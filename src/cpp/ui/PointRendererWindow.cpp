@@ -4,6 +4,7 @@ PointRendererWindow::PointRendererWindow()
     : m_program(0)
     , m_frame(0)
 {
+	m_camera = make_shared<Camera>();
 }
 
 GLuint PointRendererWindow::loadShader(GLenum type, const char *source)
@@ -30,12 +31,23 @@ void PointRendererWindow::render()
     const qreal retinaScale = devicePixelRatio();
     glViewport(0, 0, width() * retinaScale, height() * retinaScale);
 
+	
+	
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_program->bind();
 
-    QMatrix4x4 matrix;
+	m_camera->rotateY(0.01f);
+	vec3 cameraEye = m_camera->getOrigin();
+	vec3 cameraCenter = cameraEye + m_camera->getForward();
+	vec3 cameraUp = m_camera->getUp();
+    
+	QMatrix4x4 matrix;
     matrix.perspective(60.0f, 4.0f/3.0f, 0.1f, 100.0f);
+	matrix.lookAt(QVector3D(cameraEye.x, cameraEye.y, cameraEye.z),
+		QVector3D(cameraCenter.x, cameraCenter.y, cameraCenter.z),
+		QVector3D(cameraUp.x, cameraUp.y, cameraUp.z)
+	);
     matrix.translate(0, 0, -2);
     matrix.rotate(100.0f * m_frame / screen()->refreshRate(), 0, 1, 0);
 

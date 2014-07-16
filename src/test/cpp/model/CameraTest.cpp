@@ -14,7 +14,7 @@ namespace model
 		protected:
 			void SetUp()
 			{
-				m_camera = make_shared<Camera>(vec3(0.f, 0.f, 0.f));
+				m_camera = make_shared<Camera>();
 				m_camera->rotateX(3.1421f * 0.5f);
 				m_camera->rotateY(3.1421f * 0.5f);
 				m_camera->panX(10.f);

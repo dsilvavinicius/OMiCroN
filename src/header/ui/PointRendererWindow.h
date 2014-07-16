@@ -10,6 +10,10 @@
 
 #include <QtCore/qmath.h>
 
+#include "Camera.h"
+
+using namespace model;
+
 class PointRendererWindow : public OpenGLWindow
 {
 public:
@@ -43,6 +47,7 @@ private:
 
     QOpenGLShaderProgram *m_program;
     int m_frame;
+	CameraPtr m_camera;
 };
 
 #endif // POINT_RENDERER_WINDOW_H

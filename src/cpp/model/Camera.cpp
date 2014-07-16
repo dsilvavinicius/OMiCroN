@@ -19,13 +19,11 @@ namespace model
 
 	void Camera::rotateX(const float& angle)
 	{
-		cout << "rotateX" << endl;
 		rotate(angle, m_side);
 	}
 
 	void Camera::rotateY(const float& angle)
 	{
-		cout << "rotateY" << endl;
 		rotate(angle, m_up);
 	}
 	
@@ -33,18 +31,6 @@ namespace model
 	{
 		m_rotation = angleAxis(angle, axis) * m_rotation;
 		applyCurrentRotation();
-		
-		cout << "forward {" 
-		<< m_forward.x << " " << m_forward.y << " " << m_forward.z 
-		<< "}" << endl;
-		  
-		cout << "side {" 
-		<< m_side.x << " " << m_side.y << " " << m_side.z 
-		<< "}" << endl;
-		
-		cout << "up {" 
-		<< m_up.x << " " << m_up.y << " " << m_up.z 
-		<< "}" << endl;
 	}
 	
 	void Camera::applyCurrentRotation()

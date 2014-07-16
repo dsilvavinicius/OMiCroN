@@ -19,7 +19,7 @@ namespace model
 	{
 	public:
 		/** Creates the camera, given camera origin, and original*/
-		Camera(const vec3& origin, const quat& rotation = quat(1.f, 0.f, 0.f, 0.f));
+		Camera(const vec3& origin = vec3(0.f, 0.f, 0.f), const quat& rotation = quat(1.f, 0.f, 0.f, 0.f));
 
 		/** Rotates around local X (radians). */
 		void rotateX(const float& angle);
