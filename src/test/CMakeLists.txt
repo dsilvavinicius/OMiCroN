@@ -9,10 +9,11 @@ add_subdirectory (gtest/)
 
 # Adds the executable
 add_executable (Tests
-	main.cpp)
+	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
+	${CPP_DIR}/main.cpp)
 
-target_include_directories (Tests PUBLIC Point_Based_Renderer_Lib
-	gtest
+#include_directories("../header/")
+target_include_directories (Tests PUBLIC gtest
 	gtest_main)
 target_link_libraries (Tests Point_Based_Renderer_Lib
 	gtest

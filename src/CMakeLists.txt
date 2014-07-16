@@ -39,11 +39,11 @@ set (CMAKE_AUTOMOC ON)
 # Necessary flags for C++11 and linking to Qt5.
 SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC")
 
+set (HEADER_DIR "header")
+set (CPP_DIR "cpp")
+
 set (UI_DIR "ui")
 set (MODEL_DIR "model")
-
-set (HEADER_DIR "header")
-set (CPP_DIR "src")
 
 create_source_groups (UI_DIR MODEL_DIR)
 
@@ -59,15 +59,15 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
 
-	${UI_DIR}/${HEADER_DIR}/
-	${MODEL_DIR}/${HEADER_DIR}/)
+	${HEADER_DIR}/${UI_DIR}/
+	${HEADER_DIR}/${MODEL_DIR}/)
 
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
-	${UI_DIR}/${HEADER_DIR}/OpenGLWindow.h			${UI_DIR}/${CPP_DIR}/OpenGLWindow.cpp
-	${UI_DIR}/${HEADER_DIR}/PointRendererWindow.h	${UI_DIR}/${CPP_DIR}/PointRendererWindow.cpp
+	${HEADER_DIR}/${UI_DIR}/OpenGLWindow.h			${CPP_DIR}/${UI_DIR}/OpenGLWindow.cpp
+	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	
-	${MODEL_DIR}/${HEADER_DIR}/Camera.h		${MODEL_DIR}/${CPP_DIR}/Camera.cpp)
+	${HEADER_DIR}/${MODEL_DIR}/Camera.h		${CPP_DIR}/${MODEL_DIR}/Camera.cpp)
 
 # Qt 5 modules.
 target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
@@ -78,7 +78,7 @@ target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
 	
 # Creates renderer program and links with the renderer library.
 add_executable (Point_Based_Renderer
-	./main.cpp
+	${CPP_DIR}/main.cpp
 	./CMakeLists.txt)
 target_include_directories (Point_Based_Renderer PUBLIC Point_Based_Renderer_Lib)
 target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)

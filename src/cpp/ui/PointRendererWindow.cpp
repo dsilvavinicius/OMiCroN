@@ -1,4 +1,4 @@
-#include "ui/header/PointRendererWindow.h"
+#include "PointRendererWindow.h"
 
 PointRendererWindow::PointRendererWindow()
     : m_program(0)

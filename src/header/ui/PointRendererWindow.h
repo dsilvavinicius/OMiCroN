@@ -1,7 +1,7 @@
 #ifndef POINT_RENDERER_WINDOW_H
 #define POINT_RENDERER_WINDOW_H
 
-#include "ui/header/OpenGLWindow.h"
+#include "OpenGLWindow.h"
 
 #include <QtGui/QGuiApplication>
 #include <QtGui/QMatrix4x4>

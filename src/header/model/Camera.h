@@ -1,12 +1,15 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include <memory>
+
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #undef GLM_FORCE_RADIANS
 
 using namespace glm;
+using namespace std;
 
 namespace model
 {
@@ -16,20 +19,32 @@ namespace model
 	{
 	public:
 		/** Creates the camera, given camera origin, and original*/
-		Camera(vec3 origin, const quat& rotation = quat(1.f, 0.f, 0.f, 0.f));
+		Camera(const vec3& origin, const quat& rotation = quat(1.f, 0.f, 0.f, 0.f));
 
 		/** Rotates around local X (radians). */
-		void rotateX(float angle);
+		void rotateX(const float& angle);
 		/** Rotates around local Y (radians). */
-		void rotateY(float angle);
+		void rotateY(const float& angle);
 		/** Pans on local X axis. */
-		void panX(float displacement);
+		void panX(const float& displacement);
 		/** Pans on local Y axis. */
-		void panY(float displacement);
+		void panY(const float& displacement);
 		/** Zooms in the direction of the forward axis. */
-		void zoom(float displacement);
+		void zoom(const float& displacement);
+		
+		vec3& getOrigin();
+		vec3& getForward();
+		vec3& getSide();
+		vec3& getUp();
+		quat& getRotation();
 
 	private:
+		/** Rotates the current camera frame around the given axis. */
+		void rotate(const float& angle, const vec3& axis);
+		
+		/** Applies current quaternion rotation. */
+		void applyCurrentRotation();
+		
 		/** Camera position. */
 		vec3 m_origin;
 		/** Forward vector (-z).*/
@@ -40,7 +55,14 @@ namespace model
 		vec3 m_up;
 		/** Quaternion that specifies current camera rotation. */
 		quat m_rotation;
+		
+		// Camera default axis constants in world coordinates.
+		static vec3 xAxis;
+		static vec3 yAxis;
+		static vec3 zAxis;
 	};
+	
+	using CameraPtr = shared_ptr<Camera>;
 }
 
 #endif // CAMERA_H
