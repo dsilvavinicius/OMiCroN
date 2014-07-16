@@ -6,6 +6,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 project (Point_Based_Renderer)
 
+# Setups the given package, trying to find it and sets includes and linking directories.
 macro (setup_package package)
 	find_package (${package} REQUIRED)
 	include_directories (${${package}_INCLUDE_DIRS})
@@ -16,6 +17,17 @@ macro (setup_package package)
 		message(Error "${package} not found")
 	endif(NOT ${package}_FOUND)
 endmacro (setup_package)
+
+# Creates the same source groups for library and tests.
+macro (create_source_groups ui_dir model_dir)
+	# Creating file groups
+	# Specifying sources.
+	file (GLOB_RECURSE UI ${ui_dir}/*)
+	file (GLOB_RECURSE MODEL ${model_dir}/*)
+	# Creating source groups.
+	source_group (ui FILES ${UI})
+	source_group (model FILES ${MODEL})
+endmacro (create_source_groups)
 
 # Adding package finders directory.
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -33,6 +45,8 @@ set (MODEL_DIR "model")
 set (HEADER_DIR "header")
 set (CPP_DIR "src")
 
+create_source_groups (UI_DIR MODEL_DIR)
+
 setup_package(OpenGL)
 setup_package(GLM)
 
@@ -48,26 +62,26 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	${UI_DIR}/${HEADER_DIR}/
 	${MODEL_DIR}/${HEADER_DIR}/)
 
-# Creating file groups
-# Specifying sources.
-file (GLOB_RECURSE UI ${UI_DIR}/*)
-file (GLOB_RECURSE MODEL ${MODEL_DIR}/*)
-# Creating source groups.
-source_group (ui FILES ${UI})
-source_group (model FILES ${MODEL})
-
-# Add the executable
-add_executable (Point_Based_Renderer
+# Creates the renderer library.
+add_library (Point_Based_Renderer_Lib
 	${UI_DIR}/${HEADER_DIR}/OpenGLWindow.h			${UI_DIR}/${CPP_DIR}/OpenGLWindow.cpp
 	${UI_DIR}/${HEADER_DIR}/PointRendererWindow.h	${UI_DIR}/${CPP_DIR}/PointRendererWindow.cpp
 	
-	${MODEL_DIR}/${HEADER_DIR}/Camera.h		${MODEL_DIR}/${CPP_DIR}/Camera.cpp
-	./main.cpp
-	./CMakeLists.txt)
+	${MODEL_DIR}/${HEADER_DIR}/Camera.h		${MODEL_DIR}/${CPP_DIR}/Camera.cpp)
 
 # Qt 5 modules.
-target_link_libraries (Point_Based_Renderer Qt5::Core
+target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
 	Qt5::Gui
 	Qt5::Widgets
 	${OPENGL_LIBRARIES}
 	${GLML_LIBRARIES})
+	
+# Creates renderer program and links with the renderer library.
+add_executable (Point_Based_Renderer
+	./main.cpp
+	./CMakeLists.txt)
+target_include_directories (Point_Based_Renderer PUBLIC Point_Based_Renderer_Lib)
+target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)
+	
+# Tests directory.
+add_subdirectory (test)

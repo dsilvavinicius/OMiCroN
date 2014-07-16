@@ -13,12 +13,12 @@ namespace model
 
 	void Camera::rotateX(float angle)
 	{
-		rotate(m_rotation, 3.1421 * 0.1, m_side);
+		rotate(m_rotation, 3.1421f * 0.1f, m_side);
 	}
 
 	void Camera::rotateY(float angle)
 	{
-		rotate(m_rotation, 3.1421 * 0.1, m_up);
+		rotate(m_rotation, 3.1421f * 0.1f, m_up);
 	}
 
 	void Camera::panX(float displacement)
