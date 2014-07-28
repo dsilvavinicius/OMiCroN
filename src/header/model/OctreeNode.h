@@ -10,23 +10,28 @@ using namespace glm;
 
 namespace model
 {
+	template <typename MortonPrecision>
 	class Octree;
 	
-	/** Base class for octree nodes. Can be an inner node or a leaf node. */
+	/** Base class for octree nodes. */
+	template <typename MortonPrecision>
 	class OctreeNode
 	{
 	public:
 		/** Indicates the type of the node. */
 		virtual bool isLeaf() = 0;
-		/** Casts to inner node. Throws an exception if is a leaf.*/
-		InnerNode asInner();
-		/** Casts to leaf node. Throws an exception if is an inner.*/
-		LeafNode asLeaf();
+		
+		template <typename Contents>
+		void setContents(Contents contents);
+		
+		template <typename Contents>
+		Contents getContents();
 	protected:
-		shared_ptr<Octree> m_octree;
+		shared_ptr< Octree<MortonPrecision> > m_octree;
 	};
 	
-	using OctreeNodePtr = shared_ptr<OctreeNode>;
+	template <typename MortonPrecision>
+	using OctreeNodePtr = shared_ptr< OctreeNode<MortonPrecision> >;
 }
 
 #endif

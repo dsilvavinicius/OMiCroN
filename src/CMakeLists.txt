@@ -67,7 +67,13 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UI_DIR}/OpenGLWindow.h			${CPP_DIR}/${UI_DIR}/OpenGLWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	
-	${HEADER_DIR}/${MODEL_DIR}/Camera.h		${CPP_DIR}/${MODEL_DIR}/Camera.cpp)
+	${HEADER_DIR}/${MODEL_DIR}/Camera.h		${CPP_DIR}/${MODEL_DIR}/Camera.cpp
+	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h
+	${HEADER_DIR}/${MODEL_DIR}/Octree.h		${CPP_DIR}/${MODEL_DIR}/Octree.cpp
+	${HEADER_DIR}/${MODEL_DIR}/OctreeNode.h
+	${HEADER_DIR}/${MODEL_DIR}/InnerNode.h	${CPP_DIR}/${MODEL_DIR}/InnerNode.cpp
+	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h	${CPP_DIR}/${MODEL_DIR}/LeafNode.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Point.h		${CPP_DIR}/${MODEL_DIR}/Point.cpp)
 
 # Qt 5 modules.
 target_link_libraries (Point_Based_Renderer_Lib Qt5::Core

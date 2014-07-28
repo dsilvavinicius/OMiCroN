@@ -8,19 +8,32 @@ using namespace glm;
 
 namespace model
 {
-	template <typename T>
-	class InnerNode : OctreeNode
+	template <typename MortonPrecision, typename Contents>
+	class InnerNode : OctreeNode<MortonPrecision>
 	{
 	public:
 		bool isLeaf();
-		T& getValue();
+		void setContents(Contents contents);
+		Contents getContents();
 	private:
-		T value;
+		Contents m_contents;
 	};
 	
-	using LODInnerNode = InnerNode<vec3>
+	/** Inner node with one vertex as LOD. */
+	template <typename MortonPrecision>
+	using LODInnerNode = InnerNode<MortonPrecision, vec3>;
 	
-	using InnerNodePtr = shared_ptr<InnerNode>;
+	/** Smart pointer for LODInnerNode. */ 
+	template <typename MortonPrecision>
+	using LODInnerNodePtr = shared_ptr< LODInnerNode<MortonPrecision> >;
+	
+	/** Inner node with LOD as one vertex per cube face. */
+	template <typename MortonPrecision>
+	using PerFaceLODInnerNode = InnerNode<MortonPrecision, vector<vec3> >;
+	
+	/** Smart pointer for PerFaceLODInnerNode. */ 
+	template <typename MortonPrecision>
+	using PerFaceLODInnerNodePtr = shared_ptr< PerFaceLODInnerNode<MortonPrecision> >;
 }
 	
 #endif

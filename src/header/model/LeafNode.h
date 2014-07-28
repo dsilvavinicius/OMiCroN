@@ -1,19 +1,29 @@
 #ifndef LEAF_NODE_H
 #define LEAF_NODE_H
 
+#include "Point.h"
+#include "OctreeNode.h"
+
 namespace model
 {
-	template <typename T>
-	class LeafNode : OctreeNode
+	template <typename MortonPrecision, typename Contents>
+	class LeafNode : public OctreeNode<MortonPrecision>
 	{
 	public:
 		bool isLeaf();
-		vector<T>& getValues();
+		void setContents(Contents contents);
+		Contents getContents();
 	private:
-		vector<T> values;
+		Contents m_contents;
 	};
 	
-	using LeafNodePtr = shared_ptr<LeafNode>;
+	/** Leaf node with a list of points. */
+	template <typename MortonPrecision>
+	using PointsLeafNode = LeafNode<MortonPrecision, vector<Point> >;
+	
+	/** PointsLeafNode smart pointer. */
+	template <typename MortonPrecision>
+	using PointsLeafNodePtr = shared_ptr< PointsLeafNode<MortonPrecision> >;
 }
 
 #endif
