@@ -9,12 +9,12 @@ using namespace std;
 
 namespace model
 {	
-	/** Octree implemented has a hash-map using morton code as here:
+	/** Octree implemented as a hash-map using morton code as explained here:
 	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf.
 	 * 
-	 * MortonPrecision is specified in the types bellow this class. Float is the
-	 * glm type specifying the floating point precision and Vec3 is the glm type
-	 * specifying the vector with 3 coordinates precision. */
+	 * MortonPrecision is the precision of the morton code for nodes.
+	 * Float is the glm type specifying the floating point precision.
+	 * Vec3 is the glm type specifying the precision of the vector with 3 coordinates. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	class Octree
 	{
@@ -29,6 +29,9 @@ namespace model
 	private:
 		/** Calculates octree's boundaries. */
 		void buildBoundaries(vector< PointPtr< Vec3 >> points);
+		
+		/** Creates all nodes bottom-up. */
+		void buildNodes(vector< PointPtr< Vec3 >> points);
 		
 		/** The hierarchy itself. */
 		shared_ptr< map< MortonCode<MortonPrecision>,
