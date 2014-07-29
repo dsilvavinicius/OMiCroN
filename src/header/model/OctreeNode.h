@@ -10,11 +10,11 @@ using namespace glm;
 
 namespace model
 {
-	template <typename MortonPrecision>
+	template <typename MortonPrecision, typename Float, typename Vec3>
 	class Octree;
 	
 	/** Base class for octree nodes. */
-	template <typename MortonPrecision>
+	template <typename MortonPrecision, typename Float, typename Vec3>
 	class OctreeNode
 	{
 	public:
@@ -27,11 +27,11 @@ namespace model
 		template <typename Contents>
 		Contents getContents();
 	protected:
-		shared_ptr< Octree<MortonPrecision> > m_octree;
+		shared_ptr< Octree< MortonPrecision, Float, Vec3 > > m_octree;
 	};
 	
-	template <typename MortonPrecision>
-	using OctreeNodePtr = shared_ptr< OctreeNode<MortonPrecision> >;
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using OctreeNodePtr = shared_ptr< OctreeNode<MortonPrecision, Float, Vec3> >;
 }
 
 #endif

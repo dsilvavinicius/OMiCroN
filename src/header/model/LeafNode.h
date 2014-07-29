@@ -6,24 +6,27 @@
 
 namespace model
 {
-	template <typename MortonPrecision, typename Contents>
-	class LeafNode : public OctreeNode<MortonPrecision>
+	template < typename MortonPrecision, typename Float, typename Vec3,
+		typename Contents >
+	class LeafNode : public OctreeNode<MortonPrecision, Float, Vec3>
 	{
 	public:
 		bool isLeaf();
-		void setContents(Contents contents);
-		Contents getContents();
+		void setContents(const Contents& contents);
+		shared_ptr< Contents > getContents();
 	private:
-		Contents m_contents;
+		shared_ptr< Contents > m_contents;
 	};
 	
 	/** Leaf node with a list of points. */
-	template <typename MortonPrecision>
-	using PointsLeafNode = LeafNode<MortonPrecision, vector<Point> >;
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using PointsLeafNode = LeafNode<MortonPrecision, Float, Vec3,
+		vector< PointPtr<Vec3> > >;
 	
 	/** PointsLeafNode smart pointer. */
-	template <typename MortonPrecision>
-	using PointsLeafNodePtr = shared_ptr< PointsLeafNode<MortonPrecision> >;
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using PointsLeafNodePtr = shared_ptr<
+		PointsLeafNode< MortonPrecision, Float, Vec3 > >;
 }
 
 #endif

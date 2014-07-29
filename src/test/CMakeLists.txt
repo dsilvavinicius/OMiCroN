@@ -12,7 +12,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
 	${CPP_DIR}/main.cpp)
 
-#include_directories("../header/")
+target_include_directories (Tests PUBLIC include/)
 target_include_directories (Tests PUBLIC gtest
 	gtest_main)
 target_link_libraries (Tests Point_Based_Renderer_Lib

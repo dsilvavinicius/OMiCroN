@@ -1,7 +1,7 @@
 #include "../model/Camera.h"
 
 #include <glm/gtc/epsilon.hpp>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 using namespace glm;
 

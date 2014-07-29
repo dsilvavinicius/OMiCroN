@@ -9,34 +9,23 @@ using namespace glm;
 
 namespace model
 {
-	template <typename VecType>
+	/** Point representation. The precision is specified by the glm Vec3 type. */
+	template < typename Vec3 >
 	class Point
 	{
 	public:
-		Point(const vec3& color, const vec3& pos);
+		Point(const Vec3& color, const Vec3& pos);
 		
-		shared_ptr<VecType> getColor();
-		shared_ptr<VecType> getPos();
+		shared_ptr< Vec3 > getColor();
+		shared_ptr< Vec3 > getPos();
 	private:
-		shared_ptr<VecType> m_color;
-		shared_ptr<VecType> m_pos;
+		shared_ptr< Vec3 > m_color;
+		shared_ptr< Vec3 > m_pos;
 	};
 	
-	/** Point: high precision. */
-	template <typename NumType>
-	using PointHP = Point< tvec3<NumType, highp> >;
-	
-	/** Point: medium precision. */
-	template <typename NumType>
-	using PointMP = Point< tvec3<NumType, mediump> >;
-	
-	/** Point: low precision. */
-	template <typename NumType>
-	using PointLP = Point< tvec3<NumType, lowp> >;
-	
 	/** Point smart pointer. */
-	template <typename NumType>
-	using PointPtr = shared_ptr< Point< tvec3<NumType, lowp> > >;
+	template <typename Vec3>
+	using PointPtr = shared_ptr< Point< Vec3 > >;
 }
 
 #endif

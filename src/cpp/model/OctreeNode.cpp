@@ -2,7 +2,8 @@
 
 namespace model
 {
-	template <typename MortonPrecision, typename Contents>
+	template <typename MortonPrecision, typename Float, typename Vec3,
+		typename Contents>
 	void OctreeNode::setContents(Contents contents)
 	{
 		if (isLeaf())
@@ -21,7 +22,8 @@ namespace model
 		}
 	}
 		
-	template <typename T>
+	template <typename MortonPrecision, typename Float, typename Vec3,
+		typename Contents>
 	T OctreeNode::getContents()
 	{
 		if (isLeaf())

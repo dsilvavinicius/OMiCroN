@@ -8,32 +8,34 @@ using namespace glm;
 
 namespace model
 {
-	template <typename MortonPrecision, typename Contents>
-	class InnerNode : OctreeNode<MortonPrecision>
+	template < typename MortonPrecision, typename Float, typename Vec3,
+		typename Contents >
+	class InnerNode : OctreeNode<MortonPrecision, Float, Vec3>
 	{
 	public:
 		bool isLeaf();
-		void setContents(Contents contents);
-		Contents getContents();
+		void setContents(const Contents& contents);
+		shared_ptr< Contents > getContents();
 	private:
-		Contents m_contents;
+		shared_ptr< Contents > m_contents;
 	};
 	
 	/** Inner node with one vertex as LOD. */
-	template <typename MortonPrecision>
-	using LODInnerNode = InnerNode<MortonPrecision, vec3>;
+	template < typename MortonPrecision, typename Float, typename Vec3>
+	using LODInnerNode = InnerNode<MortonPrecision, Float, Vec3, Point<Vec3> >;
 	
 	/** Smart pointer for LODInnerNode. */ 
-	template <typename MortonPrecision>
-	using LODInnerNodePtr = shared_ptr< LODInnerNode<MortonPrecision> >;
+	template < typename MortonPrecision, typename Float, typename Vec3>
+	using LODInnerNodePtr = shared_ptr< LODInnerNode< MortonPrecision, Float, Vec3 > >;
 	
 	/** Inner node with LOD as one vertex per cube face. */
-	template <typename MortonPrecision>
-	using PerFaceLODInnerNode = InnerNode<MortonPrecision, vector<vec3> >;
+	template < typename MortonPrecision, typename Float, typename Vec3>
+	using PerFaceLODInnerNode = InnerNode< MortonPrecision, Float, Vec3, vector<Vec3> >;
 	
 	/** Smart pointer for PerFaceLODInnerNode. */ 
-	template <typename MortonPrecision>
-	using PerFaceLODInnerNodePtr = shared_ptr< PerFaceLODInnerNode<MortonPrecision> >;
+	template < typename MortonPrecision, typename Float, typename Vec3>
+	using PerFaceLODInnerNodePtr = shared_ptr< PerFaceLODInnerNode<
+		MortonPrecision, Float, Vec3 > >;
 }
 	
 #endif
