@@ -22,30 +22,28 @@ namespace model
 	class MortonCode
 	{
 	public:
-		/** Use this constructor to just inform the code bits. */
-		MortonCode(T codeBits);
-		/** Use this constructor to calculate code from position. */
-		MortonCode(T x, T y, T z, unsigned int level);
+		/** Use this method to calculate code from position. */
+		build(const T& x, const T& y, const T& z, const unsigned int& level);
+		
+		/** Use this method to inform the code. */
+		build(const T& codeBits);
+		
 		T getBits();
 		
 		static MortonCode< T > traverseUp(const MortonCode<T>& code);
 		static vector< MortonCode < T > > traverseDown(const MortonCode<T>& code);
 	private:
 		T spread3(T);
+		
+		T m_bits;
 	};
 	
 	/** 32 bits Morton code. Octrees can reach 10 levels max. */
 	template <>
-	class MortonCode<unsigned int>
-	{
-	public:
-		MortonCode(unsigned int x, unsigned int y, unsigned int z, unsigned int level);
-		
-	private:
-		/** Takes a value and "spreads" the lower 10 bits, seperating them in slots of 3 bits.
-		 * Applied bit-wise operations are explained here:
-		 * http://stackoverflow.com/a/18528775/1042102. */
-		unsigned int spread3(unsigned int x);
+	viMortonCode<unsigned int>::build(unsigned int x, unsigned int y, unsigned int z, unsigned int level);
+	
+	template <>
+	MortonCode<unsigned int>::unsigned int spread3(unsigned int x);
 		
 		unsigned int m_bits;
 	};
