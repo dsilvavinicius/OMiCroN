@@ -19,65 +19,66 @@ namespace model
 	 * 0 ... | 1 | 110 | 100 | 110.
 	 */
 	template <typename T>
-	class MortonCode
+	class MortonCodeBase
 	{
 	public:
 		/** Use this method to calculate code from position. */
-		build(const T& x, const T& y, const T& z, const unsigned int& level);
+		void build(const T& x, const T& y, const T& z, const unsigned int& level);
 		
 		/** Use this method to inform the code. */
-		build(const T& codeBits);
+		void build(const T& codeBits);
 		
 		T getBits();
 		
-		static MortonCode< T > traverseUp(const MortonCode<T>& code);
-		static vector< MortonCode < T > > traverseDown(const MortonCode<T>& code);
-	private:
+		MortonCodeBase< T > traverseUp(const MortonCodeBase<T>& code) const;
+		vector< MortonCodeBase < T > > traverseDown(const MortonCodeBase<T>& code) const;
+	protected:
 		T spread3(T);
-		
+	private:
 		T m_bits;
 	};
 	
-	/** 32 bits Morton code. Octrees can reach 10 levels max. */
-	template <>
-	viMortonCode<unsigned int>::build(unsigned int x, unsigned int y, unsigned int z, unsigned int level);
+	template <typename T>
+	class MortonCode : public MortonCodeBase<T> {};
 	
 	template <>
-	MortonCode<unsigned int>::unsigned int spread3(unsigned int x);
-		
-		unsigned int m_bits;
-	};
-	
-	/** 64 bits Morton code. Octrees can reach 21 levels max. */
-	template <>
-	class MortonCode<unsigned long>
+	class MortonCode<unsigned int> : public MortonCodeBase<unsigned int>
 	{
 	public:
-		MortonCode(unsigned long x, unsigned long y, unsigned long z, unsigned int level);
-		
+		/** Builds 32 bits Morton code from coordinates and level. Octrees can reach 10 levels max. */
+		/*void build(const unsigned int& x, const unsigned int& y, const unsigned int& z,
+											 const unsigned int& level);*/
 	private:
-		/** Takes a value and "spreads" the lower 21 bits, seperating them in slots of 3 bits.
-		 * Applied bit-wise operations are explained here:
-		 * http://stackoverflow.com/a/18528775/1042102. */
+		/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
+		 * http://stackoverflow.com/a/18528775/1042102 */
+		unsigned int spread3(unsigned int x);
+	};
+	
+	template <>
+	class MortonCode<unsigned long> : public MortonCodeBase<unsigned long>
+	{
+	public:
+		/** Builds 64 bits Morton code from coordinates and level. Octrees can reach 21 levels max. */
+		/*void build(const unsigned long& x, const unsigned long& y, const unsigned long& z,
+											  const unsigned int& level);*/
+	private:
+		/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
+		 * http://stackoverflow.com/a/18528775/1042102 */
 		unsigned long spread3(unsigned long x);
-		
-		unsigned m_bits;
 	};
 	
-	/** 128 bits Morton code. Octrees can reach 42 levels max.*/
 	template <>
-	class MortonCode<unsigned long long>
+	class MortonCode<unsigned long long> : public MortonCodeBase<unsigned long long>
 	{
 	public:
-		MortonCode(unsigned long long x, unsigned long long y, unsigned long long z, unsigned int level);
-		
+		/** Builds 128 bits Morton code from coordinates and level. Octrees can reach 42 levels max. The compiler can
+		 * complain about unsigned long long size. In this case don't use this type. */
+		/*void build(const unsigned long long& x, const unsigned long long& y,
+				   const unsigned long long& z, const unsigned int& level);*/
 	private:
-		/** Takes a value and "spreads" the lower 42 bits, seperating them in slots of 3 bits.
-		 * Applied bit-wise operations are explained here:
-		 * http://stackoverflow.com/a/18528775/1042102. */
+		/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
+		 * http://stackoverflow.com/a/18528775/1042102 */
 		unsigned long long spread3(unsigned long long x);
-		
-		unsigned m_bits;
 	};
 	
 	using ShallowMortonCode = MortonCode< unsigned int >;

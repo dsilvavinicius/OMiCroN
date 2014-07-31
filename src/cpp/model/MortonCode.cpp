@@ -3,26 +3,44 @@
 namespace model
 {
 	template <typename T>
-	MortonCode<T>::MortonCode(T codeBits) { m_bits = codeBits; }
-	
-	MortonCode<T>::MortonCode(T x, T y, T z, unsigned int level) {  }
+	void MortonCodeBase<T>::build(const T& x, const T& y, const T& z, const unsigned int& level)
+	{
+		m_bits = spread3(x) | (spread3(y) << 1) | (spread3(z) << 2);
+		
+		T twoPowLevel = 1 << level * 3;
+		// Discards all bits in positions greater than level * 3.
+		m_bits &= (twoPowLevel) - 1;
+		// Put the 1 sufix.
+		m_bits |= twoPowLevel;
+	}
 	
 	template <typename T>
-	T MortonCode<T>::getBits() { return m_bits; }
+	void MortonCodeBase<T>::build(const T& codeBits) { m_bits = codeBits; }
 	
 	template <typename T>
-	MortonCode<T> MortonCode<T>::traverseUp(const MortonCode<T>& code)
+	T MortonCodeBase<T>::getBits() { return m_bits; }
+	
+	template <typename T>
+	MortonCodeBase<T> MortonCodeBase<T>::traverseUp(const MortonCodeBase<T>& code) const
 	{
 		T bits = code.getBits() >> 3;
-		return MortonCode<T>(bits);
+		return MortonCodeBase<T>(bits);
 	}
 	
 	template <typename T>
-	vector< MortonCode< T > >  MortonCode<T>::traverseDown(const MortonCode<T>& code)
+	vector< MortonCodeBase< T > >  MortonCodeBase<T>::traverseDown(const MortonCodeBase<T>& code) const
 	{
+		vector< MortonCodeBase<T> > children(8);
+		
+		for (int i = 0; i < 8; ++i)
+		{
+			children[i] = MortonCodeBase<T>((code << 3) | i);
+		}
 	}
 	
-	MortonCode< unsigned int >::MortonCode(unsigned int x, unsigned int y, unsigned int z, unsigned int level)
+	/*template<>
+	void MortonCode< unsigned int >::build(const unsigned int& x, const unsigned int& y, const unsigned int& z,
+										   const unsigned int& level)
 	{
 		m_bits = spread3(x) | (spread3(y) << 1) | (spread3(z) << 2);
 		
@@ -31,8 +49,9 @@ namespace model
 		m_bits &= (twoPowLevel) - 1;
 		// Put the 1 sufix.
 		m_bits |= twoPowLevel;
-	}
+	}*/
 	
+	template<>
 	unsigned int MortonCode< unsigned int >::spread3(unsigned int x)
 	{
 		x &= 0x3ff;
@@ -44,7 +63,9 @@ namespace model
 		return x;
 	}
 	
-	MortonCode< unsigned long >::MortonCode(unsigned long x, unsigned long y, unsigned long z, unsigned int level)
+	/*template<>
+	void MortonCode< unsigned long >::build(const unsigned long& x, const unsigned long& y, const unsigned long& z,
+											const unsigned int& level)
 	{
 		m_bits = spread3(x) | (spread3(y) << 1) | (spread3(z) << 2);
 		
@@ -53,8 +74,9 @@ namespace model
 		m_bits &= (twoPowLevel - 1);
 		// Put the 1 sufix.
 		m_bits |= twoPowLevel;
-	}
+	}*/
 	
+	template<>
 	unsigned long MortonCode< unsigned long >::spread3(unsigned long x)
 	{
 		x &= 0x1fffffL;
@@ -67,8 +89,9 @@ namespace model
 		return x;
 	}
 	
-	MortonCode< unsigned long long >::MortonCode(unsigned long long x, unsigned long long y,
-												 unsigned long long z, unsigned int level)
+	/*template<>
+	void MortonCode< unsigned long long >::build(const unsigned long long& x, const unsigned long long& y,
+												 const unsigned long long& z, const unsigned int& level)
 	{
 		m_bits = spread3(x) | (spread3(y) << 1) | (spread3(z) << 2);
 		
@@ -77,8 +100,9 @@ namespace model
 		m_bits &= (twoPowLevel) - 1;
 		// Put the 1 sufix.
 		m_bits |= twoPowLevel;
-	}
+	}*/
 	
+	template<>
 	unsigned long long MortonCode< unsigned long long >::spread3(unsigned long long x)
 	{
 		x &= 0x3ffffffffffLL;
