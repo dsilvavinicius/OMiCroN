@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdexcept>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
@@ -32,8 +33,8 @@ namespace model
 		
 		T getBits() const;
 		
-		MortonCode< T > traverseUp(const MortonCode<T>& code) const;
-		vector< MortonCode < T > > traverseDown(const MortonCode<T>& code) const;
+		MortonCode< T > traverseUp() const;
+		vector< MortonCode < T > > traverseDown() const;
 		T spread3(T x);
 	private:
 		T m_bits;
@@ -78,23 +79,37 @@ namespace model
 	T MortonCode<T>::getBits() const{ return m_bits; }
 	
 	template <typename T>
-	MortonCode<T> MortonCode<T>::traverseUp(const MortonCode<T>& code) const
+	MortonCode<T> MortonCode<T>::traverseUp() const
 	{
-		T bits = code.getBits() >> 3;
+		T bits = getBits() >> 3;
 		MortonCode<T> parentMorton;
 		parentMorton.build(bits);
 		return parentMorton;
 	}
 	
 	template <typename T>
-	vector< MortonCode< T > >  MortonCode<T>::traverseDown(const MortonCode<T>& code) const
+	vector< MortonCode< T > >  MortonCode<T>::traverseDown() const
 	{
 		vector< MortonCode<T> > children(8);
+		T bits = getBits();
+		T shifted = bits << 3;
+		
+		// Checks for overflow.
+		if(shifted < bits)
+		{
+			stringstream ss;
+			ss << "Overflow detected while traversing down morton code " << hex << bits;
+			throw logic_error(ss.str());
+		}
 		
 		for (int i = 0; i < 8; ++i)
 		{
-			children[i] = MortonCode<T>((code << 3) | i);
+			MortonCode<T> child;
+			child.build(shifted | i);
+			children[i] = child;
 		}
+		
+		return children;
 	}
 	
 	template <>
