@@ -68,7 +68,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h		${CPP_DIR}/${MODEL_DIR}/Camera.cpp
-	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h
+	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h	${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Octree.h
 	${HEADER_DIR}/${MODEL_DIR}/OctreeNode.h
 	${HEADER_DIR}/${MODEL_DIR}/InnerNode.h	${CPP_DIR}/${MODEL_DIR}/InnerNode.cpp
