@@ -72,7 +72,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/Octree.h
 	${HEADER_DIR}/${MODEL_DIR}/OctreeNode.h
 	${HEADER_DIR}/${MODEL_DIR}/InnerNode.h	${CPP_DIR}/${MODEL_DIR}/InnerNode.cpp
-	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h	${CPP_DIR}/${MODEL_DIR}/LeafNode.cpp
+	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h
 	${HEADER_DIR}/${MODEL_DIR}/Point.h)
 
 # Qt 5 modules.

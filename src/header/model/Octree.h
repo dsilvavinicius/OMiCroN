@@ -97,16 +97,16 @@ namespace model
 		vector< PointPtr< Vec3 > > points)
 	{
 		// Creates leaf nodes.
-		for (unsigned int x = 0; x < m_maxLevel; ++x)
+		for (MortonPrecision x = 0; x < m_maxLevel; ++x)
 		{
-			for (unsigned int y = 0; y < m_maxLevel; ++y)
+			for (MortonPrecision y = 0; y < m_maxLevel; ++y)
 			{
-				for (unsigned int z = 0; z < m_maxLevel; ++z)
+				for (MortonPrecision z = 0; z < m_maxLevel; ++z)
 				{
 					PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
 						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
 						
-					leafNode->setContents(make_shared< vector< PointPtr< Vec3 > > >());
+					leafNode->setContents(vector< PointPtr< Vec3 > >());
 					
 					MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
 					code->build(x, y, z, m_maxLevel);
@@ -116,13 +116,23 @@ namespace model
 			}
 		}
 		
-		// Puts points inside leaf nodes
+		// Puts points inside leaf nodes.
 		for (PointPtr< Vec3 > point : points)
 		{
+			shared_ptr<Vec3> pos = point->getPos();
+			Vec3 index = ((*pos) - (*m_origin)) / (*m_size);
+			MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
+			code->build((MortonPrecision)index.x, (MortonPrecision)index.y, (MortonPrecision)index.z, m_maxLevel);
 			
+			PointsLeafNodePtr< MortonPrecision, Float, Vec3 > leafNode =
+				dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >((*m_hierarchy)[code]);
+			leafNode->getContents()->push_back(point);
 		}
 		
 		// Creates inner nodes.
+		/*for (MortonPrecision l )
+		{
+		}*/
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
