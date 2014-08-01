@@ -51,6 +51,7 @@ namespace model
 	OctreeBase<MortonPrecision, Float, Vec3>::OctreeBase()
 	{
 		m_size = make_shared<Vec3>();
+		m_origin = make_shared<Vec3>();
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
