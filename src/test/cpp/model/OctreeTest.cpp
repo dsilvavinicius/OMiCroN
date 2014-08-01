@@ -17,7 +17,7 @@ namespace model
 			vector< PointPtr <vec3> > points(1);
 			points[0] = point;
 			
-			shared_ptr< ShallowOctree<float, vec3> > octree = make_shared< ShallowOctree<float, vec3> >();
+			shared_ptr< ShallowOctree<float, vec3> > octree = make_shared< ShallowOctree<float, vec3> >(10);
 			octree->build(points);
 		}
 	}

@@ -4,6 +4,7 @@
 #include <map>
 #include "MortonCode.h"
 #include "OctreeNode.h"
+#include "LeafNode.h"
 
 using namespace std;
 
@@ -19,7 +20,8 @@ namespace model
 	class OctreeBase
 	{
 	public:
-		OctreeBase();
+		/** Constructs this octree, giving the desired max number of nodes per node. */
+		OctreeBase(const int& maxPointsPerNode);
 		
 		/** Builds the octree for a given point cloud. */
 		virtual void build(vector< PointPtr< Vec3 > > points);
@@ -35,7 +37,7 @@ namespace model
 		void buildNodes(vector< PointPtr< Vec3 >> points);
 		
 		/** The hierarchy itself. */
-		shared_ptr< map< MortonCode<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 > > > hierarchy;
+		shared_ptr< map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 > > > m_hierarchy;
 		
 		/** Octree origin. Can be used to calculate node positions. */
 		shared_ptr<Vec3> m_origin;
@@ -43,15 +45,19 @@ namespace model
 		/** Spatial size of the octree. */
 		shared_ptr<Vec3> m_size;
 		
+		/** Maximum number of points per node. */
+		int m_maxPointsPerNode;
+		
 		/** Maximum level of this octree. */
-		int m_maxLevel;
+		unsigned int m_maxLevel;
 	};
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	OctreeBase<MortonPrecision, Float, Vec3>::OctreeBase()
+	OctreeBase<MortonPrecision, Float, Vec3>::OctreeBase(const int& maxPointsPerNode)
 	{
 		m_size = make_shared<Vec3>();
 		m_origin = make_shared<Vec3>();
+		m_maxPointsPerNode = maxPointsPerNode;
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -89,7 +95,34 @@ namespace model
 	void OctreeBase< MortonPrecision, Float, Vec3 >::buildNodes(
 		vector< PointPtr< Vec3 > > points)
 	{
+		// Creates leaf nodes.
+		for (unsigned int x = 0; x < m_maxLevel; ++x)
+		{
+			for (unsigned int y = 0; y < m_maxLevel; ++y)
+			{
+				for (unsigned int z = 0; z < m_maxLevel; ++z)
+				{
+					PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
+						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
+						
+					leafNode->setContents(make_shared< vector< PointPtr< Vec3 > > >());
+					OctreeNodePtr< MortonPrecision, Float, Vec3 > octreeNode = leafNode;
+					
+					MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
+					code->build(x, y, z, m_maxLevel);
+					
+					m_hierarchy[code] = octreeNode;
+				}
+			}
+		}
 		
+		// Puts points inside leaf nodes
+		for (PointPtr< Vec3 > point : points)
+		{
+			
+		}
+		
+		// Creates inner nodes.
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -109,31 +142,43 @@ namespace model
 	class Octree <unsigned int, Float, Vec3> : public OctreeBase<unsigned int, Float, Vec3>
 	{
 	public:
-		Octree();
+		Octree(const int& maxPointsPerNode);
 	};
 	
 	template<typename Float, typename Vec3>
 	class Octree <unsigned long, Float, Vec3> : public OctreeBase<unsigned long, Float, Vec3>
 	{
 	public:
-		Octree();
+		Octree(const int& maxPointsPerNode);
 	};
 	
 	template<typename Float, typename Vec3>
 	class Octree <unsigned long long, Float, Vec3> : public OctreeBase<unsigned long long, Float, Vec3>
 	{
 	public:
-		Octree();
+		Octree(const int& maxPointsPerNode);
 	};
 	
 	template<typename Float, typename Vec3>
-	Octree<unsigned int, Float, Vec3>::Octree() { OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 10; }
+	Octree< unsigned int, Float, Vec3 >::Octree(const int& maxPointsPerNode)
+	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase(maxPointsPerNode)
+	{
+		OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 10;
+	}
 	
 	template<typename Float, typename Vec3>
-	Octree<unsigned long, Float, Vec3>::Octree() { OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 21; }
+	Octree<unsigned long, Float, Vec3>::Octree(const int& maxPointsPerNode)
+	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
+	{
+		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 21;
+	}
 	
 	template<typename Float, typename Vec3>
-	Octree<unsigned long long, Float, Vec3>::Octree() { OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 42; }
+	Octree<unsigned long long, Float, Vec3>::Octree(const int& maxPointsPerNode)
+	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
+	{
+		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 42;
+	}
 	
 	//=====================================================================
 	// Type sugars.
@@ -147,7 +192,9 @@ namespace model
 	template <typename Float, typename Vec3>
 	using DeepOctree = Octree<unsigned long, Float, Vec3>; 
 	
-	/** 128-bit morton code octree (42 levels max). */
+	/** 128-bit morton code octree (42 levels max). WARNING: The compiler may complain that unsigned long long
+	 * cannot contain constants used to calculate 128-bit morton codes. That occurs because, by C++ specification, long
+	 * longs can have less than 128 bits. Don't use this type in this case. */
 	template <typename Float, typename Vec3>
 	using DeeperOctree = Octree<unsigned long long, Float, Vec3>; 
 	

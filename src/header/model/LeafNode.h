@@ -21,7 +21,7 @@ namespace model
 	/** Leaf node with a list of points. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	using PointsLeafNode = LeafNode<MortonPrecision, Float, Vec3,
-		vector< PointPtr<Vec3> > >;
+		shared_ptr< vector< PointPtr<Vec3> > > >;
 	
 	/** PointsLeafNode smart pointer. */
 	template <typename MortonPrecision, typename Float, typename Vec3>

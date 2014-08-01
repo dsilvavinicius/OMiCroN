@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
+#include <memory>
 
 using namespace std;
 
@@ -35,8 +36,10 @@ namespace model
 		
 		MortonCode< T > traverseUp() const;
 		vector< MortonCode < T > > traverseDown() const;
-		T spread3(T x);
 	private:
+		/** Spreads the bits to build Morton code. */
+		T spread3(T x);
+		
 		T m_bits;
 	};
 	
@@ -54,10 +57,6 @@ namespace model
 	 * http://stackoverflow.com/a/18528775/1042102 */
 	template <>
 	unsigned long long MortonCode<unsigned long long>::spread3(unsigned long long x);
-	
-	using ShallowMortonCode = MortonCode< unsigned int >;
-	using MediumMortonCode = MortonCode< unsigned long >;
-	using DeepMortonCode = MortonCode< unsigned long long >;
 	
 	template <typename T>
 	void MortonCode<T>::build(const T& x, const T& y, const T& z, const unsigned int& level)
@@ -111,6 +110,13 @@ namespace model
 		
 		return children;
 	}
+	
+	using ShallowMortonCode = MortonCode< unsigned int >;
+	using MediumMortonCode = MortonCode< unsigned long >;
+	using DeepMortonCode = MortonCode< unsigned long long >;
+	
+	template <typename T>
+	using MortonCodePtr = shared_ptr< MortonCode<T> >;
 }
 
 #endif
