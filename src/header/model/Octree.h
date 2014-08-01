@@ -58,6 +58,7 @@ namespace model
 		m_size = make_shared<Vec3>();
 		m_origin = make_shared<Vec3>();
 		m_maxPointsPerNode = maxPointsPerNode;
+		m_hierarchy = make_shared< map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 > > >();
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -106,12 +107,11 @@ namespace model
 						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
 						
 					leafNode->setContents(make_shared< vector< PointPtr< Vec3 > > >());
-					OctreeNodePtr< MortonPrecision, Float, Vec3 > octreeNode = leafNode;
 					
 					MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
 					code->build(x, y, z, m_maxLevel);
 					
-					m_hierarchy[code] = octreeNode;
+					(*m_hierarchy)[code] = leafNode;
 				}
 			}
 		}
@@ -192,9 +192,9 @@ namespace model
 	template <typename Float, typename Vec3>
 	using DeepOctree = Octree<unsigned long, Float, Vec3>; 
 	
-	/** 128-bit morton code octree (42 levels max). WARNING: The compiler may complain that unsigned long long
-	 * cannot contain constants used to calculate 128-bit morton codes. That occurs because, by C++ specification, long
-	 * longs can have less than 128 bits. Don't use this type in this case. */
+	/** 128-bit morton code octree (42 levels max). WARNING: The compiler may complain about unsigned long long
+	 * size. That occurs because, by C++ specification, long longs can have less than 128 bits. Don't use this
+	 * type in this case. */
 	template <typename Float, typename Vec3>
 	using DeeperOctree = Octree<unsigned long long, Float, Vec3>; 
 	
