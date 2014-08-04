@@ -5,11 +5,18 @@
 #include "MortonCode.h"
 #include "OctreeNode.h"
 #include "LeafNode.h"
+#include "MortonComparator.h"
+#include "InnerNode.h"
 
 using namespace std;
 
 namespace model
 {	
+	/** Internal map type used to actualy store the octree. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using OctreeMap = map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 >,
+							MortonComparator<MortonPrecision> >;
+	
 	/** Octree implemented as a hash-map using morton code as explained here:
 	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf.
 	 * 
@@ -37,7 +44,7 @@ namespace model
 		void buildNodes(vector< PointPtr< Vec3 >> points);
 		
 		/** The hierarchy itself. */
-		shared_ptr< map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 > > > m_hierarchy;
+		shared_ptr< OctreeMap<MortonPrecision, Float, Vec3 > > m_hierarchy;
 		
 		/** Octree origin. Can be used to calculate node positions. */
 		shared_ptr<Vec3> m_origin;
@@ -58,7 +65,7 @@ namespace model
 		m_size = make_shared<Vec3>();
 		m_origin = make_shared<Vec3>();
 		m_maxPointsPerNode = maxPointsPerNode;
-		m_hierarchy = make_shared< map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 > > >();
+		m_hierarchy = make_shared< OctreeMap< MortonPrecision, Float, Vec3 > >();
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -95,27 +102,7 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase< MortonPrecision, Float, Vec3 >::buildNodes(
 		vector< PointPtr< Vec3 > > points)
-	{
-		// Creates leaf nodes.
-		for (MortonPrecision x = 0; x < m_maxLevel; ++x)
-		{
-			for (MortonPrecision y = 0; y < m_maxLevel; ++y)
-			{
-				for (MortonPrecision z = 0; z < m_maxLevel; ++z)
-				{
-					PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
-						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
-						
-					leafNode->setContents(vector< PointPtr< Vec3 > >());
-					
-					MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
-					code->build(x, y, z, m_maxLevel);
-					
-					(*m_hierarchy)[code] = leafNode;
-				}
-			}
-		}
-		
+	{	
 		// Puts points inside leaf nodes.
 		for (PointPtr< Vec3 > point : points)
 		{
@@ -124,15 +111,55 @@ namespace model
 			MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
 			code->build((MortonPrecision)index.x, (MortonPrecision)index.y, (MortonPrecision)index.z, m_maxLevel);
 			
-			PointsLeafNodePtr< MortonPrecision, Float, Vec3 > leafNode =
-				dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >((*m_hierarchy)[code]);
-			leafNode->getContents()->push_back(point);
+			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator genericLeaf = m_hierarchy->find(code);
+			if (genericLeaf == m_hierarchy->end())
+			{
+				// Creates leaf node.
+				PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
+						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
+						
+				leafNode->setContents(vector< PointPtr< Vec3 > >());
+				(*m_hierarchy)[code] = leafNode;
+				leafNode->getContents()->push_back(point);
+			}
+			else
+			{
+				// Node already exists. Appends the point there.
+				PointsLeafNodePtr< MortonPrecision, Float, Vec3 > leafNode =
+					dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >(genericLeaf->second);
+				leafNode->getContents()->push_back(point);
+			}
 		}
 		
-		// Creates inner nodes.
-		/*for (MortonPrecision l )
+		// Do a bottom-up per-level construction of inner nodes.
+		for (unsigned int level = m_maxLevel - 1; level > -1; --level)
 		{
-		}*/
+			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
+			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
+			// below the current one. 
+			MortonPrecision mortonLvlBoundary = 1 << 3 * (level + 1) + 1;
+			
+			for (typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator it = m_hierarchy->begin();
+				it->first->getBits() < mortonLvlBoundary || it != m_hierarchy->end(); it++)
+			{
+				MortonCodePtr< MortonPrecision > parentCode = it->first->traverseUp();
+				
+				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator parent =
+					m_hierarchy->find(parentCode);
+					
+				if (parent == m_hierarchy->end())
+				{
+					/*Point<Vec3> 
+					// Creates inner node.
+					LODInnerNodePtr<MortonPrecision, Float, Vec3> node =
+						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
+					node->*/
+				}
+				else
+				{
+				}
+			}
+		}
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -173,21 +200,21 @@ namespace model
 	Octree< unsigned int, Float, Vec3 >::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 10;
+		OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 9; // 0 to 9.
 	}
 	
 	template<typename Float, typename Vec3>
 	Octree<unsigned long, Float, Vec3>::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 21;
+		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 20; // 0 to 21.
 	}
 	
 	template<typename Float, typename Vec3>
 	Octree<unsigned long long, Float, Vec3>::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 42;
+		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 41; // 0 to 41
 	}
 	
 	//=====================================================================

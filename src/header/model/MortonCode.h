@@ -32,31 +32,44 @@ namespace model
 		/** Use this method to inform the code. */
 		void build(const T& codeBits);
 		
+		/** Decodes this morton code into an array of 3 coordinates. */
+		vector<T> decode(const unsigned int& level);
+		
 		T getBits() const;
 		
-		MortonCode< T > traverseUp() const;
-		vector< MortonCode < T > > traverseDown() const;
+		shared_ptr< MortonCode< T > > traverseUp() const;
+		vector< shared_ptr< MortonCode< T > >  > traverseDown() const;
+		
+		template <typename Precision>
+		friend ostream& operator<<(ostream& os, const MortonCode<Precision>& dt);
 	private:
 		/** Spreads the bits to build Morton code. */
 		T spread3(T x);
 		
+		/** Compacts the bits in code to decode it as a coordinate. */
+		T compact3(T x);
+		
 		T m_bits;
 	};
 	
-	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
-	 * http://stackoverflow.com/a/18528775/1042102 */
-	template <>
-	unsigned int MortonCode<unsigned int>::spread3(unsigned int x);
+	//=================
+	// Type sugar.
+	//=================
 	
-	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
-	 * http://stackoverflow.com/a/18528775/1042102 */
-	template <>
-	unsigned long MortonCode<unsigned long>::spread3(unsigned long x);
+	using ShallowMortonCode = MortonCode< unsigned int >;
+	using MediumMortonCode = MortonCode< unsigned long >;
+	using DeepMortonCode = MortonCode< unsigned long long >;
 	
-	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
-	 * http://stackoverflow.com/a/18528775/1042102 */
-	template <>
-	unsigned long long MortonCode<unsigned long long>::spread3(unsigned long long x);
+	using ShallowMortonCodePtr = shared_ptr<ShallowMortonCode>;
+	using MediumMortonCodePtr = shared_ptr<MediumMortonCode>;
+	using DeepMortonCodePtr = shared_ptr<DeepMortonCode>;
+	
+	template <typename T>
+	using MortonCodePtr = shared_ptr< MortonCode<T> >;
+	
+	//===============
+	// Implementation
+	//===============
 	
 	template <typename T>
 	void MortonCode<T>::build(const T& x, const T& y, const T& z, const unsigned int& level)
@@ -75,24 +88,39 @@ namespace model
 	void MortonCode<T>::build(const T& codeBits) { m_bits = codeBits; }
 	
 	template <typename T>
+	vector<T> MortonCode<T>::decode(const unsigned int& level)
+	{
+		vector<T> coords(3);
+		
+		//T bits = m_bits & ((1 << (level * 3)) - 1);
+		
+		coords[0] = compact3(m_bits);
+		coords[1] = compact3(m_bits >> 1);
+		coords[2] = compact3(m_bits >> 2);
+		
+		return coords;
+	}
+	
+	template <typename T>
 	T MortonCode<T>::getBits() const{ return m_bits; }
 	
 	template <typename T>
-	MortonCode<T> MortonCode<T>::traverseUp() const
+	MortonCodePtr<T> MortonCode<T>::traverseUp() const
 	{
 		T bits = getBits() >> 3;
-		MortonCode<T> parentMorton;
-		parentMorton.build(bits);
+		MortonCodePtr<T> parentMorton = make_shared< MortonCode<T> >();
+		parentMorton->build(bits);
 		return parentMorton;
 	}
 	
 	template <typename T>
-	vector< MortonCode< T > >  MortonCode<T>::traverseDown() const
+	vector< MortonCodePtr< T > >  MortonCode<T>::traverseDown() const
 	{
-		vector< MortonCode<T> > children(8);
+		vector< MortonCodePtr<T> > children(8);
 		T bits = getBits();
 		T shifted = bits << 3;
 		
+		// TODO: Code this overflow check as an assert.
 		// Checks for overflow.
 		if(shifted < bits)
 		{
@@ -103,20 +131,49 @@ namespace model
 		
 		for (int i = 0; i < 8; ++i)
 		{
-			MortonCode<T> child;
-			child.build(shifted | i);
+			MortonCodePtr<T> child = make_shared< MortonCode<T> >();
+			child->build(shifted | i);
 			children[i] = child;
 		}
 		
 		return children;
 	}
 	
-	using ShallowMortonCode = MortonCode< unsigned int >;
-	using MediumMortonCode = MortonCode< unsigned long >;
-	using DeepMortonCode = MortonCode< unsigned long long >;
+	template <typename Precision>
+	ostream& operator<<(ostream& os, const MortonCode<Precision>& code)
+	{
+		os << "MortonCode: 0x" << hex << code.m_bits << endl << endl;
+		return os;
+	}
 	
-	template <typename T>
-	using MortonCodePtr = shared_ptr< MortonCode<T> >;
+	//=================
+	// Specializations.
+	//=================
+	
+	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
+	 * http://stackoverflow.com/a/18528775/1042102 */
+	template <>
+	unsigned int MortonCode<unsigned int>::spread3(unsigned int x);
+	
+	template <>
+	unsigned int MortonCode<unsigned int>::compact3(unsigned int x);
+	
+	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
+	 * http://stackoverflow.com/a/18528775/1042102 */
+	template <>
+	unsigned long MortonCode<unsigned long>::spread3(unsigned long x);
+	
+	template <>
+	unsigned long MortonCode<unsigned long>::compact3(unsigned long x);
+	
+	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
+	 * http://stackoverflow.com/a/18528775/1042102 */
+	template <>
+	unsigned long long MortonCode<unsigned long long>::spread3(unsigned long long x);
+	
+	// TODO: Finish this.
+	//template <>
+	//unsigned long long * MortonCode<unsigned long long>::compact3(unsigned long long);
 }
 
 #endif
