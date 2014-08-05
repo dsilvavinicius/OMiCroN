@@ -140,7 +140,7 @@ namespace model
 			MortonPrecision mortonLvlBoundary = 1 << 3 * (level + 1) + 1;
 			
 			for (typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator it = m_hierarchy->begin();
-				it->first->getBits() < mortonLvlBoundary || it != m_hierarchy->end(); it++)
+				it->first->getBits() < mortonLvlBoundary && it != m_hierarchy->end(); it++)
 			{
 				MortonCodePtr< MortonPrecision > parentCode = it->first->traverseUp();
 				
@@ -149,11 +149,11 @@ namespace model
 					
 				if (parent == m_hierarchy->end())
 				{
-					/*Point<Vec3> 
+					PointPtr<Vec3> point = make_shared();
 					// Creates inner node.
 					LODInnerNodePtr<MortonPrecision, Float, Vec3> node =
 						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
-					node->*/
+					node->setContents();
 				}
 				else
 				{
