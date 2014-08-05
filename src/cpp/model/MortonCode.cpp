@@ -43,7 +43,7 @@ namespace model
 	unsigned long MortonCode< unsigned long >::compact3(unsigned long x)
 	{
 		x &= 0x1249249249249249L;
-		x = (x ^ x >> 2) & 0x19d79d79d79d79d7L;
+		x = (x ^ x >> 2) & 0x10c30c30c30c30c3L;
 		x = (x ^ x >> 4) & 0x100f00f00f00f00fL;
 		x = (x ^ x >> 8) & 0x001f0000ff0000ffL;
 		x = (x ^ x >> 16) & 0x001f00000000ffffL;
