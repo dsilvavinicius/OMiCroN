@@ -40,6 +40,9 @@ namespace model
 		shared_ptr< MortonCode< T > > traverseUp() const;
 		vector< shared_ptr< MortonCode< T > >  > traverseDown() const;
 		
+		bool operator==(const MortonCode& other);
+		bool operator!=(const MortonCode& other);
+		
 		template <typename Precision>
 		friend ostream& operator<<(ostream& os, const MortonCode<Precision>& dt);
 	private:
@@ -137,6 +140,18 @@ namespace model
 		}
 		
 		return children;
+	}
+	
+	template <typename T>
+	bool MortonCode< T >::operator==(const MortonCode< T >& other)
+	{
+		return m_bits == other.getBits();
+	}
+	
+	template <typename T>
+	bool MortonCode< T >::operator!=(const MortonCode< T >& other)
+	{
+		return !(m_bits == other.getBits());
 	}
 	
 	template <typename Precision>

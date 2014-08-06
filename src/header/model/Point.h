@@ -16,8 +16,8 @@ namespace model
 	public:
 		Point(const Vec3& color, const Vec3& pos);
 		
-		void operator+(const Point< Float, Vec3 >& other);
-		void operator*(const Float& number);
+		Point< Float, Vec3 > operator+(const Point< Float, Vec3 >& other);
+		Point< Float, Vec3 > operator*(const Float& number);
 		
 		shared_ptr< Vec3 > getColor();
 		shared_ptr< Vec3 > getPos();

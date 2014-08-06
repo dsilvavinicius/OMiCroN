@@ -75,6 +75,12 @@ namespace model
 			ShallowMortonCodePtr morton1 = make_shared<ShallowMortonCode>();
 			morton1->build(1, 1, 1, 2);
 			
+			ShallowMortonCodePtr morton2 = make_shared<ShallowMortonCode>();
+			morton0->build(1, 1, 1, 3);
+			
+			ASSERT_TRUE(*morton0 != *morton1);
+			ASSERT_TRUE(*morton0 == *morton2);
+			
 			ShallowMortonComparator comp;
 			ASSERT_FALSE(comp(morton0, morton1)) << morton0 << " should be greater than " << morton1;
 		}
