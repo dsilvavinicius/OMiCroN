@@ -31,17 +31,23 @@ namespace model
 		OctreeBase(const int& maxPointsPerNode);
 		
 		/** Builds the octree for a given point cloud. */
-		virtual void build(vector< PointPtr< Vec3 > > points);
+		virtual void build(const PointVector< Float, Vec3 >& points);
 		
 		/** Traverses the octree, rendering all necessary points. */
 		virtual void traverse();
 		
 	protected:
 		/** Calculates octree's boundaries. */
-		void buildBoundaries(vector< PointPtr< Vec3 >> points);
+		void buildBoundaries(const PointVector< Float, Vec3 >& points);
 		
 		/** Creates all nodes bottom-up. */
-		void buildNodes(vector< PointPtr< Vec3 >> points);
+		void buildNodes(const PointVector< Float, Vec3 >& points);
+		
+		/** Creates all leaf nodes and put points inside them. */
+		void buildLeaves(const PointVector< Float, Vec3 >& points);
+		
+		/** Creates all inner nodes, with LOD. Bottom-up. */
+		void buildInners();
 		
 		/** The hierarchy itself. */
 		shared_ptr< OctreeMap<MortonPrecision, Float, Vec3 > > m_hierarchy;
@@ -69,7 +75,7 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::build(vector< PointPtr<Vec3> > points)
+	void OctreeBase<MortonPrecision, Float, Vec3>::build(const PointVector< Float, Vec3 >& points)
 	{
 		buildBoundaries(points);
 		buildNodes(points);
@@ -77,14 +83,14 @@ namespace model
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase<MortonPrecision, Float, Vec3>::buildBoundaries(
-		vector< PointPtr<Vec3> > points)
+		const PointVector< Float, Vec3 >& points)
 	{
 		Float negInf = numeric_limits<Float>::min();
 		Float posInf = numeric_limits<Float>::max();
 		Vec3 minCoords(posInf, posInf, posInf);
 		Vec3 maxCoords(negInf, negInf, negInf);
 		
-		for (PointPtr<Vec3> point : points)
+		for (PointPtr< Float, Vec3 > point : points)
 		{
 			shared_ptr<Vec3> pos = point->getPos();
 			
@@ -101,36 +107,47 @@ namespace model
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase< MortonPrecision, Float, Vec3 >::buildNodes(
-		vector< PointPtr< Vec3 > > points)
+		const PointVector< Float, Vec3 >& points)
 	{	
-		// Puts points inside leaf nodes.
-		for (PointPtr< Vec3 > point : points)
+		buildLeaves(points);
+		buildInners();
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	void OctreeBase<MortonPrecision, Float, Vec3>::buildLeaves(const PointVector< Float, Vec3 >& points)
+	{
+		for (PointPtr< Float, Vec3 > point : points)
 		{
 			shared_ptr<Vec3> pos = point->getPos();
 			Vec3 index = ((*pos) - (*m_origin)) / (*m_size);
 			MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
 			code->build((MortonPrecision)index.x, (MortonPrecision)index.y, (MortonPrecision)index.z, m_maxLevel);
 			
-			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator genericLeaf = m_hierarchy->find(code);
-			if (genericLeaf == m_hierarchy->end())
+			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator genericLeafIt = m_hierarchy->find(code);
+			if (genericLeafIt == m_hierarchy->end())
 			{
 				// Creates leaf node.
 				PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
 						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
 						
-				leafNode->setContents(vector< PointPtr< Vec3 > >());
+				leafNode->setContents(PointVector< Float, Vec3 >());
 				(*m_hierarchy)[code] = leafNode;
 				leafNode->getContents()->push_back(point);
 			}
 			else
 			{
 				// Node already exists. Appends the point there.
-				PointsLeafNodePtr< MortonPrecision, Float, Vec3 > leafNode =
-					dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >(genericLeaf->second);
-				leafNode->getContents()->push_back(point);
+				OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode = genericLeafIt->second;
+				shared_ptr< PointVector< Float, Vec3 > > nodePoints =
+					leafNode-> template getContents< PointVector< Float, Vec3 > >();
+				nodePoints->push_back(point);
 			}
 		}
-		
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	void OctreeBase<MortonPrecision, Float, Vec3>::buildInners()
+	{
 		// Do a bottom-up per-level construction of inner nodes.
 		for (unsigned int level = m_maxLevel - 1; level > -1; --level)
 		{
@@ -139,25 +156,36 @@ namespace model
 			// below the current one. 
 			MortonPrecision mortonLvlBoundary = 1 << 3 * (level + 1) + 1;
 			
-			for (typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator it = m_hierarchy->begin();
-				it->first->getBits() < mortonLvlBoundary && it != m_hierarchy->end(); it++)
+			for (typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator childIt = m_hierarchy->begin();
+				childIt->first->getBits() < mortonLvlBoundary && childIt != m_hierarchy->end(); childIt++)
 			{
-				MortonCodePtr< MortonPrecision > parentCode = it->first->traverseUp();
+				MortonCodePtr< MortonPrecision > parentCode = childIt->first->traverseUp();
 				
-				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator parent =
-					m_hierarchy->find(parentCode);
+				//LODInnerNodePtr <MortonPrecision, Float, Vec3> parent;
+				OctreeNodePtr< MortonPrecision, Float, Vec3 > parent;
+				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator parentIt = m_hierarchy->find(parentCode);
 					
-				if (parent == m_hierarchy->end())
+				if (parentIt == m_hierarchy->end())
 				{
-					PointPtr<Vec3> point = make_shared();
 					// Creates inner node.
-					LODInnerNodePtr<MortonPrecision, Float, Vec3> node =
+					LODInnerNodePtr< MortonPrecision, Float, Vec3 > innerNode =
 						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
-					node->setContents();
+					parent = static_pointer_cast< OctreeNode< MortonPrecision, Float, Vec3 > >(innerNode);
 				}
 				else
 				{
+					//parent = dynamic_pointer_cast< LODInnerNode< MortonPrecision, Float, Vec3 > >(parentIt->second);
+					parent = parentIt->second;
 				}
+					
+				// Points to be accumulated for LOD.
+				vector< Point< Float, Vec3 > > childrenPoints = vector< Point< Float, Vec3 > >(); 
+				
+				/*if (childIt->second)
+				while (dynamic_pointer_cast<  >(it.next()->first))
+				else
+				{
+				}*/
 			}
 		}
 	}

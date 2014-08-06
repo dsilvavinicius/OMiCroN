@@ -8,9 +8,11 @@ using namespace glm;
 
 namespace model
 {
-	template < typename MortonPrecision, typename Float, typename Vec3,
-		typename Contents >
-	class InnerNode : OctreeNode<MortonPrecision, Float, Vec3>
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	class OctreeNode;
+	
+	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
+	class InnerNode : public OctreeNode<MortonPrecision, Float, Vec3>
 	{
 	public:
 		bool isLeaf();
@@ -20,23 +22,20 @@ namespace model
 		shared_ptr< Contents > m_contents;
 	};
 	
-	template < typename MortonPrecision, typename Float, typename Vec3,
-		typename Contents>
+	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents>
 	bool InnerNode<MortonPrecision, Float, Vec3, Contents>::isLeaf()
 	{
 		return false;
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3,
-		typename Contents>
+	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents>
 	void InnerNode<MortonPrecision, Float, Vec3, Contents>::setContents(
 		const Contents& contents)
 	{
 		m_contents = make_shared< Contents >(contents);
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3,
-		typename Contents>
+	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents>
 	shared_ptr< Contents > InnerNode<MortonPrecision, Float, Vec3, Contents>::
 		getContents()
 	{
@@ -45,7 +44,7 @@ namespace model
 	
 	/** Inner node with one vertex as LOD. */
 	template < typename MortonPrecision, typename Float, typename Vec3>
-	using LODInnerNode = InnerNode<MortonPrecision, Float, Vec3, Point<Vec3> >;
+	using LODInnerNode = InnerNode<MortonPrecision, Float, Vec3, Point< Float, Vec3 > >;
 	
 	/** Smart pointer for LODInnerNode. */ 
 	template < typename MortonPrecision, typename Float, typename Vec3>
