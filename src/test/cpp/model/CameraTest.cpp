@@ -24,7 +24,8 @@ namespace model
 			CameraPtr m_camera;
 		};
 
-		TEST_F(CameraTest, Creation_And_Operations) {
+		TEST_F(CameraTest, Creation_And_Operations)
+		{
 			vec3::bool_type test = epsilonEqual(m_camera->getForward(), vec3(-1.f, 0.f, 0.f), 1.0e-2f);
 			ASSERT_TRUE (test.x && test.y && test.z);
 			

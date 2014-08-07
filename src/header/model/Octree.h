@@ -16,9 +16,13 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	using OctreeMap = map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 >,
 							MortonComparator<MortonPrecision> >;
+							
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using OctreeMapPtr = shared_ptr< OctreeMap< MortonPrecision, Float, Vec3 > >;
 	
-	/** Octree implemented as a hash-map using morton code as explained here:
-	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf.
+	/** Base Octree implemented as a hash-map using morton code as explained here:
+	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf. All parts of construction and traversal are free
+	 * for reimplementation of derived classes.
 	 * 
 	 * MortonPrecision is the precision of the morton code for nodes.
 	 * Float is the glm type specifying the floating point type / precision.
@@ -36,19 +40,33 @@ namespace model
 		/** Traverses the octree, rendering all necessary points. */
 		virtual void traverse();
 		
+		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy();
+		
+		/** Gets the origin, which is the point contained in octree with minimun coordinates for all axis. */
+		virtual shared_ptr< Vec3 > getOrigin();
+		
+		/** Gets the size of the octree, which is the extents in each axis from origin representing the space that the octree occupies. */
+		virtual shared_ptr< Vec3 > getSize();
+		
+		/** Gets the maximum number of points that can be inside an octree node. */
+		virtual unsigned int getMaxPointsPerNode();
+		
+		/** Gets the maximum level that this octree can reach. */
+		virtual unsigned int getMaxLevel();
+		
 	protected:
 		/** Calculates octree's boundaries. */
-		void buildBoundaries(const PointVector< Float, Vec3 >& points);
+		virtual void buildBoundaries(const PointVector< Float, Vec3 >& points);
 		
 		/** Creates all nodes bottom-up. */
-		void buildNodes(const PointVector< Float, Vec3 >& points);
+		virtual void buildNodes(const PointVector< Float, Vec3 >& points);
 		
 		/** Creates all leaf nodes and put points inside them. */
-		void buildLeaves(const PointVector< Float, Vec3 >& points);
+		virtual void buildLeaves(const PointVector< Float, Vec3 >& points);
 		
 		/** Creates all inner nodes, with LOD. Bottom-up. If a node has only leaf chilren and the accumulated number of
 		 * children points is less than a threshold, the children is merged into parent. */
-		void buildInners();
+		virtual void buildInners();
 		
 		/** Utility: appends the points of a child node into a vector, incrementing the number of parent's children and
 		 * leaves. */
@@ -56,16 +74,16 @@ namespace model
 								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves);
 		
 		/** The hierarchy itself. */
-		shared_ptr< OctreeMap< MortonPrecision, Float, Vec3 > > m_hierarchy;
+		OctreeMapPtr< MortonPrecision, Float, Vec3 > m_hierarchy;
 		
-		/** Octree origin. Can be used to calculate node positions. */
+		/** Octree origin, which is the point contained in octree with minimum coordinates for all axis. */
 		shared_ptr<Vec3> m_origin;
 		
 		/** Spatial size of the octree. */
 		shared_ptr<Vec3> m_size;
 		
 		/** Maximum number of points per node. */
-		int m_maxPointsPerNode;
+		unsigned int m_maxPointsPerNode;
 		
 		/** Maximum level of this octree. */
 		unsigned int m_maxLevel;
@@ -244,6 +262,28 @@ namespace model
 	{
 		
 	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	OctreeMapPtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getHierarchy()
+	{
+		return m_hierarchy;
+	}
+		
+	/** Gets the origin, which is the point contained in octree with minimun coordinates for all axis. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getOrigin() { return m_origin; }
+		
+	/** Gets the size of the octree, which is the extents in each axis from origin representing the space that the octree occupies. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getSize() { return m_size; }
+		
+	/** Gets the maximum number of points that can be inside an octree node. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxPointsPerNode() { return m_maxPointsPerNode; }
+		
+	/** Gets the maximum level that this octree can reach. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxLevel() { return m_maxLevel; }
 	
 	//=====================================================================
 	// Specializations.

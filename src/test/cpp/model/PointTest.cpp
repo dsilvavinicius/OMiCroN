@@ -15,7 +15,8 @@ namespace model
 			void SetUp() {}
 		};
 
-		TEST_F(PointTest, Add_operation) {
+		TEST_F(PointTest, Add_operation)
+		{
 			Point< float, vec3 > point0 = Point< float, vec3 >(vec3(1.f, 2.f ,3.f), vec3(4.f, 5.f, 6.f));
 			Point< float, vec3 > point1 = Point< float, vec3 >(vec3(10.f, 11.f ,12.f), vec3(13.f, 14.f, 15.f));
 			Point< float, vec3 > point2 = Point< float, vec3 >(vec3(20.f, 21.f ,21.f), vec3(23.f, 24.f, 25.f));
