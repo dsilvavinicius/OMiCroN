@@ -76,7 +76,7 @@ namespace model
 			morton1->build(1, 1, 1, 2);
 			
 			ShallowMortonCodePtr morton2 = make_shared<ShallowMortonCode>();
-			morton0->build(1, 1, 1, 3);
+			morton2->build(1, 1, 1, 3);
 			
 			ASSERT_TRUE(*morton0 != *morton1);
 			ASSERT_TRUE(*morton0 == *morton2);

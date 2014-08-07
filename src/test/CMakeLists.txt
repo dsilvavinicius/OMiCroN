@@ -10,6 +10,7 @@ add_subdirectory (gtest/)
 # Adds the executable
 add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/PointTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/main.cpp)

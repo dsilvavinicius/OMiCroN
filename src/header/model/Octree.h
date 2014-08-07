@@ -207,14 +207,14 @@ namespace model
 					{
 						accumulated = accumulated + (*point);
 					}
-					accumulated = accumulated * (1 / childrenPoints.size());
+					accumulated = accumulated.multiply(1 / (Float)childrenPoints.size());
 					
 					// Creates leaf to replace children.
 					LODInnerNodePtr< MortonPrecision, Float, Vec3 > LODNode =
-						make_shared< LODInnerNodePtr< MortonPrecision, Float, Vec3 > >();
+						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
 					LODNode->setContents(accumulated);
 					
-					m_hierarchy[parentCode] = LODNode;
+					(*m_hierarchy)[parentCode] = LODNode;
 				}
 			}
 		}
@@ -228,13 +228,13 @@ namespace model
 		++numChildren;
 		if (node->isLeaf())
 		{
-			PointVectorPtr< Float, Vec3 > childPoints = node->getContents();
+			PointVectorPtr< Float, Vec3 > childPoints = node-> template getContents< PointVector< Float, Vec3 > >();
 			vec.insert(vec.end(), childPoints->begin(), childPoints->end());
 			++numLeaves;
 		}
 		else
 		{
-			PointPtr< Float, Vec3 > LODPoint = node->getContents();
+			PointPtr< Float, Vec3 > LODPoint = node-> template getContents< Point< Float, Vec3 > >();
 			vec.push_back(LODPoint);
 		}
 	}
