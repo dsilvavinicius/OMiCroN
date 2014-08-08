@@ -7,19 +7,13 @@
 #include "LeafNode.h"
 #include "MortonComparator.h"
 #include "InnerNode.h"
+#include "OctreeTypes.h"
+#include "OctreeMapTypes.h"
 
 using namespace std;
 
 namespace model
 {	
-	/** Internal map type used to actualy store the octree. */
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	using OctreeMap = map< MortonCodePtr<MortonPrecision>, OctreeNodePtr< MortonPrecision, Float, Vec3 >,
-							MortonComparator<MortonPrecision> >;
-							
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	using OctreeMapPtr = shared_ptr< OctreeMap< MortonPrecision, Float, Vec3 > >;
-	
 	/** Base Octree implemented as a hash-map using morton code as explained here:
 	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf. All parts of construction and traversal are free
 	 * for reimplementation of derived classes.
@@ -109,7 +103,7 @@ namespace model
 	void OctreeBase<MortonPrecision, Float, Vec3>::buildBoundaries(
 		const PointVector< Float, Vec3 >& points)
 	{
-		Float negInf = numeric_limits<Float>::min();
+		Float negInf = -numeric_limits<Float>::max();
 		Float posInf = numeric_limits<Float>::max();
 		Vec3 minCoords(posInf, posInf, posInf);
 		Vec3 maxCoords(negInf, negInf, negInf);
@@ -333,28 +327,6 @@ namespace model
 	{
 		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 41; // 0 to 41
 	}
-	
-	//=====================================================================
-	// Type sugars.
-	//=====================================================================
-	
-	/** 32-bit morton code octree (10 levels max). */
-	template <typename Float, typename Vec3>
-	using ShallowOctree = Octree<unsigned int, Float, Vec3>;
-	
-	/** 64-bit morton code octree (21 levels max). */
-	template <typename Float, typename Vec3>
-	using DeepOctree = Octree<unsigned long, Float, Vec3>; 
-	
-	/** 128-bit morton code octree (42 levels max). WARNING: The compiler may complain about unsigned long long
-	 * size. That occurs because, by C++ specification, long longs can have less than 128 bits. Don't use this
-	 * type in this case. */
-	template <typename Float, typename Vec3>
-	using DeeperOctree = Octree<unsigned long long, Float, Vec3>; 
-	
-	/** Octree smart pointer. */
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	using OctreePtr = shared_ptr< Octree < MortonPrecision, Float, Vec3 >>;
 }
 
 #endif
