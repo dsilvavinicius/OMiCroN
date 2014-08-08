@@ -34,19 +34,22 @@ namespace model
 		/** Traverses the octree, rendering all necessary points. */
 		virtual void traverse();
 		
-		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy();
+		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
 		/** Gets the origin, which is the point contained in octree with minimun coordinates for all axis. */
-		virtual shared_ptr< Vec3 > getOrigin();
+		virtual shared_ptr< Vec3 > getOrigin() const;
 		
 		/** Gets the size of the octree, which is the extents in each axis from origin representing the space that the octree occupies. */
-		virtual shared_ptr< Vec3 > getSize();
+		virtual shared_ptr< Vec3 > getSize() const;
 		
 		/** Gets the maximum number of points that can be inside an octree node. */
-		virtual unsigned int getMaxPointsPerNode();
+		virtual unsigned int getMaxPointsPerNode() const;
 		
 		/** Gets the maximum level that this octree can reach. */
-		virtual unsigned int getMaxLevel();
+		virtual unsigned int getMaxLevel() const;
+		
+		template <typename M, typename F, typename V>
+		friend ostream& operator<<(ostream& out, const OctreeBase< M, F, V >& octree);
 		
 	protected:
 		/** Calculates octree's boundaries. */
@@ -258,26 +261,51 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	OctreeMapPtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getHierarchy()
+	OctreeMapPtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getHierarchy() const
 	{
 		return m_hierarchy;
 	}
 		
 	/** Gets the origin, which is the point contained in octree with minimun coordinates for all axis. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getOrigin() { return m_origin; }
+	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getOrigin() const { return m_origin; }
 		
 	/** Gets the size of the octree, which is the extents in each axis from origin representing the space that the octree occupies. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getSize() { return m_size; }
+	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getSize() const { return m_size; }
 		
 	/** Gets the maximum number of points that can be inside an octree node. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxPointsPerNode() { return m_maxPointsPerNode; }
+	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxPointsPerNode() const { return m_maxPointsPerNode; }
 		
 	/** Gets the maximum level that this octree can reach. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxLevel() { return m_maxLevel; }
+	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxLevel() const { return m_maxLevel; }
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	ostream& operator<<(ostream& out, const OctreeBase< MortonPrecision, Float, Vec3 >& octree)
+	{
+		out << "Octree: " << endl << endl;
+		OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy = octree.getHierarchy();
+		for (auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt)
+		{
+			MortonCodePtr< MortonPrecision > code = nodeIt->first;
+			OctreeNodePtr< MortonPrecision, Float, Vec3 > genericNode = nodeIt->second;
+			if (genericNode->isLeaf())
+			{
+				auto node = dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >(genericNode);
+				out << *code << *node;
+			}
+			else
+			{
+				auto node = dynamic_pointer_cast< LODInnerNode< MortonPrecision, Float, Vec3 > >(genericNode);
+				out << *code << *node;
+			}
+			
+		}
+		out << endl;
+		return out;
+	}
 	
 	//=====================================================================
 	// Specializations.

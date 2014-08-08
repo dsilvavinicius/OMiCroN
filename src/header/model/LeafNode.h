@@ -11,18 +11,33 @@ namespace model
 	
 	template < typename MortonPrecision, typename Float, typename Vec3,
 		typename Contents >
+	class LeafNode;
+	
+	/** Leaf node with a list of points. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using PointsLeafNode = LeafNode< MortonPrecision, Float, Vec3, PointVector< Float, Vec3 > >;
+	
+	/** PointsLeafNode smart pointer. */
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	using PointsLeafNodePtr = shared_ptr< PointsLeafNode< MortonPrecision, Float, Vec3 > >;
+	
+	template < typename MortonPrecision, typename Float, typename Vec3,
+		typename Contents >
 	class LeafNode : public OctreeNode< MortonPrecision, Float, Vec3 >
 	{
 	public:
-		bool isLeaf();
+		bool isLeaf() const;
 		void setContents(const Contents& contents);
-		shared_ptr< Contents > getContents();
+		shared_ptr< Contents > getContents() const;
+		
+		template <typename M, typename F, typename V>
+		friend ostream& operator<<(ostream& out, const PointsLeafNode< M, F, V >& node);
 	private:
 		shared_ptr< Contents > m_contents;
 	};
 	
 	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	bool LeafNode<MortonPrecision, Float, Vec3, Contents>::isLeaf()
+	bool LeafNode<MortonPrecision, Float, Vec3, Contents>::isLeaf() const
 	{
 		return true;
 	}
@@ -36,18 +51,22 @@ namespace model
 	
 	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	shared_ptr< Contents > LeafNode<MortonPrecision, Float, Vec3, Contents>::
-		getContents()
+		getContents() const
 	{
 		return m_contents;
 	}
 	
-	/** Leaf node with a list of points. */
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	using PointsLeafNode = LeafNode< MortonPrecision, Float, Vec3, PointVector< Float, Vec3 > >;
-	
-	/** PointsLeafNode smart pointer. */
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	using PointsLeafNodePtr = shared_ptr< PointsLeafNode< MortonPrecision, Float, Vec3 > >;
+	template < typename MortonPrecision, typename Float, typename Vec3 >
+	ostream& operator<<(ostream& out, const PointsLeafNode< MortonPrecision, Float, Vec3 >& node)
+	{
+		out << "Points Leaf Node: " << endl;
+		for (PointPtr< Float, Vec3 > point : *node.getContents())
+		{
+			out << *point << endl;
+		}
+		out << endl;
+		return out;
+	}
 }
 
 #endif

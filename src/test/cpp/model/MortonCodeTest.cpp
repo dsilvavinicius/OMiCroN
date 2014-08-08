@@ -69,13 +69,13 @@ namespace model
 		
 		TEST_F(MortonCodeTest, Comparison)
 		{
-			ShallowMortonCodePtr morton0 = make_shared<ShallowMortonCode>();
+			auto morton0 = make_shared< ShallowMortonCode >();
 			morton0->build(1, 1, 1, 3);
 			
-			ShallowMortonCodePtr morton1 = make_shared<ShallowMortonCode>();
+			auto morton1 = make_shared< ShallowMortonCode >();
 			morton1->build(1, 1, 1, 2);
 			
-			ShallowMortonCodePtr morton2 = make_shared<ShallowMortonCode>();
+			auto morton2 = make_shared< ShallowMortonCode >();
 			morton2->build(1, 1, 1, 3);
 			
 			ASSERT_TRUE(*morton0 != *morton1);
@@ -91,7 +91,7 @@ namespace model
 			unsigned int coords[3] = { 7, 5, 0 };
 			ShallowMortonCode shallowMorton;
 			shallowMorton.build(coords[0], coords[1], coords[2], level);
-			vector<unsigned int> decoded = shallowMorton.decode(level);
+			vector< unsigned int > decoded = shallowMorton.decode(level);
 			
 			ASSERT_EQ(decoded[0], coords[0]);
 			ASSERT_EQ(decoded[1], coords[1]);
@@ -101,7 +101,7 @@ namespace model
 			unsigned int coordsL[3] = { 5000, 6000, 7000 };
 			MediumMortonCode mediumMorton;
 			mediumMorton.build(coordsL[0], coordsL[1], coordsL[2], level);
-			vector<unsigned long> decodedL = mediumMorton.decode(level);
+			vector< unsigned long > decodedL = mediumMorton.decode(level);
 			
 			ASSERT_EQ(decodedL[0], coordsL[0]);
 			ASSERT_EQ(decodedL[1], coordsL[1]);

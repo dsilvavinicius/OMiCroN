@@ -21,7 +21,7 @@ namespace model
 	{
 	public:
 		/** Indicates the type of the node. */
-		virtual bool isLeaf() = 0;
+		virtual bool isLeaf() const = 0;
 		
 		/** Sets the contents of this node. Implies dynamic_cast downawards hierarchy. */
 		template <typename Contents>
@@ -29,7 +29,10 @@ namespace model
 		
 		/** Gets the contents of this node. Implies dynamic_cast downawards hierarchy. */
 		template <typename Contents>
-		shared_ptr< Contents > getContents();
+		shared_ptr< Contents > getContents() const;
+		
+		template <typename M, typename F, typename V, typename C>
+		friend ostream& operator<<(ostream& out, const OctreeNode< M, F, V >& node);
 	protected:
 		shared_ptr< Octree< MortonPrecision, Float, Vec3 > > m_octree;
 	};
@@ -56,26 +59,61 @@ namespace model
 		
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	template <typename Contents>
-	shared_ptr< Contents > OctreeNode< MortonPrecision, Float, Vec3 >::getContents()
+	shared_ptr< Contents > OctreeNode< MortonPrecision, Float, Vec3 >::getContents() const
 	{
 		if (isLeaf())
 		{
-			LeafNode< MortonPrecision, Float, Vec3, Contents >* node =
-				dynamic_cast< LeafNode< MortonPrecision, Float, Vec3, Contents >* >(this);
+			const LeafNode< MortonPrecision, Float, Vec3, Contents >* node =
+				dynamic_cast< const LeafNode< MortonPrecision, Float, Vec3, Contents >* >(this);
 			
 			return node->getContents();
 		}
 		else
 		{
-			InnerNode< MortonPrecision, Float, Vec3, Contents >* node =
-				dynamic_cast< InnerNode< MortonPrecision, Float, Vec3, Contents >* >(this);
+			const InnerNode< MortonPrecision, Float, Vec3, Contents >* node =
+				dynamic_cast< const InnerNode< MortonPrecision, Float, Vec3, Contents >* >(this);
 			
 			return node->getContents();
 		}
 	}
 	
+	template <typename MortonPrecision, typename Float, typename Vec3, typename Contents>
+	ostream& operator<<(ostream& out, const OctreeNode< MortonPrecision, Float, Vec3 >& node)
+	{
+		if (node.isLeaf())
+		{
+			auto* leaf = dynamic_cast< LeafNode< MortonPrecision, Float, Vec3, Contents> >(&node);
+			out << *leaf;
+		}
+		else
+		{
+			auto* inner = dynamic_cast< InnerNode< MortonPrecision, Float, Vec3, Contents > >(&node);
+			out << inner;
+		}
+		
+		return out;
+	}
+	
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	using OctreeNodePtr = shared_ptr< OctreeNode<MortonPrecision, Float, Vec3> >;
+	
+	template <typename Float, typename Vec3>
+	using ShallowOctreeNode = OctreeNode< unsigned int, Float, Vec3 >;
+	
+	template <typename Float, typename Vec3>
+	using ShallowOctreeNodePtr = shared_ptr< ShallowOctreeNode <Float, Vec3> >;
+	
+	template <typename Float, typename Vec3>
+	using MediumOctreeNode = OctreeNode< unsigned long, Float, Vec3 >;
+	
+	template <typename Float, typename Vec3>
+	using MediumOctreeNodePtr = shared_ptr< MediumOctreeNode< Float, Vec3 > >;
+	
+	template <typename Float, typename Vec3>
+	using DeepOctreeNode = OctreeNode< unsigned long long, Float, Vec3 >;
+	
+	template <typename Float, typename Vec3>
+	using DeepOctreeNodePtr = shared_ptr< DeepOctreeNode< Float, Vec3 > >;
 }
 
 #endif
