@@ -33,7 +33,7 @@ namespace model
 		void build(const T& codeBits);
 		
 		/** Decodes this morton code into an array of 3 coordinates. */
-		vector<T> decode(const unsigned int& level);
+		vector<T> decode(const unsigned int& level) const;
 		
 		T getBits() const;
 		
@@ -50,7 +50,7 @@ namespace model
 		T spread3(T x);
 		
 		/** Compacts the bits in code to decode it as a coordinate. */
-		T compact3(T x);
+		T compact3(T x) const;
 		
 		T m_bits;
 	};
@@ -91,11 +91,9 @@ namespace model
 	void MortonCode<T>::build(const T& codeBits) { m_bits = codeBits; }
 	
 	template <typename T>
-	vector<T> MortonCode<T>::decode(const unsigned int& level)
+	vector<T> MortonCode<T>::decode(const unsigned int& level) const
 	{
 		vector<T> coords(3);
-		
-		//T bits = m_bits & ((1 << (level * 3)) - 1);
 		
 		coords[0] = compact3(m_bits);
 		coords[1] = compact3(m_bits >> 1);
@@ -157,7 +155,21 @@ namespace model
 	template <typename Precision>
 	ostream& operator<<(ostream& os, const MortonCode<Precision>& code)
 	{
-		os << "MortonCode: 0x" << hex << code.m_bits << endl << endl;
+		// Finds the MortonCode level.
+		int numBits = sizeof(Precision) * 8;
+		int level = numBits / 3;
+		Precision bits = code.getBits();
+		
+		for (int i = numBits - 1; i > 0; i = i - 3)
+		{
+			if (bits & ((Precision)1 << i) != 0) { break; }
+			--level;
+		}
+		
+		vector< Precision > decoded = code.decode(level);
+		os 	<< "MortonCode: " << endl << "level = " << level << endl
+			<< "coords = {" << decoded[0] << ", " << decoded[1] << ", " << decoded[2] << "}" << endl
+			<< "0x" << hex << code.m_bits << endl << endl;
 		return os;
 	}
 	
@@ -171,7 +183,7 @@ namespace model
 	unsigned int MortonCode<unsigned int>::spread3(unsigned int x);
 	
 	template <>
-	unsigned int MortonCode<unsigned int>::compact3(unsigned int x);
+	unsigned int MortonCode<unsigned int>::compact3(unsigned int x) const;
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
@@ -179,7 +191,7 @@ namespace model
 	unsigned long MortonCode<unsigned long>::spread3(unsigned long x);
 	
 	template <>
-	unsigned long MortonCode<unsigned long>::compact3(unsigned long x);
+	unsigned long MortonCode<unsigned long>::compact3(unsigned long x) const;
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
@@ -188,7 +200,7 @@ namespace model
 	
 	// TODO: Finish this.
 	//template <>
-	//unsigned long long * MortonCode<unsigned long long>::compact3(unsigned long long);
+	//unsigned long long * MortonCode<unsigned long long>::compact3(unsigned long long) const;
 }
 
 #endif

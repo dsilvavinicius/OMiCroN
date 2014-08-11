@@ -15,7 +15,7 @@ namespace model
 	}
 	
 	template <>
-	unsigned int MortonCode< unsigned int >::compact3(unsigned int x)
+	unsigned int MortonCode< unsigned int >::compact3(unsigned int x) const
 	{
 		x &= 0x09249249;
 		x = (x ^ (x >>  2)) & 0x030c30c3;
@@ -40,7 +40,7 @@ namespace model
 	}
 	
 	template <>
-	unsigned long MortonCode< unsigned long >::compact3(unsigned long x)
+	unsigned long MortonCode< unsigned long >::compact3(unsigned long x) const
 	{
 		x &= 0x1249249249249249L;
 		x = (x ^ x >> 2) & 0x10c30c30c30c30c3L;
@@ -68,7 +68,7 @@ namespace model
 	
 	// TODO: Finish this (so boring!).
 	/*template <>
-	unsigned long long MortonCode< unsigned long long >::compact3(unsigned long long x)
+	unsigned long long MortonCode< unsigned long long >::compact3(unsigned long long x) const
 	{
 		x &= 0x3ffffffffffLL;
 		x = (x | x << 64) & 0x3ff0000000000000000ffffffffLL;

@@ -85,7 +85,7 @@ namespace model
 			
 			vec3 origin = *octree->getOrigin();
 			vec3 size = *octree->getSize();
-			vec3 leafSize = size * (1.f / (octree->getMaxLevel() + 1));
+			vec3 leafSize = *octree->getLeafSize();
 			
 			ASSERT_TRUE(glm::all(glm::equal(origin, vec3(-14.f, -31.f, -51.f))));
 			ASSERT_TRUE(glm::all(glm::equal(size, vec3(60.f, 46.f, 75.f))));
