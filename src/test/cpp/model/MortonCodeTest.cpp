@@ -97,11 +97,23 @@ namespace model
 			ASSERT_EQ(decoded[1], coords[1]);
 			ASSERT_EQ(decoded[2], coords[2]);
 			
+			decoded = shallowMorton.decode();
+			
+			ASSERT_EQ(decoded[0], coords[0]);
+			ASSERT_EQ(decoded[1], coords[1]);
+			ASSERT_EQ(decoded[2], coords[2]);
+			
 			level = 21;
 			unsigned int coordsL[3] = { 5000, 6000, 7000 };
 			MediumMortonCode mediumMorton;
 			mediumMorton.build(coordsL[0], coordsL[1], coordsL[2], level);
 			vector< unsigned long > decodedL = mediumMorton.decode(level);
+			
+			ASSERT_EQ(decodedL[0], coordsL[0]);
+			ASSERT_EQ(decodedL[1], coordsL[1]);
+			ASSERT_EQ(decodedL[2], coordsL[2]);
+			
+			decodedL = mediumMorton.decode();
 			
 			ASSERT_EQ(decodedL[0], coordsL[0]);
 			ASSERT_EQ(decodedL[1], coordsL[1]);

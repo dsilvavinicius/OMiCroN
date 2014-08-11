@@ -19,14 +19,16 @@ macro (setup_package package)
 endmacro (setup_package)
 
 # Creates the same source groups for library and tests.
-macro (create_source_groups ui_dir model_dir)
+macro (create_source_groups ui_dir model_dir util_dir)
 	# Creating file groups
 	# Specifying sources.
 	file (GLOB_RECURSE UI ${ui_dir}/*)
 	file (GLOB_RECURSE MODEL ${model_dir}/*)
+	file (GLOB_RECURSE UTIL ${util_dir}/*)
 	# Creating source groups.
 	source_group (ui FILES ${UI})
 	source_group (model FILES ${MODEL})
+	source_group (util FILES ${UTIL})
 endmacro (create_source_groups)
 
 # Adding package finders directory.
@@ -44,8 +46,9 @@ set (CPP_DIR "cpp")
 
 set (UI_DIR "ui")
 set (MODEL_DIR "model")
+set (UTIL_DIR "util")
 
-create_source_groups (UI_DIR MODEL_DIR)
+create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
 setup_package(OpenGL)
 setup_package(GLM)
@@ -60,7 +63,8 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
 
 	${HEADER_DIR}/${UI_DIR}/
-	${HEADER_DIR}/${MODEL_DIR}/)
+	${HEADER_DIR}/${MODEL_DIR}/
+	${HEADER_DIR}/${UTIL_DIR}/)
 
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
@@ -73,7 +77,9 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/OctreeNode.h
 	${HEADER_DIR}/${MODEL_DIR}/InnerNode.h
 	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h
-	${HEADER_DIR}/${MODEL_DIR}/Point.h)
+	${HEADER_DIR}/${MODEL_DIR}/Point.h
+	
+	${HEADER_DIR}/${UTIL_DIR}/Stream.h)
 
 # Qt 5 modules.
 target_link_libraries (Point_Based_Renderer_Lib Qt5::Core

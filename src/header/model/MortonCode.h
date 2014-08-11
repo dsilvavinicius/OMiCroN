@@ -6,11 +6,30 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <glm/ext.hpp>
 
 using namespace std;
 
 namespace model
 {
+	// Forward declaration.
+	template <typename T> class MortonCode;
+	
+	//=================
+	// Type sugar.
+	//=================
+	
+	using ShallowMortonCode = MortonCode< unsigned int >;
+	using MediumMortonCode = MortonCode< unsigned long >;
+	using DeepMortonCode = MortonCode< unsigned long long >;
+	
+	using ShallowMortonCodePtr = shared_ptr<ShallowMortonCode>;
+	using MediumMortonCodePtr = shared_ptr<MediumMortonCode>;
+	using DeepMortonCodePtr = shared_ptr<DeepMortonCode>;
+	
+	template <typename T>
+	using MortonCodePtr = shared_ptr< MortonCode<T> >;
+	
 	/** Morton code designed for use as an octree node index, represented by interleaving the bits of the node coordinate.
 	 * To avoid collision of node indices, the code for a given node at level l in the Octree only considers the first
 	 * l groups of interleaved bits. Also an 1 is concatenated at the end of the code to disambiguate with other
@@ -32,8 +51,16 @@ namespace model
 		/** Use this method to inform the code. */
 		void build(const T& codeBits);
 		
-		/** Decodes this morton code into an array of 3 coordinates. */
+		/** Decodes this morton code into an array of 3 coordinates. Use this when the level of code is known
+		 * a priori. */
 		vector<T> decode(const unsigned int& level) const;
+		
+		/** Decodes this morton code into an array of 3 coordinates. Use this when the level of the code is
+		 * unknown (slower). */
+		vector<T> decode() const;
+		
+		/** Computes the level of this code. */
+		unsigned int getLevel() const;
 		
 		T getBits() const;
 		
@@ -43,8 +70,12 @@ namespace model
 		bool operator==(const MortonCode& other);
 		bool operator!=(const MortonCode& other);
 		
+		/** Prints the nodes in the path from this node to the root node.
+		 * @param simple indicates that the node should be printed in a simpler representation. */
+		void printPathToRoot(ostream& out, bool simple);
+		
 		template <typename Precision>
-		friend ostream& operator<<(ostream& os, const MortonCode<Precision>& dt);
+		friend ostream& operator<<(ostream& out, const MortonCode<Precision>& dt);
 	private:
 		/** Spreads the bits to build Morton code. */
 		T spread3(T x);
@@ -54,21 +85,6 @@ namespace model
 		
 		T m_bits;
 	};
-	
-	//=================
-	// Type sugar.
-	//=================
-	
-	using ShallowMortonCode = MortonCode< unsigned int >;
-	using MediumMortonCode = MortonCode< unsigned long >;
-	using DeepMortonCode = MortonCode< unsigned long long >;
-	
-	using ShallowMortonCodePtr = shared_ptr<ShallowMortonCode>;
-	using MediumMortonCodePtr = shared_ptr<MediumMortonCode>;
-	using DeepMortonCodePtr = shared_ptr<DeepMortonCode>;
-	
-	template <typename T>
-	using MortonCodePtr = shared_ptr< MortonCode<T> >;
 	
 	//===============
 	// Implementation
@@ -100,6 +116,29 @@ namespace model
 		coords[2] = compact3(m_bits >> 2);
 		
 		return coords;
+	}
+	
+	template <typename T>
+	vector<T> MortonCode<T>::decode() const
+	{
+		unsigned int level = getLevel();
+		return decode(level);
+	}
+	
+	template <typename T>
+	unsigned int MortonCode<T>::getLevel() const
+	{
+		// Finds the MortonCode level.
+		unsigned int numBits = sizeof(T) * 8;
+		T bits = getBits();
+		unsigned int level = 0;
+		for (level = numBits / 3; level > 0; --level)
+		{
+			unsigned int shift = level * 3;
+			if ((bits & ((T)1 << shift)) != 0) { break; }
+		}
+		
+		return level;
 	}
 	
 	template <typename T>
@@ -152,25 +191,41 @@ namespace model
 		return !(m_bits == other.getBits());
 	}
 	
-	template <typename Precision>
-	ostream& operator<<(ostream& os, const MortonCode<Precision>& code)
-	{
-		// Finds the MortonCode level.
-		int numBits = sizeof(Precision) * 8;
-		int level = numBits / 3;
-		Precision bits = code.getBits();
-		
-		for (int i = numBits - 1; i > 0; i = i - 3)
+	template <typename T>
+	void MortonCode< T >::printPathToRoot(ostream& out, bool simple)
 		{
-			if (bits & ((Precision)1 << i) != 0) { break; }
-			--level;
+			MortonCodePtr< T > ancestor = traverseUp();
+			out << "Path to root: ";
+			
+			if (simple)
+			{
+				out << "0x" << hex << getBits() << dec;
+				do {
+					out << " -> 0x" << hex << ancestor->getBits() << dec;
+					ancestor = ancestor->traverseUp();
+				} while (ancestor->getBits() != 0);	
+			}
+			else
+			{
+				out << *this;
+				do {
+					out << " -> " << hex << *ancestor << dec;
+					ancestor = ancestor->traverseUp();
+				} while (ancestor->getBits() != 0);	
+			}
+			cout << endl;
 		}
-		
+	
+	template <typename Precision>
+	ostream& operator<<(ostream& out, const MortonCode<Precision>& code)
+	{
+		unsigned int level = code.getLevel();
 		vector< Precision > decoded = code.decode(level);
-		os 	<< "MortonCode: " << endl << "level = " << level << endl
-			<< "coords = {" << decoded[0] << ", " << decoded[1] << ", " << decoded[2] << "}" << endl
-			<< "0x" << hex << code.m_bits << endl << endl;
-		return os;
+		out << "MortonCode: " << endl << "level = " << level << endl
+			<< "coords = " << decoded << endl
+			<< "0x" << hex << code.m_bits << dec << endl
+			<< "parent: 0x" << hex << code.traverseUp()->m_bits << dec << endl;
+		return out;
 	}
 	
 	//=================

@@ -3,7 +3,7 @@
 # Path: src/test
 ##############################
 
-create_source_groups (UI_DIR MODEL_DIR)
+create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
 add_subdirectory (gtest/)
 

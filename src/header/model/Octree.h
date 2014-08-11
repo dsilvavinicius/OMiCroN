@@ -2,6 +2,7 @@
 #define OCTREE_H
 
 #include <map>
+#include <glm/ext.hpp>
 #include "MortonCode.h"
 #include "OctreeNode.h"
 #include "LeafNode.h"
@@ -9,6 +10,7 @@
 #include "InnerNode.h"
 #include "OctreeTypes.h"
 #include "OctreeMapTypes.h"
+#include "Stream.h"
 
 using namespace std;
 
@@ -132,7 +134,7 @@ namespace model
 		
 		*m_origin = minCoords;
 		*m_size = maxCoords - minCoords;
-		*m_leafSize = *m_size * ((Float)1 / (m_maxLevel + 1));
+		*m_leafSize = *m_size * ((Float)1 / ((MortonPrecision)1 << m_maxLevel));
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -152,6 +154,8 @@ namespace model
 			Vec3 index = ((*pos) - (*m_origin)) / (*m_leafSize);
 			MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
 			code->build((MortonPrecision)index.x, (MortonPrecision)index.y, (MortonPrecision)index.z, m_maxLevel);
+			
+			code->printPathToRoot(cout, true);
 			
 			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator genericLeafIt = m_hierarchy->find(code);
 			if (genericLeafIt == m_hierarchy->end())
@@ -178,13 +182,15 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase<MortonPrecision, Float, Vec3>::buildInners()
 	{
+		cout << "After leaves creation: " << *this;
 		// Do a bottom-up per-level construction of inner nodes.
-		for (int level = m_maxLevel; level > 0; --level)
+		for (int level = m_maxLevel - 1; level > -1; --level)
 		{
+			cout << "Iterating level " << level << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
 			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
 			// below the current one. 
-			MortonPrecision mortonLvlBoundary = 1 << 3 * (level + 1) + 1;
+			MortonPrecision mortonLvlBoundary = 1 << (3 * (level + 1) + 1);
 			
 			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator firstChildIt = m_hierarchy->begin(); 
 			
@@ -195,6 +201,8 @@ namespace model
 				if (firstChildIt->first->getBits() >= mortonLvlBoundary) { break; }
 				
 				MortonCodePtr< MortonPrecision > parentCode = firstChildIt->first->traverseUp();
+				
+				cout << "Parent: " << *parentCode << " First child: " << *firstChildIt->first << endl;
 				
 				// These counters are used to check if the accumulated number of child node points is less than a threshold.
 				// In this case, the children are deleted and their points are merged into the parent.
@@ -212,18 +220,25 @@ namespace model
 				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator currentChildIt = firstChildIt;
 				while ((++currentChildIt) != m_hierarchy->end())
 				{
-					if (currentChildIt->first->traverseUp() != parentCode) { break; }
+					cout << "Current child code: " << *currentChildIt->first;
+					
+					if (*currentChildIt->first->traverseUp() != *parentCode) { break; }
+					
+					cout << "Child: " << *currentChildIt->first;
 					
 					OctreeNodePtr< MortonPrecision, Float, Vec3 > currentChild = currentChildIt->second;
 					appendPoints(currentChild, childrenPoints, numChildren, numLeaves);
 				}
 				
-				if ((numChildren == numLeaves && childrenPoints.size() < m_maxPointsPerNode) ||
+				// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
+				// is not leaf.
+				if ((numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode) ||
 					childrenPoints.size() == 1)
 				{
-					// All children are leaves, but they have less points than the threshold and must be merged or
-					// child have just one point, which is a leaf node that would generate a chain with the parent.
-					// In both cases the best solution is to merge children into parent.
+					// All children are leaves, but they have less points than the threshold and must be merged.
+					
+					cout << "Merging child." << endl << endl;
+					
 					auto tempIt = firstChildIt;
 					advance(firstChildIt, numChildren);
 					
@@ -238,6 +253,7 @@ namespace model
 				}
 				else
 				{
+					cout << "Calculating LOD." << endl << endl;
 					// No merge is needed. Just does LOD.
 					advance(firstChildIt, numChildren);
 					
@@ -256,7 +272,6 @@ namespace model
 					
 					(*m_hierarchy)[parentCode] = LODNode;
 				}
-				cout << *this;
 			}
 		}
 	}
@@ -314,7 +329,14 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	ostream& operator<<(ostream& out, const OctreeBase< MortonPrecision, Float, Vec3 >& octree)
 	{
-		out << "Octree: " << endl << endl;
+		out << endl << "=========== Begin Octree ============" << endl << endl
+			<< "origin: " << glm::to_string(*octree.m_origin) << endl
+			<< "size: " << glm::to_string(*octree.m_size) << endl
+			<< "leaf size: " << glm::to_string(*octree.m_leafSize) << endl
+			<< "max points per node: " << octree.m_maxPointsPerNode << endl << endl;
+		
+		/** Maximum level of this octree. */
+		unsigned int m_maxLevel;
 		OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy = octree.getHierarchy();
 		for (auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt)
 		{
@@ -323,16 +345,16 @@ namespace model
 			if (genericNode->isLeaf())
 			{
 				auto node = dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >(genericNode);
-				out << *code << *node;
+				out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
 			}
 			else
 			{
 				auto node = dynamic_pointer_cast< LODInnerNode< MortonPrecision, Float, Vec3 > >(genericNode);
-				out << *code << *node;
+				out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
 			}
 			
 		}
-		out << endl;
+		out << "=========== End Octree ============" << endl << endl;
 		return out;
 	}
 	
@@ -368,21 +390,21 @@ namespace model
 	Octree< unsigned int, Float, Vec3 >::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 9; // 0 to 9.
+		OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 10; // 0 to 10.
 	}
 	
 	template<typename Float, typename Vec3>
 	Octree<unsigned long, Float, Vec3>::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 20; // 0 to 21.
+		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 21; // 0 to 21.
 	}
 	
 	template<typename Float, typename Vec3>
 	Octree<unsigned long long, Float, Vec3>::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 41; // 0 to 41
+		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 42; // 0 to 42
 	}
 }
 

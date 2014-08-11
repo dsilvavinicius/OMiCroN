@@ -62,9 +62,8 @@ namespace model
 		out << "Points Leaf Node: " << endl;
 		for (PointPtr< Float, Vec3 > point : *node.getContents())
 		{
-			out << *point << endl;
+			out << *point;
 		}
-		out << endl;
 		return out;
 	}
 }

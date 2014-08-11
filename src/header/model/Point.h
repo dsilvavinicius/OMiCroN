@@ -2,6 +2,7 @@
 #define POINT_H
 
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -112,8 +113,8 @@ namespace model
 		Vec3 color = *point.m_color;
 		
 		out << "Point:" << endl
-			<< "color = {" << color.x << " " << color.y << " "<< color.z << "}" << endl
-			<< "pos = {" << pos.x << " " << pos.y << " "<< pos.z << "}" << endl;
+			<< "color = " << glm::to_string(color) << endl
+			<< "pos = " << glm::to_string(pos) << endl;
 			
 		return out;
 	}

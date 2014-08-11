@@ -43,35 +43,35 @@ namespace model
 				
 				// Expected leaf code table.
 				// The numerical constants here are the final coordinates of the point in octree space.
-				auto upCode = make_shared< ShallowMortonCode >(); upCode->build(2, 10, 7, 9);
-				auto downCode 		= make_shared< ShallowMortonCode >(); downCode->build(2, 0, 7, 9);
-				auto leftCode 		= make_shared< ShallowMortonCode >(); leftCode->build(0, 7, 7, 9);
-				auto rightCode 		= make_shared< ShallowMortonCode >(); rightCode->build(10, 8, 7, 9);
-				auto frontCode 		= make_shared< ShallowMortonCode >(); frontCode->build(3, 8, 10, 9);
-				auto backCode 		= make_shared< ShallowMortonCode >(); backCode->build(4, 9, 0, 9);
-				auto addPoint0Code 	= make_shared< ShallowMortonCode >(); addPoint0Code->build(4, 4, 8, 9);
-				auto addPoint1Code 	= make_shared< ShallowMortonCode >(); addPoint1Code->build(1, 5, 6, 9);
-				auto addPoint2Code 	= make_shared< ShallowMortonCode >(); addPoint2Code->build(4, 9, 7, 9);
-				auto addPoint3Code 	= make_shared< ShallowMortonCode >(); addPoint3Code->build(3, 7, 5, 9);
-				auto addPoint4Code 	= make_shared< ShallowMortonCode >(); addPoint4Code->build(4, 7, 6, 9);
+				auto upCode 		= make_shared< ShallowMortonCode >(); upCode->build(2, 10, 7, 10);
+				auto downCode 		= make_shared< ShallowMortonCode >(); downCode->build(2, 0, 7, 10);
+				auto leftCode 		= make_shared< ShallowMortonCode >(); leftCode->build(0, 7, 7, 10);
+				auto rightCode 		= make_shared< ShallowMortonCode >(); rightCode->build(10, 8, 7, 10);
+				auto frontCode 		= make_shared< ShallowMortonCode >(); frontCode->build(3, 8, 10, 10);
+				auto backCode 		= make_shared< ShallowMortonCode >(); backCode->build(4, 9, 0, 10);
+				auto addPoint0Code 	= make_shared< ShallowMortonCode >(); addPoint0Code->build(4, 4, 8, 10);
+				auto addPoint1Code 	= make_shared< ShallowMortonCode >(); addPoint1Code->build(1, 5, 6, 10);
+				auto addPoint2Code 	= make_shared< ShallowMortonCode >(); addPoint2Code->build(4, 9, 7, 10);
+				auto addPoint3Code 	= make_shared< ShallowMortonCode >(); addPoint3Code->build(3, 7, 5, 10);
+				auto addPoint4Code 	= make_shared< ShallowMortonCode >(); addPoint4Code->build(4, 7, 6, 10);
 				
-				m_expectedLeafCodes[up]		= upCode;
-				m_expectedLeafCodes[down] 	= downCode;
-				m_expectedLeafCodes[left] 	= leftCode;
-				m_expectedLeafCodes[right] 	= rightCode;
-				m_expectedLeafCodes[front] 	= frontCode;
-				m_expectedLeafCodes[back] 	= backCode;
-				
-				m_expectedLeafCodes[addPoint0] = addPoint0Code;
-				m_expectedLeafCodes[addPoint1] = addPoint1Code;
-				m_expectedLeafCodes[addPoint2] = addPoint2Code;
-				m_expectedLeafCodes[addPoint3] = addPoint3Code;
-				m_expectedLeafCodes[addPoint4] = addPoint4Code;
+				/*cout << "Expected full paths from each node to root. This will not be the final hierarchy "
+						"since nodes can be merged at construction time. " << endl;
+				upCode			->printPathToRoot(cout, true);
+				downCode		->printPathToRoot(cout, true);
+				leftCode		->printPathToRoot(cout, true);
+				rightCode		->printPathToRoot(cout, true);
+				frontCode		->printPathToRoot(cout, true);
+				backCode		->printPathToRoot(cout, true);
+				addPoint0Code	->printPathToRoot(cout, true);
+				addPoint1Code	->printPathToRoot(cout, true);
+				addPoint2Code	->printPathToRoot(cout, true);
+				addPoint3Code	->printPathToRoot(cout, true);
+				addPoint4Code	->printPathToRoot(cout, true);
+				cout << endl;*/
 			}
 			
 			PointVector< float, vec3 > m_points;
-			unordered_map< PointPtr< float, vec3 >, ShallowMortonCodePtr > m_expectedLeafCodes;
-			//multimap<>
 		};
 
 		/** Checks origin and size of built octree. */
@@ -80,7 +80,9 @@ namespace model
 			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
 			octree->build(m_points);
 			
-			ASSERT_EQ(octree->getMaxLevel(), 9);
+			cout << "Final octree: " << *octree;
+			
+			ASSERT_EQ(octree->getMaxLevel(), 10);
 			ASSERT_EQ(octree->getMaxPointsPerNode(), 1);
 			
 			vec3 origin = *octree->getOrigin();
@@ -89,33 +91,7 @@ namespace model
 			
 			ASSERT_TRUE(glm::all(glm::equal(origin, vec3(-14.f, -31.f, -51.f))));
 			ASSERT_TRUE(glm::all(glm::equal(size, vec3(60.f, 46.f, 75.f))));
-			ASSERT_TRUE(glm::all(glm::equal(leafSize, vec3(6.f, 4.6f, 7.5f))));
-		}
-		
-		/** Checks the hierarchy. */
-		TEST_F(OctreeTest, Creation_Hierarchy)
-		{
-			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
-			octree->build(m_points);
-			cout << *octree;
-			/*ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
-			for (ShallowOctreeNodePtr< float, vec3 > node : hierarchy)
-			{
-				//if ()
-			}*/
-			
-			
-			/*leafCodes[point] = ;
-			map[  ]
-			
-			ShallowMortonCodePtr code = make_shared< ShallowMortonCode >();
-			vec3 pos = *points[0]->getPos();
-			code.build(pos.x, pos.y, pos.z, maxLevel);
-			
-			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
-			hierarchy[];
-			
-			ASSERT_EQ(hierarchy->size(), 0);*/
+			ASSERT_TRUE(glm::all(glm::equal(leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f))));
 		}
 	}
 }

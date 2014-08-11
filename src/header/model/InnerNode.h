@@ -72,7 +72,7 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	ostream& operator<<(ostream& out, const LODInnerNode< MortonPrecision, Float, Vec3 >& node)
 	{
-		out << "LOD Inner Node: " << endl << *node.getContents() << endl;
+		out << "LOD Inner Node: " << endl << *node.getContents();
 		return out;
 	}
 	
@@ -82,9 +82,8 @@ namespace model
 		out << "Per-Face LOD Inner Node: " << endl;
 		for (PointPtr< Float, Vec3 > point : *node.getContents())
 		{
-			out << *point << endl;
+			out << *point;
 		}
-		out << endl;
 		return out;
 	}
 }
