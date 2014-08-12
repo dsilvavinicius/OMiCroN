@@ -1,7 +1,6 @@
 #include "Octree.h"
 
 #include <gtest/gtest.h>
-#include <unordered_map>
 
 namespace model
 {
@@ -40,47 +39,26 @@ namespace model
 				m_points.push_back(addPoint2);
 				m_points.push_back(addPoint3);
 				m_points.push_back(addPoint4);
-				
-				// Expected leaf code table.
-				// The numerical constants here are the final coordinates of the point in octree space.
-				auto upCode 		= make_shared< ShallowMortonCode >(); upCode->build(2, 10, 7, 10);
-				auto downCode 		= make_shared< ShallowMortonCode >(); downCode->build(2, 0, 7, 10);
-				auto leftCode 		= make_shared< ShallowMortonCode >(); leftCode->build(0, 7, 7, 10);
-				auto rightCode 		= make_shared< ShallowMortonCode >(); rightCode->build(10, 8, 7, 10);
-				auto frontCode 		= make_shared< ShallowMortonCode >(); frontCode->build(3, 8, 10, 10);
-				auto backCode 		= make_shared< ShallowMortonCode >(); backCode->build(4, 9, 0, 10);
-				auto addPoint0Code 	= make_shared< ShallowMortonCode >(); addPoint0Code->build(4, 4, 8, 10);
-				auto addPoint1Code 	= make_shared< ShallowMortonCode >(); addPoint1Code->build(1, 5, 6, 10);
-				auto addPoint2Code 	= make_shared< ShallowMortonCode >(); addPoint2Code->build(4, 9, 7, 10);
-				auto addPoint3Code 	= make_shared< ShallowMortonCode >(); addPoint3Code->build(3, 7, 5, 10);
-				auto addPoint4Code 	= make_shared< ShallowMortonCode >(); addPoint4Code->build(4, 7, 6, 10);
-				
-				/*cout << "Expected full paths from each node to root. This will not be the final hierarchy "
-						"since nodes can be merged at construction time. " << endl;
-				upCode			->printPathToRoot(cout, true);
-				downCode		->printPathToRoot(cout, true);
-				leftCode		->printPathToRoot(cout, true);
-				rightCode		->printPathToRoot(cout, true);
-				frontCode		->printPathToRoot(cout, true);
-				backCode		->printPathToRoot(cout, true);
-				addPoint0Code	->printPathToRoot(cout, true);
-				addPoint1Code	->printPathToRoot(cout, true);
-				addPoint2Code	->printPathToRoot(cout, true);
-				addPoint3Code	->printPathToRoot(cout, true);
-				addPoint4Code	->printPathToRoot(cout, true);
-				cout << endl;*/
 			}
 			
 			PointVector< float, vec3 > m_points;
 		};
+		
+		template<typename MortonPrecision, typename Float, typename Vec3>
+		void checkNode(OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits)
+		{
+			auto code = make_shared< MortonCode< MortonPrecision > >();
+			code->build(bits);
+			auto iter = hierarchy->find(code);
+			ASSERT_FALSE(iter == hierarchy->end());
+			hierarchy->erase(iter);
+		}
 
-		/** Checks origin and size of built octree. */
-		TEST_F(OctreeTest, Creation_Boundaries)
+		/** Checks octree generated boundaries and hierarchy. */
+		TEST_F(OctreeTest, Creation)
 		{	
 			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
 			octree->build(m_points);
-			
-			cout << "Final octree: " << *octree;
 			
 			ASSERT_EQ(octree->getMaxLevel(), 10);
 			ASSERT_EQ(octree->getMaxPointsPerNode(), 1);
@@ -92,6 +70,82 @@ namespace model
 			ASSERT_TRUE(glm::all(glm::equal(origin, vec3(-14.f, -31.f, -51.f))));
 			ASSERT_TRUE(glm::all(glm::equal(size, vec3(60.f, 46.f, 75.f))));
 			ASSERT_TRUE(glm::all(glm::equal(leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f))));
+			
+			/*
+			Expected hierarchy. 0x1 is the root node. The blank spaces are merged nodes. A node with an arrow that
+			points to nothing means that it is a sibling of the node at the same position at the line immediately
+			above.
+			
+			0xa6c3 -> 	______ -> _____ -> ____ -> 0xa -> 0x1
+			0xa6c0 ->
+										   0x67 -> 0xc ->
+			0xc325 -> 	______ -> _____ -> 0x61 ->
+			0xc320 ->
+						______ -> _____ -> 0x70 -> 0xe ->
+						______ -> _____ -> 0x71 ->
+						______ -> 0x39f -> 0x73 ->
+						______ -> 0x39d -> 
+						0x1d82 -> _____ -> 0x76 ->
+						0x1d80 ->
+			*/
+			
+			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
+			
+			SCOPED_TRACE("0xa6c3");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xa6c3u);
+			
+			SCOPED_TRACE("0xa6c0");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xa6c0u);
+			
+			SCOPED_TRACE("0xc325");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xc325u);
+			
+			SCOPED_TRACE("0xc320");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xc320u);
+			
+			SCOPED_TRACE("0x1d82");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1d82u);
+			
+			SCOPED_TRACE("0x1d80");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1d80u);
+			
+			SCOPED_TRACE("0x39f");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x39fu);
+			
+			SCOPED_TRACE("0x39d");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x39du);
+			
+			SCOPED_TRACE("0x67");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x67u);
+			
+			SCOPED_TRACE("0x61");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x61u);
+			
+			SCOPED_TRACE("0x70");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x70u);
+			
+			SCOPED_TRACE("0x71");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x71u);
+			
+			SCOPED_TRACE("0x73");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x73u);
+			
+			SCOPED_TRACE("0x76");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x76u);
+			
+			SCOPED_TRACE("0xa");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xau);
+			
+			SCOPED_TRACE("0xc");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xcu);
+			
+			SCOPED_TRACE("0xe");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0xeu);
+			
+			SCOPED_TRACE("0x1");
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1u);
+			
+			ASSERT_TRUE(hierarchy->empty());
 		}
 	}
 }
