@@ -4,10 +4,6 @@
 #include <memory>
 
 #include <QtGui/QGuiApplication>
-#include <QtGui/QMatrix4x4>
-#include <QtGui/QOpenGLShaderProgram>
-#include <QtGui/QScreen>
-#include <QtCore/qmath.h>
 #include <Qt3D/QGLCamera>
 #include <Qt3D/QGLView>
 #include <Qt3D/QGLShaderProgramEffect>

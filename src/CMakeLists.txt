@@ -70,7 +70,6 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
-	${HEADER_DIR}/${UI_DIR}/OpenGLWindow.h			${CPP_DIR}/${UI_DIR}/OpenGLWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h		${CPP_DIR}/${MODEL_DIR}/Camera.cpp
