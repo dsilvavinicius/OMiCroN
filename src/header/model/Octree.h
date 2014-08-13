@@ -27,7 +27,8 @@ namespace model
 	class OctreeBase
 	{
 	public:
-		/** Constructs this octree, giving the desired max number of nodes per node. */
+		/** Initialize data for building the octree, giving the desired max number of nodes per node
+		 * and the Camera used to cull points in traversal. */
 		OctreeBase(const int& maxPointsPerNode);
 		
 		/** Builds the octree for a given point cloud. */

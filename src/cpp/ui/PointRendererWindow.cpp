@@ -3,82 +3,64 @@
 
 namespace ui
 {
-	PointRendererWindow::PointRendererWindow()
-		: m_program(0)
+	PointRendererWindow::PointRendererWindow(const QSurfaceFormat &format, QWindow *parent)
+		: QGLView(format, parent)
+		, m_program(0)
 		, m_frame(0)
+	{}
+	
+	PointRendererWindow::~PointRendererWindow()
 	{
-		m_camera = make_shared<QGLCamera>();
+		delete m_program;
 	}
 
-	GLuint PointRendererWindow::loadShader(GLenum type, const char *source)
+	void PointRendererWindow::initializeGL(QGLPainter *painter)
 	{
-		GLuint shader = glCreateShader(type);
-		glShaderSource(shader, 1, &source, 0);
-		glCompileShader(shader);
-		return shader;
+		m_program = new QGLShaderProgramEffect();
+		m_program->setVertexShader(PointRendererWindow::vertexShaderSource);
+		m_program->setFragmentShader(PointRendererWindow::fragmentShaderSource);
+		
+		painter->setUserEffect(m_program);
+		
+		QGLCamera* cam = camera();
+		cam->setProjectionType(QGLCamera::Perspective);
+		cam->setFieldOfView(60.0f);
+		cam->setNearPlane(0.1f);
+		cam->setFarPlane(100.0f);
+		
+		painter->setCamera(cam);
 	}
 
-	void PointRendererWindow::initialize()
+	void PointRendererWindow::paintGL(QGLPainter *painter)
 	{
-		m_program = new QOpenGLShaderProgram(this);
-		m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, PointRendererWindow::vertexShaderSource);
-		m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, PointRendererWindow::fragmentShaderSource);
-		m_program->link();
-		m_posAttr = m_program->attributeLocation("posAttr");
-		m_colAttr = m_program->attributeLocation("colAttr");
-		m_matrixUniform = m_program->uniformLocation("matrix");
-	}
+		painter->clearAttributes();
 
-	void PointRendererWindow::render()
-	{
-		const qreal retinaScale = devicePixelRatio();
-		glViewport(0, 0, width() * retinaScale, height() * retinaScale);
-		
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		m_program->bind();
-		
-		m_camera->setProjectionType(QGLCamera::Perspective);
-		m_camera->setFieldOfView(60.0f);
-		m_camera->setNearPlane(0.1f);
-		m_camera->setFarPlane(100.0f);
-		
-		QMatrix4x4 matrix = m_camera->projectionMatrix(4.0f/3.0f) * m_camera->modelViewMatrix();
-		matrix.translate(0, 0, -2);
-		matrix.rotate(100.0f * m_frame / screen()->refreshRate(), 0, 1, 0);
-
-		m_program->setUniformValue(m_matrixUniform, matrix);
-
-		GLfloat vertices[] = {
-			0.0f, 0.707f,
-			-0.5f, -0.5f,
-			0.5f, -0.5f
+		const QVector2D vertices[] = {
+			QVector2D(0.0f, 0.707f),
+			QVector2D(-0.5f, -0.5f),
+			QVector2D(0.5f, -0.5f)
 		};
 
-		GLfloat colors[] = {
-			1.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 1.0f
+		const QVector3D colors[] = {
+			QVector3D(1.0f, 0.0f, 0.0f),
+			QVector3D(0.0f, 1.0f, 0.0f),
+			QVector3D(0.0f, 0.0f, 1.0f)
 		};
+		
+		QArray< QVector2D > vertexArray(vertices, 3);
+		QArray< QVector3D > colorArray(colors, 3);
 
-		glVertexAttribPointer(m_posAttr, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-		glVertexAttribPointer(m_colAttr, 3, GL_FLOAT, GL_FALSE, 0, colors);
+		painter->setVertexAttribute(QGL::Position, vertexArray);
+		painter->setVertexAttribute(QGL::Color, colorArray);
 
-		glEnableVertexAttribArray(0);
-		glEnableVertexAttribArray(1);
-
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(0);
-
-		m_program->release();
+		painter->draw(QGL::Triangles, 3);
 
 		++m_frame;
 	}
 
 	void PointRendererWindow::mouseMoveEvent(QMouseEvent * ev)
 	{
+		QGLCamera* cam = camera();
 		Qt::MouseButtons buttons = ev->buttons();
 		
 		if (buttons & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton))
@@ -87,21 +69,22 @@ namespace ui
 			QPoint deltaPos = currentPos - m_lastMousePos;
 			if (buttons & Qt::LeftButton)
 			{
-				QQuaternion rotation = 	m_camera->pan(-(float)deltaPos.x() * 0.1f) *
-										m_camera->tilt(-(float)deltaPos.y() * 0.1f);
-				m_camera->rotateEye(rotation);
+				QQuaternion rotation = 	cam->pan(-(float)deltaPos.x() * 0.1f) *
+										cam->tilt(-(float)deltaPos.y() * 0.1f);
+				cam->rotateEye(rotation);
 			}
 			if (buttons & Qt::RightButton)
 			{
-				QVector3D translation = m_camera->translation((float)deltaPos.x() * 0.01f,
+				QVector3D translation = cam->translation((float)deltaPos.x() * 0.01f,
 														   (float)deltaPos.y() * 0.01f, 0);
-				m_camera->translateCenter(translation.x(), translation.y(), translation.z());
-				m_camera->translateEye(translation.x(), translation.y(), translation.z());
+				cam->setEye(cam->eye() + translation);
+				cam->setCenter(cam->center() + translation);
 			}
 			if (buttons & Qt::MiddleButton)
 			{
-				QVector3D translation = m_camera->translation(0.f, 0.f, (float)deltaPos.y() * 0.1f);
-				m_camera->translateEye(translation.x(), translation.y(), translation.z());
+				QVector3D translation = cam->translation(0.f, 0.f, -(float)deltaPos.y() * 0.1f);
+				cam->setEye(cam->eye() + translation);
+				cam->setCenter(cam->center() + translation);
 			}
 			
 			m_lastMousePos = currentPos;

@@ -10,10 +10,10 @@ int main(int argc, char **argv)
 	QSurfaceFormat format;
 	format.setSamples(16);
 
-	PointRendererWindow window;
-	window.setFormat(format);
+	PointRendererWindow window(format);
+	//window.setFormat(format);
 	window.resize(640, 480);
-	window.setAnimating(true);
+	//window.setAnimating(true);
 	window.show();
 
     return app.exec();

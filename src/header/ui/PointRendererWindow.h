@@ -1,8 +1,6 @@
 #ifndef POINT_RENDERER_WINDOW_H
 #define POINT_RENDERER_WINDOW_H
 
-#include "OpenGLWindow.h"
-
 #include <memory>
 
 #include <QtGui/QGuiApplication>
@@ -11,27 +9,27 @@
 #include <QtGui/QScreen>
 #include <QtCore/qmath.h>
 #include <Qt3D/QGLCamera>
+#include <Qt3D/QGLView>
+#include <Qt3D/QGLShaderProgramEffect>
 
 using namespace std;
 
 namespace ui
 {
-	class PointRendererWindow : public OpenGLWindow
+	class PointRendererWindow : public QGLView
 	{
 	public:
-		PointRendererWindow();
-
-		void initialize();
-		void render();
+		PointRendererWindow(const QSurfaceFormat &format, QWindow *parent = 0);
+		~PointRendererWindow();
 		
 		static constexpr char *vertexShaderSource =
-			"attribute highp vec4 posAttr;\n"
-			"attribute lowp vec4 colAttr;\n"
+			"attribute highp vec4 qt_Vertex;\n"
+			"attribute lowp vec4 qt_Color;\n"
 			"varying lowp vec4 col;\n"
-			"uniform highp mat4 matrix;\n"
+			"uniform highp mat4 qt_ModelViewProjectionMatrix;\n"
 			"void main() {\n"
-			"   col = colAttr;\n"
-			"   gl_Position = matrix * posAttr;\n"
+			"   col = qt_Color;\n"
+			"   gl_Position = qt_ModelViewProjectionMatrix * qt_Vertex;\n"
 			"}\n";
 
 		static constexpr char *fragmentShaderSource =
@@ -41,19 +39,14 @@ namespace ui
 			"}\n";
 
 	protected:
+		void paintGL(QGLPainter *painter);
+		void initializeGL(QGLPainter *painter);
 		virtual void mouseMoveEvent(QMouseEvent* ev);
 		virtual void mousePressEvent(QMouseEvent* ev);
 		
 	private:
-		GLuint loadShader(GLenum type, const char *source);
-
-		GLuint m_posAttr;
-		GLuint m_colAttr;
-		GLuint m_matrixUniform;
-
-		QOpenGLShaderProgram *m_program;
+		QGLShaderProgramEffect* m_program;
 		int m_frame;
-		shared_ptr<QGLCamera> m_camera;
 		
 		QPoint m_lastMousePos;
 	};
