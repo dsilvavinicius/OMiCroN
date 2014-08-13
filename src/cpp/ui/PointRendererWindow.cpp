@@ -7,7 +7,7 @@ namespace ui
 		: m_program(0)
 		, m_frame(0)
 	{
-		m_camera = make_shared<Camera>();
+		m_camera = make_shared<QGLCamera>();
 	}
 
 	GLuint PointRendererWindow::loadShader(GLenum type, const char *source)
@@ -37,17 +37,13 @@ namespace ui
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		m_program->bind();
-
-		vec3 cameraEye = m_camera->getOrigin();
-		vec3 cameraCenter = cameraEye + m_camera->getForward();
-		vec3 cameraUp = m_camera->getUp();
 		
-		QMatrix4x4 matrix;
-		matrix.perspective(60.0f, 4.0f/3.0f, 0.1f, 100.0f);
-		matrix.lookAt(QVector3D(cameraEye.x, cameraEye.y, cameraEye.z),
-			QVector3D(cameraCenter.x, cameraCenter.y, cameraCenter.z),
-			QVector3D(cameraUp.x, cameraUp.y, cameraUp.z)
-		);
+		m_camera->setProjectionType(QGLCamera::Perspective);
+		m_camera->setFieldOfView(60.0f);
+		m_camera->setNearPlane(0.1f);
+		m_camera->setFarPlane(100.0f);
+		
+		QMatrix4x4 matrix = m_camera->projectionMatrix(4.0f/3.0f) * m_camera->modelViewMatrix();
 		matrix.translate(0, 0, -2);
 		matrix.rotate(100.0f * m_frame / screen()->refreshRate(), 0, 1, 0);
 
@@ -91,17 +87,21 @@ namespace ui
 			QPoint deltaPos = currentPos - m_lastMousePos;
 			if (buttons & Qt::LeftButton)
 			{
-				m_camera->rotateX((float)deltaPos.y() * 0.001f);
-				m_camera->rotateY((float)deltaPos.x() * 0.001f);
+				QQuaternion rotation = 	m_camera->pan(-(float)deltaPos.x() * 0.1f) *
+										m_camera->tilt(-(float)deltaPos.y() * 0.1f);
+				m_camera->rotateEye(rotation);
 			}
 			if (buttons & Qt::RightButton)
 			{
-				m_camera->panX((float)deltaPos.x() * 0.01f);
-				m_camera->panY((float)deltaPos.y() * 0.01f);
+				QVector3D translation = m_camera->translation((float)deltaPos.x() * 0.01f,
+														   (float)deltaPos.y() * 0.01f, 0);
+				m_camera->translateCenter(translation.x(), translation.y(), translation.z());
+				m_camera->translateEye(translation.x(), translation.y(), translation.z());
 			}
 			if (buttons & Qt::MiddleButton)
 			{
-				m_camera->zoom((float)deltaPos.y() * -0.01f);
+				QVector3D translation = m_camera->translation(0.f, 0.f, (float)deltaPos.y() * 0.1f);
+				m_camera->translateEye(translation.x(), translation.y(), translation.z());
 			}
 			
 			m_lastMousePos = currentPos;

@@ -57,10 +57,12 @@ setup_package(GLM)
 find_package (Qt5Core REQUIRED)
 find_package (Qt5Gui REQUIRED)
 find_package (Qt5Widgets REQUIRED)
+find_package (Qt53D REQUIRED)
 
 include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
+	${Qt53D_INCLUDE_DIRS}
 
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
@@ -85,6 +87,7 @@ add_library (Point_Based_Renderer_Lib
 target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
 	Qt5::Gui
 	Qt5::Widgets
+	Qt5::3D
 	${OPENGL_LIBRARIES}
 	${GLML_LIBRARIES})
 	

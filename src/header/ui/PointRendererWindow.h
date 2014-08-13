@@ -3,16 +3,16 @@
 
 #include "OpenGLWindow.h"
 
+#include <memory>
+
 #include <QtGui/QGuiApplication>
 #include <QtGui/QMatrix4x4>
 #include <QtGui/QOpenGLShaderProgram>
 #include <QtGui/QScreen>
-
 #include <QtCore/qmath.h>
+#include <Qt3D/QGLCamera>
 
-#include "Camera.h"
-
-using namespace model;
+using namespace std;
 
 namespace ui
 {
@@ -53,7 +53,7 @@ namespace ui
 
 		QOpenGLShaderProgram *m_program;
 		int m_frame;
-		CameraPtr m_camera;
+		shared_ptr<QGLCamera> m_camera;
 		
 		QPoint m_lastMousePos;
 	};
