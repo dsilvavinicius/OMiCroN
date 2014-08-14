@@ -35,7 +35,7 @@ namespace model
 		virtual void build(const PointVector< Float, Vec3 >& points);
 		
 		/** Traverses the octree, rendering all necessary points. */
-		virtual void traverse();
+		virtual void traverse(QGLPainter *painter);
 		
 		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
@@ -298,9 +298,12 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::traverse()
+	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(QGLPainter *painter)
 	{
+		/*MortonCodePtr< MortonPrecision > parent = make_shared< MortonCode< MortonPrecision > >();
+		parent->build(0x1);
 		
+		m_hierarchy->find(parent);*/
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
