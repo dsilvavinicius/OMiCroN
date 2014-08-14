@@ -43,20 +43,9 @@ namespace model
 			
 			PointVector< float, vec3 > m_points;
 		};
-		
-		template<typename MortonPrecision, typename Float, typename Vec3>
-		void checkNode(OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits)
-		{
-			auto code = make_shared< MortonCode< MortonPrecision > >();
-			code->build(bits);
-			auto iter = hierarchy->find(code);
-			ASSERT_FALSE(iter == hierarchy->end());
-			hierarchy->erase(iter);
-		}
 
-		/** Checks octree generated boundaries and hierarchy. */
-		TEST_F(OctreeTest, Creation)
-		{	
+		TEST_F(OctreeTest, Boundaries)
+		{
 			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
 			octree->build(m_points);
 			
@@ -70,82 +59,106 @@ namespace model
 			ASSERT_TRUE(glm::all(glm::equal(origin, vec3(-14.f, -31.f, -51.f))));
 			ASSERT_TRUE(glm::all(glm::equal(size, vec3(60.f, 46.f, 75.f))));
 			ASSERT_TRUE(glm::all(glm::equal(leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f))));
+		}
+		
+		template<typename MortonPrecision, typename Float, typename Vec3>
+		void checkNode(OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits)
+		{
+			SCOPED_TRACE(bits);
+			auto code = make_shared< MortonCode< MortonPrecision > >();
+			code->build(bits);
+			auto iter = hierarchy->find(code);
+			ASSERT_FALSE(iter == hierarchy->end());
+			hierarchy->erase(iter);
+		}
+		
+		template< typename Float, typename Vec3 >
+		void checkSparseHierarchy(ShallowOctreeMapPtr< Float, Vec3 > hierarchy)
+		{
 			
-			/*
-			Expected hierarchy. 0x1 is the root node. The blank spaces are merged nodes. A node with an arrow that
-			points to nothing means that it is a sibling of the node at the same position at the line immediately
-			above.
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xa6c3u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xa6c0u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xc325u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xc320u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1d82u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1d80u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x39fu);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x39du);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x67u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x61u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x70u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x71u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x73u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x76u);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xau);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xcu);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xeu);
+			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1u);
+		}
+		
+		// Tests octree's hierarchy creation. It uses the sparse check just for code reuse.
+		TEST_F(OctreeTest, Hierarchy)
+		{
+			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
+			// it is a sibling of the node at the same position at the line immediately above.
+			//
+			// 0xa6c3 -> 0x14d8 -> 0x29b -> 0x53 -> 0xa -> 0x1
+			// 0xa6c0 -> 
+			//								0x67 -> 0xc ->
+			// 0xc325 -> 0x1864 -> 0x30c -> 0x61 ->
+			// 0xc320 ->
+
+			//								0x70 -> 0xe ->
+			//							    0x71 ->
+			//					   0x39f -> 0x73 ->
+			//					   0x39d ->
+			//			 0x1d82 -> 0x3b0 -> 0x76 ->
+			//			 0x1d80 ->
 			
-			0xa6c3 -> 	______ -> _____ -> ____ -> 0xa -> 0x1
-			0xa6c0 ->
-										   0x67 -> 0xc ->
-			0xc325 -> 	______ -> _____ -> 0x61 ->
-			0xc320 ->
-						______ -> _____ -> 0x70 -> 0xe ->
-						______ -> _____ -> 0x71 ->
-						______ -> 0x39f -> 0x73 ->
-						______ -> 0x39d -> 
-						0x1d82 -> _____ -> 0x76 ->
-						0x1d80 ->
-			*/
+			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
+			octree->build(m_points);
 			
 			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
+			// Check node that should appear in the sparse representation of the octree.
+			checkSparseHierarchy< float, vec3 >(hierarchy);
 			
-			SCOPED_TRACE("0xa6c3");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xa6c3u);
-			
-			SCOPED_TRACE("0xa6c0");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xa6c0u);
-			
-			SCOPED_TRACE("0xc325");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xc325u);
-			
-			SCOPED_TRACE("0xc320");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xc320u);
-			
-			SCOPED_TRACE("0x1d82");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1d82u);
-			
-			SCOPED_TRACE("0x1d80");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1d80u);
-			
-			SCOPED_TRACE("0x39f");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x39fu);
-			
-			SCOPED_TRACE("0x39d");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x39du);
-			
-			SCOPED_TRACE("0x67");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x67u);
-			
-			SCOPED_TRACE("0x61");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x61u);
-			
-			SCOPED_TRACE("0x70");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x70u);
-			
-			SCOPED_TRACE("0x71");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x71u);
-			
-			SCOPED_TRACE("0x73");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x73u);
-			
-			SCOPED_TRACE("0x76");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x76u);
-			
-			SCOPED_TRACE("0xa");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xau);
-			
-			SCOPED_TRACE("0xc");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xcu);
-			
-			SCOPED_TRACE("0xe");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0xeu);
-			
-			SCOPED_TRACE("0x1");
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1u);
+			// Check the other nodes, which would be merged in a sparse octree.
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x14d8);
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1864);
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x29b);
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x30c);
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x3b0);
+			checkNode< unsigned int, float, vec3 >(hierarchy, 0x53);
 			
 			ASSERT_TRUE(hierarchy->empty());
 		}
+		
+		/** Checks generated sparse octree. */
+		/*TEST_F(OctreeTest, Sparse_Hierarchy)
+		{	
+			// Expected hierarchy. 0x1 is the root node. The blank spaces are merged nodes. A node with an arrow that
+			// points to nothing means that it is a sibling of the node at the same position at the line immediately
+			// above.
+			//
+			// 0xa6c3 -> 	______ -> _____ -> ____ -> 0xa -> 0x1
+			// 0xa6c0 ->
+			// 								   0x67 -> 0xc ->
+			// 0xc325 -> 	______ -> _____ -> 0x61 ->
+			// 0xc320 ->
+			// 				______ -> _____ -> 0x70 -> 0xe ->
+			// 				______ -> _____ -> 0x71 ->
+			// 				______ -> 0x39f -> 0x73 ->
+			// 				______ -> 0x39d -> 
+			// 				0x1d82 -> _____ -> 0x76 ->
+			// 				0x1d80 ->
+			
+			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
+			octree->build(m_points);
+			
+			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
+			checkSparseHierarchy< float, vec3 >(hierarchy);
+			
+			ASSERT_TRUE(hierarchy->empty());
+		}*/
 	}
 }

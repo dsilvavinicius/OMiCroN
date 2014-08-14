@@ -31,10 +31,11 @@ namespace model
 		template <typename Contents>
 		shared_ptr< Contents > getContents() const;
 		
+		/** Returns two vertices that defines the boundaries box of this node (minimum, maximum). */
+		pair< Vec3, Vec3 > getBoundaries() const;
+		
 		template <typename M, typename F, typename V, typename C>
 		friend ostream& operator<<(ostream& out, const OctreeNode< M, F, V >& node);
-	protected:
-		shared_ptr< Octree< MortonPrecision, Float, Vec3 > > m_octree;
 	};
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>

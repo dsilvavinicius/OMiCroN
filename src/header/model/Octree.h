@@ -3,6 +3,7 @@
 
 #include <map>
 #include <glm/ext.hpp>
+#include <Qt3D/QGLPainter>
 #include "MortonCode.h"
 #include "OctreeNode.h"
 #include "LeafNode.h"
@@ -72,10 +73,16 @@ namespace model
 		 * children points is less than a threshold, the children is merged into parent. */
 		virtual void buildInners();
 		
+		/** Computes the boundaries of the node indicated by the given morton code. */
+		pair< Vec3, Vec3 > getBoundaries(MortonCodePtr< MortonPrecision >) const;
+		
 		/** Utility: appends the points of a child node into a vector, incrementing the number of parent's children and
 		 * leaves. */
 		static void appendPoints(OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
 								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves);
+		
+		/** Traversal recursion. */
+		virtual void traverse(MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter);
 		
 		/** The hierarchy itself. */
 		OctreeMapPtr< MortonPrecision, Float, Vec3 > m_hierarchy;
@@ -238,6 +245,8 @@ namespace model
 					
 					(*m_hierarchy)[parentCode] = mergedNode;
 				}
+				/* 
+				// The condition below is to build a sparse representation of the octree.
 				else if (numChildren == 1 && numLeaves == 0)
 				{
 					// Inner node child, which forms a chain with the parent and represents the same info.
@@ -253,7 +262,7 @@ namespace model
 					newNode->setContents(*childrenPoints[0]);
 					
 					(*m_hierarchy)[parentCode] = newNode;
-				}
+				}*/
 				else
 				{
 					// No merge or absorption is needed. Just does LOD.
@@ -298,12 +307,62 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(QGLPainter *painter)
+	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(QGLPainter* painter)
 	{
-		/*MortonCodePtr< MortonPrecision > parent = make_shared< MortonCode< MortonPrecision > >();
-		parent->build(0x1);
+		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
+		rootCode->build(0x1);
 		
-		m_hierarchy->find(parent);*/
+		traverse(rootCode, painter);
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(MortonCodePtr< MortonPrecision > nodeCode,
+															QGLPainter* painter)
+	{
+		auto nodeIt = m_hierarchy->find(nodeCode);
+		if (nodeIt != m_hierarchy->end())
+		{
+			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
+			pair< Vec3, Vec3 > boxVerts = getBoundaries(nodeCode);
+			Vec3 v0 = boxVerts.first;
+			Vec3 v1 = boxVerts.second;
+			QBox3D box(QVector3D(v0.x, v0.y, v0.z), QVector3D(v1.x, v1.y, v1.z));
+			
+			if (!painter->isCullable(box))
+			{
+				QMatrix4x4 modelViewProjection = painter->combinedMatrix();
+				QVector4D projMin = modelViewProjection.map(QVector4D(box.minimum(), 1));
+				QVector4D projMax = modelViewProjection.map(QVector4D(box.maximum(), 1));
+				
+				if ((projMax - projMin).lengthSquared() < 1) // One pixel threshold.
+				{
+					//painter->draw(QGL::Points, );
+				}
+				else
+				{
+					vector< MortonCodePtr< MortonPrecision > > childrenCodes = nodeCode->traverseDown();
+			
+					for (MortonCodePtr< MortonPrecision > childCode : childrenCodes)
+					{
+						traverse(childCode, painter);
+					}
+				}
+			}
+		}
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	pair<Vec3, Vec3> OctreeBase< MortonPrecision, Float, Vec3 >::getBoundaries(MortonCodePtr< MortonPrecision > code)
+	const
+	{
+		unsigned int level = code->getLevel();
+		vector< MortonPrecision > nodeCoords = code->decode(level);
+		Vec3 levelNodeSize = (*m_size) * Float(1 / (2 << level));
+		
+		Vec3 minBoxVert = (*m_origin) * levelNodeSize;
+		Vec3 maxBoxVert = minBoxVert + levelNodeSize;
+		
+		return pair< Vec3, Vec3 >(minBoxVert, maxBoxVert);
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
