@@ -8,7 +8,6 @@
 #include <Qt3D/QGLView>
 #include <Qt3D/QGLShaderProgramEffect>
 
-#include "rply/rply.h"
 #include "Octree.h"
 
 using namespace std;
@@ -47,7 +46,7 @@ namespace ui
 	private:
 		//QGLShaderProgramEffect* m_program;
 		int m_frame;
-		MediumOctreePtr<float, vec3> octree;
+		MediumOctreePtr<float, vec3> m_octree;
 		
 		QPoint m_lastMousePos;
 	};

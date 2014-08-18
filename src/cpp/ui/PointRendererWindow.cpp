@@ -1,5 +1,9 @@
 #include "PointRendererWindow.h"
+
 #include <QMouseEvent>
+#include "PlyPointReader.h"
+
+using namespace util;
 
 namespace ui
 {
@@ -7,7 +11,12 @@ namespace ui
 		: QGLView(format, parent)
 		/*, m_program(0)*/
 		, m_frame(0)
-	{}
+	{
+		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
+			"../src/data/SparsePointCloud.ply", PlyPointReader::SINGLE);
+		m_octree = make_shared< MediumOctree< float, vec3 > >(50);
+		m_octree->build(points);
+	}
 	
 	PointRendererWindow::~PointRendererWindow()
 	{
@@ -56,8 +65,7 @@ namespace ui
 		painter->draw(QGL::Triangles, 3);
 
 		++m_frame;*/
-		
-		
+		m_octree->traverse(painter);
 	}
 
 	void PointRendererWindow::mouseMoveEvent(QMouseEvent * ev)
