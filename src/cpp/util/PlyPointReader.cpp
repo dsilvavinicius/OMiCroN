@@ -12,7 +12,7 @@ namespace util
 		PointVector< float, vec3 >* points = (PointVector< float, vec3 >*) rawPoints;
 		
 		float value = ply_get_argument_value(argument);
-		cout << "Prop value: " << value << endl;
+		//cout << "Prop value: " << value << endl;
 		
 		unsigned int index = propFlag & 0x7;		
 		switch (index)
