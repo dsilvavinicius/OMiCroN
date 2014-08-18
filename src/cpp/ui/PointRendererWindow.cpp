@@ -5,22 +5,22 @@ namespace ui
 {
 	PointRendererWindow::PointRendererWindow(const QSurfaceFormat &format, QWindow *parent)
 		: QGLView(format, parent)
-		, m_program(0)
+		/*, m_program(0)*/
 		, m_frame(0)
 	{}
 	
 	PointRendererWindow::~PointRendererWindow()
 	{
-		delete m_program;
+		/*delete m_program;*/
 	}
 
 	void PointRendererWindow::initializeGL(QGLPainter *painter)
 	{
-		m_program = new QGLShaderProgramEffect();
+		/*m_program = new QGLShaderProgramEffect();
 		m_program->setVertexShader(PointRendererWindow::vertexShaderSource);
 		m_program->setFragmentShader(PointRendererWindow::fragmentShaderSource);
 		
-		painter->setUserEffect(m_program);
+		painter->setUserEffect(m_program);*/
 		
 		QGLCamera* cam = camera();
 		cam->setProjectionType(QGLCamera::Perspective);
@@ -33,7 +33,7 @@ namespace ui
 
 	void PointRendererWindow::paintGL(QGLPainter *painter)
 	{
-		painter->clearAttributes();
+		/*painter->clearAttributes();
 
 		const QVector2D vertices[] = {
 			QVector2D(0.0f, 0.707f),
@@ -55,7 +55,9 @@ namespace ui
 
 		painter->draw(QGL::Triangles, 3);
 
-		++m_frame;
+		++m_frame;*/
+		
+		
 	}
 
 	void PointRendererWindow::mouseMoveEvent(QMouseEvent * ev)

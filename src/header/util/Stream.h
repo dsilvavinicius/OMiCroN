@@ -4,6 +4,7 @@
 #include <vector>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <glm/ext.hpp>
 
 using namespace std;
 using namespace glm;
@@ -19,12 +20,12 @@ namespace model
 		{
 			if (first)
 			{
-				out << element;
+				out << glm::to_string(element);
 				first = false;
 			}
 			else
 			{
-				out << ", " << element;
+				out << ", " << glm::to_string(element);
 			}
 		}
 		out << "}";

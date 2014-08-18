@@ -82,7 +82,8 @@ namespace model
 								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves);
 		
 		/** Traversal recursion. */
-		virtual void traverse(MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter);
+		virtual void traverse(MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter,
+							  vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw);
 		
 		/** The hierarchy itself. */
 		OctreeMapPtr< MortonPrecision, Float, Vec3 > m_hierarchy;
@@ -309,15 +310,29 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(QGLPainter* painter)
 	{
+		painter->clearAttributes();
+		painter->setStandardEffect(QGL::FlatPerVertexColor);
+		
 		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
 		rootCode->build(0x1);
+		vector<Vec3> pointsToDraw;
+		vector<Vec3> colorsToDraw;
 		
-		traverse(rootCode, painter);
+		traverse(rootCode, painter, pointsToDraw, colorsToDraw);
+		
+		// TODO: Find a way to specify the precision properly here,
+		QGLAttributeValue pointValues(3, GL_FLOAT, 0, &pointsToDraw[0]);
+		QGLAttributeValue colorValues(3, GL_FLOAT, 0, &colorsToDraw[0]);
+		painter->setVertexAttribute(QGL::Position, pointValues);
+		painter->setVertexAttribute(QGL::Color, colorValues);
+		
+		painter->draw(QGL::Points, pointsToDraw.size());
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(MortonCodePtr< MortonPrecision > nodeCode,
-															QGLPainter* painter)
+															QGLPainter* painter, vector< Vec3 >& pointsToDraw,
+															vector< Vec3 >& colorsToDraw)
 	{
 		auto nodeIt = m_hierarchy->find(nodeCode);
 		if (nodeIt != m_hierarchy->end())
@@ -332,11 +347,27 @@ namespace model
 			{
 				QMatrix4x4 modelViewProjection = painter->combinedMatrix();
 				QVector4D projMin = modelViewProjection.map(QVector4D(box.minimum(), 1));
+				projMin = projMin / projMin.w();
 				QVector4D projMax = modelViewProjection.map(QVector4D(box.maximum(), 1));
+				projMax = projMax / projMax.w();
 				
 				if ((projMax - projMin).lengthSquared() < 1) // One pixel threshold.
 				{
-					//painter->draw(QGL::Points, );
+					if (node->isLeaf())
+					{
+						PointVectorPtr< Float, Vec3 > points = node-> template getContents< PointVector< Float, Vec3 > >();
+						for(PointPtr<Float, Vec3> point : *points)
+						{
+							pointsToDraw.push_back(*point->getPos());
+							colorsToDraw.push_back(*point->getColor());
+						}
+					}
+					else
+					{
+						PointPtr< Float, Vec3 > point = node-> template getContents< Point< Float, Vec3 > >();
+						pointsToDraw.push_back(*point->getPos());
+						colorsToDraw.push_back(*point->getColor());
+					}
 				}
 				else
 				{
@@ -344,7 +375,7 @@ namespace model
 			
 					for (MortonCodePtr< MortonPrecision > childCode : childrenCodes)
 					{
-						traverse(childCode, painter);
+						traverse(childCode, painter, pointsToDraw, colorsToDraw);
 					}
 				}
 			}

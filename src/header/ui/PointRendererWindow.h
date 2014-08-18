@@ -8,7 +8,11 @@
 #include <Qt3D/QGLView>
 #include <Qt3D/QGLShaderProgramEffect>
 
+#include "rply/rply.h"
+#include "Octree.h"
+
 using namespace std;
+using namespace model;
 
 namespace ui
 {
@@ -18,7 +22,7 @@ namespace ui
 		PointRendererWindow(const QSurfaceFormat &format, QWindow *parent = 0);
 		~PointRendererWindow();
 		
-		static constexpr char *vertexShaderSource =
+		/*static constexpr char *vertexShaderSource =
 			"attribute highp vec4 qt_Vertex;\n"
 			"attribute lowp vec4 qt_Color;\n"
 			"varying lowp vec4 col;\n"
@@ -32,7 +36,7 @@ namespace ui
 			"varying lowp vec4 col;\n"
 			"void main() {\n"
 			"   gl_FragColor = col;\n"
-			"}\n";
+			"}\n";*/
 
 	protected:
 		void paintGL(QGLPainter *painter);
@@ -41,8 +45,9 @@ namespace ui
 		virtual void mousePressEvent(QMouseEvent* ev);
 		
 	private:
-		QGLShaderProgramEffect* m_program;
+		//QGLShaderProgramEffect* m_program;
 		int m_frame;
+		MediumOctreePtr<float, vec3> octree;
 		
 		QPoint m_lastMousePos;
 	};

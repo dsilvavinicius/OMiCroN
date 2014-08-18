@@ -63,11 +63,15 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
 	${Qt53D_INCLUDE_DIRS}
-
+	include/
+	
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
 	${HEADER_DIR}/${UTIL_DIR}/)
 
+# Compiles libraries
+add_subdirectory(lib)
+	
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
@@ -88,8 +92,9 @@ target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
 	Qt5::Widgets
 	Qt5::3D
 	${OPENGL_LIBRARIES}
-	${GLML_LIBRARIES})
-	
+	${GLML_LIBRARIES}
+	RPly)
+
 # Creates renderer program and links with the renderer library.
 add_executable (Point_Based_Renderer
 	${CPP_DIR}/main.cpp
