@@ -46,7 +46,7 @@ namespace ui
 	private:
 		//QGLShaderProgramEffect* m_program;
 		int m_frame;
-		MediumOctreePtr<float, vec3> m_octree;
+		ShallowOctreePtr<float, vec3> m_octree;
 		
 		QPoint m_lastMousePos;
 	};

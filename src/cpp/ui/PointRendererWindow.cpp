@@ -1,6 +1,7 @@
 #include "PointRendererWindow.h"
 
 #include <QMouseEvent>
+#include <QDir>
 #include "PlyPointReader.h"
 
 using namespace util;
@@ -13,8 +14,8 @@ namespace ui
 		, m_frame(0)
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
-			"../../src/data/pugile.ply", PlyPointReader::SINGLE);
-		m_octree = make_shared< MediumOctree< float, vec3 > >(50);
+			"../../src/data/SparsePointCloud.ply", PlyPointReader::SINGLE);
+		m_octree = make_shared< ShallowOctree< float, vec3 > >(100);
 		m_octree->build(points);
 	}
 	
@@ -35,7 +36,7 @@ namespace ui
 		cam->setProjectionType(QGLCamera::Perspective);
 		cam->setFieldOfView(60.0f);
 		cam->setNearPlane(0.1f);
-		cam->setFarPlane(5000.0f);
+		cam->setFarPlane(10000.0f);
 		
 		painter->setCamera(cam);
 	}

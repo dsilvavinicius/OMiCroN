@@ -17,7 +17,7 @@ namespace util
 
 		TEST_F(PlyPointReaderTest, Read)
 		{
-			PointVector< float, vec3 > points = PlyPointReader::read< float, vec3 >("../../src/data/test.ply",
+			PointVector< float, vec3 > points = PlyPointReader::read< float, vec3 >("../../../src/data/test.ply",
 																	 PlyPointReader::SINGLE);
 			
 			Point< float, vec3 > expectedPoint0(vec3((float)81 / 255, (float)63 / 255, (float)39 / 255),

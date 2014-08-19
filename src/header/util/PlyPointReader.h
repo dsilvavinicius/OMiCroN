@@ -1,6 +1,7 @@
 #ifndef PLY_POINT_READER_H
 #define PLY_POINT_READER_H
 
+#include <locale.h>
 #include <string>
 #include "rply/rply.h"
 #include "Point.h"
@@ -49,13 +50,21 @@ namespace util
 	PointVector< Float, Vec3 > PlyPointReader::read(const string& fileName,
 		PlyPointReader::Precision precision)
 	{
+		/* Save application locale */
+		const char *old_locale = setlocale(LC_NUMERIC, NULL);
+		/* Change to PLY standard */
+		setlocale(LC_NUMERIC, "C");
+
 		p_ply ply = ply_open(fileName.c_str(), NULL, 0, NULL);
 		if (!ply)
 		{
+			setlocale(LC_NUMERIC, old_locale);
 			throw runtime_error("Cannot open .ply point file");
 		}
 		if (!ply_read_header(ply))
 		{
+			ply_close(ply);
+			setlocale(LC_NUMERIC, old_locale);
 			throw runtime_error("Cannot read point file header.");
 		}
 		
@@ -69,8 +78,15 @@ namespace util
 		
 		if (!ply_read(ply))
 		{
+			ply_close(ply);
+			setlocale(LC_NUMERIC, old_locale);
 			throw runtime_error("Problem while reading points.");
 		}
+		
+		ply_close(ply);
+		
+		/* Restore application locale when done */
+		setlocale(LC_NUMERIC, old_locale);
 		
 		return points;
 	}
