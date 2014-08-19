@@ -393,6 +393,12 @@ namespace model
 		Vec3 minBoxVert = (*m_origin) * levelNodeSize;
 		Vec3 maxBoxVert = minBoxVert + levelNodeSize;
 		
+		cout << "Boundaries calc: level = " << level << endl
+			 << "node coordinates = " << nodeCoords << endl
+			 << "level node size = " << "{" << levelNodeSize[0] << ", " << levelNodeSize[1] << ", " << levelNodeSize[2] << "}" << endl
+			 << "min coords = " << glm::to_string(minBoxVert) << endl
+			 << "max coords = " << glm::to_string(maxBoxVert) << endl;
+		
 		return pair< Vec3, Vec3 >(minBoxVert, maxBoxVert);
 	}
 	

@@ -86,12 +86,21 @@ namespace model
 		}
 		
 		TEST_F(MortonCodeTest, Decoding)
-		{
-			unsigned int level = 10;
-			unsigned int coords[3] = { 7, 5, 0 };
+		{	
+			// Root node
+			unsigned int level = 0;
 			ShallowMortonCode shallowMorton;
-			shallowMorton.build(coords[0], coords[1], coords[2], level);
+			shallowMorton.build(0x1);
 			vector< unsigned int > decoded = shallowMorton.decode(level);
+			ASSERT_EQ(decoded[0], 0);
+			ASSERT_EQ(decoded[1], 0);
+			ASSERT_EQ(decoded[2], 0);
+			
+			// Leaf (shallow).
+			level = 10;
+			unsigned int coords[3] = { 7, 5, 0 };
+			shallowMorton.build(coords[0], coords[1], coords[2], level);
+			decoded = shallowMorton.decode(level);
 			
 			ASSERT_EQ(decoded[0], coords[0]);
 			ASSERT_EQ(decoded[1], coords[1]);
@@ -103,6 +112,7 @@ namespace model
 			ASSERT_EQ(decoded[1], coords[1]);
 			ASSERT_EQ(decoded[2], coords[2]);
 			
+			// Leaf (medium).
 			level = 21;
 			unsigned int coordsL[3] = { 5000, 6000, 7000 };
 			MediumMortonCode mediumMorton;

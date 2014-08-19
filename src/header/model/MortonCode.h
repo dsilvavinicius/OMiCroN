@@ -111,9 +111,12 @@ namespace model
 	{
 		vector<T> coords(3);
 		
-		coords[0] = compact3(m_bits);
-		coords[1] = compact3(m_bits >> 1);
-		coords[2] = compact3(m_bits >> 2);
+		T clearPrefixMask = (T(1) << T(3 * level)) - 1;
+		T bits = m_bits & clearPrefixMask;
+		
+		coords[0] = compact3(bits);
+		coords[1] = compact3(bits >> 1);
+		coords[2] = compact3(bits >> 2);
 		
 		return coords;
 	}
