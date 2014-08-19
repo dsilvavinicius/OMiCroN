@@ -53,10 +53,12 @@ namespace model
 		
 		/** Decodes this morton code into an array of 3 coordinates. Use this when the level of code is known
 		 * a priori. */
+		// TODO: Use a template to specify a vec3 type here.
 		vector<T> decode(const unsigned int& level) const;
 		
 		/** Decodes this morton code into an array of 3 coordinates. Use this when the level of the code is
 		 * unknown (slower). */
+		// TODO: Use a template to specify a vec3 type here.
 		vector<T> decode() const;
 		
 		/** Computes the level of this code. */

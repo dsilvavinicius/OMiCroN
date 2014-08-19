@@ -334,6 +334,7 @@ namespace model
 															QGLPainter* painter, vector< Vec3 >& pointsToDraw,
 															vector< Vec3 >& colorsToDraw)
 	{
+		//cout << "TRAVERSING " << *nodeCode << endl << endl;
 		auto nodeIt = m_hierarchy->find(nodeCode);
 		if (nodeIt != m_hierarchy->end())
 		{
@@ -345,6 +346,7 @@ namespace model
 			
 			if (!painter->isCullable(box))
 			{
+				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
 				QMatrix4x4 modelViewProjection = painter->combinedMatrix();
 				QVector4D projMin = modelViewProjection.map(QVector4D(box.minimum(), 1));
 				projMin = projMin / projMin.w();
@@ -353,6 +355,7 @@ namespace model
 				
 				if ((projMax - projMin).lengthSquared() < 1) // One pixel threshold.
 				{
+					//cout << *nodeCode << "RENDERED!" << endl << endl;
 					if (node->isLeaf())
 					{
 						PointVectorPtr< Float, Vec3 > points = node-> template getContents< PointVector< Float, Vec3 > >();
@@ -387,17 +390,21 @@ namespace model
 	const
 	{
 		unsigned int level = code->getLevel();
-		vector< MortonPrecision > nodeCoords = code->decode(level);
-		Vec3 levelNodeSize = (*m_size) * Float(1 / (2 << level));
+		vector< MortonPrecision > nodeCoordsVec = code->decode(level);
+		Vec3 nodeCoords(nodeCoordsVec[0], nodeCoordsVec[1], nodeCoordsVec[2]);
+		Float nodeSizeFactor = Float(1) / Float(1 << level);
+		Vec3 levelNodeSize = (*m_size) * nodeSizeFactor;
 		
-		Vec3 minBoxVert = (*m_origin) * levelNodeSize;
+		Vec3 minBoxVert = (*m_origin) + nodeCoords * levelNodeSize;
 		Vec3 maxBoxVert = minBoxVert + levelNodeSize;
 		
-		cout << "Boundaries calc: level = " << level << endl
-			 << "node coordinates = " << nodeCoords << endl
-			 << "level node size = " << "{" << levelNodeSize[0] << ", " << levelNodeSize[1] << ", " << levelNodeSize[2] << "}" << endl
+		/*cout << "Boundaries for node 0x" << hex << code->getBits() << dec << endl
+			 << "level = " << level << endl
+			 << "node coordinates = " << glm::to_string(nodeCoords) << endl
+			 << "node size factor = " << nodeSizeFactor << endl
+			 << "level node size = " << glm::to_string(levelNodeSize) << endl
 			 << "min coords = " << glm::to_string(minBoxVert) << endl
-			 << "max coords = " << glm::to_string(maxBoxVert) << endl;
+			 << "max coords = " << glm::to_string(maxBoxVert) << endl;*/
 		
 		return pair< Vec3, Vec3 >(minBoxVert, maxBoxVert);
 	}
