@@ -15,7 +15,7 @@ namespace ui
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
 			"../../src/data/Tempietteo_dense_01.ply", PlyPointReader::SINGLE);
-		m_octree = make_shared< ShallowOctree< float, vec3 > >(10000);
+		m_octree = make_shared< ShallowOctree< float, vec3 > >(100);
 		m_octree->build(points);
 	}
 	
@@ -67,6 +67,7 @@ namespace ui
 
 		++m_frame;*/
 		//cout << "STARTING PAINTING!" << endl;
+		//m_octree->drawBoundaries(painter);
 		m_octree->traverse(painter);
 	}
 
@@ -85,6 +86,11 @@ namespace ui
 										cam->tilt(-(float)deltaPos.y() * 0.1f);
 				cam->rotateEye(rotation);
 			}
+			if (buttons & Qt::MiddleButton)
+			{
+				QQuaternion rotation = cam->roll(-(float)deltaPos.y() * 0.1f);
+				cam->rotateEye(rotation);
+			}
 			if (buttons & Qt::RightButton)
 			{
 				QVector3D translation = cam->translation((float)deltaPos.x() * 0.01f,
@@ -92,15 +98,17 @@ namespace ui
 				cam->setEye(cam->eye() + translation);
 				cam->setCenter(cam->center() + translation);
 			}
-			if (buttons & Qt::MiddleButton)
-			{
-				QVector3D translation = cam->translation(0.f, 0.f, -(float)deltaPos.y() * 0.1f);
-				cam->setEye(cam->eye() + translation);
-				cam->setCenter(cam->center() + translation);
-			}
 			
 			m_lastMousePos = currentPos;
 		}
+	}
+	
+	void PointRendererWindow::wheelEvent(QWheelEvent * ev)
+	{
+		QGLCamera* cam = camera();
+		QVector3D translation = cam->translation(0.f, 0.f, (float)ev->angleDelta().y() * 0.01f);
+		cam->setEye(cam->eye() + translation);
+		cam->setCenter(cam->center() + translation);
 	}
 	
 	void PointRendererWindow::mousePressEvent(QMouseEvent* ev)

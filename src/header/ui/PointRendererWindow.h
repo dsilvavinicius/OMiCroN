@@ -42,6 +42,7 @@ namespace ui
 		void initializeGL(QGLPainter *painter);
 		virtual void mouseMoveEvent(QMouseEvent* ev);
 		virtual void mousePressEvent(QMouseEvent* ev);
+		virtual void wheelEvent(QWheelEvent * ev);
 		
 	private:
 		//QGLShaderProgramEffect* m_program;

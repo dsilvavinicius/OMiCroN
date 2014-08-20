@@ -56,6 +56,9 @@ namespace model
 		/** Gets the maximum level that this octree can reach. */
 		virtual unsigned int getMaxLevel() const;
 		
+		/** Draws the boundaries of the nodes. */
+		virtual void drawBoundaries(QGLPainter * painter) const;
+		
 		template <typename M, typename F, typename V>
 		friend ostream& operator<<(ostream& out, const OctreeBase< M, F, V >& octree);
 		
@@ -73,13 +76,20 @@ namespace model
 		 * children points is less than a threshold, the children is merged into parent. */
 		virtual void buildInners();
 		
-		/** Computes the boundaries of the node indicated by the given morton code. */
-		pair< Vec3, Vec3 > getBoundaries(MortonCodePtr< MortonPrecision >) const;
-		
 		/** Utility: appends the points of a child node into a vector, incrementing the number of parent's children and
 		 * leaves. */
 		static void appendPoints(OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
 								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves);
+		
+		// TODO: Make testes for this function.
+		/** Computes the boundaries of the node indicated by the given morton code. */
+		pair< Vec3, Vec3 > getBoundaries(MortonCodePtr< MortonPrecision >) const;
+		
+		/** Checks if this node is culled by frustrum test. */
+		bool isCullable(MortonCodePtr< MortonPrecision > code, QGLPainter* painter, QBox3D& box) const;
+		
+		/** Check if this node is at desired LOD and thus, would be rendered. */
+		bool isRenderable(QBox3D& box, QGLPainter* painter) const;
 		
 		/** Traversal recursion. */
 		virtual void traverse(MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter,
@@ -330,62 +340,6 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(MortonCodePtr< MortonPrecision > nodeCode,
-															QGLPainter* painter, vector< Vec3 >& pointsToDraw,
-															vector< Vec3 >& colorsToDraw)
-	{
-		//cout << "TRAVERSING " << *nodeCode << endl << endl;
-		auto nodeIt = m_hierarchy->find(nodeCode);
-		if (nodeIt != m_hierarchy->end())
-		{
-			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
-			pair< Vec3, Vec3 > boxVerts = getBoundaries(nodeCode);
-			Vec3 v0 = boxVerts.first;
-			Vec3 v1 = boxVerts.second;
-			QBox3D box(QVector3D(v0.x, v0.y, v0.z), QVector3D(v1.x, v1.y, v1.z));
-			
-			if (!painter->isCullable(box))
-			{
-				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
-				QMatrix4x4 modelViewProjection = painter->combinedMatrix();
-				QVector4D projMin = modelViewProjection.map(QVector4D(box.minimum(), 1));
-				projMin = projMin / projMin.w();
-				QVector4D projMax = modelViewProjection.map(QVector4D(box.maximum(), 1));
-				projMax = projMax / projMax.w();
-				
-				if ((projMax - projMin).lengthSquared() < 1) // One pixel threshold.
-				{
-					//cout << *nodeCode << "RENDERED!" << endl << endl;
-					if (node->isLeaf())
-					{
-						PointVectorPtr< Float, Vec3 > points = node-> template getContents< PointVector< Float, Vec3 > >();
-						for(PointPtr<Float, Vec3> point : *points)
-						{
-							pointsToDraw.push_back(*point->getPos());
-							colorsToDraw.push_back(*point->getColor());
-						}
-					}
-					else
-					{
-						PointPtr< Float, Vec3 > point = node-> template getContents< Point< Float, Vec3 > >();
-						pointsToDraw.push_back(*point->getPos());
-						colorsToDraw.push_back(*point->getColor());
-					}
-				}
-				else
-				{
-					vector< MortonCodePtr< MortonPrecision > > childrenCodes = nodeCode->traverseDown();
-			
-					for (MortonCodePtr< MortonPrecision > childCode : childrenCodes)
-					{
-						traverse(childCode, painter, pointsToDraw, colorsToDraw);
-					}
-				}
-			}
-		}
-	}
-	
-	template <typename MortonPrecision, typename Float, typename Vec3>
 	pair<Vec3, Vec3> OctreeBase< MortonPrecision, Float, Vec3 >::getBoundaries(MortonCodePtr< MortonPrecision > code)
 	const
 	{
@@ -407,6 +361,166 @@ namespace model
 			 << "max coords = " << glm::to_string(maxBoxVert) << endl;*/
 		
 		return pair< Vec3, Vec3 >(minBoxVert, maxBoxVert);
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	bool OctreeBase< MortonPrecision, Float, Vec3 >::isCullable(MortonCodePtr< MortonPrecision > code,
+															  QGLPainter* painter, QBox3D& box) const
+	{
+		pair< Vec3, Vec3 > boxVerts = getBoundaries(code);
+		Vec3 v0 = boxVerts.first;
+		Vec3 v1 = boxVerts.second;
+		box = QBox3D(QVector3D(v0.x, v0.y, v0.z), QVector3D(v1.x, v1.y, v1.z));
+			
+		return painter->isCullable(box);
+	}
+		
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	bool OctreeBase< MortonPrecision, Float, Vec3 >::isRenderable(QBox3D& box, QGLPainter* painter) const
+	{
+		QMatrix4x4 modelViewProjection = painter->combinedMatrix();
+		QVector4D projMin = modelViewProjection.map(QVector4D(box.minimum(), 1));
+		QVector2D normalizedMin(projMin / projMin.w());
+		QVector4D projMax = modelViewProjection.map(QVector4D(box.maximum(), 1));
+		QVector2D normalizedMax(projMax / projMax.w());
+		
+		/*vec4 max(projMax.x(), projMax.y(), projMax.z(), projMax.w());
+		vec4 min(projMin.x(), projMin.y(), projMin.z(), projMin.w());
+		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
+			 << "squared len = " << (projMax - projMin).lengthSquared() << endl;*/
+		
+		return (normalizedMax - normalizedMin).length() < 0.005;
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	void OctreeBase<MortonPrecision, Float, Vec3>::traverse(MortonCodePtr< MortonPrecision > nodeCode,
+															QGLPainter* painter, vector< Vec3 >& pointsToDraw,
+															vector< Vec3 >& colorsToDraw)
+	{
+		//cout << "TRAVERSING " << *nodeCode << endl << endl;
+		auto nodeIt = m_hierarchy->find(nodeCode);
+		if (nodeIt != m_hierarchy->end())
+		{
+			MortonCodePtr< MortonPrecision > code = nodeIt->first;
+			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
+			QBox3D box;
+			
+			if(!isCullable(code, painter, box))
+			{
+				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
+				if(isRenderable(box, painter))
+				{
+					//cout << *nodeCode << "RENDERED!" << endl << endl;
+					if (node->isLeaf())
+					{
+						PointVectorPtr< Float, Vec3 > points = node-> template getContents< PointVector< Float, Vec3 > >();
+						for(PointPtr<Float, Vec3> point : *points)
+						{
+							pointsToDraw.push_back(*point->getPos());
+							colorsToDraw.push_back(*point->getColor());
+						}
+					}
+					else
+					{
+						PointPtr< Float, Vec3 > point = node-> template getContents< Point< Float, Vec3 > >();
+						pointsToDraw.push_back(*point->getPos());
+						colorsToDraw.push_back(*point->getColor());
+					}
+				}
+				else
+				{
+					if (node->isLeaf())
+					{
+						PointVectorPtr< Float, Vec3 > points = node-> template getContents< PointVector< Float, Vec3 > >();
+						for(PointPtr<Float, Vec3> point : *points)
+						{
+							pointsToDraw.push_back(*point->getPos());
+							colorsToDraw.push_back(*point->getColor());
+						}
+					}
+					else
+					{
+						vector< MortonCodePtr< MortonPrecision > > childrenCodes = nodeCode->traverseDown();
+			
+						for (MortonCodePtr< MortonPrecision > childCode : childrenCodes)
+						{
+							traverse(childCode, painter, pointsToDraw, colorsToDraw);
+						}
+					}
+				}
+			}
+		}
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	void OctreeBase< MortonPrecision, Float, Vec3 >::drawBoundaries(QGLPainter * painter) const
+	{
+		// Saves current effect.
+		QGLAbstractEffect* effect = painter->effect();
+		
+		painter->setStandardEffect(QGL::FlatPerVertexColor);
+		vector< Vec3 > verts;
+		vector< Vec3 > colors;
+		
+		for (pair< MortonCodePtr< MortonPrecision >, OctreeNodePtr< MortonPrecision, Float, Vec3 > > entry : *m_hierarchy)
+		{
+			MortonCodePtr< MortonPrecision > code = entry.first;
+			QBox3D box;
+			bool culled = isCullable(code, painter, box);
+			bool renderable = isRenderable(box, painter);
+			
+			if (renderable)
+			{
+				QVector3D qv0 = box.minimum();
+				QVector3D qv6 = box.maximum();
+				
+				Vec3 v0(qv0.x(), qv0.y(), qv0.z());
+				Vec3 v6(qv6.x(), qv6.y(), qv6.z());
+				Vec3 size = v6 - v0;
+				Vec3 v1(v0.x + size.x, v0.y			, v0.z);
+				Vec3 v2(v1.x		 , v1.y + size.y, v1.z);
+				Vec3 v3(v2.x - size.x, v2.y			, v2.z);
+				Vec3 v4(v0.x		 , v0.y			, v0.z + size.z);
+				Vec3 v5(v4.x + size.x, v4.y			, v4.z);
+				Vec3 v7(v6.x - size.x, v6.y			, v6.z);
+				
+				// Face 0.
+				verts.push_back(v0); verts.push_back(v1);
+				verts.push_back(v1); verts.push_back(v2);
+				verts.push_back(v2); verts.push_back(v3);
+				verts.push_back(v3); verts.push_back(v0);
+				// Face 1.
+				verts.push_back(v4); verts.push_back(v5);
+				verts.push_back(v5); verts.push_back(v6);
+				verts.push_back(v6); verts.push_back(v7);
+				verts.push_back(v7); verts.push_back(v4);
+				// Connectors.
+				verts.push_back(v0); verts.push_back(v4);
+				verts.push_back(v1); verts.push_back(v5);
+				verts.push_back(v2); verts.push_back(v6);
+				verts.push_back(v3); verts.push_back(v7);
+				
+				if (culled)
+				{
+					colors.insert(colors.end(), 24, Vec3(1, 0, 0));
+				}
+				else
+				{
+					colors.insert(colors.end(), 24, Vec3(1, 1, 1));
+				}
+			}
+		}
+		
+		// TODO: Find a way to parametrize precision here.
+		QGLAttributeValue vertPosAttrib(3, GL_FLOAT, 0, &verts[0]);
+		QGLAttributeValue colorAttrib(3, GL_FLOAT, 0, &colors[0]);
+		
+		painter->setVertexAttribute(QGL::Position, vertPosAttrib);
+		painter->setVertexAttribute(QGL::Color, colorAttrib);
+		painter->draw(QGL::Lines, verts.size());
+		
+		// Restores previous effect.
+		painter->setUserEffect(effect);
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
