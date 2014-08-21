@@ -389,7 +389,7 @@ namespace model
 		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
 			 << "squared len = " << (projMax - projMin).lengthSquared() << endl;*/
 		
-		return (normalizedMax - normalizedMin).length() < 0.004;
+		return (normalizedMax - normalizedMin).length() < 0.01;
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -469,45 +469,46 @@ namespace model
 			bool culled = isCullable(code, painter, box);
 			bool renderable = isRenderable(box, painter);
 			
-			if (renderable)
+			QVector3D qv0 = box.minimum();
+			QVector3D qv6 = box.maximum();
+				
+			Vec3 v0(qv0.x(), qv0.y(), qv0.z());
+			Vec3 v6(qv6.x(), qv6.y(), qv6.z());
+			Vec3 size = v6 - v0;
+			Vec3 v1(v0.x + size.x, v0.y			, v0.z);
+			Vec3 v2(v1.x		 , v1.y + size.y, v1.z);
+			Vec3 v3(v2.x - size.x, v2.y			, v2.z);
+			Vec3 v4(v0.x		 , v0.y			, v0.z + size.z);
+			Vec3 v5(v4.x + size.x, v4.y			, v4.z);
+			Vec3 v7(v6.x - size.x, v6.y			, v6.z);
+			
+			// Face 0.
+			verts.push_back(v0); verts.push_back(v1);
+			verts.push_back(v1); verts.push_back(v2);
+			verts.push_back(v2); verts.push_back(v3);
+			verts.push_back(v3); verts.push_back(v0);
+			// Face 1.
+			verts.push_back(v4); verts.push_back(v5);
+			verts.push_back(v5); verts.push_back(v6);
+			verts.push_back(v6); verts.push_back(v7);
+			verts.push_back(v7); verts.push_back(v4);
+			// Connectors.
+			verts.push_back(v0); verts.push_back(v4);
+			verts.push_back(v1); verts.push_back(v5);
+			verts.push_back(v2); verts.push_back(v6);
+			verts.push_back(v3); verts.push_back(v7);
+			
+			if (culled)
 			{
-				QVector3D qv0 = box.minimum();
-				QVector3D qv6 = box.maximum();
-				
-				Vec3 v0(qv0.x(), qv0.y(), qv0.z());
-				Vec3 v6(qv6.x(), qv6.y(), qv6.z());
-				Vec3 size = v6 - v0;
-				Vec3 v1(v0.x + size.x, v0.y			, v0.z);
-				Vec3 v2(v1.x		 , v1.y + size.y, v1.z);
-				Vec3 v3(v2.x - size.x, v2.y			, v2.z);
-				Vec3 v4(v0.x		 , v0.y			, v0.z + size.z);
-				Vec3 v5(v4.x + size.x, v4.y			, v4.z);
-				Vec3 v7(v6.x - size.x, v6.y			, v6.z);
-				
-				// Face 0.
-				verts.push_back(v0); verts.push_back(v1);
-				verts.push_back(v1); verts.push_back(v2);
-				verts.push_back(v2); verts.push_back(v3);
-				verts.push_back(v3); verts.push_back(v0);
-				// Face 1.
-				verts.push_back(v4); verts.push_back(v5);
-				verts.push_back(v5); verts.push_back(v6);
-				verts.push_back(v6); verts.push_back(v7);
-				verts.push_back(v7); verts.push_back(v4);
-				// Connectors.
-				verts.push_back(v0); verts.push_back(v4);
-				verts.push_back(v1); verts.push_back(v5);
-				verts.push_back(v2); verts.push_back(v6);
-				verts.push_back(v3); verts.push_back(v7);
-				
-				if (culled)
-				{
-					colors.insert(colors.end(), 24, Vec3(1, 0, 0));
-				}
-				else
-				{
-					colors.insert(colors.end(), 24, Vec3(1, 1, 1));
-				}
+				colors.insert(colors.end(), 24, Vec3(1, 0, 0));
+			}
+			else if (renderable)
+			{
+				colors.insert(colors.end(), 24, Vec3(1, 1, 1));
+			}
+			else
+			{
+				colors.insert(colors.end(), 24, Vec3(0, 0, 1));
 			}
 		}
 		
