@@ -389,7 +389,7 @@ namespace model
 		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
 			 << "squared len = " << (projMax - projMin).lengthSquared() << endl;*/
 		
-		return (normalizedMax - normalizedMin).length() < 0.005;
+		return (normalizedMax - normalizedMin).length() < 0.004;
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
