@@ -56,8 +56,9 @@ namespace model
 		/** Gets the maximum level that this octree can reach. */
 		virtual unsigned int getMaxLevel() const;
 		
-		/** Draws the boundaries of the nodes. */
-		virtual void drawBoundaries(QGLPainter * painter) const;
+		/** Draws the boundaries of the nodes.
+		 * @param passProjTestOnly indicates if only the nodes that pass the projection test should be rendered. */
+		virtual void drawBoundaries(QGLPainter * painter, const bool& passProjTestOnly) const;
 		
 		template <typename M, typename F, typename V>
 		friend ostream& operator<<(ostream& out, const OctreeBase< M, F, V >& octree);
@@ -94,6 +95,10 @@ namespace model
 		/** Traversal recursion. */
 		virtual void traverse(MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter,
 							  vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw);
+		
+		/** Helper function to insert node boundary point into vectors for rendering. */
+		static void insertBoundaryPoints(vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
+										 const bool& isCullable, const bool& isRenderable);
 		
 		/** The hierarchy itself. */
 		OctreeMapPtr< MortonPrecision, Float, Vec3 > m_hierarchy;
@@ -378,18 +383,48 @@ namespace model
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	bool OctreeBase< MortonPrecision, Float, Vec3 >::isRenderable(QBox3D& box, QGLPainter* painter) const
 	{
+		QVector4D min(box.minimum(), 1);
+		QVector4D max(box.maximum(), 1);
+		
 		QMatrix4x4 modelViewProjection = painter->combinedMatrix();
-		QVector4D projMin = modelViewProjection.map(QVector4D(box.minimum(), 1));
-		QVector2D normalizedMin(projMin / projMin.w());
-		QVector4D projMax = modelViewProjection.map(QVector4D(box.maximum(), 1));
-		QVector2D normalizedMax(projMax / projMax.w());
 		
-		/*vec4 max(projMax.x(), projMax.y(), projMax.z(), projMax.w());
-		vec4 min(projMin.x(), projMin.y(), projMin.z(), projMin.w());
+		QVector4D proj0 = modelViewProjection.map(min);
+		QVector2D normalizedProj0(proj0 / proj0.w());
+		
+		QVector4D proj1 = modelViewProjection.map(max);
+		QVector2D normalizedProj1(proj1 / proj1.w());
+		
+		QVector2D diagonal0 = normalizedProj1 - normalizedProj0;
+		
+		/*vec4 min(proj0.x(), proj0.y(), proj0.z(), proj0.w());
+		vec2 normMin(normalizedProj0.x(), normalizedProj0.y());
+		vec4 max(proj1.x(), proj1.y(), proj1.z(), proj1.w());
+		vec2 normMax(normalizedProj1.x(), normalizedProj1.y());
 		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
-			 << "squared len = " << (projMax - projMin).lengthSquared() << endl;*/
+			 << "normMin = " << glm::to_string(normMin) << endl << "normMax = " << glm::to_string(normMax) << endl
+			 << "squared len = " << diagonal0.lengthSquared() << endl;*/
 		
-		return (normalizedMax - normalizedMin).length() < 0.01;
+		QVector3D boxSize = box.size();
+		
+		proj0 = modelViewProjection.map(QVector4D(min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1));
+		normalizedProj0 = QVector2D(proj0 / proj0.w());
+		
+		proj1 = modelViewProjection.map(QVector4D(max.x(), max.y(), max.z() + boxSize.z(), 1));
+		normalizedProj1 = QVector2D(proj1 / proj1.w());
+		
+		QVector2D diagonal1 = normalizedProj1 - normalizedProj0;
+		
+		Float maxDiagLength = glm::max(diagonal0.lengthSquared(), diagonal1.lengthSquared());
+		
+		/*min = vec4(proj0.x(), proj0.y(), proj0.z(), proj0.w());
+		normMin = vec2(normalizedProj0.x(), normalizedProj0.y());
+		max = vec4(proj1.x(), proj1.y(), proj1.z(), proj1.w());
+		normMax = vec2(normalizedProj1.x(), normalizedProj1.y());
+		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
+			 << "normMin = " << glm::to_string(normMin) << endl << "normMax = " << glm::to_string(normMax) << endl
+			 << "squared len = " << diagonal1.lengthSquared() << endl;*/
+		
+		return maxDiagLength < 0.0005;
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -453,7 +488,55 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase< MortonPrecision, Float, Vec3 >::drawBoundaries(QGLPainter * painter) const
+	void OctreeBase< MortonPrecision, Float, Vec3 >::insertBoundaryPoints(vector< Vec3 >& verts, vector< Vec3 >& colors,
+																		  const QBox3D& box, const bool& isCullable,
+																		  const bool& isRenderable)
+	{
+		QVector3D qv0 = box.minimum();
+		QVector3D qv6 = box.maximum();
+			
+		Vec3 v0(qv0.x(), qv0.y(), qv0.z());
+		Vec3 v6(qv6.x(), qv6.y(), qv6.z());
+		Vec3 size = v6 - v0;
+		Vec3 v1(v0.x + size.x, v0.y			, v0.z);
+		Vec3 v2(v1.x		 , v1.y + size.y, v1.z);
+		Vec3 v3(v2.x - size.x, v2.y			, v2.z);
+		Vec3 v4(v0.x		 , v0.y			, v0.z + size.z);
+		Vec3 v5(v4.x + size.x, v4.y			, v4.z);
+		Vec3 v7(v6.x - size.x, v6.y			, v6.z);
+		
+		// Face 0.
+		verts.push_back(v0); verts.push_back(v1);
+		verts.push_back(v1); verts.push_back(v2);
+		verts.push_back(v2); verts.push_back(v3);
+		verts.push_back(v3); verts.push_back(v0);
+		// Face 1.
+		verts.push_back(v4); verts.push_back(v5);
+		verts.push_back(v5); verts.push_back(v6);
+		verts.push_back(v6); verts.push_back(v7);
+		verts.push_back(v7); verts.push_back(v4);
+		// Connectors.
+		verts.push_back(v0); verts.push_back(v4);
+		verts.push_back(v1); verts.push_back(v5);
+		verts.push_back(v2); verts.push_back(v6);
+		verts.push_back(v3); verts.push_back(v7);
+		
+		if (isCullable)
+		{
+			colors.insert(colors.end(), 24, Vec3(1, 0, 0));
+		}
+		else if (isRenderable)
+		{
+			colors.insert(colors.end(), 24, Vec3(1, 1, 1));
+		}
+		else
+		{
+			colors.insert(colors.end(), 24, Vec3(0, 0, 1));
+		}
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	void OctreeBase< MortonPrecision, Float, Vec3 >::drawBoundaries(QGLPainter * painter, const bool& passProjTestOnly ) const
 	{
 		// Saves current effect.
 		QGLAbstractEffect* effect = painter->effect();
@@ -466,49 +549,19 @@ namespace model
 		{
 			MortonCodePtr< MortonPrecision > code = entry.first;
 			QBox3D box;
-			bool culled = isCullable(code, painter, box);
+			bool cullable = isCullable(code, painter, box);
 			bool renderable = isRenderable(box, painter);
 			
-			QVector3D qv0 = box.minimum();
-			QVector3D qv6 = box.maximum();
-				
-			Vec3 v0(qv0.x(), qv0.y(), qv0.z());
-			Vec3 v6(qv6.x(), qv6.y(), qv6.z());
-			Vec3 size = v6 - v0;
-			Vec3 v1(v0.x + size.x, v0.y			, v0.z);
-			Vec3 v2(v1.x		 , v1.y + size.y, v1.z);
-			Vec3 v3(v2.x - size.x, v2.y			, v2.z);
-			Vec3 v4(v0.x		 , v0.y			, v0.z + size.z);
-			Vec3 v5(v4.x + size.x, v4.y			, v4.z);
-			Vec3 v7(v6.x - size.x, v6.y			, v6.z);
-			
-			// Face 0.
-			verts.push_back(v0); verts.push_back(v1);
-			verts.push_back(v1); verts.push_back(v2);
-			verts.push_back(v2); verts.push_back(v3);
-			verts.push_back(v3); verts.push_back(v0);
-			// Face 1.
-			verts.push_back(v4); verts.push_back(v5);
-			verts.push_back(v5); verts.push_back(v6);
-			verts.push_back(v6); verts.push_back(v7);
-			verts.push_back(v7); verts.push_back(v4);
-			// Connectors.
-			verts.push_back(v0); verts.push_back(v4);
-			verts.push_back(v1); verts.push_back(v5);
-			verts.push_back(v2); verts.push_back(v6);
-			verts.push_back(v3); verts.push_back(v7);
-			
-			if (culled)
+			if (passProjTestOnly)
 			{
-				colors.insert(colors.end(), 24, Vec3(1, 0, 0));
-			}
-			else if (renderable)
-			{
-				colors.insert(colors.end(), 24, Vec3(1, 1, 1));
+				if (renderable)
+				{
+					insertBoundaryPoints(verts, colors, box, cullable, renderable);
+				}
 			}
 			else
 			{
-				colors.insert(colors.end(), 24, Vec3(0, 0, 1));
+				insertBoundaryPoints(verts, colors, box, cullable, renderable);
 			}
 		}
 		

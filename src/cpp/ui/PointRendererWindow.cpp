@@ -15,7 +15,7 @@ namespace ui
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
 			"../../src/data/pugile.ply", PlyPointReader::SINGLE);
-		m_octree = make_shared< ShallowOctree< float, vec3 > >(5000);
+		m_octree = make_shared< ShallowOctree< float, vec3 > >(1);
 		m_octree->build(points);
 	}
 	
@@ -67,7 +67,7 @@ namespace ui
 
 		++m_frame;*/
 		//cout << "STARTING PAINTING!" << endl;
-		//m_octree->drawBoundaries(painter);
+		//m_octree->drawBoundaries(painter, false);
 		m_octree->traverse(painter);
 	}
 
