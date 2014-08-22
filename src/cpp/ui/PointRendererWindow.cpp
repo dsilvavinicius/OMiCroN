@@ -14,7 +14,7 @@ namespace ui
 		, m_frame(0)
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
-			"../../src/data/pugile.ply", PlyPointReader::SINGLE);
+			"../../src/data/tempietto_dense.ply", PlyPointReader::SINGLE);
 		m_octree = make_shared< ShallowOctree< float, vec3 > >(1);
 		m_octree->build(points);
 	}
