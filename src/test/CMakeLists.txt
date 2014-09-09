@@ -5,6 +5,8 @@
 
 create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
+include_directories (include/)
+
 add_subdirectory (gtest/)
 
 # Adds the executable

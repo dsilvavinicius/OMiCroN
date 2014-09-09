@@ -67,7 +67,7 @@ namespace ui
 
 		++m_frame;*/
 		//cout << "STARTING PAINTING!" << endl;
-		m_octree->drawBoundaries(painter, false);
+		//m_octree->drawBoundaries(painter, false);
 		m_octree->traverse(painter);
 	}
 
