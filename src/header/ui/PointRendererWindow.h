@@ -7,6 +7,7 @@
 #include <Qt3D/QGLCamera>
 #include <Qt3D/QGLView>
 #include <Qt3D/QGLShaderProgramEffect>
+#include <QOpenGLFramebufferObject>
 
 #include "Octree.h"
 
@@ -20,22 +21,6 @@ namespace ui
 	public:
 		PointRendererWindow(const QSurfaceFormat &format, QWindow *parent = 0);
 		~PointRendererWindow();
-		
-		/*static constexpr char *vertexShaderSource =
-			"attribute highp vec4 qt_Vertex;\n"
-			"attribute lowp vec4 qt_Color;\n"
-			"varying lowp vec4 col;\n"
-			"uniform highp mat4 qt_ModelViewProjectionMatrix;\n"
-			"void main() {\n"
-			"   col = qt_Color;\n"
-			"   gl_Position = qt_ModelViewProjectionMatrix * qt_Vertex;\n"
-			"}\n";
-
-		static constexpr char *fragmentShaderSource =
-			"varying lowp vec4 col;\n"
-			"void main() {\n"
-			"   gl_FragColor = col;\n"
-			"}\n";*/
 
 	protected:
 		void paintGL(QGLPainter *painter);
@@ -45,9 +30,13 @@ namespace ui
 		virtual void wheelEvent(QWheelEvent * ev);
 		
 	private:
-		//QGLShaderProgramEffect* m_program;
+		void drawText( QGLPainter *painter, const QRect& posn, const QString& str );
+		
 		int m_frame;
 		ShallowOctreePtr<float, vec3> m_octree;
+		
+		/** Fullscreen quad geometry used to provide overlay capabilities. */
+		//QGLSceneNode *m_fullScreenQuad;
 		
 		QPoint m_lastMousePos;
 	};
