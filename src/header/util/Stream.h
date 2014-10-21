@@ -5,6 +5,9 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
+#include <QPoint>
+#include <QRect>
+#include <QSize>
 
 using namespace std;
 using namespace glm;
@@ -54,6 +57,12 @@ namespace model
 		
 		return out;
 	}
+	
+	ostream& operator<<( ostream& out, const QSize& size );
+	
+	ostream& operator<<( ostream& out, const QPoint& point );
+	
+	ostream& operator<<( ostream& out, const QRect& rect );
 }
 
 #endif

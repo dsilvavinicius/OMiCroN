@@ -43,7 +43,12 @@ namespace ui
 		
 		m_octree->traverse(painter);
 		QString str();
-		drawText( painter, QRect( width() - 200, 10, 200, 1014), "Debug string:\nFPS: XXX\nOctree:XXX!" );
+		
+		int textBoxWidth = width() * 0.3;
+		int textBoxHeight = height() * 0.7;
+		int margin = 10;
+		drawText( painter, QRect( width() - textBoxWidth - margin, margin, textBoxWidth, textBoxHeight),
+				  "Debug string: I don't know anything...\nFPS: XXX\nOctree:XXX!" );
 	}
 
 	void PointRendererWindow::mouseMoveEvent(QMouseEvent * ev)
@@ -94,6 +99,9 @@ namespace ui
 	// Draw text centered on the bottom of the "posn" rectangle.
 	void PointRendererWindow::drawText( QGLPainter *painter, const QRect& posn, const QString& str )
 	{
+		cout << "Window size: " << size() << endl << endl;
+		cout << "Final debug rect: " << endl << posn << endl;
+		
 		painter->modelViewMatrix().push();
 		painter->projectionMatrix().push();
 		
@@ -102,36 +110,37 @@ namespace ui
 		painter->projectionMatrix() = projm;
 		painter->modelViewMatrix().setToIdentity();
 		
-		QFont f( "Helvetica", 18 );
+		QFont f( "Helvetica", 10 );
 		QFontMetrics metrics( f );
-		QRect rect = metrics.boundingRect( QRect( 0, 0, posn.width(), posn.height() ), Qt::AlignRight , str );
-		//cout << "Bonding rect" << rect << endl;
+		QRect rect = metrics.boundingRect( QRect( 0, 0, posn.width(), posn.height() ),
+										   Qt::AlignLeft | Qt::TextWordWrap , str );
+		cout << "Bonding rect: " << endl << rect << endl;
 
 		QImage image( rect.size(), QImage::Format_ARGB32 );
 		image.fill( 0 );
 		QPainter p2( &image );
 		p2.setFont( f );
 		p2.setPen( Qt::white );
-		p2.drawText( rect,  str );
+		p2.drawText( rect, Qt::AlignLeft | Qt::TextWordWrap, str );
 		p2.end();
 
 		QGLTexture2D texture;
 		texture.setImage( image );
 
-		int x = posn.x();
-		int y = posn.y();
+		int x = posn.x() + posn.width() - rect.width();
+		int y = posn.y() + rect.y();
 
 		QVector2DArray vertices;
-		vertices.append( x + rect.x(), y + metrics.ascent() );
-		vertices.append( x + rect.x(), y - metrics.descent() );
-		vertices.append( x + rect.x() + rect.width(), y - metrics.descent() );
-		vertices.append( x + rect.x() + rect.width(), y + metrics.ascent() );
+		vertices.append( x				 , y );
+		vertices.append( x				 , y + rect.height() );
+		vertices.append( x + rect.width(), y + rect.height() );
+		vertices.append( x + rect.width(), y );
 		
 		QVector2DArray texCoord;
-		texCoord.append( 0.0f, 0.0f );
 		texCoord.append( 0.0f, 1.0f );
-		texCoord.append( 1.0f, 1.0f );
+		texCoord.append( 0.0f, 0.0f );
 		texCoord.append( 1.0f, 0.0f );
+		texCoord.append( 1.0f, 1.0f );
 
 		painter->clearAttributes();
 		painter->setStandardEffect( QGL::FlatReplaceTexture2D );
@@ -140,7 +149,7 @@ namespace ui
 		painter->setVertexAttribute( QGL::TextureCoord0, texCoord );
 		painter->draw( QGL::TriangleFan, 4 );
 		painter->setStandardEffect( QGL::FlatColor );
-		glBindTexture( GL_TEXTURE_2D, 0 );
+		texture.release();
 		
 		painter->projectionMatrix().pop();
 		painter->modelViewMatrix().pop();
