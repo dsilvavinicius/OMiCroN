@@ -43,7 +43,7 @@ namespace ui
 		//m_octree->drawBoundaries(painter, true);
 		
 		clock_t timing = clock();
-		m_octree->traverse(painter);
+		m_octree->traverse( painter, 0.001 );
 		timing = clock() - timing;
 		
 		stringstream debugSS;
