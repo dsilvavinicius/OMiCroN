@@ -19,7 +19,7 @@ namespace util
 		{
 			case 0:
 			{
-				auto point = make_shared< Point< float, vec3 > >(vec3(0.f, 0.f, 0.f), vec3(value, 0.f, 0.f));
+				auto point = make_shared< Point< float, vec3 > >(vec3(1.f, 1.f, 1.f), vec3(value, 0.f, 0.f));
 				points->push_back(point);
 				break;
 			}

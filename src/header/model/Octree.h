@@ -424,7 +424,7 @@ namespace model
 			 << "normMin = " << glm::to_string(normMin) << endl << "normMax = " << glm::to_string(normMax) << endl
 			 << "squared len = " << diagonal1.lengthSquared() << endl;*/
 		
-		return maxDiagLength < 0.00005;
+		return maxDiagLength < 0.001;
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
