@@ -18,26 +18,22 @@ namespace ui
 {
 	class PointRendererWindow : public QGLView
 	{
+		Q_OBJECT
 	public:
-		PointRendererWindow(const QSurfaceFormat &format, QWindow *parent = 0);
+		PointRendererWindow( const QSurfaceFormat &format, QWindow *parent = 0 );
 		~PointRendererWindow();
 
 	protected:
-		void paintGL(QGLPainter *painter);
-		void initializeGL(QGLPainter *painter);
-		virtual void mouseMoveEvent(QMouseEvent* ev);
-		virtual void mousePressEvent(QMouseEvent* ev);
-		virtual void wheelEvent(QWheelEvent * ev);
+		void paintGL( QGLPainter *painter );
+		void initializeGL( QGLPainter *painter );
+		void mouseMoveEvent( QMouseEvent* ev );
+		void mousePressEvent( QMouseEvent* ev );
+		void wheelEvent( QWheelEvent * ev );
 		
 	private:
 		void drawText( QGLPainter *painter, const QRect& posn, const QString& str );
 		
-		int m_frame;
 		ShallowOctreePtr<float, vec3> m_octree;
-		
-		/** Fullscreen quad geometry used to provide overlay capabilities. */
-		//QGLSceneNode *m_fullScreenQuad;
-		
 		QPoint m_lastMousePos;
 	};
 

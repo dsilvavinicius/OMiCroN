@@ -1,20 +1,21 @@
 #include "PointRendererWindow.h"
+#include "PlyPointReader.h"
+
+#include <ctime>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QGLBuilder>
 #include <QGeometryData>
 #include <QGLTexture2D>
 #include <QMouseEvent>
 #include <QDir>
-#include "PlyPointReader.h"
+#include <qtextcodec.h>
 
 using namespace util;
 
 namespace ui
 {
-	PointRendererWindow::PointRendererWindow(const QSurfaceFormat &format, QWindow *parent)
-		: QGLView(format, parent)
-		/*, m_program(0)*/
-		, m_frame(0)
+	PointRendererWindow::PointRendererWindow( const QSurfaceFormat &format, QWindow *parent )
+		: QGLView( format, parent )
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
 			"../../src/data/tempietto_dense.ply", PlyPointReader::SINGLE);
@@ -25,7 +26,7 @@ namespace ui
 	
 	PointRendererWindow::~PointRendererWindow() {}
 
-	void PointRendererWindow::initializeGL(QGLPainter *painter)
+	void PointRendererWindow::initializeGL( QGLPainter *painter )
 	{	
 		QGLCamera* cam = camera();
 		cam->setProjectionType( QGLCamera::Perspective );
@@ -36,51 +37,52 @@ namespace ui
 		painter->setCamera( cam );
 	}
 
-	void PointRendererWindow::paintGL(QGLPainter *painter)
+	void PointRendererWindow::paintGL( QGLPainter *painter )
 	{
 		//cout << "STARTING PAINTING!" << endl;
 		//m_octree->drawBoundaries(painter, false);
 		
+		clock_t timing = clock();
 		m_octree->traverse(painter);
-		QString str();
+		timing = clock() - timing;
+		
+		stringstream debugSS;
+		debugSS << "Render time: " << float( timing ) / CLOCKS_PER_SEC * 1000 << " ms";
 		
 		int textBoxWidth = width() * 0.3;
 		int textBoxHeight = height() * 0.7;
 		int margin = 10;
 		drawText( painter, QRect( width() - textBoxWidth - margin, margin, textBoxWidth, textBoxHeight),
-				  "Debug string: I don't know anything...\nFPS: XXX\nOctree:XXX!" );
+				  debugSS.str().c_str() );
 	}
 
 	void PointRendererWindow::mouseMoveEvent(QMouseEvent * ev)
 	{
-		QGLCamera* cam = camera();
 		Qt::MouseButtons buttons = ev->buttons();
 		
-		if (buttons & (Qt::LeftButton | Qt::RightButton | Qt::MiddleButton))
+		QGLCamera* cam = camera();
+		QPoint currentPos = ev->globalPos();
+		QPoint deltaPos = currentPos - m_lastMousePos;
+		if (buttons & Qt::LeftButton)
 		{
-			QPoint currentPos = ev->globalPos();
-			QPoint deltaPos = currentPos - m_lastMousePos;
-			if (buttons & Qt::LeftButton)
-			{
-				QQuaternion rotation = 	cam->pan(-(float)deltaPos.x() * 0.1f) *
-										cam->tilt(-(float)deltaPos.y() * 0.1f);
-				cam->rotateEye(rotation);
-			}
-			if (buttons & Qt::MiddleButton)
-			{
-				QQuaternion rotation = cam->roll(-(float)deltaPos.y() * 0.1f);
-				cam->rotateEye(rotation);
-			}
-			if (buttons & Qt::RightButton)
-			{
-				QVector3D translation = cam->translation((float)deltaPos.x() * 0.01f,
-														   (float)deltaPos.y() * 0.01f, 0);
-				cam->setEye(cam->eye() + translation);
-				cam->setCenter(cam->center() + translation);
-			}
-			
-			m_lastMousePos = currentPos;
+			QQuaternion rotation = 	cam->pan(-(float)deltaPos.x() * 0.1f) *
+									cam->tilt(-(float)deltaPos.y() * 0.1f);
+			cam->rotateEye(rotation);
 		}
+		if (buttons & Qt::MiddleButton)
+		{
+			QQuaternion rotation = cam->roll(-(float)deltaPos.y() * 0.1f);
+			cam->rotateEye(rotation);
+		}
+		if (buttons & Qt::RightButton)
+		{
+			QVector3D translation = cam->translation((float)deltaPos.x() * 0.01f,
+														(float)deltaPos.y() * 0.01f, 0);
+			cam->setEye(cam->eye() + translation);
+			cam->setCenter(cam->center() + translation);
+		}
+		
+		m_lastMousePos = currentPos;
 	}
 	
 	void PointRendererWindow::wheelEvent(QWheelEvent * ev)
@@ -99,9 +101,6 @@ namespace ui
 	// Draw text centered on the bottom of the "posn" rectangle.
 	void PointRendererWindow::drawText( QGLPainter *painter, const QRect& posn, const QString& str )
 	{
-		cout << "Window size: " << size() << endl << endl;
-		cout << "Final debug rect: " << endl << posn << endl;
-		
 		painter->modelViewMatrix().push();
 		painter->projectionMatrix().push();
 		
@@ -114,7 +113,6 @@ namespace ui
 		QFontMetrics metrics( f );
 		QRect rect = metrics.boundingRect( QRect( 0, 0, posn.width(), posn.height() ),
 										   Qt::AlignLeft | Qt::TextWordWrap , str );
-		cout << "Bonding rect: " << endl << rect << endl;
 
 		QImage image( rect.size(), QImage::Format_ARGB32 );
 		image.fill( 0 );
