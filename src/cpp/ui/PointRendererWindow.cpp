@@ -15,10 +15,14 @@ using namespace util;
 namespace ui
 {
 	PointRendererWindow::PointRendererWindow( const QSurfaceFormat &format, QWindow *parent )
-		: QGLView( format, parent )
+		: QGLView( format, parent ),
+		m_projThresh( 0.001f ),
+		m_prevProjThresh( 0.f ),
+		m_renderTime( 0.f ),
+		m_prevRenderTime( 0.f )
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
-			"../../src/data/tempietto_all_50M.ply", PlyPointReader::SINGLE);
+			"../../src/data/tempietto_dense.ply", PlyPointReader::SINGLE);
 		
 		m_octree = make_shared< ShallowOctree< float, vec3 > >( 1 );
 		m_octree->build(points);
@@ -35,19 +39,87 @@ namespace ui
 		cam->setFarPlane( 10000.0f );
 		
 		painter->setCamera( cam );
+		
+		m_octree->traverse( painter, m_projThresh );
+		
+		// Render two frames in order to set the parameters for the adaptive projection threshold.
+		clock_t timing = clock();
+		m_octree->traverse( painter, m_projThresh );
+		timing = clock() - timing;
+		m_prevRenderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+		m_prevProjThresh = m_projThresh;
+		
+		m_projThresh = m_prevProjThresh * 0.1;
+		timing = clock();
+		m_octree->traverse( painter, m_projThresh );
+		timing = clock() - timing;
+		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+		
+		cout << "============= Projection Threshold init ==============" << endl
+			 << "current render time:" << m_renderTime << endl
+			 << "prev render time:" << m_prevRenderTime << endl
+			 << "current projection threshold:" << m_projThresh << endl
+			 << "prev projection threshold:" << m_prevProjThresh << endl
+			 << "============= End of Projection Threshold init ==============" << endl << endl;
 	}
 
+	bool PointRendererWindow::adaptProjThresh( float desiredRenderTime )
+	{
+		float derivative = ( m_renderTime - m_prevRenderTime ) / ( m_projThresh - m_prevProjThresh );
+		float newProjThresh = ( ( desiredRenderTime - m_renderTime ) / ( derivative ) ) + m_projThresh;
+		
+		cout << "============= Projection Threshold adaptation ==============" << endl
+			<< "derivative:" << derivative << endl
+			<< "new projection threshold:" << newProjThresh << endl
+			<< "============= End of Projection Threshold adaptation ==============" << endl << endl;
+		
+		float upperBound = 1.0f;
+		float lowerBound = 1.0e-10f; 
+		
+		// Condition to ensure a upper bound for the projection threshold.
+		if( newProjThresh > m_projThresh && newProjThresh > upperBound )
+		{
+			cout << "Passed upper bound." << endl << endl;
+			return false;
+		}
+		
+		// Condition to ensure a lower bound for the projection threshold.
+		if( newProjThresh < m_projThresh && newProjThresh < lowerBound )
+		{
+			cout << "Passed lower bound." << endl << endl;
+			return false;
+		}
+		
+		m_prevRenderTime = m_renderTime;
+		m_prevProjThresh = m_projThresh;
+		m_projThresh = newProjThresh;
+		
+		return true;
+	}
+	
 	void PointRendererWindow::paintGL( QGLPainter *painter )
 	{
 		//cout << "STARTING PAINTING!" << endl;
 		//m_octree->drawBoundaries(painter, true);
 		
+		bool adapted = adaptProjThresh( 33.333f ); // 30 fps.
+		//bool adapted = adaptProjThresh( 100.f ); // 10 fps.
+		
+		// Render the scene.
 		clock_t timing = clock();
-		m_octree->traverse( painter, 0.001 );
+		m_octree->traverse( painter, m_projThresh );
 		timing = clock() - timing;
 		
+		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+		
+		// Render debug data.
 		stringstream debugSS;
-		debugSS << "Render time: " << float( timing ) / CLOCKS_PER_SEC * 1000 << " ms";
+		debugSS << "Render time: " << m_renderTime << " ms" << endl
+				<< "Previous render time: " << m_prevRenderTime << " ms\n" << endl
+				<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
+				<< "Previous projection threshold: " << m_prevProjThresh << " pixel^2";
+		
+		cout << debugSS.str() << endl << endl;
 		
 		int textBoxWidth = width() * 0.3;
 		int textBoxHeight = height() * 0.7;

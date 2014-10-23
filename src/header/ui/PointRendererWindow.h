@@ -31,10 +31,30 @@ namespace ui
 		void wheelEvent( QWheelEvent * ev );
 		
 	private:
+		/** Draws debug text in this window. */
 		void drawText( QGLPainter *painter, const QRect& posn, const QString& str );
+		
+		/** Adapts the octree traversal projection threshold by checking the derivative of the render time function r( p )
+		 * dependent of the projection threshold p. If the rendering time differential is less than a predefined
+		 * epsilon, no adaptation is done at all.
+		 * @returns true if the adaptation was done, false otherwise. */
+		bool adaptProjThresh( float desiredRenderTime );
 		
 		ShallowOctreePtr<float, vec3> m_octree;
 		QPoint m_lastMousePos;
+		
+		// Adaptive projection threshold related data.
+		
+		/** Current projection threshold used in octree traversal. */
+		float m_projThresh;
+		/** Previous frame projection threshold. Used to calculate a differential in order to adapt the projection threshold
+		 * to achieve a desired render time. */
+		float m_prevProjThresh;
+		/** Current render time. */
+		float m_renderTime;
+		/** Previous frame render time. Used to calculate a differential in order to adapt the projection threshold
+		 * to achieve a desired render time. */
+		float m_prevRenderTime;
 	};
 
 	using PointRendererWindowPtr = shared_ptr<PointRendererWindow>;
