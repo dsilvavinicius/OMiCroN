@@ -44,7 +44,8 @@ namespace model
 			PointVector< float, vec3 > m_points;
 		};
 
-		TEST_F(OctreeTest, Boundaries)
+		/** Tests the calculated boundaries of the ShallowOctree. */
+		TEST_F(OctreeTest, ShallowBoundaries)
 		{
 			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
 			octree->build(m_points);
@@ -56,20 +57,23 @@ namespace model
 			vec3 size = *octree->getSize();
 			vec3 leafSize = *octree->getLeafSize();
 			
-			ASSERT_TRUE(glm::all(glm::equal(origin, vec3(-14.f, -31.f, -51.f))));
-			ASSERT_TRUE(glm::all(glm::equal(size, vec3(60.f, 46.f, 75.f))));
-			ASSERT_TRUE(glm::all(glm::equal(leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f))));
+			float epsilon = 10.e-8f;
+			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) ) < epsilon ) ;
+			ASSERT_TRUE( distance2( size, vec3(60.f, 46.f, 75.f) ) < epsilon );
+			ASSERT_TRUE( distance2( leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f ) ) < epsilon ) ;
 		}
 		
 		template<typename MortonPrecision, typename Float, typename Vec3>
 		void checkNode(OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits)
 		{
-			SCOPED_TRACE(bits);
+			stringstream ss;
+			ss << hex << bits << dec;
+			SCOPED_TRACE( ss.str() );
 			auto code = make_shared< MortonCode< MortonPrecision > >();
-			code->build(bits);
+			code->build( bits );
 			auto iter = hierarchy->find(code);
-			ASSERT_FALSE(iter == hierarchy->end());
-			hierarchy->erase(iter);
+			ASSERT_FALSE( iter == hierarchy->end() );
+			hierarchy->erase( iter );
 		}
 		
 		template< typename Float, typename Vec3 >
@@ -96,8 +100,8 @@ namespace model
 			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1u);
 		}
 		
-		// Tests octree's hierarchy creation. It uses the sparse check just for code reuse.
-		TEST_F(OctreeTest, Hierarchy)
+		/** Tests the ShallowOctree created hierarchy. */
+		TEST_F(OctreeTest, ShallowHierarchy)
 		{
 			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
 			// it is a sibling of the node at the same position at the line immediately above.
@@ -133,8 +137,9 @@ namespace model
 			ASSERT_TRUE(hierarchy->empty());
 		}
 		
+		// TODO: Activate this test when the system has implemented sparse octree representation.
 		/** Checks generated sparse octree. */
-		/*TEST_F(OctreeTest, Sparse_Hierarchy)
+		/*TEST_F(OctreeTest, ShallowSparse_Hierarchy)
 		{	
 			// Expected hierarchy. 0x1 is the root node. The blank spaces are merged nodes. A node with an arrow that
 			// points to nothing means that it is a sibling of the node at the same position at the line immediately
@@ -160,5 +165,119 @@ namespace model
 			
 			ASSERT_TRUE(hierarchy->empty());
 		}*/
+		
+		/** Tests the calculated boundaries of the MediumOctree. */
+		TEST_F( OctreeTest, MediumBoundaries )
+		{
+			auto octree = make_shared< MediumOctree<float, vec3> >( 1 );
+			octree->build( m_points );
+			
+			ASSERT_EQ(octree->getMaxLevel(), 21);
+			ASSERT_EQ(octree->getMaxPointsPerNode(), 1);
+			
+			vec3 origin = *octree->getOrigin();
+			vec3 size = *octree->getSize();
+			vec3 leafSize = *octree->getLeafSize();
+			
+			float epsilon = 10.e-8f;
+			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) )  < epsilon );
+			ASSERT_TRUE( distance2( size, vec3( 60.f, 46.f, 75.f ) ) < epsilon );
+			ASSERT_TRUE( distance2( leafSize, vec3( 0.00002861f, 0.000021935f, 0.000035763f ) ) < epsilon );
+		}
+		
+		/** Tests the MediumOctree created hierarchy. */
+		TEST_F( OctreeTest, MediumHierarchy )
+		{
+/*
+Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
+it is a sibling of the node at the same position at the line immediately above.
+									   0x1924924924920 -> 0x324924924924 -> 0x64924924924 -> 0xc924924924 -> 0x1924924924 -> 0x324924924 -> 0x64924924 -> 0xc924924 -> 0x1924924 -> 0x324924 -> 0x64924 -> 0xc924 -> 0x1924 -> 0x324 -> 0x64 -> 0xc -> 0x1
+0x64924924924927 -> 0xc924924924924 -> 0x1924924924924 ->
+0x64924924924920 ->
+0x40000000000002 -> 0x8000000000000 -> 0x1000000000000 -> 0x200000000000 -> 0x40000000000 -> 0x8000000000 -> 0x1000000000 -> 0x200000000 -> 0x40000000 -> 0x8000000 -> 0x1000000 -> 0x200000 -> 0x40000 -> 0x8000 -> 0x1000 -> 0x200 -> 0x40 -> 0x8 ->
+0x40000000000001 -> 
+					0x8000000000004 ->
+									   0x1000000000001 ->
+																																																												0x9 ->
+					0xa492492492490 -> 0x1492492492492 -> 0x292492492492 -> 0x52492492492 -> 0xa492492492 -> 0x1492492492 -> 0x292492492 -> 0x52492492 -> 0xa492492 -> 0x1492492 -> 0x292492 -> 0x52492 -> 0xa492 -> 0x1492 -> 0x292 -> 0x52 -> 0xa ->
+					0xa492492492492 ->
+																																																												0xb ->
+*/
+			
+			/*for( PointPtr< float, vec3 > point : m_points )
+			{
+				vec3 pos = *( point->getPos() );
+				MediumMortonCode code;
+				code.build( pos.x, pos.y, pos.z, 21 );
+				code.printPathToRoot( cout, true );
+			}*/
+			
+			auto octree = make_shared< MediumOctree<float, vec3> >( 1 );
+			octree->build( m_points );
+			MediumOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
+			
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x40000000000001ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x40000000000002ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x64924924924920ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x64924924924927ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa492492492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa492492492490ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x8000000000004ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x8000000000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc924924924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1492492492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1000000000001ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1000000000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1924924924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1924924924920ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x292492492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x200000000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x324924924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x52492492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x40000000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x64924924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa492492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x8000000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc924924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1492492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1000000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1924924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x292492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x200000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x324924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x52492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x40000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x64924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x8000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1492492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1000000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1924924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x292492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x200000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x324924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x52492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x40000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x64924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x8000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1492ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1000ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1924ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x292ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x200ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x324ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x52ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x40ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x64ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xbul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xaul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x9ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x8ul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0xcul );
+			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1ul );
+		}
 	}
 }

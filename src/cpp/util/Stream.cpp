@@ -2,6 +2,28 @@
 
 namespace model
 {
+	template<>
+	ostream& operator<< < vec3 >( ostream& out, const vector< vec3 >& v ) 
+	{
+		out << "{";
+		bool first = true;
+		for ( vec3 element : v)
+		{
+			if (first)
+			{
+				out << glm::to_string(element);
+				first = false;
+			}
+			else
+			{
+				out << ", " << glm::to_string(element);
+			}
+		}
+		out << "}";
+		
+		return out;
+	}
+	
 	ostream& operator<<( ostream& out, const QPoint& point )
 	{
 		out << "( " << point.x() << ", " << point.y()  <<  " )";
@@ -14,7 +36,7 @@ namespace model
 		return out;
 	}
 	
-	ostream& operator<<(ostream& out, const QRect& rect)
+	ostream& operator<<( ostream& out, const QRect& rect )
 	{
 		out << "top left:" << rect.topLeft() << endl << "bottom right:" << rect.bottomRight()
 			<< endl << "size:" << rect.size() << endl;

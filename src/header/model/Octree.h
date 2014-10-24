@@ -74,7 +74,7 @@ namespace model
 		virtual void buildLeaves(const PointVector< Float, Vec3 >& points);
 		
 		/** Creates all inner nodes, with LOD. Bottom-up. If a node has only leaf chilren and the accumulated number of
-		 * children points is less than a threshold, the children is merged into parent. */
+		 * children points is less than a threshold, the children are merged into parent. */
 		virtual void buildInners();
 		
 		/** Utility: appends the points of a child node into a vector, incrementing the number of parent's children and
@@ -82,7 +82,7 @@ namespace model
 		static void appendPoints(OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
 								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves);
 		
-		// TODO: Make testes for this function.
+		// TODO: Make tests for this function.
 		/** Computes the boundaries of the node indicated by the given morton code. */
 		pair< Vec3, Vec3 > getBoundaries(MortonCodePtr< MortonPrecision >) const;
 		

@@ -14,7 +14,7 @@ using namespace glm;
 
 namespace model
 {
-	/*template <typename T>
+	template< typename T >
 	ostream& operator<<(ostream& out, const vector<T>& v)
 	{
 		out << "{";
@@ -34,29 +34,10 @@ namespace model
 		out << "}";
 		
 		return out;
-	}*/
-	
-	template <typename T>
-	ostream& operator<<(ostream& out, const vector<T>& v)
-	{
-		out << "{";
-		bool first = true;
-		for (T element : v)
-		{
-			if (first)
-			{
-				out << glm::to_string(element);
-				first = false;
-			}
-			else
-			{
-				out << ", " << glm::to_string(element);
-			}
-		}
-		out << "}";
-		
-		return out;
 	}
+	
+	template<>
+	ostream& operator<<( ostream& out, const vector< vec3 >& v );
 	
 	ostream& operator<<( ostream& out, const QSize& size );
 	
