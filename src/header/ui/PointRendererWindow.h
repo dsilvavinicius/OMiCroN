@@ -8,6 +8,7 @@
 #include <Qt3D/QGLView>
 #include <Qt3D/QGLShaderProgramEffect>
 #include <QOpenGLFramebufferObject>
+#include <QTimer>
 
 #include "Octree.h"
 
@@ -34,27 +35,23 @@ namespace ui
 		/** Draws debug text in this window. */
 		void drawText( QGLPainter *painter, const QRect& posn, const QString& str );
 		
-		/** Adapts the octree traversal projection threshold by checking the derivative of the render time function r( p )
-		 * dependent of the projection threshold p. If the rendering time differential is less than a predefined
-		 * epsilon, no adaptation is done at all.
+		/** Adapts the octree traversal projection threshold. The algorithm just increments or decrements the threshold
+		 * based on the difference of the last frame rendering time and the desired rendering time. Care is taken to ensure
+		 * that the threshold doesn't pass predefined upper and lower bounds.
 		 * @returns true if the adaptation was done, false otherwise. */
-		bool adaptProjThresh( float desiredRenderTime );
+		void adaptProjThresh( float desiredRenderTime );
 		
 		ShallowOctreePtr<float, vec3> m_octree;
 		QPoint m_lastMousePos;
+		
+		QTimer *m_timer;
 		
 		// Adaptive projection threshold related data.
 		
 		/** Current projection threshold used in octree traversal. */
 		float m_projThresh;
-		/** Previous frame projection threshold. Used to calculate a differential in order to adapt the projection threshold
-		 * to achieve a desired render time. */
-		float m_prevProjThresh;
-		/** Current render time. */
+		/** Current render time used to adapt the projection threshold. */
 		float m_renderTime;
-		/** Previous frame render time. Used to calculate a differential in order to adapt the projection threshold
-		 * to achieve a desired render time. */
-		float m_prevRenderTime;
 	};
 
 	using PointRendererWindowPtr = shared_ptr<PointRendererWindow>;
