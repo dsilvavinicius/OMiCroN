@@ -28,12 +28,11 @@ namespace model
 	class OctreeBase
 	{
 	public:
-		/** Initialize data for building the octree, giving the desired max number of nodes per node
-		 * and the Camera used to cull points in traversal. */
-		OctreeBase(const int& maxPointsPerNode);
+		/** Initialize data for building the octree, giving the desired max number of nodes per node. */
+		OctreeBase( const int& maxPointsPerNode );
 		
-		/** Builds the octree for a given point cloud. */
-		virtual void build(const PointVector< Float, Vec3 >& points);
+		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. */
+		virtual void build( const PointVector< Float, Vec3 >& points );
 		
 		/** Traverses the octree, rendering all necessary points. */
 		virtual void traverse( QGLPainter *painter, const Float& projThresh );
@@ -137,59 +136,66 @@ namespace model
 		buildNodes(points);
 	}
 	
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::buildBoundaries(
-		const PointVector< Float, Vec3 >& points)
+	template < typename MortonPrecision, typename Float, typename Vec3 >
+	void OctreeBase< MortonPrecision, Float, Vec3 >::buildBoundaries(
+		const PointVector< Float, Vec3 >& points )
 	{
-		Float negInf = -numeric_limits<Float>::max();
-		Float posInf = numeric_limits<Float>::max();
-		Vec3 minCoords(posInf, posInf, posInf);
-		Vec3 maxCoords(negInf, negInf, negInf);
+		Float negInf = -numeric_limits< Float >::max();
+		Float posInf = numeric_limits< Float >::max();
+		Vec3 minCoords( posInf, posInf, posInf );
+		Vec3 maxCoords( negInf, negInf, negInf );
 		
-		for (PointPtr< Float, Vec3 > point : points)
+		for( PointPtr< Float, Vec3 > point : points )
 		{
-			shared_ptr<Vec3> pos = point->getPos();
+			shared_ptr< Vec3 > pos = point->getPos();
 			
-			for (int i = 0; i < 3; ++i)
+			for( int i = 0; i < 3; ++i )
 			{
-				minCoords[i] = glm::min(minCoords[i], (*pos)[i]);
-				maxCoords[i] = glm::max(maxCoords[i], (*pos)[i]);
+				minCoords[ i ] = glm::min( minCoords[ i ], ( *pos )[ i ] );
+				maxCoords[ i ] = glm::max( maxCoords[ i ], ( *pos )[ i ] );
 			}
 		}
 		
 		*m_origin = minCoords;
 		*m_size = maxCoords - minCoords;
-		*m_leafSize = *m_size * ((Float)1 / ((MortonPrecision)1 << m_maxLevel));
+		*m_leafSize = *m_size * ( ( Float )1 / ( ( MortonPrecision )1 << m_maxLevel ) );
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	void OctreeBase< MortonPrecision, Float, Vec3 >::buildNodes(
 		const PointVector< Float, Vec3 >& points)
-	{	
+	{
+		cout << "Before leaves build." << endl << endl;
 		buildLeaves(points);
+		
+		cout << "After leaves build." << endl << endl;
+		//cout << *this << endl << endl;
+		
 		buildInners();
+		
+		cout << "After inners build." << endl << endl;
 	}
 	
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::buildLeaves(const PointVector< Float, Vec3 >& points)
+	template< typename MortonPrecision, typename Float, typename Vec3 >
+	void OctreeBase< MortonPrecision, Float, Vec3 >::buildLeaves( const PointVector< Float, Vec3 >& points )
 	{
-		for (PointPtr< Float, Vec3 > point : points)
+		for( PointPtr< Float, Vec3 > point : points )
 		{
-			shared_ptr<Vec3> pos = point->getPos();
-			Vec3 index = ((*pos) - (*m_origin)) / (*m_leafSize);
+			shared_ptr< Vec3 > pos = point->getPos();
+			Vec3 index = ( ( *pos ) - ( *m_origin ) ) / ( *m_leafSize );
 			MortonCodePtr< MortonPrecision > code = make_shared< MortonCode< MortonPrecision > >();
-			code->build((MortonPrecision)index.x, (MortonPrecision)index.y, (MortonPrecision)index.z, m_maxLevel);
+			code->build( ( MortonPrecision )index.x, ( MortonPrecision )index.y, ( MortonPrecision )index.z, m_maxLevel );
 			
-			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator genericLeafIt = m_hierarchy->find(code);
-			if (genericLeafIt == m_hierarchy->end())
+			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator genericLeafIt = m_hierarchy->find( code );
+			if( genericLeafIt == m_hierarchy->end() )
 			{
 				// Creates leaf node.
 				PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
 						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
 						
-				leafNode->setContents(PointVector< Float, Vec3 >());
-				(*m_hierarchy)[code] = leafNode;
-				leafNode->getContents()->push_back(point);
+				leafNode->setContents( PointVector< Float, Vec3 >() );
+				( *m_hierarchy )[ code ] = leafNode;
+				leafNode->getContents()->push_back( point );
 			}
 			else
 			{
@@ -197,7 +203,7 @@ namespace model
 				OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode = genericLeafIt->second;
 				shared_ptr< PointVector< Float, Vec3 > > nodePoints =
 					leafNode-> template getContents< PointVector< Float, Vec3 > >();
-				nodePoints->push_back(point);
+				nodePoints->push_back( point );
 			}
 		}
 	}
@@ -206,22 +212,28 @@ namespace model
 	void OctreeBase<MortonPrecision, Float, Vec3>::buildInners()
 	{
 		// Do a bottom-up per-level construction of inner nodes.
-		for (int level = m_maxLevel - 1; level > -1; --level)
+		for( int level = m_maxLevel - 1; level > -1; --level )
 		{
+			//cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
 			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
 			// below the current one. 
-			MortonPrecision mortonLvlBoundary = 1 << (3 * (level + 1) + 1);
+			MortonPrecision mortonLvlBoundary = MortonPrecision( 1 ) << ( 3 * ( level + 1 ) + 1 );
+			
+			//cout << "Morton lvl boundary: 0x" << hex << mortonLvlBoundary << dec << endl;
 			
 			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator firstChildIt = m_hierarchy->begin(); 
 			
-			while (true) // Loops per siblings in a level.
+			while( true ) // Loops per siblings in a level.
 			{
 				// Stop conditions.
-				if (firstChildIt == m_hierarchy->end()) { break; }
-				if (firstChildIt->first->getBits() >= mortonLvlBoundary) { break; }
+				if( firstChildIt == m_hierarchy->end() ) { break; }
+				if( firstChildIt->first->getBits() >= mortonLvlBoundary ) { break; }
 				
 				MortonCodePtr< MortonPrecision > parentCode = firstChildIt->first->traverseUp();
+				
+				//cout << "First child: 0x" << hex << firstChildIt->first->getBits() << endl
+				//	 << "Parent: 0x" << hex << parentCode->getBits() << dec << endl;
 				
 				// These counters are used to check if the accumulated number of child node points is less than a threshold.
 				// In this case, the children are deleted and their points are merged into the parent.
@@ -233,34 +245,37 @@ namespace model
 				
 				// Appends first child node.
 				OctreeNodePtr< MortonPrecision, Float, Vec3 > firstChild = firstChildIt->second;
-				appendPoints(firstChild, childrenPoints, numChildren, numLeaves);
+				appendPoints( firstChild, childrenPoints, numChildren, numLeaves );
 				
 				// Adds points of remaining child nodes.
 				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator currentChildIt = firstChildIt;
-				while ((++currentChildIt) != m_hierarchy->end())
+				while( ( ++currentChildIt ) != m_hierarchy->end() )
 				{
-					if (*currentChildIt->first->traverseUp() != *parentCode) { break; }
+					if( *currentChildIt->first->traverseUp() != *parentCode ) { break; }
 					
 					OctreeNodePtr< MortonPrecision, Float, Vec3 > currentChild = currentChildIt->second;
-					appendPoints(currentChild, childrenPoints, numChildren, numLeaves);
+					appendPoints( currentChild, childrenPoints, numChildren, numLeaves );
 				}
+				
+				//cout << "numChildren: " << numChildren << endl << "numLeaves" << numLeaves << endl;
 				
 				// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
 				// is not leaf.
-				if (numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode)
+				if( numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode )
 				{
+					//cout << "Will merge children." << endl << endl;
 					// All children are leaves, but they have less points than the threshold and must be merged.
 					auto tempIt = firstChildIt;
-					advance(firstChildIt, numChildren);
+					advance( firstChildIt, numChildren );
 					
-					m_hierarchy->erase(tempIt, currentChildIt);
+					m_hierarchy->erase( tempIt, currentChildIt );
 					
 					// Creates leaf to replace children.
 					PointsLeafNodePtr< MortonPrecision, Float, Vec3 > mergedNode =
 						make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
-					mergedNode->setContents(childrenPoints);
+					mergedNode->setContents( childrenPoints );
 					
-					(*m_hierarchy)[parentCode] = mergedNode;
+					( *m_hierarchy )[ parentCode ] = mergedNode;
 				}
 				/* 
 				// The condition below is to build a sparse representation of the octree.
@@ -282,25 +297,28 @@ namespace model
 				}*/
 				else
 				{
+					//cout << "Just LOD." << endl << endl;
 					// No merge or absorption is needed. Just does LOD.
-					advance(firstChildIt, numChildren);
+					advance( firstChildIt, numChildren );
 					
 					// Accumulate points for LOD.
-					Point< Float, Vec3 > accumulated(Vec3(0, 0, 0), Vec3(0, 0, 0));
-					for (PointPtr< Float, Vec3 > point : childrenPoints)
+					Point< Float, Vec3 > accumulated( Vec3( 0, 0, 0 ), Vec3( 0, 0, 0 ) );
+					for( PointPtr< Float, Vec3 > point : childrenPoints )
 					{
 						accumulated = accumulated + (*point);
 					}
-					accumulated = accumulated.multiply(1 / (Float)childrenPoints.size());
+					accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
 					
 					// Creates leaf to replace children.
 					LODInnerNodePtr< MortonPrecision, Float, Vec3 > LODNode =
 						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
-					LODNode->setContents(accumulated);
+					LODNode->setContents( accumulated );
 					
-					(*m_hierarchy)[parentCode] = LODNode;
+					( *m_hierarchy )[ parentCode ] = LODNode;
 				}
 			}
+			
+			//cout << "========== End of level " << level << " ==========" << endl << endl;
 		}
 	}
 
@@ -676,7 +694,7 @@ namespace model
 	Octree<unsigned long, Float, Vec3>::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 21; // 0 to 21.
+		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 20; // 0 to 20.
 	}
 	
 	template<typename Float, typename Vec3>

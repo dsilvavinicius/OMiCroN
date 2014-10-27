@@ -20,7 +20,7 @@ namespace ui
 		m_renderTime( 0.f )
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
-			"../../src/data/tempietto_dense.ply", PlyPointReader::SINGLE);
+			"../../src/data/tempietto_all.ply", PlyPointReader::SINGLE);
 		
 		m_octree = make_shared< MediumOctree< float, vec3 > >( 1 );
 		m_octree->build(points);
@@ -80,7 +80,7 @@ namespace ui
 		debugSS << "Render time: " << m_renderTime << " ms" << endl
 				<< "Projection threshold: " << m_projThresh << " pixel^2" << endl;
 		
-		cout << debugSS.str() << endl << endl;
+		//cout << debugSS.str() << endl << endl;
 		
 		int textBoxWidth = width() * 0.3;
 		int textBoxHeight = height() * 0.7;

@@ -29,12 +29,12 @@ namespace model
 	template <>
 	unsigned long MortonCode< unsigned long >::spread3(unsigned long x)
 	{
-		x &= 0x1fffffL;
-		x = (x | x << 32) & 0x1f00000000ffffL;
-		x = (x | x << 16) & 0x1f0000ff0000ffL;
-		x = (x | x << 8) & 0x100f00f00f00f00fL;
-		x = (x | x << 4) & 0x10c30c30c30c30c3L;
-		x = (x | x << 2) & 0x1249249249249249L;
+		x &= 0x1fffffUL;
+		x = (x | x << 32UL) & 0x1f00000000ffffUL;
+		x = (x | x << 16UL) & 0x1f0000ff0000ffUL;
+		x = (x | x << 8UL) & 0x100f00f00f00f00fUL;
+		x = (x | x << 4UL) & 0x10c30c30c30c30c3UL;
+		x = (x | x << 2UL) & 0x1249249249249249UL;
 		
 		return x;
 	}
@@ -42,12 +42,12 @@ namespace model
 	template <>
 	unsigned long MortonCode< unsigned long >::compact3(unsigned long x) const
 	{
-		x &= 0x1249249249249249L;
-		x = (x ^ x >> 2) & 0x10c30c30c30c30c3L;
-		x = (x ^ x >> 4) & 0x100f00f00f00f00fL;
-		x = (x ^ x >> 8) & 0x001f0000ff0000ffL;
-		x = (x ^ x >> 16) & 0x001f00000000ffffL;
-		x = (x ^ x >> 32) & 0x00000000001fffffL;
+		x &= 0x1249249249249249UL;
+		x = (x ^ x >> 2UL) & 0x10c30c30c30c30c3UL;
+		x = (x ^ x >> 4UL) & 0x100f00f00f00f00fUL;
+		x = (x ^ x >> 8UL) & 0x001f0000ff0000ffUL;
+		x = (x ^ x >> 16UL) & 0x001f00000000ffffUL;
+		x = (x ^ x >> 32UL) & 0x00000000001fffffUL;
 		
 		return x;
 	}

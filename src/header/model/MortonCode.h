@@ -214,7 +214,7 @@ namespace model
 			{
 				out << *this;
 				do {
-					out << " -> " << hex << *ancestor << dec;
+					out << " -> " << *ancestor << dec;
 					ancestor = ancestor->traverseUp();
 				} while (ancestor->getBits() != 0);	
 			}

@@ -17,27 +17,30 @@ namespace model
 		{
 			ShallowMortonCode shallowMorton;
 			
-			shallowMorton.build(7, 5, 0, 3); // 10 1100 1011
-			ASSERT_EQ(shallowMorton.getBits(), 0x2CB);
+			shallowMorton.build( 7, 5, 0, 3 ); // 10 1100 1011
+			ASSERT_EQ( shallowMorton.getBits(), 0x2CBu );
 			
 			shallowMorton.build(7, 5, 0, 10); // 100 0000 0000 0000 0000 0000 1100 1011;
-			ASSERT_EQ(shallowMorton.getBits(), 0x400000CB);
+			ASSERT_EQ( shallowMorton.getBits(), 0x400000CBu );
 			
 			// Verifying if the unsigned long has 8 bytes.
-			ASSERT_EQ(sizeof(unsigned long), 8);
+			ASSERT_EQ( sizeof(unsigned long), 8 );
 			
 			MediumMortonCode mediumMorton;
 			
-			mediumMorton.build(5000, 6000, 7000, 5); // 1110 1010 0000 0000
-			ASSERT_EQ(mediumMorton.getBits(), 0xEA00); 
+			mediumMorton.build( 5000, 6000, 7000, 5 ); // 1110 1010 0000 0000
+			ASSERT_EQ( mediumMorton.getBits(), 0xEA00ul ); 
 			
-			mediumMorton.build(5000, 6000, 7000, 13);
+			mediumMorton.build( 1002999, 501956, 785965, 11 );
+			ASSERT_EQ( mediumMorton.getBits(), 0x3616E99CDul );
+			
+			mediumMorton.build( 5000, 6000, 7000, 13 );
 			// 1111 1000 1011 1111 0011 1001 0110 1010 0000 0000
-			ASSERT_EQ(mediumMorton.getBits(), 0xF8BF396A00);
+			ASSERT_EQ( mediumMorton.getBits(), 0xF8BF396A00ul );
 			
-			mediumMorton.build(5000, 6000, 7000, 21);
+			mediumMorton.build( 5000, 6000, 7000, 21 );
 			// 1000 0000 0000 0000 0000 0000 0111 1000 1011 1111 0011 1001 0110 1010 0000 0000
-			ASSERT_EQ(mediumMorton.getBits(), 0x80000078BF396A00);
+			ASSERT_EQ( mediumMorton.getBits(), 0x80000078BF396A00ul );
 		}
 		
 		TEST_F(MortonCodeTest, Traversal)
@@ -45,24 +48,40 @@ namespace model
 			ShallowMortonCode shallowMorton;
 			
 			shallowMorton.build(7, 5, 0, 3); // 10 1100 1011
-			ShallowMortonCodePtr parent = shallowMorton.traverseUp();
-			ASSERT_EQ(parent->getBits(), 0x59);
+			ShallowMortonCodePtr shallowParent = shallowMorton.traverseUp();
+			ASSERT_EQ( shallowParent->getBits(), 0x59u );
 			
-			vector< ShallowMortonCodePtr > children = shallowMorton.traverseDown();
-			ASSERT_EQ(children[0]->getBits(), 0x1658);
-			ASSERT_EQ(children[1]->getBits(), 0x1659);
-			ASSERT_EQ(children[2]->getBits(), 0x165A);
-			ASSERT_EQ(children[3]->getBits(), 0x165B);
-			ASSERT_EQ(children[4]->getBits(), 0x165C);
-			ASSERT_EQ(children[5]->getBits(), 0x165D);
-			ASSERT_EQ(children[6]->getBits(), 0x165E);
-			ASSERT_EQ(children[7]->getBits(), 0x165F);
+			vector< ShallowMortonCodePtr > shallowChildren = shallowMorton.traverseDown();
+			ASSERT_EQ( shallowChildren[ 0 ]->getBits(), 0x1658u );
+			ASSERT_EQ( shallowChildren[ 1 ]->getBits(), 0x1659u );
+			ASSERT_EQ( shallowChildren[ 2 ]->getBits(), 0x165Au );
+			ASSERT_EQ( shallowChildren[ 3 ]->getBits(), 0x165Bu );
+			ASSERT_EQ( shallowChildren[ 4 ]->getBits(), 0x165Cu );
+			ASSERT_EQ( shallowChildren[ 5 ]->getBits(), 0x165Du );
+			ASSERT_EQ( shallowChildren[ 6 ]->getBits(), 0x165Eu );
+			ASSERT_EQ( shallowChildren[ 7 ]->getBits(), 0x165Fu );
 			
 			// Checks for overflow.
-			shallowMorton.build(7, 5, 0, 10); // 100 0000 0000 0000 0000 0000 1100 1011;
+			shallowMorton.build( 7, 5, 0, 10 ); // 100 0000 0000 0000 0000 0000 1100 1011;
 			ASSERT_ANY_THROW(shallowMorton.traverseDown());
 			
 			MediumMortonCode mediumMorton;
+			
+			mediumMorton.build( 1002999, 501956, 785965, 11 ); // 3616E99CD
+			MediumMortonCodePtr mediumParent = mediumMorton.traverseUp();
+			ASSERT_EQ( mediumParent->getBits(), 0x6C2DD339ul );
+			
+			vector< MediumMortonCodePtr > mediumChildren = mediumMorton.traverseDown();
+			ASSERT_EQ( mediumChildren[ 0 ]->getBits(), 0x1B0B74CE68ul );
+			ASSERT_EQ( mediumChildren[ 1 ]->getBits(), 0x1B0B74CE69ul );
+			ASSERT_EQ( mediumChildren[ 2 ]->getBits(), 0x1B0B74CE6Aul );
+			ASSERT_EQ( mediumChildren[ 3 ]->getBits(), 0x1B0B74CE6Bul );
+			ASSERT_EQ( mediumChildren[ 4 ]->getBits(), 0x1B0B74CE6Cul );
+			ASSERT_EQ( mediumChildren[ 5 ]->getBits(), 0x1B0B74CE6Dul );
+			ASSERT_EQ( mediumChildren[ 6 ]->getBits(), 0x1B0B74CE6Eul );
+			ASSERT_EQ( mediumChildren[ 7 ]->getBits(), 0x1B0B74CE6Ful );
+			
+			// Check for overflow
 			mediumMorton.build(5000, 6000, 7000, 21);
 			ASSERT_ANY_THROW(mediumMorton.traverseDown());
 		}
@@ -70,13 +89,13 @@ namespace model
 		TEST_F(MortonCodeTest, Comparison)
 		{
 			auto morton0 = make_shared< ShallowMortonCode >();
-			morton0->build(1, 1, 1, 3);
+			morton0->build( 1, 1, 1, 3 );
 			
 			auto morton1 = make_shared< ShallowMortonCode >();
-			morton1->build(1, 1, 1, 2);
+			morton1->build( 1, 1, 1, 2 );
 			
 			auto morton2 = make_shared< ShallowMortonCode >();
-			morton2->build(1, 1, 1, 3);
+			morton2->build( 1, 1, 1, 3 );
 			
 			ASSERT_TRUE(*morton0 != *morton1);
 			ASSERT_TRUE(*morton0 == *morton2);
@@ -90,44 +109,44 @@ namespace model
 			// Root node
 			unsigned int level = 0;
 			ShallowMortonCode shallowMorton;
-			shallowMorton.build(0x1);
-			vector< unsigned int > decoded = shallowMorton.decode(level);
-			ASSERT_EQ(decoded[0], 0);
-			ASSERT_EQ(decoded[1], 0);
-			ASSERT_EQ(decoded[2], 0);
+			shallowMorton.build( 0x1u );
+			vector< unsigned int > decoded = shallowMorton.decode( level );
+			ASSERT_EQ( decoded[ 0 ], 0 );
+			ASSERT_EQ( decoded[ 1 ], 0 );
+			ASSERT_EQ( decoded[ 2 ], 0 );
 			
 			// Leaf (shallow).
 			level = 10;
 			unsigned int coords[3] = { 7, 5, 0 };
-			shallowMorton.build(coords[0], coords[1], coords[2], level);
-			decoded = shallowMorton.decode(level);
+			shallowMorton.build( coords[0], coords[1], coords[2], level );
+			decoded = shallowMorton.decode( level );
 			
-			ASSERT_EQ(decoded[0], coords[0]);
-			ASSERT_EQ(decoded[1], coords[1]);
-			ASSERT_EQ(decoded[2], coords[2]);
+			ASSERT_EQ( decoded[ 0 ], coords[ 0 ] );
+			ASSERT_EQ( decoded[ 1 ], coords[ 1 ] );
+			ASSERT_EQ( decoded[ 2 ], coords[ 2 ] );
 			
 			decoded = shallowMorton.decode();
 			
-			ASSERT_EQ(decoded[0], coords[0]);
-			ASSERT_EQ(decoded[1], coords[1]);
-			ASSERT_EQ(decoded[2], coords[2]);
+			ASSERT_EQ( decoded[ 0 ], coords[ 0 ] );
+			ASSERT_EQ( decoded[ 1 ], coords[ 1 ] );
+			ASSERT_EQ( decoded[ 2 ], coords[ 2 ] );
 			
 			// Leaf (medium).
 			level = 21;
-			unsigned int coordsL[3] = { 5000, 6000, 7000 };
+			unsigned int coordsL[ 3 ] = { 5000, 6000, 7000 };
 			MediumMortonCode mediumMorton;
-			mediumMorton.build(coordsL[0], coordsL[1], coordsL[2], level);
-			vector< unsigned long > decodedL = mediumMorton.decode(level);
+			mediumMorton.build( coordsL[0], coordsL[1], coordsL[2], level );
+			vector< unsigned long > decodedL = mediumMorton.decode( level );
 			
-			ASSERT_EQ(decodedL[0], coordsL[0]);
-			ASSERT_EQ(decodedL[1], coordsL[1]);
-			ASSERT_EQ(decodedL[2], coordsL[2]);
+			ASSERT_EQ( decodedL[ 0 ], coordsL[ 0 ] );
+			ASSERT_EQ( decodedL[ 1 ], coordsL[ 1 ] );
+			ASSERT_EQ( decodedL[ 2 ], coordsL[ 2 ] );
 			
 			decodedL = mediumMorton.decode();
 			
-			ASSERT_EQ(decodedL[0], coordsL[0]);
-			ASSERT_EQ(decodedL[1], coordsL[1]);
-			ASSERT_EQ(decodedL[2], coordsL[2]);
+			ASSERT_EQ( decodedL[ 0 ], coordsL[ 0 ]);
+			ASSERT_EQ( decodedL[ 1 ], coordsL[ 1 ]);
+			ASSERT_EQ( decodedL[ 2 ], coordsL[ 2 ]);
 		}
 	}
 }
