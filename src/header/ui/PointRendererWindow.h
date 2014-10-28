@@ -41,7 +41,7 @@ namespace ui
 		 * @returns true if the adaptation was done, false otherwise. */
 		void adaptProjThresh( float desiredRenderTime );
 		
-		MediumOctreePtr< float, vec3 > m_octree;
+		ShallowOctreePtr< float, vec3 > m_octree;
 		QPoint m_lastMousePos;
 		
 		QTimer *m_timer;

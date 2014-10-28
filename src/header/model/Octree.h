@@ -214,7 +214,7 @@ namespace model
 		// Do a bottom-up per-level construction of inner nodes.
 		for( int level = m_maxLevel - 1; level > -1; --level )
 		{
-			//cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
+			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
 			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
 			// below the current one. 
@@ -318,7 +318,7 @@ namespace model
 				}
 			}
 			
-			//cout << "========== End of level " << level << " ==========" << endl << endl;
+			cout << "========== End of level " << level << " ==========" << endl << endl;
 		}
 	}
 
