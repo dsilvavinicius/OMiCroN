@@ -31,7 +31,8 @@ namespace model
 		/** Initialize data for building the octree, giving the desired max number of nodes per node. */
 		OctreeBase( const int& maxPointsPerNode );
 		
-		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. */
+		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates.
+		 The elements of the point vector passed are erased to conserve memory. */
 		virtual void build( const PointVector< Float, Vec3 >& points );
 		
 		/** Traverses the octree, rendering all necessary points. */
@@ -64,13 +65,13 @@ namespace model
 		
 	protected:
 		/** Calculates octree's boundaries. */
-		virtual void buildBoundaries(const PointVector< Float, Vec3 >& points);
+		virtual void buildBoundaries( const PointVector< Float, Vec3 >& points );
 		
 		/** Creates all nodes bottom-up. */
-		virtual void buildNodes(const PointVector< Float, Vec3 >& points);
+		virtual void buildNodes( const PointVector< Float, Vec3 >& points );
 		
 		/** Creates all leaf nodes and put points inside them. */
-		virtual void buildLeaves(const PointVector< Float, Vec3 >& points);
+		virtual void buildLeaves( const PointVector< Float, Vec3 >& points );
 		
 		/** Creates all inner nodes, with LOD. Bottom-up. If a node has only leaf chilren and the accumulated number of
 		 * children points is less than a threshold, the children are merged into parent. */
@@ -119,26 +120,25 @@ namespace model
 		unsigned int m_maxLevel;
 	};
 	
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	OctreeBase<MortonPrecision, Float, Vec3>::OctreeBase(const int& maxPointsPerNode)
+	template< typename MortonPrecision, typename Float, typename Vec3 >
+	OctreeBase< MortonPrecision, Float, Vec3 >::OctreeBase( const int& maxPointsPerNode )
 	{
-		m_size = make_shared<Vec3>();
-		m_leafSize = make_shared<Vec3>();
-		m_origin = make_shared<Vec3>();
+		m_size = make_shared< Vec3 >();
+		m_leafSize = make_shared< Vec3 >();
+		m_origin = make_shared< Vec3 >();
 		m_maxPointsPerNode = maxPointsPerNode;
 		m_hierarchy = make_shared< OctreeMap< MortonPrecision, Float, Vec3 > >();
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::build(const PointVector< Float, Vec3 >& points)
+	void OctreeBase<MortonPrecision, Float, Vec3>::build( const PointVector< Float, Vec3 >& points )
 	{
-		buildBoundaries(points);
-		buildNodes(points);
+		buildBoundaries( points );
+		buildNodes( points );
 	}
 	
 	template < typename MortonPrecision, typename Float, typename Vec3 >
-	void OctreeBase< MortonPrecision, Float, Vec3 >::buildBoundaries(
-		const PointVector< Float, Vec3 >& points )
+	void OctreeBase< MortonPrecision, Float, Vec3 >::buildBoundaries( const PointVector< Float, Vec3 >& points )
 	{
 		Float negInf = -numeric_limits< Float >::max();
 		Float posInf = numeric_limits< Float >::max();
@@ -162,8 +162,7 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase< MortonPrecision, Float, Vec3 >::buildNodes(
-		const PointVector< Float, Vec3 >& points)
+	void OctreeBase< MortonPrecision, Float, Vec3 >::buildNodes( const PointVector< Float, Vec3 >& points )
 	{
 		cout << "Before leaves build." << endl << endl;
 		buildLeaves(points);
@@ -694,7 +693,7 @@ namespace model
 	Octree<unsigned long, Float, Vec3>::Octree(const int& maxPointsPerNode)
 	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
 	{
-		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 20; // 0 to 20.
+		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 13; // 0 to 20.
 	}
 	
 	template<typename Float, typename Vec3>

@@ -20,9 +20,9 @@ namespace ui
 		m_renderTime( 0.f )
 	{
 		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
-			"../../src/data/pugile.ply", PlyPointReader::SINGLE);
+			"../../src/data/tempietto_all.ply", PlyPointReader::SINGLE);
 		
-		m_octree = make_shared< ShallowOctree< float, vec3 > >( 1 );
+		m_octree = make_shared< MediumOctree< float, vec3 > >( 1 );
 		m_octree->build(points);
 	}
 	
