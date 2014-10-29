@@ -10,7 +10,8 @@
 #include <QOpenGLFramebufferObject>
 #include <QTimer>
 
-#include "Octree.h"
+//#include "Octree.h"
+#include "RandomSampleOctree.h"
 
 using namespace std;
 using namespace model;
@@ -41,7 +42,8 @@ namespace ui
 		 * @returns true if the adaptation was done, false otherwise. */
 		void adaptProjThresh( float desiredRenderTime );
 		
-		MediumOctreePtr< float, vec3 > m_octree;
+		//MediumOctreePtr< float, vec3 > m_octree;
+		ShallowRandomSampleOctreePtr< float, vec3 > m_octree;
 		QPoint m_lastMousePos;
 		
 		QTimer *m_timer;

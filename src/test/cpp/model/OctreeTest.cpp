@@ -80,24 +80,24 @@ namespace model
 		void checkSparseHierarchy(ShallowOctreeMapPtr< Float, Vec3 > hierarchy)
 		{
 			
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xa6c3u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xa6c0u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xc325u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xc320u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1d82u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1d80u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x39fu);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x39du);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x67u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x61u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x70u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x71u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x73u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x76u);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xau);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xcu);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0xeu);
-			checkNode< unsigned int, Float, Vec3 >(hierarchy, 0x1u);
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xa6c3U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xa6c0U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xc325U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xc320U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x1d82U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x1d80U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x39fU );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x39dU );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x67U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x61U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x70U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x71U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x73U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x76U );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xaU );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xcU );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0xeU );
+			checkNode< unsigned int, Float, Vec3 >( hierarchy, 0x1U );
 		}
 		
 		/** Tests the ShallowOctree created hierarchy. */
@@ -124,15 +124,15 @@ namespace model
 			
 			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
 			// Check node that should appear in the sparse representation of the octree.
-			checkSparseHierarchy< float, vec3 >(hierarchy);
+			checkSparseHierarchy< float, vec3 >( hierarchy );
 			
 			// Check the other nodes, which would be merged in a sparse octree.
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x14d8);
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x1864);
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x29b);
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x30c);
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x3b0);
-			checkNode< unsigned int, float, vec3 >(hierarchy, 0x53);
+			checkNode< unsigned int, float, vec3 >( hierarchy, 0x14d8U);
+			checkNode< unsigned int, float, vec3 >( hierarchy, 0x1864U);
+			checkNode< unsigned int, float, vec3 >( hierarchy, 0x29bU);
+			checkNode< unsigned int, float, vec3 >( hierarchy, 0x30cU);
+			checkNode< unsigned int, float, vec3 >( hierarchy, 0x3b0U);
+			checkNode< unsigned int, float, vec3 >( hierarchy, 0x53U);
 			
 			ASSERT_TRUE(hierarchy->empty());
 		}

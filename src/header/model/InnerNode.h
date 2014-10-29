@@ -8,31 +8,30 @@ using namespace glm;
 
 namespace model
 {
-	template <typename MortonPrecision, typename Float, typename Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3 >
 	class OctreeNode;
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	class InnerNode;
 	
 	/** Inner node with one vertex as LOD. */
-	template < typename MortonPrecision, typename Float, typename Vec3>
-	using LODInnerNode = InnerNode<MortonPrecision, Float, Vec3, Point< Float, Vec3 > >;
+	template< typename MortonPrecision, typename Float, typename Vec3 >
+	using LODInnerNode = InnerNode< MortonPrecision, Float, Vec3, Point< Float, Vec3 > >;
 	
 	/** Smart pointer for LODInnerNode. */ 
-	template < typename MortonPrecision, typename Float, typename Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3 >
 	using LODInnerNodePtr = shared_ptr< LODInnerNode< MortonPrecision, Float, Vec3 > >;
 	
-	/** Inner node with LOD as one vertex per cube face. */
-	template < typename MortonPrecision, typename Float, typename Vec3>
-	using PerFaceLODInnerNode = InnerNode< MortonPrecision, Float, Vec3, vector<Vec3> >;
+	/** Inner node formed by a random sample of 1/8 of the children points. */
+	template< typename MortonPrecision, typename Float, typename Vec3 >
+	using RamdomInnerNode = InnerNode< MortonPrecision, Float, Vec3, PointVector< Float, Vec3 > >;
 	
 	/** Smart pointer for PerFaceLODInnerNode. */ 
-	template < typename MortonPrecision, typename Float, typename Vec3>
-	using PerFaceLODInnerNodePtr = shared_ptr< PerFaceLODInnerNode<
-		MortonPrecision, Float, Vec3 > >;
+	template< typename MortonPrecision, typename Float, typename Vec3 >
+	using RandomInnerNodePtr = shared_ptr< RamdomInnerNode< MortonPrecision, Float, Vec3 > >;
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	class InnerNode : public OctreeNode<MortonPrecision, Float, Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
+	class InnerNode : public OctreeNode< MortonPrecision, Float, Vec3 >
 	{
 	public:
 		bool isLeaf() const;
@@ -43,7 +42,7 @@ namespace model
 		friend ostream& operator<<(ostream& out, const LODInnerNode< M, F, V >& node);
 		
 		template <typename M, typename F, typename V>
-		friend ostream& operator<<(ostream& out, const PerFaceLODInnerNode< M, F, V >& node);
+		friend ostream& operator<<(ostream& out, const RandomInnerNodePtr< M, F, V >& node);
 		
 	private:
 		shared_ptr< Contents > m_contents;
@@ -77,9 +76,9 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	ostream& operator<<(ostream& out, const PerFaceLODInnerNode< MortonPrecision, Float, Vec3 >& node)
+	ostream& operator<<(ostream& out, const RandomInnerNodePtr< MortonPrecision, Float, Vec3 >& node)
 	{
-		out << "Per-Face LOD Inner Node: " << endl;
+		out << "Random Inner Node: " << endl;
 		for (PointPtr< Float, Vec3 > point : *node.getContents())
 		{
 			out << *point;

@@ -1,9 +1,11 @@
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include <cassert>
 #include <map>
 #include <glm/ext.hpp>
 #include <Qt3D/QGLPainter>
+
 #include "MortonCode.h"
 #include "OctreeNode.h"
 #include "LeafNode.h"
@@ -24,7 +26,7 @@ namespace model
 	 * MortonPrecision is the precision of the morton code for nodes.
 	 * Float is the glm type specifying the floating point type / precision.
 	 * Vec3 is the glm type specifying the type / precision of the vector with 3 coordinates. */
-	template <typename MortonPrecision, typename Float, typename Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3 >
 	class OctreeBase
 	{
 	public:
@@ -77,10 +79,14 @@ namespace model
 		 * children points is less than a threshold, the children are merged into parent. */
 		virtual void buildInners();
 		
-		/** Utility: appends the points of a child node into a vector, incrementing the number of parent's children and
-		 * leaves. */
-		static void appendPoints(OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
-								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves);
+		/** Builds the inner node given the points in all child nodes. */
+		virtual OctreeNodePtr< MortonPrecision, Float, Vec3 > buildInnerNode(
+			const PointVector< Float, Vec3 >& childrenPoints ) const;
+		
+		/** Utility method to append the points of a child node into a vector, incrementing the number of
+		 * parent's children and leaves. */
+		static void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
+								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves );
 		
 		// TODO: Make tests for this function.
 		/** Computes the boundaries of the node indicated by the given morton code. */
@@ -97,7 +103,11 @@ namespace model
 		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter,
 							   vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw, const Float& projThresh);
 		
-		/** Helper function to insert node boundary point into vectors for rendering. */
+		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
+		virtual void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
+											  vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw ) const;
+		
+		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints(vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
 										 const bool& isCullable, const bool& isRenderable);
 		
@@ -300,20 +310,7 @@ namespace model
 					// No merge or absorption is needed. Just does LOD.
 					advance( firstChildIt, numChildren );
 					
-					// Accumulate points for LOD.
-					Point< Float, Vec3 > accumulated( Vec3( 0, 0, 0 ), Vec3( 0, 0, 0 ) );
-					for( PointPtr< Float, Vec3 > point : childrenPoints )
-					{
-						accumulated = accumulated + (*point);
-					}
-					accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
-					
-					// Creates leaf to replace children.
-					LODInnerNodePtr< MortonPrecision, Float, Vec3 > LODNode =
-						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
-					LODNode->setContents( accumulated );
-					
-					( *m_hierarchy )[ parentCode ] = LODNode;
+					( *m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
 				}
 			}
 			
@@ -321,10 +318,32 @@ namespace model
 		}
 	}
 
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::
+		buildInnerNode( const PointVector< Float, Vec3 >& childrenPoints ) const
+	{
+		// Accumulate points for LOD.
+		Point< Float, Vec3 > accumulated( Vec3( 0, 0, 0 ), Vec3( 0, 0, 0 ) );
+		for( PointPtr< Float, Vec3 > point : childrenPoints )
+		{
+			accumulated = accumulated + (*point);
+		}
+		accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
+		
+		// Creates leaf to replace children.
+		LODInnerNodePtr< MortonPrecision, Float, Vec3 > LODNode =
+			make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
+		LODNode->setContents( accumulated );
+		
+		return LODNode;
+	}
+	
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase<MortonPrecision, Float, Vec3>::appendPoints(OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
-							 PointVector< Float, Vec3 >& vec, int& numChildren, int& numLeaves)
+	inline void OctreeBase<MortonPrecision, Float, Vec3>::appendPoints(OctreeNodePtr< MortonPrecision,
+																	   Float, Vec3 > node,
+																	   PointVector< Float, Vec3 >& vec,
+																	   int& numChildren, int& numLeaves)
 	{
 		++numChildren;
 		if (node->isLeaf())
@@ -363,8 +382,8 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	pair<Vec3, Vec3> OctreeBase< MortonPrecision, Float, Vec3 >::getBoundaries(MortonCodePtr< MortonPrecision > code)
-	const
+	inline pair<Vec3, Vec3> OctreeBase< MortonPrecision, Float, Vec3 >::getBoundaries(
+		MortonCodePtr< MortonPrecision > code ) const
 	{
 		unsigned int level = code->getLevel();
 		vector< MortonPrecision > nodeCoordsVec = code->decode(level);
@@ -387,8 +406,8 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	bool OctreeBase< MortonPrecision, Float, Vec3 >::isCullable(MortonCodePtr< MortonPrecision > code,
-															  QGLPainter* painter, QBox3D& box) const
+	inline bool OctreeBase< MortonPrecision, Float, Vec3 >::isCullable( MortonCodePtr< MortonPrecision > code,
+																	    QGLPainter* painter, QBox3D& box ) const
 	{
 		pair< Vec3, Vec3 > boxVerts = getBoundaries(code);
 		Vec3 v0 = boxVerts.first;
@@ -399,8 +418,9 @@ namespace model
 	}
 		
 	template< typename MortonPrecision, typename Float, typename Vec3 >
-	bool OctreeBase< MortonPrecision, Float, Vec3 >::isRenderable( QBox3D& box, QGLPainter* painter, const Float& projThresh )
-	const
+	inline bool OctreeBase< MortonPrecision, Float, Vec3 >::isRenderable( QBox3D& box,
+																		  QGLPainter* painter,
+																	      const Float& projThresh ) const
 	{
 		QVector4D min( box.minimum(), 1 );
 		QVector4D max( box.maximum(), 1 );
@@ -476,9 +496,7 @@ namespace model
 					}
 					else
 					{
-						PointPtr< Float, Vec3 > point = node-> template getContents< Point< Float, Vec3 > >();
-						pointsToDraw.push_back( *point->getPos() );
-						colorsToDraw.push_back( *point->getColor() );
+						setupInnerNodeRendering( node, pointsToDraw, colorsToDraw );
 					}
 				}
 				else
@@ -507,9 +525,23 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase< MortonPrecision, Float, Vec3 >::insertBoundaryPoints(vector< Vec3 >& verts, vector< Vec3 >& colors,
-																		  const QBox3D& box, const bool& isCullable,
-																		  const bool& isRenderable)
+	inline void OctreeBase< MortonPrecision, Float, Vec3 >::setupInnerNodeRendering(
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, vector< Vec3 >& pointsToDraw,
+		vector< Vec3 >& colorsToDraw) const
+	{
+		assert( !innerNode.isLeaf() );
+		
+		PointPtr< Float, Vec3 > point = innerNode-> template getContents< Point< Float, Vec3 > >();
+		pointsToDraw.push_back( *point->getPos() );
+		colorsToDraw.push_back( *point->getColor() );
+	}
+	
+	template <typename MortonPrecision, typename Float, typename Vec3>
+	inline void OctreeBase< MortonPrecision, Float, Vec3 >::insertBoundaryPoints( vector< Vec3 >& verts,
+																				  vector< Vec3 >& colors,
+																				  const QBox3D& box,
+																				  const bool& isCullable,
+																				  const bool& isRenderable )
 	{
 		QVector3D qv0 = box.minimum();
 		QVector3D qv6 = box.maximum();
@@ -554,9 +586,10 @@ namespace model
 		}
 	}
 	
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	void OctreeBase< MortonPrecision, Float, Vec3 >::drawBoundaries(QGLPainter * painter, const bool& passProjTestOnly,
-																	const Float& projThresh ) const
+	template< typename MortonPrecision, typename Float, typename Vec3 >
+	void OctreeBase< MortonPrecision, Float, Vec3 >::drawBoundaries( QGLPainter * painter,
+																	 const bool& passProjTestOnly,
+																	 const Float& projThresh ) const
 	{
 		// Saves current effect.
 		QGLAbstractEffect* effect = painter->effect();
@@ -598,29 +631,33 @@ namespace model
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	OctreeMapPtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getHierarchy() const
+	inline OctreeMapPtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getHierarchy()
+	const
 	{
 		return m_hierarchy;
 	}
 		
 	/** Gets the origin, which is the point contained in octree with minimun coordinates for all axis. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getOrigin() const { return m_origin; }
+	inline shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getOrigin() const { return m_origin; }
 		
 	/** Gets the size of the octree, which is the extents in each axis from origin representing the space that the octree occupies. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getSize() const { return m_size; }
+	inline shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getSize() const { return m_size; }
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getLeafSize() const { return m_leafSize; }
+	inline shared_ptr< Vec3 > OctreeBase< MortonPrecision, Float, Vec3 >::getLeafSize() const { return m_leafSize; }
 		
 	/** Gets the maximum number of points that can be inside an octree node. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxPointsPerNode() const { return m_maxPointsPerNode; }
+	inline unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxPointsPerNode() const
+	{
+		return m_maxPointsPerNode;
+	}
 		
 	/** Gets the maximum level that this octree can reach. */
 	template <typename MortonPrecision, typename Float, typename Vec3>
-	unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxLevel() const { return m_maxLevel; }
+	inline unsigned int OctreeBase< MortonPrecision, Float, Vec3 >::getMaxLevel() const { return m_maxLevel; }
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
 	ostream& operator<<(ostream& out, const OctreeBase< MortonPrecision, Float, Vec3 >& octree)
@@ -658,49 +695,49 @@ namespace model
 	// Specializations.
 	//=====================================================================
 	
-	template <typename MortonPrecision, typename Float, typename Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3 >
 	class Octree {};
 	
-	template<typename Float, typename Vec3>
-	class Octree <unsigned int, Float, Vec3> : public OctreeBase<unsigned int, Float, Vec3>
+	template< typename Float, typename Vec3 >
+	class Octree< unsigned int, Float, Vec3 > : public OctreeBase< unsigned int, Float, Vec3 >
 	{
 	public:
-		Octree(const int& maxPointsPerNode);
+		Octree( const int& maxPointsPerNode );
 	};
 	
-	template<typename Float, typename Vec3>
-	class Octree <unsigned long, Float, Vec3> : public OctreeBase<unsigned long, Float, Vec3>
+	template< typename Float, typename Vec3 >
+	class Octree< unsigned long, Float, Vec3 > : public OctreeBase< unsigned long, Float, Vec3 >
 	{
 	public:
-		Octree(const int& maxPointsPerNode);
+		Octree( const int& maxPointsPerNode );
 	};
 	
-	template<typename Float, typename Vec3>
-	class Octree <unsigned long long, Float, Vec3> : public OctreeBase<unsigned long long, Float, Vec3>
+	template< typename Float, typename Vec3 >
+	class Octree< unsigned long long, Float, Vec3 > : public OctreeBase< unsigned long long, Float, Vec3 >
 	{
 	public:
-		Octree(const int& maxPointsPerNode);
+		Octree( const int& maxPointsPerNode );
 	};
 	
-	template<typename Float, typename Vec3>
-	Octree< unsigned int, Float, Vec3 >::Octree(const int& maxPointsPerNode)
-	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase(maxPointsPerNode)
+	template< typename Float, typename Vec3 >
+	Octree< unsigned int, Float, Vec3 >::Octree( const int& maxPointsPerNode )
+	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase( maxPointsPerNode )
 	{
-		OctreeBase<unsigned int, Float, Vec3>::m_maxLevel = 10; // 0 to 10.
+		OctreeBase< unsigned int, Float, Vec3 >::m_maxLevel = 10; // 0 to 10.
 	}
 	
-	template<typename Float, typename Vec3>
-	Octree<unsigned long, Float, Vec3>::Octree(const int& maxPointsPerNode)
-	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
+	template< typename Float, typename Vec3 >
+	Octree< unsigned long, Float, Vec3 >::Octree( const int& maxPointsPerNode )
+	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase( maxPointsPerNode )
 	{
-		OctreeBase<unsigned long, Float, Vec3>::m_maxLevel = 13; // 0 to 20.
+		OctreeBase< unsigned long, Float, Vec3 >::m_maxLevel = 13; // 0 to 20.
 	}
 	
-	template<typename Float, typename Vec3>
-	Octree<unsigned long long, Float, Vec3>::Octree(const int& maxPointsPerNode)
-	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase(maxPointsPerNode)
+	template< typename Float, typename Vec3 >
+	Octree< unsigned long long, Float, Vec3 >::Octree( const int& maxPointsPerNode )
+	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase( maxPointsPerNode )
 	{
-		OctreeBase<unsigned long long, Float, Vec3>::m_maxLevel = 42; // 0 to 42
+		OctreeBase< unsigned long long, Float, Vec3 >::m_maxLevel = 42; // 0 to 42
 	}
 }
 
