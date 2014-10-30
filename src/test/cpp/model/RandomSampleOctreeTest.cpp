@@ -6,7 +6,7 @@ namespace model
 {
 	namespace test
 	{
-        /*class RandomSampleOctreeTest : public ::testing::Test
+        class RandomSampleOctreeTest : public ::testing::Test
 		{
 		protected:
 			
@@ -47,6 +47,6 @@ namespace model
 		TEST_F( RandomSampleOctreeTest, Hierarchy )
 		{
 			
-		}*/
+		}
 	}
 }

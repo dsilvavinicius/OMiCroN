@@ -30,8 +30,9 @@ namespace model
 	class OctreeBase
 	{
 	public:
-		/** Initialize data for building the octree, giving the desired max number of nodes per node. */
-		OctreeBase( const int& maxPointsPerNode );
+		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum level
+		 * of the hierarchy. */
+		OctreeBase( const int& maxPointsPerNode, const int& maxLevel );
 		
 		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates.
 		 The elements of the point vector passed are erased to conserve memory. */
@@ -85,8 +86,8 @@ namespace model
 		
 		/** Utility method to append the points of a child node into a vector, incrementing the number of
 		 * parent's children and leaves. */
-		static void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
-								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves );
+		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node,
+								 PointVector< Float, Vec3 >& vector, int& numChildren, int& numLeaves ) const;
 		
 		// TODO: Make tests for this function.
 		/** Computes the boundaries of the node indicated by the given morton code. */
@@ -128,16 +129,20 @@ namespace model
 		
 		/** Maximum level of this octree. */
 		unsigned int m_maxLevel;
+		
+		/** Maximum level that the type used as morton code of this octree can represent. */
+		unsigned int m_maxMortonLevel;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3 >
-	OctreeBase< MortonPrecision, Float, Vec3 >::OctreeBase( const int& maxPointsPerNode )
+	OctreeBase< MortonPrecision, Float, Vec3 >::OctreeBase( const int& maxPointsPerNode, const int& maxLevel )
 	{
 		m_size = make_shared< Vec3 >();
 		m_leafSize = make_shared< Vec3 >();
 		m_origin = make_shared< Vec3 >();
 		m_maxPointsPerNode = maxPointsPerNode;
 		m_hierarchy = make_shared< OctreeMap< MortonPrecision, Float, Vec3 > >();
+		m_maxLevel = maxLevel;
 	}
 	
 	template <typename MortonPrecision, typename Float, typename Vec3>
@@ -343,7 +348,7 @@ namespace model
 	inline void OctreeBase<MortonPrecision, Float, Vec3>::appendPoints(OctreeNodePtr< MortonPrecision,
 																	   Float, Vec3 > node,
 																	   PointVector< Float, Vec3 >& vec,
-																	   int& numChildren, int& numLeaves)
+																	   int& numChildren, int& numLeaves) const
 	{
 		++numChildren;
 		if (node->isLeaf())
@@ -529,7 +534,7 @@ namespace model
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, vector< Vec3 >& pointsToDraw,
 		vector< Vec3 >& colorsToDraw) const
 	{
-		assert( !innerNode.isLeaf() );
+		assert( !innerNode->isLeaf() );
 		
 		PointPtr< Float, Vec3 > point = innerNode-> template getContents< Point< Float, Vec3 > >();
 		pointsToDraw.push_back( *point->getPos() );
@@ -702,42 +707,48 @@ namespace model
 	class Octree< unsigned int, Float, Vec3 > : public OctreeBase< unsigned int, Float, Vec3 >
 	{
 	public:
-		Octree( const int& maxPointsPerNode );
+		Octree( const int& maxPointsPerNode, const int& maxLevel );
 	};
 	
 	template< typename Float, typename Vec3 >
 	class Octree< unsigned long, Float, Vec3 > : public OctreeBase< unsigned long, Float, Vec3 >
 	{
 	public:
-		Octree( const int& maxPointsPerNode );
+		Octree( const int& maxPointsPerNode, const int& maxLevel );
 	};
 	
 	template< typename Float, typename Vec3 >
 	class Octree< unsigned long long, Float, Vec3 > : public OctreeBase< unsigned long long, Float, Vec3 >
 	{
 	public:
-		Octree( const int& maxPointsPerNode );
+		Octree( const int& maxPointsPerNode, const int& maxLevel );
 	};
 	
 	template< typename Float, typename Vec3 >
-	Octree< unsigned int, Float, Vec3 >::Octree( const int& maxPointsPerNode )
-	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase( maxPointsPerNode )
+	Octree< unsigned int, Float, Vec3 >::Octree( const int& maxPointsPerNode, const int& maxLevel )
+	: OctreeBase< unsigned int, Float, Vec3 >::OctreeBase( maxPointsPerNode, maxLevel )
 	{
-		OctreeBase< unsigned int, Float, Vec3 >::m_maxLevel = 10; // 0 to 10.
+		OctreeBase< unsigned int, Float, Vec3 >::m_maxMortonLevel = 10; // 0 to 10.
+		assert( ( OctreeBase< unsigned int, Float, Vec3 >::m_maxLevel <=
+			OctreeBase< unsigned int, Float, Vec3 >::m_maxMortonLevel ) );
 	}
 	
 	template< typename Float, typename Vec3 >
-	Octree< unsigned long, Float, Vec3 >::Octree( const int& maxPointsPerNode )
-	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase( maxPointsPerNode )
+	Octree< unsigned long, Float, Vec3 >::Octree( const int& maxPointsPerNode, const int& maxLevel )
+	: OctreeBase< unsigned long, Float, Vec3 >::OctreeBase( maxPointsPerNode, maxLevel )
 	{
-		OctreeBase< unsigned long, Float, Vec3 >::m_maxLevel = 13; // 0 to 20.
+		OctreeBase< unsigned long, Float, Vec3 >::m_maxMortonLevel = 20; // 0 to 20.
+		assert( ( OctreeBase< unsigned long, Float, Vec3 >::m_maxLevel <=
+			OctreeBase< unsigned long, Float, Vec3 >::m_maxMortonLevel ) );
 	}
 	
 	template< typename Float, typename Vec3 >
-	Octree< unsigned long long, Float, Vec3 >::Octree( const int& maxPointsPerNode )
-	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase( maxPointsPerNode )
+	Octree< unsigned long long, Float, Vec3 >::Octree( const int& maxPointsPerNode, const int& maxLevel )
+	: OctreeBase< unsigned long long, Float, Vec3 >::OctreeBase( maxPointsPerNode, maxLevel )
 	{
-		OctreeBase< unsigned long long, Float, Vec3 >::m_maxLevel = 42; // 0 to 42
+		OctreeBase< unsigned long long, Float, Vec3 >::m_maxMortonLevel = 42; // 0 to 42
+		assert( ( OctreeBase< unsigned long long, Float, Vec3 >::m_maxLevel <=
+			OctreeBase< unsigned long long, Float, Vec3 >::m_maxMortonLevel ) );
 	}
 }
 
