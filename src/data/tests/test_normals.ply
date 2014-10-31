@@ -1,0 +1,13 @@
+ply
+format ascii 1.0
+element vertex 3
+property float x
+property float y
+property float z
+property float nx
+property float ny
+property float nz
+end_header
+7.163479 4.658535 11.321565 11.321565 4.658535 7.163479
+6.996898 5.635769 11.201763 11.201763 5.635769 6.996898
+7.202037 4.750132 11.198129 11.198129 4.750132 7.202037

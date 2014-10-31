@@ -19,8 +19,8 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		PointVector<float, vec3> points = PlyPointReader::read< float, vec3 >(
-			"../../src/data/tempietto_all.ply", PlyPointReader::SINGLE);
+		PlyPointReader< float, vec3 > reader( "../../src/data/real/pugile.ply", PlyPointReader< float, vec3 >::SINGLE );
+		PointVector<float, vec3> points = reader.getPoints();
 		
 		//m_octree = make_shared< ShallowOctree< float, vec3 > >( 1, 10 );
 		//m_octree = make_shared< MediumOctree< float, vec3 > >( 1, 13 );

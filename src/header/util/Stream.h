@@ -8,6 +8,7 @@
 #include <QPoint>
 #include <QRect>
 #include <QSize>
+#include "Point.h"
 
 using namespace std;
 using namespace glm;
@@ -15,13 +16,13 @@ using namespace glm;
 namespace model
 {
 	template< typename T >
-	ostream& operator<<(ostream& out, const vector<T>& v)
+	ostream& operator<<(ostream& out, const vector< T >& v)
 	{
 		out << "{";
 		bool first = true;
-		for (T element : v)
+		for( T element : v )
 		{
-			if (first)
+			if( first )
 			{
 				out << element;
 				first = false;
@@ -34,6 +35,26 @@ namespace model
 		out << "}";
 		
 		return out;
+	}
+	
+	template< typename Float, typename Vec3 >
+	ostream& operator<<( ostream& out, const vector< PointPtr< Float, Vec3> >& v )
+	{
+		out << "{" << endl;
+		bool first = true;
+		for( PointPtr< Float, Vec3 > element : v )
+		{
+			if( first )
+			{
+				out << *element;
+				first = false;
+			}
+			else
+			{
+				out << ", " << endl << *element;
+			}
+		}
+		out << "}";
 	}
 	
 	template<>

@@ -1,1 +1,1 @@
-Put the point data files here.
+Put the data .ply files here. Use real folder to put real datasets and tests folder to put test datasets. The real folder is ignored in version control to avoid upload and download of large files.
