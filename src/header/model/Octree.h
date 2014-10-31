@@ -39,7 +39,7 @@ namespace model
 		virtual void build( const PointVector< Float, Vec3 >& points );
 		
 		/** Traverses the octree, rendering all necessary points. */
-		virtual void traverse( QGLPainter *painter, const Float& projThresh );
+		virtual void traverse( QGLPainter *painter, const Float& projThresh, const bool& normalsEnabled );
 		
 		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
@@ -365,10 +365,19 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3 >
-	void OctreeBase< MortonPrecision, Float, Vec3 >::traverse( QGLPainter* painter, const Float& projThresh )
+	void OctreeBase< MortonPrecision, Float, Vec3 >::traverse( QGLPainter* painter, const Float& projThresh,
+															   const bool& normalsEnabled )
 	{
 		painter->clearAttributes();
-		painter->setStandardEffect( QGL::FlatPerVertexColor );
+		if( normalsEnabled )
+		{
+			painter->setStandardEffect( QGL::LitMaterial );
+			//painter->setFaceMaterial( QGL::FrontFaces, QGLMaterial(  ) );
+		}
+		else
+		{
+			painter->setStandardEffect( QGL::FlatPerVertexColor );
+		}
 		
 		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
 		rootCode->build( 0x1 );
@@ -381,7 +390,15 @@ namespace model
 		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &pointsToDraw[0] );
 		QGLAttributeValue colorValues( 3, GL_FLOAT, 0, &colorsToDraw[0] );
 		painter->setVertexAttribute( QGL::Position, pointValues );
-		painter->setVertexAttribute( QGL::Color, colorValues );
+		
+		if( normalsEnabled )
+		{
+			painter->setVertexAttribute( QGL::Normal, colorValues );
+		}
+		else
+		{
+			painter->setVertexAttribute( QGL::Color, colorValues );
+		}
 		
 		painter->draw( QGL::Points, pointsToDraw.size() );
 	}

@@ -56,6 +56,8 @@ namespace ui
 		float m_projThresh;
 		/** Current render time used to adapt the projection threshold. */
 		float m_renderTime;
+		
+		bool m_normalsEnabled;
 	};
 
 	using PointRendererWindowPtr = shared_ptr<PointRendererWindow>;

@@ -19,8 +19,11 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		PlyPointReader< float, vec3 > reader( "../../src/data/real/pugile.ply", PlyPointReader< float, vec3 >::SINGLE );
+		PlyPointReader< float, vec3 > reader( "../../src/data/real/tempietto_all.ply", PlyPointReader< float, vec3 >::SINGLE );
 		PointVector<float, vec3> points = reader.getPoints();
+		m_normalsEnabled = reader.hasNormals();
+		
+		cout << "Normals enabled." << endl << endl;
 		
 		//m_octree = make_shared< ShallowOctree< float, vec3 > >( 1, 10 );
 		//m_octree = make_shared< MediumOctree< float, vec3 > >( 1, 13 );
@@ -41,11 +44,11 @@ namespace ui
 		
 		painter->setCamera( cam );
 		
-		m_octree->traverse( painter, m_projThresh );
+		m_octree->traverse( painter, m_projThresh, m_normalsEnabled );
 		
 		// Render the scene one time to init m_renderTime for future projection threshold adaptations.
 		clock_t timing = clock();
-		m_octree->traverse( painter, m_projThresh );
+		m_octree->traverse( painter, m_projThresh, m_normalsEnabled );
 		timing = clock() - timing;
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 	
@@ -73,7 +76,7 @@ namespace ui
 		
 		// Render the scene.
 		clock_t timing = clock();
-		m_octree->traverse( painter, m_projThresh );
+		m_octree->traverse( painter, m_projThresh, m_normalsEnabled );
 		timing = clock() - timing;
 		
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
