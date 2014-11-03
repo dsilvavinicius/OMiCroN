@@ -15,7 +15,7 @@ namespace util
 		//cout << "Prop value: " << value << endl;
 		
 		unsigned int index = propFlag & 0xF;
-		switch (index)
+		switch( index )
 		{
 			case 0:
 			{

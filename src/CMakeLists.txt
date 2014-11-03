@@ -84,6 +84,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/InnerNode.h
 	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h
 	${HEADER_DIR}/${MODEL_DIR}/Point.h
+	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h			${CPP_DIR}/${UTIL_DIR}/Stream.cpp
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h	${CPP_DIR}/${UTIL_DIR}/PlyPointReader.cpp)

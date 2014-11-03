@@ -47,7 +47,7 @@ namespace model
 		/** Tests the calculated boundaries of the ShallowOctree. */
 		TEST_F(OctreeTest, ShallowBoundaries)
 		{
-			auto octree = make_shared< ShallowOctree<float, vec3> >(1, 10);
+			auto octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >(1, 10);
 			octree->build(m_points);
 			
 			ASSERT_EQ(octree->getMaxLevel(), 10);
@@ -119,7 +119,7 @@ namespace model
 			//			 0x1d82 -> 0x3b0 -> 0x76 ->
 			//			 0x1d80 ->
 			
-			auto octree = make_shared< ShallowOctree<float, vec3> >(1, 10);
+			auto octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >(1, 10);
 			octree->build(m_points);
 			
 			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
@@ -169,7 +169,7 @@ namespace model
 		/** Tests the calculated boundaries of the MediumOctree. */
 		TEST_F( OctreeTest, MediumBoundaries )
 		{
-			auto octree = make_shared< MediumOctree<float, vec3> >( 1, 20 );
+			auto octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 20 );
 			octree->build( m_points );
 			
 			// TODO: Turn this test on later.
@@ -210,7 +210,7 @@ it is a sibling of the node at the same position at the line immediately above.
 					0x39d ->
 */
 			// Creates the octree.
-			auto octree = make_shared< MediumOctree<float, vec3> >( 1, 20 );
+			auto octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 20 );
 			octree->build( m_points );
 			MediumOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
 			

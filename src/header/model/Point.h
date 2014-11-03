@@ -18,33 +18,33 @@ namespace model
 	{
 	public:
 		Point();
-		Point(const Vec3& color, const Vec3& pos);
+		Point( const Vec3& color, const Vec3& pos );
 		
 		shared_ptr< Vec3 > getColor();
 		shared_ptr< Vec3 > getPos();
 		
 		// Comparison operators.
-		bool equal(const Point< Float, Vec3 >& other);
+		bool equal( const Point< Float, Vec3 >& other );
 		
 		// Arithmetic operators.
-		Point< Float, Vec3 > multiply(const Float& multiplier);
+		Point< Float, Vec3 > multiply( const Float& multiplier ) const;
 		
 		template < typename F, typename V >
-		friend Point< F, V > operator+(const Point< F, V >& left, const Point< F, V >& right);
+		friend Point< F, V > operator+( const Point< F, V >& left, const Point< F, V >& right );
 		
 		template < typename F, typename V >
-		friend Point< F, V > operator+(Point< F, V >&& left , const Point< F, V >& right);
+		friend Point< F, V > operator+( Point< F, V >&& left , const Point< F, V >& right );
 		
 		template < typename F, typename V >
-		friend Point< F, V > operator+(const Point< F, V >& left, Point< F, V >&& right);
+		friend Point< F, V > operator+( const Point< F, V >& left, Point< F, V >&& right );
 		
 		template < typename F, typename V >
-		friend Point< F, V > operator+(Point< F, V >&& left, Point< F, V >&& right);
+		friend Point< F, V > operator+( Point< F, V >&& left, Point< F, V >&& right );
 		
 		template < typename F, typename V >
-		friend ostream& operator<< (ostream &out, Point< F, V > &point);
+		friend ostream& operator<< ( ostream &out, Point< F, V > &point );
 		
-	private:
+	protected:
 		shared_ptr< Vec3 > m_color;
 		shared_ptr< Vec3 > m_pos;
 	};
@@ -52,15 +52,15 @@ namespace model
 	template <typename Float, typename Vec3>
 	Point< Float, Vec3 >::Point()
 	{
-		m_color = make_shared< Vec3 >(vec3(0, 0, 0));
-		m_pos = make_shared< Vec3 >(vec3(0, 0, 0));
+		m_color = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
+		m_pos = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 	}
 	
 	template <typename Float, typename Vec3>
-	Point< Float, Vec3 >::Point(const Vec3& color, const Vec3& pos)
+	Point< Float, Vec3 >::Point( const Vec3& color, const Vec3& pos )
 	{
-		m_color = make_shared< Vec3 >(color);
-		m_pos = make_shared< Vec3 >(pos);
+		m_color = make_shared< Vec3 >( color );
+		m_pos = make_shared< Vec3 >( pos );
 	}
 	
 	template <typename Float, typename Vec3>
@@ -70,51 +70,51 @@ namespace model
 	shared_ptr< Vec3 > Point< Float, Vec3 >::getPos() { return m_pos; }
 	
 	template <typename Float, typename Vec3>
-	bool Point< Float, Vec3 >::equal(const Point< Float, Vec3 >& other)
+	bool Point< Float, Vec3 >::equal( const Point< Float, Vec3 >& other )
 	{
-		return 	glm::all(glm::equal(*m_color, *other.m_color)) &&
-				glm::all(glm::equal(*m_pos, *other.m_pos));
+		return 	glm::all( glm::equal( *m_color, *other.m_color ) ) &&
+				glm::all( glm::equal( *m_pos, *other.m_pos ) );
 	}
 	
 	template <typename Float, typename Vec3>
-	Point< Float, Vec3 > Point< Float, Vec3 >::multiply(const Float& multiplier)
+	Point< Float, Vec3 > Point< Float, Vec3 >::multiply( const Float& multiplier ) const
 	{
-		return Point< Float, Vec3 >(*m_color * multiplier, *m_pos * multiplier);
+		return Point< Float, Vec3 >( *m_color * multiplier, *m_pos * multiplier );
 	}
 	
 	template < typename Float, typename Vec3 >
-	Point< Float, Vec3 > operator+(const Point< Float, Vec3 >& left, const Point< Float, Vec3 >& right)
+	Point< Float, Vec3 > operator+( const Point< Float, Vec3 >& left, const Point< Float, Vec3 >& right )
 	{
-		return Point< Float, Vec3 >(*left.m_color + *right.m_color, *left.m_pos + *right.m_pos);
+		return Point< Float, Vec3 >( *left.m_color + *right.m_color, *left.m_pos + *right.m_pos );
 	}
 	
 	template < typename Float, typename Vec3 >
-	Point< Float, Vec3 > operator+(Point< Float, Vec3 >&& left , const Point< Float, Vec3 >& right)
+	Point< Float, Vec3 > operator+( Point< Float, Vec3 >&& left , const Point< Float, Vec3 >& right )
 	{
-		return Point< Float, Vec3 >(*left.m_color + *right.m_color, *left.m_pos + *right.m_pos);
+		return Point< Float, Vec3 >( *left.m_color + *right.m_color, *left.m_pos + *right.m_pos );
 	}
 	
 	template < typename Float, typename Vec3 >
-	Point< Float, Vec3 > operator+(const Point< Float, Vec3 >& left, Point< Float, Vec3 >&& right)
+	Point< Float, Vec3 > operator+( const Point< Float, Vec3 >& left, Point< Float, Vec3 >&& right )
 	{
-		return Point< Float, Vec3 >(*left.m_color + *right.m_color, *left.m_pos + *right.m_pos);
+		return Point< Float, Vec3 >( *left.m_color + *right.m_color, *left.m_pos + *right.m_pos );
 	}
 	
 	template < typename Float, typename Vec3 >
-	Point< Float, Vec3 > operator+(Point< Float, Vec3 >&& left, Point< Float, Vec3 >&& right)
+	Point< Float, Vec3 > operator+( Point< Float, Vec3 >&& left, Point< Float, Vec3 >&& right )
 	{
-		return Point< Float, Vec3 >(*left.m_color + *right.m_color, *left.m_pos + *right.m_pos);
+		return Point< Float, Vec3 >( *left.m_color + *right.m_color, *left.m_pos + *right.m_pos );
 	}
 	
 	template < typename Float, typename Vec3 >
-	ostream& operator<< (ostream &out, Point< Float, Vec3 > &point)
+	ostream& operator<< ( ostream &out, Point< Float, Vec3 > &point )
 	{
 		Vec3 pos = *point.m_pos;
 		Vec3 color = *point.m_color;
 		
 		out << "Point:" << endl
-			<< "color = " << glm::to_string(color) << endl
-			<< "pos = " << glm::to_string(pos) << endl;
+			<< "color = " << glm::to_string( color ) << endl
+			<< "pos = " << glm::to_string( pos ) << endl;
 			
 		return out;
 	}

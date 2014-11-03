@@ -12,11 +12,11 @@ using namespace glm;
 
 namespace model
 {
-	template <typename MortonPrecision, typename Float, typename Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	class Octree;
 	
 	/** Base class for octree nodes. */
-	template <typename MortonPrecision, typename Float, typename Vec3>
+	template< typename MortonPrecision, typename Float, typename Vec3 >
 	class OctreeNode
 	{
 	public:

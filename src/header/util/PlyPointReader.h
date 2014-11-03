@@ -52,6 +52,7 @@ namespace util
 	
 	template< typename Float, typename Vec3 >
 	PlyPointReader< Float, Vec3 >::PlyPointReader( const string& fileName, PlyPointReader::Precision precision )
+	: m_normalsFlag( false )
 	{
 		/* Save application locale */
 		const char *old_locale = setlocale( LC_NUMERIC, NULL );
@@ -71,6 +72,24 @@ namespace util
 			throw runtime_error( "Cannot read point file header." );
 		}
 		
+		// Verify the properties of the vertex element in the .ply file in order to set the normal flag.
+		p_ply_element vertexElement = ply_get_next_element( ply, NULL );
+		p_ply_property  property = ply_get_next_property( vertexElement, property );
+		
+		while( property != NULL )
+		{
+			char* name;
+			ply_get_property_info( property, const_cast< const char** >( &name ), NULL, NULL, NULL );
+			if( !strcmp( name, "nx\0" ) )
+			{
+				m_normalsFlag = true;
+			}
+			cout << "Prop name: " << name << endl;
+			property = ply_get_next_property( vertexElement, property );
+		}
+		cout << endl;
+		
+		// Set callbacks for reading.
 		setVertexCB( ply, "x", 0, precision );
 		setVertexCB( ply, "y", 1, precision );
 		setVertexCB( ply, "z", 2, precision );
@@ -87,17 +106,6 @@ namespace util
 			setlocale( LC_NUMERIC, old_locale );
 			throw runtime_error( "Problem while reading points." );
 		}
-		
-		// Verify the properties of the vertex element in the .ply file in order to set the normal flag.
-		p_ply_element vertexElement = ply_get_next_element( ply, NULL );
-		p_ply_property  property = NULL;
-		for( int i = 0; i < 4; ++i )
-		{
-			property = ply_get_next_property( vertexElement, property );
-		}
-		char* name;
-		ply_get_property_info( property, const_cast< const char** >( &name ), NULL, NULL, NULL );
-		m_normalsFlag =  strcmp( name, "nx\0" ) ? false : true;
 		
 		ply_close( ply );
 		
