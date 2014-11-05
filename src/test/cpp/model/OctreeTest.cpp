@@ -172,43 +172,36 @@ namespace model
 			auto octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 20 );
 			octree->build( m_points );
 			
-			// TODO: Turn this test on later.
-			//ASSERT_EQ(octree->getMaxLevel(), 20);
+			ASSERT_EQ(octree->getMaxLevel(), 20);
 			ASSERT_EQ(octree->getMaxPointsPerNode(), 1);
 			
 			vec3 origin = *octree->getOrigin();
 			vec3 size = *octree->getSize();
 			vec3 leafSize = *octree->getLeafSize();
 			
-			cout << "Leaf size: " << glm::to_string( leafSize ) << endl
-				 << "Distance: " << distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) )
-				 << endl << endl;
-			
 			float epsilon = 10.e-15f;
 			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) )  < epsilon );
 			ASSERT_TRUE( distance2( size, vec3( 60.f, 46.f, 75.f ) ) < epsilon );
-			// TODO: Turn this test on later.
-			//ASSERT_TRUE( distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) ) < epsilon );
+			ASSERT_TRUE( distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) ) < epsilon );
 		}
 		
 		/** Tests the MediumOctree created hierarchy. */
 		TEST_F( OctreeTest, MediumHierarchy )
 		{
-/*
-Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
-it is a sibling of the node at the same position at the line immediately above.
-0xa6c3 -> 0x14d8 -> 0x29b -> 0x53 -> 0xa -> 0x1
-0xa6c0 -> 
-0xc325 -> 0x1864 -> 0x30c -> 0x61 -> 0xc
-0xc320 -> 
-							 0x67 ->
-		  0x1d82 -> 0x3b0 -> 0x76 -> 0xe
-		  0x1d80 -> 
-							 0x70 ->
-							 0x71 ->
-					0x39f -> 0x73 ->
-					0x39d ->
-*/
+			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
+			// it is a sibling of the node at the same position at the line immediately above.
+			// 0xa6c3 -> 0x14d8 -> 0x29b -> 0x53 -> 0xa -> 0x1
+			// 0xa6c0 -> 
+			// 0xc325 -> 0x1864 -> 0x30c -> 0x61 -> 0xc
+			// 0xc320 -> 
+			// 							    0x67 ->
+			// 		  	 0x1d82 -> 0x3b0 -> 0x76 -> 0xe
+			// 		  	 0x1d80 -> 
+			// 								0x70 ->
+			// 								0x71 ->
+			// 					   0x39f -> 0x73 ->
+			// 					   0x39d ->
+			
 			// Creates the octree.
 			auto octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 20 );
 			octree->build( m_points );

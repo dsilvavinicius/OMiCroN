@@ -40,8 +40,7 @@ namespace model
 		 * of the hierarchy. */
 		OctreeBase( const int& maxPointsPerNode, const int& maxLevel );
 		
-		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates.
-		 The elements of the point vector passed are erased to conserve memory. */
+		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. */
 		virtual void build( const PointVector& points );
 		
 		/** Traverses the octree, rendering all necessary points. */

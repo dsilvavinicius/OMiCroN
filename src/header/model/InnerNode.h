@@ -24,11 +24,11 @@ namespace model
 	
 	/** Inner node formed by a random sample of 1/8 of the children points. */
 	template< typename MortonPrecision, typename Float, typename Vec3 >
-	using RamdomInnerNode = InnerNode< MortonPrecision, Float, Vec3, PointVector< Float, Vec3 > >;
+	using RandomInnerNode = InnerNode< MortonPrecision, Float, Vec3, PointVector< Float, Vec3 > >;
 	
 	/** Smart pointer for PerFaceLODInnerNode. */ 
 	template< typename MortonPrecision, typename Float, typename Vec3 >
-	using RandomInnerNodePtr = shared_ptr< RamdomInnerNode< MortonPrecision, Float, Vec3 > >;
+	using RandomInnerNodePtr = shared_ptr< RandomInnerNode< MortonPrecision, Float, Vec3 > >;
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	class InnerNode : public OctreeNode< MortonPrecision, Float, Vec3 >

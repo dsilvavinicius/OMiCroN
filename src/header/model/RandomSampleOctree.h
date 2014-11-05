@@ -45,11 +45,9 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		auto node = make_shared< RamdomInnerNode< MortonPrecision, Float, Vec3 > >();
+		auto node = make_shared< RandomInnerNode< MortonPrecision, Float, Vec3 > >();
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
-		
-		//cout << "num Sample points: " << numSamplePoints << endl << "Children points size:" << childrenPoints.size() << endl;
 		
 		// Gets random 1/8 of the number of points.
 		for( int i = 0; i < numSamplePoints; ++i )
@@ -91,6 +89,7 @@ namespace model
 		}
 		
 		PointVectorPtr childPoints = node-> template getContents< PointVector >();
+		
 		vec.insert( vec.end(), childPoints->begin(), childPoints->end() );
 	}
 	
