@@ -186,12 +186,8 @@ namespace model
 	{
 		cout << "Before leaves build." << endl << endl;
 		buildLeaves(points);
-		
 		cout << "After leaves build." << endl << endl;
-		//cout << *this << endl << endl;
-		
 		buildInners();
-		
 		cout << "After inners build." << endl << endl;
 	}
 	
@@ -220,8 +216,7 @@ namespace model
 			{
 				// Node already exists. Appends the point there.
 				OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode = genericLeafIt->second;
-				shared_ptr< PointVector > nodePoints =
-					leafNode-> template getContents< PointVector >();
+				shared_ptr< PointVector > nodePoints = leafNode-> template getContents< PointVector >();
 				nodePoints->push_back( point );
 			}
 		}
