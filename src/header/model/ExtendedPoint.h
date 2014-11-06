@@ -12,50 +12,51 @@ using namespace std;
 namespace model
 {
 	/** Point with normal. */
-	template < typename Float, typename Vec3 >
+	template< typename Float, typename Vec3 >
 	class ExtendedPoint : public Point< Float, Vec3 >
 	{
+	public:
 		ExtendedPoint();
 		ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos );
 		
 		shared_ptr< Vec3 > getNormal();
 		
 		// Comparison operators.
-		bool equal(const ExtendedPoint< Float, Vec3 >& other);
+		bool equal( const ExtendedPoint< Float, Vec3 >& other );
 		
 		// Arithmetic operators.
 		ExtendedPoint< Float, Vec3 > multiply( const Float& multiplier ) const;
 		
-		template < typename F, typename V >
+		template< typename F, typename V >
 		friend ExtendedPoint< F, V > operator+( const ExtendedPoint< F, V >& left, const ExtendedPoint< F, V >& right );
 		
-		template < typename F, typename V >
+		template< typename F, typename V >
 		friend ExtendedPoint< F, V > operator+( ExtendedPoint< F, V >&& left , const ExtendedPoint< F, V >& right );
 		
-		template < typename F, typename V >
+		template< typename F, typename V >
 		friend ExtendedPoint< F, V > operator+( const ExtendedPoint< F, V >& left, ExtendedPoint< F, V >&& right );
 		
-		template < typename F, typename V >
+		template< typename F, typename V >
 		friend ExtendedPoint< F, V > operator+( ExtendedPoint< F, V >&& left, ExtendedPoint< F, V >&& right );
 		
-		template < typename F, typename V >
-		friend ostream& operator<< ( ostream &out, ExtendedPoint< F, V > &point );
+		template< typename F, typename V >
+		friend ostream& operator<<( ostream &out, const ExtendedPoint< F, V >& point );
 		
-	private:
+	protected:
 		shared_ptr< Vec3 > m_normal;
 	};
 	
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 >::ExtendedPoint()
+	: Point< Float, Vec3 >::Point()
 	{
-		Point< Float, Vec3 >::Point();
 		m_normal = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 	}
 	
 	template <typename Float, typename Vec3>
-	ExtendedPoint< Float, Vec3 >::ExtendedPoint(const Vec3& color, const Vec3& normal, const Vec3& pos)
+	ExtendedPoint< Float, Vec3 >::ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos )
+	: Point< Float, Vec3 >::Point( color, pos )
 	{
-		Point< Float, Vec3 >::Point( color, pos );
 		m_normal = make_shared< Vec3 >( normal );
 	}
 	
@@ -71,7 +72,8 @@ namespace model
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 > ExtendedPoint< Float, Vec3 >::multiply( const Float& multiplier ) const
 	{
-		return ExtendedPoint< Float, Vec3 >(*m_color * multiplier, *m_normal * multiplier, *m_pos * multiplier);
+		return ExtendedPoint< Float, Vec3 >( *Point< Float, Vec3 >::m_color * multiplier, *m_normal * multiplier,
+											 *Point< Float, Vec3 >::m_pos * multiplier );
 	}
 	
 	template < typename Float, typename Vec3 >
@@ -103,8 +105,8 @@ namespace model
 											 *left.m_pos + *right.m_pos);
 	}
 	
-	template < typename Float, typename Vec3 >
-	ostream& operator<<( ostream &out, ExtendedPoint< Float, Vec3 > &point )
+	template< typename Float, typename Vec3 >
+	ostream& operator<<( ostream &out, const ExtendedPoint< Float, Vec3 > &point )
 	{
 		Vec3 pos = *point.m_pos;
 		Vec3 color = *point.m_color;

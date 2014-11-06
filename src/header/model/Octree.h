@@ -205,8 +205,8 @@ namespace model
 			if( genericLeafIt == m_hierarchy->end() )
 			{
 				// Creates leaf node.
-				PointsLeafNodePtr< MortonPrecision, Float, Vec3 >
-						leafNode = make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
+				LeafNodePtr< MortonPrecision, Float, Vec3, PointVector >
+						leafNode = make_shared< LeafNode< MortonPrecision, Float, Vec3, PointVector > >();
 						
 				leafNode->setContents( PointVector() );
 				( *m_hierarchy )[ code ] = leafNode;
@@ -285,8 +285,8 @@ namespace model
 					m_hierarchy->erase( tempIt, currentChildIt );
 					
 					// Creates leaf to replace children.
-					PointsLeafNodePtr< MortonPrecision, Float, Vec3 > mergedNode =
-						make_shared< PointsLeafNode< MortonPrecision, Float, Vec3 > >();
+					LeafNodePtr< MortonPrecision, Float, Vec3, PointVector > mergedNode =
+						make_shared< LeafNode< MortonPrecision, Float, Vec3, PointVector > >();
 					mergedNode->setContents( childrenPoints );
 					
 					( *m_hierarchy )[ parentCode ] = mergedNode;
@@ -328,7 +328,7 @@ namespace model
 		buildInnerNode( const PointVector& childrenPoints ) const
 	{
 		// Accumulate points for LOD.
-		Point accumulated( Vec3( 0, 0, 0 ), Vec3( 0, 0, 0 ) );
+		Point accumulated;
 		for( PointPtr point : childrenPoints )
 		{
 			accumulated = accumulated + (*point);
@@ -682,8 +682,10 @@ namespace model
 	inline unsigned int OctreeBase< MortonPrecision, Float, Vec3, Point >::getMaxLevel() const { return m_maxLevel; }
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	ostream& operator<<(ostream& out, const OctreeBase< MortonPrecision, Float, Vec3, Point >& octree)
+	ostream& operator<<( ostream& out, const OctreeBase< MortonPrecision, Float, Vec3, Point >& octree )
 	{
+		using PointVector = vector< shared_ptr< Point > >;
+		
 		out << endl << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string(*octree.m_origin) << endl
 			<< "size: " << glm::to_string(*octree.m_size) << endl
@@ -693,19 +695,21 @@ namespace model
 		/** Maximum level of this octree. */
 		unsigned int m_maxLevel;
 		OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy = octree.getHierarchy();
-		for (auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt)
+		for( auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt )
 		{
 			MortonCodePtr< MortonPrecision > code = nodeIt->first;
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > genericNode = nodeIt->second;
-			if (genericNode->isLeaf())
+			if ( genericNode->isLeaf() )
 			{
-				auto node = dynamic_pointer_cast< PointsLeafNode< MortonPrecision, Float, Vec3 > >(genericNode);
+				auto node = dynamic_pointer_cast< LeafNode< MortonPrecision, Float, Vec3, PointVector > >( genericNode );
 				out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
 			}
 			else
 			{
-				auto node = dynamic_pointer_cast< LODInnerNode< MortonPrecision, Float, Vec3 > >(genericNode);
-				out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
+				cout << "INNER NODE LOG NEED TO BE FIXED." << endl;
+				// TODO: Fix this later. There should be support for both LODInnerNode and RandomInnerNode.
+				//auto node = dynamic_pointer_cast< LODInnerNode< MortonPrecision, Float, Vec3, PointVector > >( genericNode );
+				//out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
 			}
 			
 		}
@@ -746,7 +750,7 @@ namespace model
 	: OctreeBase< unsigned int, Float, Vec3, Point >::OctreeBase( maxPointsPerNode, maxLevel )
 	{
 		OctreeBase< unsigned int, Float, Vec3, Point >::m_maxMortonLevel = 10; // 0 to 10.
-		assert( ( OctreeBase< unsigned int, Float, Vec3 >::m_maxLevel <=
+		assert( ( OctreeBase< unsigned int, Float, Vec3, Point >::m_maxLevel <=
 			OctreeBase< unsigned int, Float, Vec3, Point >::m_maxMortonLevel ) );
 	}
 	

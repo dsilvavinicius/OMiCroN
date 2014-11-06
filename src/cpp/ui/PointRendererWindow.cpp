@@ -19,16 +19,22 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		PlyPointReader< float, vec3 > reader( "../../src/data/real/tempietto_all.ply", PlyPointReader< float, vec3 >::SINGLE );
-		PointVector<float, vec3> points = reader.getPoints();
+		//SimplePointReader reader( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, SimplePointReader::COLORS );
+		ExtendedPointReader reader( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE,
+									ExtendedPointReader::COLORS_AND_NORMALS );
+		
 		m_normalsEnabled = reader.hasNormals();
+		m_colorsEnabled = reader.hasColors();
 		
-		cout << "Normals enabled? " << m_normalsEnabled << endl << endl;
+		//PointVector<float, vec3> points = reader.getPoints();
+		ExtendedPointVector< float, vec3 > points = reader.getPoints();
 		
-		//m_octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
+		cout << "Colors enabled? " << m_colorsEnabled << endl << "Normals enabled? " << m_normalsEnabled << endl << endl;
+		
+		m_octree = make_shared< ShallowOctree< float, vec3, ExtendedPoint< float, vec3 > > >( 1, 10 );
 		//m_octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		//m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
-		m_octree = make_shared< MediumRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
+		//m_octree = make_shared< MediumRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		m_octree->build(points);
 	}
 	
