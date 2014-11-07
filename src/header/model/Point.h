@@ -24,7 +24,7 @@ namespace model
 		shared_ptr< Vec3 > getPos();
 		
 		// Comparison operators.
-		bool equal( const Point< Float, Vec3 >& other );
+		bool equal( const Point< Float, Vec3 >& other, const float& epsilon );
 		
 		// Arithmetic operators.
 		Point< Float, Vec3 > multiply( const Float& multiplier ) const;
@@ -70,10 +70,9 @@ namespace model
 	shared_ptr< Vec3 > Point< Float, Vec3 >::getPos() { return m_pos; }
 	
 	template <typename Float, typename Vec3>
-	bool Point< Float, Vec3 >::equal( const Point< Float, Vec3 >& other )
+	bool Point< Float, Vec3 >::equal( const Point< Float, Vec3 >& other, const float& epsilon )
 	{
-		return 	glm::all( glm::equal( *m_color, *other.m_color ) ) &&
-				glm::all( glm::equal( *m_pos, *other.m_pos ) );
+		return 	glm::distance2( *m_color, *other.m_color ) < epsilon && glm::distance2( *m_pos, *other.m_pos ) < epsilon;
 	}
 	
 	template <typename Float, typename Vec3>

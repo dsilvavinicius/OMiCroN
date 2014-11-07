@@ -22,7 +22,7 @@ namespace model
 		shared_ptr< Vec3 > getNormal();
 		
 		// Comparison operators.
-		bool equal( const ExtendedPoint< Float, Vec3 >& other );
+		bool equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon );
 		
 		// Arithmetic operators.
 		ExtendedPoint< Float, Vec3 > multiply( const Float& multiplier ) const;
@@ -64,9 +64,9 @@ namespace model
 	shared_ptr< Vec3 > ExtendedPoint< Float, Vec3 >::getNormal() { return m_normal; }
 	
 	template <typename Float, typename Vec3>
-	bool ExtendedPoint< Float, Vec3 >::equal( const ExtendedPoint< Float, Vec3 >& other )
+	bool ExtendedPoint< Float, Vec3 >::equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon )
 	{
-		return Point< Float, Vec3 >::equal() && glm::all( glm::equal( *m_normal, *other.m_normal ) );
+		return Point< Float, Vec3 >::equal( other, epsilon ) && glm::distance2( *m_normal, *other.m_normal ) < epsilon;
 	}
 	
 	template <typename Float, typename Vec3>

@@ -35,7 +35,7 @@ namespace model
 		pair< Vec3, Vec3 > getBoundaries() const;
 		
 		template< typename M, typename F, typename V, typename C >
-		friend ostream& operator<<( ostream& out, const OctreeNode< M, F, V >& node );
+		friend ostream& operator<<( ostream& out, OctreeNode< M, F, V >& node );
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3 >
@@ -79,17 +79,17 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	ostream& operator<<( ostream& out, const OctreeNode< MortonPrecision, Float, Vec3 >& node )
+	ostream& operator<<( ostream& out, OctreeNode< MortonPrecision, Float, Vec3 >& node )
 	{
 		if( node.isLeaf() )
 		{
-			auto* leaf = reinterpret_cast< LeafNode< MortonPrecision, Float, Vec3, Contents> >( &node );
+			auto* leaf = reinterpret_cast< LeafNode< MortonPrecision, Float, Vec3, Contents >* >( &node );
 			out << *leaf;
 		}
 		else
 		{
-			auto* inner = reinterpret_cast< InnerNode< MortonPrecision, Float, Vec3, Contents > >( &node );
-			out << inner;
+			auto* inner = reinterpret_cast< InnerNode< MortonPrecision, Float, Vec3, Contents >* >( &node );
+			out << *inner;
 		}
 		
 		return out;

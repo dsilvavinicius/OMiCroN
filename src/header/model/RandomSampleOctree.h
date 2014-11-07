@@ -18,10 +18,13 @@ namespace model
 		
 	public:
 		RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel );
+		
+		template <typename M, typename F, typename V, typename P >
+		friend ostream& operator<<( ostream& out, const RandomSampleOctree< M, F, V, P >& octree );
+		
 	protected:
 		/** Creates a new inner node by randomly sampling the points of the child nodes. */
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > buildInnerNode(
-			const PointVector& childrenPoints ) const;
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > buildInnerNode( const PointVector& childrenPoints ) const;
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
 		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
@@ -45,7 +48,7 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		auto node = make_shared< RandomInnerNode< MortonPrecision, Float, Vec3 > >();
+		auto node = make_shared< InnerNode< MortonPrecision, Float, Vec3, PointVector > >();
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
 		
@@ -77,8 +80,8 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::appendPoints(OctreeNodePtr< MortonPrecision,
-																						Float, Vec3 > node,
+	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::appendPoints( OctreeNodePtr< MortonPrecision,
+																						 Float, Vec3 > node,
 																					 PointVector& vec,
 																					 int& numChildren, int& numLeaves) const
 	{
@@ -91,6 +94,33 @@ namespace model
 		PointVectorPtr childPoints = node-> template getContents< PointVector >();
 		
 		vec.insert( vec.end(), childPoints->begin(), childPoints->end() );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonPrecision, Float, Vec3, Point >& octree )
+	{
+		using PointVector = vector< shared_ptr< Point > >;
+		
+		out << endl << "=========== Begin Octree ============" << endl << endl
+			<< "origin: " << glm::to_string(*octree.m_origin) << endl
+			<< "size: " << glm::to_string(*octree.m_size) << endl
+			<< "leaf size: " << glm::to_string(*octree.m_leafSize) << endl
+			<< "max points per node: " << octree.m_maxPointsPerNode << endl << endl;
+		
+		/** Maximum level of this octree. */
+		unsigned int m_maxLevel;
+		OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy = octree.getHierarchy();
+		for( auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt )
+		{
+			MortonCodePtr< MortonPrecision > code = nodeIt->first;
+			OctreeNodePtr< MortonPrecision, Float, Vec3 > genericNode = nodeIt->second;
+			
+			out << "Node: {" << endl << *code << "," << endl;
+			operator<< < PointVector >( out, *genericNode );
+			out << "}" << endl;
+		}
+		out << "=========== End Octree ============" << endl << endl;
+		return out;
 	}
 	
 	// ====================== Type Sugar ================================ /

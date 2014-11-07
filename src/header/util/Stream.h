@@ -9,6 +9,7 @@
 #include <QRect>
 #include <QSize>
 #include "Point.h"
+#include <ExtendedPoint.h>
 
 using namespace std;
 using namespace glm;
@@ -16,7 +17,7 @@ using namespace glm;
 namespace model
 {
 	template< typename T >
-	ostream& operator<<(ostream& out, const vector< T >& v)
+	ostream& operator<<( ostream& out, const vector< T >& v )
 	{
 		out << "{";
 		bool first = true;
@@ -40,9 +41,29 @@ namespace model
 	template< typename Float, typename Vec3 >
 	ostream& operator<<( ostream& out, const vector< PointPtr< Float, Vec3> >& v )
 	{
-		out << "{" << endl;
+		out << "size: " << v.size() << endl << "{" << endl;
 		bool first = true;
 		for( PointPtr< Float, Vec3 > element : v )
+		{
+			if( first )
+			{
+				out << *element;
+				first = false;
+			}
+			else
+			{
+				out << ", " << endl << *element;
+			}
+		}
+		out << "}";
+	}
+	
+	template< typename Float, typename Vec3 >
+	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr< Float, Vec3> >& v )
+	{
+		out << "size: " << v.size() << endl << "{" << endl;
+		bool first = true;
+		for( ExtendedPointPtr< Float, Vec3 > element : v )
 		{
 			if( first )
 			{

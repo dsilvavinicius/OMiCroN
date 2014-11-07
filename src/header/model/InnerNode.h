@@ -14,21 +14,8 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	class InnerNode;
 	
-	/** Inner node with one vertex as LOD. */
-	template< typename MortonPrecision, typename Float, typename Vec3 >
-	using LODInnerNode = InnerNode< MortonPrecision, Float, Vec3, Point< Float, Vec3 > >;
-	
-	/** Smart pointer for LODInnerNode. */ 
-	template< typename MortonPrecision, typename Float, typename Vec3 >
-	using LODInnerNodePtr = shared_ptr< LODInnerNode< MortonPrecision, Float, Vec3 > >;
-	
-	/** Inner node formed by a random sample of 1/8 of the children points. */
-	template< typename MortonPrecision, typename Float, typename Vec3 >
-	using RandomInnerNode = InnerNode< MortonPrecision, Float, Vec3, PointVector< Float, Vec3 > >;
-	
-	/** Smart pointer for PerFaceLODInnerNode. */ 
-	template< typename MortonPrecision, typename Float, typename Vec3 >
-	using RandomInnerNodePtr = shared_ptr< RandomInnerNode< MortonPrecision, Float, Vec3 > >;
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
+	using InnerNodePtr = shared_ptr< InnerNode< MortonPrecision, Float, Vec3, Contents > >;
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	class InnerNode : public OctreeNode< MortonPrecision, Float, Vec3 >
@@ -38,11 +25,8 @@ namespace model
 		void setContents(const Contents& contents);
 		shared_ptr< Contents > getContents() const;
 		
-		template <typename M, typename F, typename V>
-		friend ostream& operator<<(ostream& out, const LODInnerNode< M, F, V >& node);
-		
-		template <typename M, typename F, typename V>
-		friend ostream& operator<<(ostream& out, const RandomInnerNodePtr< M, F, V >& node);
+		template< typename M, typename F, typename V, typename C >
+		friend ostream& operator<<( ostream& out, const InnerNodePtr< M, F, V, C >& node );
 		
 	private:
 		shared_ptr< Contents > m_contents;
@@ -68,21 +52,10 @@ namespace model
 		return m_contents;
 	}
 	
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	ostream& operator<<(ostream& out, const LODInnerNode< MortonPrecision, Float, Vec3 >& node)
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
+	ostream& operator<<( ostream& out, const InnerNode< MortonPrecision, Float, Vec3, Contents >& node )
 	{
-		out << "LOD Inner Node: " << endl << *node.getContents();
-		return out;
-	}
-	
-	template <typename MortonPrecision, typename Float, typename Vec3>
-	ostream& operator<<(ostream& out, const RandomInnerNodePtr< MortonPrecision, Float, Vec3 >& node)
-	{
-		out << "Random Inner Node: " << endl;
-		for (PointPtr< Float, Vec3 > point : *node.getContents())
-		{
-			out << *point;
-		}
+		out << "Inner Node: " << endl << *node.getContents();
 		return out;
 	}
 }

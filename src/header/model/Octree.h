@@ -184,11 +184,11 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	void OctreeBase< MortonPrecision, Float, Vec3, Point >::buildNodes( const PointVector& points )
 	{
-		cout << "Before leaves build." << endl << endl;
+		cout << "Before leaf nodes build." << endl << endl;
 		buildLeaves(points);
-		cout << "After leaves build." << endl << endl;
+		cout << "After leaf nodes build." << endl << endl;
 		buildInners();
-		cout << "After inners build." << endl << endl;
+		cout << "After inner nodes build." << endl << endl;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -246,9 +246,6 @@ namespace model
 				
 				MortonCodePtr< MortonPrecision > parentCode = firstChildIt->first->traverseUp();
 				
-				//cout << "First child: 0x" << hex << firstChildIt->first->getBits() << endl
-				//	 << "Parent: 0x" << hex << parentCode->getBits() << dec << endl;
-				
 				// These counters are used to check if the accumulated number of child node points is less than a threshold.
 				// In this case, the children are deleted and their points are merged into the parent.
 				int numChildren = 0;
@@ -259,6 +256,7 @@ namespace model
 				
 				// Appends first child node.
 				OctreeNodePtr< MortonPrecision, Float, Vec3 > firstChild = firstChildIt->second;
+				
 				appendPoints( firstChild, childrenPoints, numChildren, numLeaves );
 				
 				// Adds points of remaining child nodes.
@@ -268,6 +266,7 @@ namespace model
 					if( *currentChildIt->first->traverseUp() != *parentCode ) { break; }
 					
 					OctreeNodePtr< MortonPrecision, Float, Vec3 > currentChild = currentChildIt->second;
+					
 					appendPoints( currentChild, childrenPoints, numChildren, numLeaves );
 				}
 				
@@ -326,18 +325,18 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3, Point >::
 		buildInnerNode( const PointVector& childrenPoints ) const
-	{
+	{	
 		// Accumulate points for LOD.
 		Point accumulated;
 		for( PointPtr point : childrenPoints )
 		{
-			accumulated = accumulated + (*point);
+			accumulated = accumulated + ( *point );
 		}
 		accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
 		
 		// Creates leaf to replace children.
-		LODInnerNodePtr< MortonPrecision, Float, Vec3 > LODNode =
-			make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
+		InnerNodePtr< MortonPrecision, Float, Vec3, Point > LODNode =
+			make_shared< InnerNode< MortonPrecision, Float, Vec3, Point > >();
 		LODNode->setContents( accumulated );
 		
 		return LODNode;
@@ -345,10 +344,10 @@ namespace model
 	
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::appendPoints(OctreeNodePtr< MortonPrecision,
-																				Float, Vec3 > node,
-																				PointVector& vec, int& numChildren,
-																				int& numLeaves) const
+	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::appendPoints( OctreeNodePtr< MortonPrecision,
+																				 Float, Vec3 > node,
+																				 PointVector& vec, int& numChildren,
+																				 int& numLeaves) const
 	{
 		++numChildren;
 		if (node->isLeaf())
@@ -457,14 +456,6 @@ namespace model
 		
 		QVector2D diagonal0 = normalizedProj1 - normalizedProj0;
 		
-		/*vec4 min(proj0.x(), proj0.y(), proj0.z(), proj0.w());
-		vec2 normMin(normalizedProj0.x(), normalizedProj0.y());
-		vec4 max(proj1.x(), proj1.y(), proj1.z(), proj1.w());
-		vec2 normMax(normalizedProj1.x(), normalizedProj1.y());
-		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
-			 << "normMin = " << glm::to_string(normMin) << endl << "normMax = " << glm::to_string(normMax) << endl
-			 << "squared len = " << diagonal0.lengthSquared() << endl;*/
-		
 		QVector3D boxSize = box.size();
 		
 		proj0 = modelViewProjection.map( QVector4D(min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1) );
@@ -476,14 +467,6 @@ namespace model
 		QVector2D diagonal1 = normalizedProj1 - normalizedProj0;
 		
 		Float maxDiagLength = glm::max( diagonal0.lengthSquared(), diagonal1.lengthSquared() );
-		
-		/*min = vec4(proj0.x(), proj0.y(), proj0.z(), proj0.w());
-		normMin = vec2(normalizedProj0.x(), normalizedProj0.y());
-		max = vec4(proj1.x(), proj1.y(), proj1.z(), proj1.w());
-		normMax = vec2(normalizedProj1.x(), normalizedProj1.y());
-		cout << "projMin = " << glm::to_string(min) << endl << "projMax = " << glm::to_string(max) << endl
-			 << "normMin = " << glm::to_string(normMin) << endl << "normMax = " << glm::to_string(normMax) << endl
-			 << "squared len = " << diagonal1.lengthSquared() << endl;*/
 		
 		return maxDiagLength < projThresh;
 	}
@@ -701,15 +684,15 @@ namespace model
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > genericNode = nodeIt->second;
 			if ( genericNode->isLeaf() )
 			{
-				auto node = dynamic_pointer_cast< LeafNode< MortonPrecision, Float, Vec3, PointVector > >( genericNode );
-				out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
+				out << "Node: {" << endl << *code << "," << endl;
+				operator<< < MortonPrecision, Float, Vec3, PointVector >( out, *genericNode );
+				out << "}" << endl;
 			}
 			else
 			{
-				cout << "INNER NODE LOG NEED TO BE FIXED." << endl;
-				// TODO: Fix this later. There should be support for both LODInnerNode and RandomInnerNode.
-				//auto node = dynamic_pointer_cast< LODInnerNode< MortonPrecision, Float, Vec3, PointVector > >( genericNode );
-				//out << "Node: {" << endl << *code << "," << endl << *node << "}" << endl;
+				out << "Node: {" << endl << *code << "," << endl;
+				operator<< < MortonPrecision, Float, Vec3, Point >( out, *genericNode );
+				out << "}" << endl;
 			}
 			
 		}
