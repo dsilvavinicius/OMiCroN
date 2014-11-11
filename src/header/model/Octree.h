@@ -14,6 +14,7 @@
 #include "OctreeTypes.h"
 #include "OctreeMapTypes.h"
 #include "Stream.h"
+#include "RenderingState.h"
 
 using namespace std;
 
@@ -34,6 +35,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
+		using RenderingState = RenderingState< Vec3 >;
 		
 	public:
 		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum level
@@ -44,7 +46,7 @@ namespace model
 		virtual void build( const PointVector& points );
 		
 		/** Traverses the octree, rendering all necessary points. */
-		virtual void traverse( QGLPainter *painter, const Float& projThresh, const bool& normalsEnabled );
+		virtual void traverse( QGLPainter *painter, Attributes& attribs, const Float& projThresh );
 		
 		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
@@ -101,13 +103,20 @@ namespace model
 		/** Checks if this node is culled by frustrum test. */
 		bool isCullable( MortonCodePtr< MortonPrecision > code, QGLPainter* painter, QBox3D& box ) const;
 		
-		/** Check if this node is at desired LOD and thus, would be rendered. The LOD condition is the projection of node's 
-		 *	bouding box is greater than a given projection threshold. */
+		/** Check if this node is at desired LOD and thus if it should be rendered. The LOD condition is the
+		 * projection of node's bouding box is greater than a given projection threshold. */
 		bool isRenderable( QBox3D& box, QGLPainter* painter, const Float& projThresh ) const;
 		
 		/** Traversal recursion. */
-		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode, QGLPainter* painter,
-							   vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw, const Float& projThresh );
+		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode,
+							   RenderingState& renderingState,
+							   const Float& projThresh );
+		
+		/** Method called in the traversal a node should be rendered. */
+		//virtual handleRenderedNode();
+		
+		/** Method called in the traversal a node should not be rendered. */
+		//virtual handleNotRenderedNode();
 		
 		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
 		virtual void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
@@ -364,42 +373,15 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, const Float& projThresh,
-																	  const bool& normalsEnabled )
+	void OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, Attributes attribs,
+																	  const Float& projThresh )
 	{
-		painter->clearAttributes();
-		if( normalsEnabled )
-		{
-			painter->setStandardEffect( QGL::LitMaterial );
-			//painter->setFaceMaterial( QGL::FrontFaces, QGLMaterial(  ) );
-		}
-		else
-		{
-			painter->setStandardEffect( QGL::FlatPerVertexColor );
-		}
+		RenderingState renderingState( painter, attribs );
 		
 		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
 		rootCode->build( 0x1 );
-		vector< Vec3 > pointsToDraw;
-		vector< Vec3 > colorsToDraw;
 		
-		traverse( rootCode, painter, pointsToDraw, colorsToDraw, projThresh );
-		
-		// TODO: Find a way to specify the precision properly here,
-		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &pointsToDraw[0] );
-		QGLAttributeValue colorValues( 3, GL_FLOAT, 0, &colorsToDraw[0] );
-		painter->setVertexAttribute( QGL::Position, pointValues );
-		
-		if( normalsEnabled )
-		{
-			painter->setVertexAttribute( QGL::Normal, colorValues );
-		}
-		else
-		{
-			painter->setVertexAttribute( QGL::Color, colorValues );
-		}
-		
-		painter->draw( QGL::Points, pointsToDraw.size() );
+		traverse( rootCode, renderingState, projThresh );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -473,8 +455,8 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	void OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( MortonCodePtr< MortonPrecision > nodeCode,
-																	  QGLPainter* painter, vector< Vec3 >& pointsToDraw,
-																	  vector< Vec3 >& colorsToDraw, const Float& projThresh )
+																	  RenderingState& renderingState,
+																   const Float& projThresh )
 	{
 		//cout << "TRAVERSING " << *nodeCode << endl << endl;
 		auto nodeIt = m_hierarchy->find( nodeCode );
@@ -484,24 +466,20 @@ namespace model
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
 			QBox3D box;
 			
-			if( !isCullable( code, painter, box ) )
+			if( !isCullable( code, renderingState.getPainter(), box ) )
 			{
 				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
-				if( isRenderable( box, painter, projThresh ) )
+				if( isRenderable( box, renderingState.getPainter(), projThresh ) )
 				{
 					//cout << *nodeCode << "RENDERED!" << endl << endl;
 					if ( node->isLeaf() )
 					{
 						PointVectorPtr points = node-> template getContents< PointVector >();
-						for( PointPtr point : *points )
-						{
-							pointsToDraw.push_back( *point->getPos() );
-							colorsToDraw.push_back( *point->getColor() );
-						}
+						renderingState.handleNodeRendering( points );
 					}
 					else
 					{
-						setupInnerNodeRendering( node, pointsToDraw, colorsToDraw );
+						setupInnerNodeRendering( node, renderingState );
 					}
 				}
 				else
@@ -509,11 +487,7 @@ namespace model
 					if (node->isLeaf())
 					{
 						PointVectorPtr points = node-> template getContents< PointVector >();
-						for( PointPtr point : *points )
-						{
-							pointsToDraw.push_back( *point->getPos() );
-							colorsToDraw.push_back( *point->getColor() );
-						}
+						renderingState.handleNodeRendering( *points );
 					}
 					else
 					{
@@ -521,7 +495,7 @@ namespace model
 			
 						for (MortonCodePtr< MortonPrecision > childCode : childrenCodes)
 						{
-							traverse( childCode, painter, pointsToDraw, colorsToDraw, projThresh );
+							traverse( childCode, renderingState, projThresh );
 						}
 					}
 				}
@@ -531,14 +505,12 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, vector< Vec3 >& pointsToDraw,
-		vector< Vec3 >& colorsToDraw ) const
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
 	{
 		assert( !innerNode->isLeaf() );
 		
 		PointPtr point = innerNode-> template getContents< Point >();
-		pointsToDraw.push_back( *point->getPos() );
-		colorsToDraw.push_back( *point->getColor() );
+		renderingState.handleNodeRendering( point );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

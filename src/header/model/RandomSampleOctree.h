@@ -28,7 +28,7 @@ namespace model
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
 		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-									  vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw ) const;
+									  RenderingState& renderingState ) const;
 
 		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec,
 						   int& numChildren, int& numLeaves) const;
@@ -66,17 +66,12 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-		vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw ) const
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
 	{
 		assert( !innerNode->isLeaf() );
 		
 		PointVectorPtr points = innerNode-> template getContents< PointVector >();
-		for( PointPtr point : *points )
-		{
-			pointsToDraw.push_back( *point->getPos() );
-			colorsToDraw.push_back( *point->getColor() );
-		}
+		renderingState.handleNodeRendering( points );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

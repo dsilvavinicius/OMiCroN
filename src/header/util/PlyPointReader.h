@@ -5,6 +5,7 @@
 #include <string>
 #include "rply/rply.h"
 #include "ExtendedPoint.h"
+#include "RenderingState.h"
 
 using namespace std;
 using namespace model;
@@ -33,13 +34,6 @@ namespace util
 		{
 			SINGLE = 0x1,
 			DOUBLE = 0x2
-		};
-		
-		enum Attributes
-		{
-			COLORS = 0x1,
-			NORMALS = 0x2,
-			COLORS_AND_NORMALS = 0x3
 		};
 		
 		// TODO: Specialize this class so the precision is infered automatically by template parameters.
