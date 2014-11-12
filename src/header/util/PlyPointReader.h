@@ -43,15 +43,13 @@ namespace util
 		PlyPointReader( const string& fileName, Precision precision, Attributes attribs );
 		
 		PointVector getPoints(){ return m_points; }
-		bool hasColors(){ return m_colorsFlag; }
-		bool hasNormals(){ return m_normalsFlag; }
+		Attributes getAttributes(){ return m_attribs; }
 	private:
 		/** Sets the RPly callback for vertex data, given a property index and a precision flag. */
 		void setVertexCB( p_ply ply, string propName, const unsigned int propIndex, Precision precision );
 		
 		PointVector m_points;
-		bool m_colorsFlag;
-		bool m_normalsFlag;
+		Attributes m_attribs;
 	};
 	
 	template< typename Float, typename Vec3, typename Point >
@@ -64,8 +62,6 @@ namespace util
 	
 	template< typename Float, typename Vec3, typename Point >
 	PlyPointReader< Float, Vec3, Point >::PlyPointReader( const string& fileName, Precision precision, Attributes attribs )
-	: m_normalsFlag( false ),
-	m_colorsFlag( false )
 	{
 		/* Save application locale */
 		const char *old_locale = setlocale( LC_NUMERIC, NULL );
@@ -91,6 +87,7 @@ namespace util
 		
 		bool colorsNeeded = attribs & COLORS;
 		bool normalsNeeded = attribs & NORMALS;
+		int rawAttribs = 0x0;
 		
 		while( property != NULL )
 		{
@@ -99,12 +96,14 @@ namespace util
 			
 			if( colorsNeeded && !strcmp( name, "red\0" ) )
 			{
-				m_colorsFlag = true;
+				rawAttribs |= model::COLORS;
+				m_attribs = Attributes( rawAttribs );
 			}
 			
 			if( normalsNeeded && !strcmp( name, "nx\0" ) )
 			{
-				m_normalsFlag = true;
+				rawAttribs |= model::NORMALS;
+				m_attribs = Attributes( rawAttribs );
 			}
 			
 			cout << "Prop name: " << name << endl;

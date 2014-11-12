@@ -42,9 +42,9 @@ namespace ui
 		 * @returns true if the adaptation was done, false otherwise. */
 		void adaptProjThresh( float desiredRenderTime );
 		
-		ShallowOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		//ShallowOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		//MediumOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
-		//ShallowRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		ShallowRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		//MediumRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		QPoint m_lastMousePos;
 		
@@ -57,11 +57,8 @@ namespace ui
 		/** Current render time used to adapt the projection threshold. */
 		float m_renderTime;
 		
-		/** Flag that indicates if per-point normals are enabled for the current model. */
-		bool m_normalsEnabled;
-		
-		/** Flag that indicates if per-point color is enabled for the current model. */
-		bool m_colorsEnabled;
+		/** Point attributes. */
+		Attributes m_attribs;
 	};
 
 	using PointRendererWindowPtr = shared_ptr<PointRendererWindow>;

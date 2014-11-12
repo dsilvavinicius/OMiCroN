@@ -19,21 +19,20 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		SimplePointReader reader( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
+		SimplePointReader reader( "../../src/data/real/tempietto_all.ply", SimplePointReader::SINGLE, NORMALS );
 		//ExtendedPointReader reader( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE,
 		//							COLORS_AND_NORMALS );
 		
-		m_normalsEnabled = reader.hasNormals();
-		m_colorsEnabled = reader.hasColors();
+		m_attribs = reader.getAttributes();
 		
 		PointVector< float, vec3 > points = reader.getPoints();
 		//ExtendedPointVector< float, vec3 > points = reader.getPoints();
 		
-		cout << "Colors enabled? " << m_colorsEnabled << endl << "Normals enabled? " << m_normalsEnabled << endl << endl;
+		cout << "Attributes:" << m_attribs << endl << endl;
 		
-		m_octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
+		//m_octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
 		//m_octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
-		//m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
+		m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
 		//m_octree = make_shared< MediumRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		m_octree->build(points);
 	}
@@ -50,11 +49,11 @@ namespace ui
 		
 		painter->setCamera( cam );
 		
-		m_octree->traverse( painter, m_projThresh, m_normalsEnabled );
+		m_octree->traverse( painter, m_attribs, m_projThresh );
 		
 		// Render the scene one time to init m_renderTime for future projection threshold adaptations.
 		clock_t timing = clock();
-		m_octree->traverse( painter, m_projThresh, m_normalsEnabled );
+		m_octree->traverse( painter, m_attribs, m_projThresh );
 		timing = clock() - timing;
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 	
@@ -82,7 +81,7 @@ namespace ui
 		
 		// Render the scene.
 		clock_t timing = clock();
-		m_octree->traverse( painter, m_projThresh, m_normalsEnabled );
+		unsigned long numRenderedPoints = m_octree->traverse( painter, m_attribs, m_projThresh );
 		timing = clock() - timing;
 		
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
@@ -90,7 +89,8 @@ namespace ui
 		// Render debug data.
 		stringstream debugSS;
 		debugSS << "Render time: " << m_renderTime << " ms" << endl
-				<< "Projection threshold: " << m_projThresh << " pixel^2" << endl;
+				<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
+				<< "Rendered points: " << numRenderedPoints << endl;
 		
 		//cout << debugSS.str() << endl << endl;
 		

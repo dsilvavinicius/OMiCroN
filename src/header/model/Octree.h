@@ -35,7 +35,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using RenderingState = RenderingState< Vec3 >;
+		using RenderingState = model::RenderingState< Vec3 >;
 		
 	public:
 		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum level
@@ -45,8 +45,9 @@ namespace model
 		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. */
 		virtual void build( const PointVector& points );
 		
-		/** Traverses the octree, rendering all necessary points. */
-		virtual void traverse( QGLPainter *painter, Attributes& attribs, const Float& projThresh );
+		/** Traverses the octree, rendering all necessary points.
+		 * @returns the number of rendered points. */
+		virtual unsigned long traverse( QGLPainter *painter, const Attributes& attribs, const Float& projThresh );
 		
 		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
@@ -120,7 +121,7 @@ namespace model
 		
 		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
 		virtual void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-											  vector< Vec3 >& pointsToDraw, vector< Vec3 >& colorsToDraw ) const;
+											  RenderingState& renderingState ) const;
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
@@ -373,7 +374,7 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, Attributes attribs,
+	unsigned long  OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, const Attributes& attribs,
 																	  const Float& projThresh )
 	{
 		RenderingState renderingState( painter, attribs );
@@ -382,6 +383,8 @@ namespace model
 		rootCode->build( 0x1 );
 		
 		traverse( rootCode, renderingState, projThresh );
+		
+		return renderingState.render();
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -475,7 +478,7 @@ namespace model
 					if ( node->isLeaf() )
 					{
 						PointVectorPtr points = node-> template getContents< PointVector >();
-						renderingState.handleNodeRendering( points );
+						renderingState.handleNodeRendering( renderingState, points );
 					}
 					else
 					{
@@ -487,7 +490,7 @@ namespace model
 					if (node->isLeaf())
 					{
 						PointVectorPtr points = node-> template getContents< PointVector >();
-						renderingState.handleNodeRendering( *points );
+						renderingState.handleNodeRendering( renderingState, points );
 					}
 					else
 					{
@@ -510,7 +513,7 @@ namespace model
 		assert( !innerNode->isLeaf() );
 		
 		PointPtr point = innerNode-> template getContents< Point >();
-		renderingState.handleNodeRendering( point );
+		renderingState.handleNodeRendering( renderingState, point );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

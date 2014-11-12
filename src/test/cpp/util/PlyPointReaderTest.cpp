@@ -17,8 +17,7 @@ namespace util
 
 		TEST_F( PlyPointReaderTest, Read )
 		{
-			SimplePointReader reader( "../../../src/data/tests/test.ply", SimplePointReader::SINGLE,
-									  SimplePointReader::COLORS );
+			SimplePointReader reader( "../../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
 			Point< float, vec3 > expectedPoint0( vec3( ( float )81 / 255, ( float )63 / 255, ( float )39 / 255 ),
@@ -30,8 +29,7 @@ namespace util
 			
 			float epsilon = 1.e-15;
 			
-			ASSERT_TRUE( reader.hasColors() );
-			ASSERT_FALSE( reader.hasNormals() );
+			ASSERT_TRUE( reader.getAttributes() == model::COLORS );
 			ASSERT_TRUE( expectedPoint0.equal( *points[0], epsilon ) );
 			ASSERT_TRUE( expectedPoint1.equal( *points[1], epsilon ) );
 			ASSERT_TRUE( expectedPoint2.equal( *points[2], epsilon ) );
@@ -39,8 +37,7 @@ namespace util
 		
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
-			SimplePointReader reader( "../../../src/data/tests/test_normals.ply", SimplePointReader::SINGLE,
-									  SimplePointReader::NORMALS );
+			SimplePointReader reader( "../../../src/data/tests/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
 			Point< float, vec3 > expectedPoint0( vec3( 11.321565, 4.658535, 7.163479 ),
@@ -52,8 +49,7 @@ namespace util
 			
 			float epsilon = 1.e-15;
 			
-			ASSERT_FALSE( reader.hasColors() );
-			ASSERT_TRUE( reader.hasNormals() );
+			ASSERT_TRUE( reader.getAttributes() == model::NORMALS );
 			ASSERT_TRUE( expectedPoint0.equal( *points[0], epsilon ) );
 			ASSERT_TRUE( expectedPoint1.equal( *points[1], epsilon ) );
 			ASSERT_TRUE( expectedPoint2.equal( *points[2], epsilon ) );
@@ -62,7 +58,7 @@ namespace util
 		TEST_F( PlyPointReaderTest, ReadExtendedPoints )
 		{
 			ExtendedPointReader reader( "../../../src/data/tests/test_extended_points.ply", ExtendedPointReader::SINGLE,
-										ExtendedPointReader::COLORS_AND_NORMALS );
+										COLORS_AND_NORMALS );
 			ExtendedPointVector< float, vec3 > points = reader.getPoints();
 			
 			ExtendedPoint< float, vec3 > expectedPoint0( vec3( 0.003921569, 0.007843137, 0.011764706 ),
@@ -75,8 +71,7 @@ namespace util
 														 vec3( 11.198129, 4.750132, 7.202037 ),
 														 vec3( 7.202037, 4.750132, 11.198129 ) );
 			
-			ASSERT_TRUE( reader.hasColors() );
-			ASSERT_TRUE( reader.hasNormals() );
+			ASSERT_TRUE( reader.getAttributes() == model::COLORS_AND_NORMALS );
 			
 			float epsilon = 1.e-15;
 			

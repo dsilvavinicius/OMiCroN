@@ -22,20 +22,22 @@ namespace model
 	 * rendering, call render() to render them all.
 	 * @param Vec3 is the type for 3-dimensional vector. */
 	template< typename Vec3 >
-	class RenderingStateBase
+	class RenderingState
 	{
 	public:
-		RenderingStateBase( QGLPainter* painter, const Attributes& attribs );
+		RenderingState( QGLPainter* painter, const Attributes& attribs );
 		
 		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
-		 * been already handled. */
-		void render();
+		 * been already handled.
+		 * @returns the number of rendered points. */
+		unsigned long render();
 		
-		/** Indicates that the node contents passed should be rendered.
-		 * @param NodeContents is the type of nodes' contents. The octree is aware of this type.
-		 */
+		/** Indicates that the node contents passed should be rendered. A static method was used to overcome C++ limitation of
+		* class member specializations.
+		* @param NodeContents is the type of nodes' contents. The octree is aware of this type.
+		*/
 		template< typename NodeContents >
-		void handleNodeRendering( const NodeContents& contents );
+		void handleNodeRendering( RenderingState< Vec3 >& state, const NodeContents& contents );
 		
 		QGLPainter* getPainter() { return m_painter; };
 		vector< Vec3 >& getPositions() { return m_positions; };
@@ -51,7 +53,7 @@ namespace model
 	};
 	
 	template< typename Vec3 >
-	RenderingStateBase< Vec3 >::RenderingStateBase( QGLPainter* painter, const Attributes& attribs )
+	RenderingState< Vec3 >::RenderingState( QGLPainter* painter, const Attributes& attribs )
 	: m_painter( painter ),
 	m_attribs( attribs )
 	{
@@ -72,12 +74,13 @@ namespace model
 			case Attributes::COLORS_AND_NORMALS:
 			{
 				throw logic_error( "Colors and normals not supported yet." );
+				break;
 			}
 		}
 	}
 	
 	template< typename Vec3 >
-	void RenderingStateBase< Vec3 >::render()
+	unsigned long RenderingState< Vec3 >::render()
 	{
 		// TODO: Find a way to specify the precision properly here,
 		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &m_positions[0] );
@@ -94,97 +97,74 @@ namespace model
 			case Attributes::COLORS:
 			{
 				m_painter->setVertexAttribute( QGL::Color, colorValues );
+				break;
 			}
 			case Attributes::COLORS_AND_NORMALS:
 			{
 				QGLAttributeValue normalValues( 3, GL_FLOAT, 0, &m_normals[0] );
 				m_painter->setVertexAttribute( QGL::Color, colorValues );
 				m_painter->setVertexAttribute( QGL::Normal, normalValues );
+				break;
 			}
 		}
 		
-		m_painter->draw( QGL::Points, m_positions.size() );
+		unsigned long numRenderedPoints = m_positions.size();
+		m_painter->draw( QGL::Points, numRenderedPoints );
+		
+		return numRenderedPoints;
 	}
 	
-	template< typename Vec3 >
-	class RenderingState
-	: public RenderingStateBase< Vec3 >
+	namespace NodeRenderingHandler
 	{
-		RenderingState( QGLPainter* painter, const Attributes& attribs ) : RenderingStateBase( painter, attribs );
+		template< typename Vec3, typename NodeContents >
+		void handle( RenderingState< Vec3 >& state, const NodeContents& contents );
 		
 		template<>
-		void handleNodeRendering< PointPtr< float, vec3 > >( const PointPtr& contents );
-	};
-	
-	template< typename Vec3 >
-	class RenderingState
-	: public RenderingStateBase< Vec3 >
-	{
-		RenderingState( QGLPainter* painter, const Attributes& attribs );
-		
-		template<>
-		void handleNodeRendering< PointVectorPtr< float, vec3 > >( const PointVectorPtr& contents );
-	};
-	
-	template< typename Vec3 >
-	class RenderingState
-	: public RenderingStateBase< Vec3 >
-	{
-		RenderingState( QGLPainter* painter, const Attributes& attribs );
-		
-		template<>
-		void handleNodeRendering< ExtendedPointPtr< float, vec3 > >( const ExtendedPointPtr& contents );
-	};
-	
-	template< typename Vec3 >
-	class RenderingState
-	: public RenderingStateBase< Vec3 >
-	{
-		RenderingState( QGLPainter* painter, const Attributes& attribs );
-		
-		template<>
-		void handleNodeRendering< ExtendedPointVectorPtr< float, vec3 > >( const ExtendedPointVectorPtr& contents );
-	};
-	
-	
-	template< typename Vec3 >
-	inline void RenderingState< Vec3 >::handleNodeRendering< PointPtr< float, vec3 > >(
-		const PointPtr< float, vec3 >& point )
-	{
-		RenderingStateBase::m_positions.push_back( *point->getPos() );
-		RenderingStateBase::m_colors.push_back( *point->getColor() );
-	}
-	
-	template< typename Vec3 >
-	inline void RenderingState< Vec3 >::handleNodeRendering< PointVectorPtr< float, vec3 > >(
-		const PointVectorPtr& points )
-	{
-		for( PointPtr point : *points )
+		inline void handle< vec3, PointPtr< float, vec3 > >( RenderingState< vec3 >& state,
+															 const PointPtr< float, vec3 >& point )
 		{
-			RenderingStateBase::m_positions.push_back( *point->getPos() );
-			RenderingStateBase::m_colors.push_back( *point->getColor() );
+			state.getPositions().push_back( *point->getPos() );
+			state.getColors().push_back( *point->getColor() );
+		}
+	
+		template<>
+		inline void handle< vec3, PointVectorPtr< float, vec3 > >( RenderingState< vec3 >& state,
+																   const PointVectorPtr< float, vec3 >& points )
+		{
+			for( PointPtr< float, vec3 > point : *points )
+			{
+				state.getPositions().push_back( *point->getPos() );
+				state.getColors().push_back( *point->getColor() );
+			}
+		}
+	
+		template<>
+		inline void handle< vec3, ExtendedPointPtr< float, vec3 > >( RenderingState< vec3 >& state,
+																		 const ExtendedPointPtr< float, vec3 >& point )
+		{
+			state.getPositions().push_back( *point->getPos() );
+			state.getColors().push_back( *point->getColor() );
+			state.getNormals().push_back( *point->getNormal() );
+		}
+	
+		template<>
+		inline void handle< vec3, ExtendedPointVectorPtr< float, vec3 > >( RenderingState< vec3 >& state,
+																		const ExtendedPointVectorPtr< float, vec3 >& points )
+		{
+			for( ExtendedPointPtr< float, vec3 > point : *points )
+			{
+				state.getPositions().push_back( *point->getPos() );
+				state.getColors().push_back( *point->getColor() );
+				state.getNormals().push_back( *point->getNormal() );
+			}
 		}
 	}
 	
 	template< typename Vec3 >
-	inline void RenderingState< Vec3 >::handleNodeRendering< ExtendedPointPtr< float, vec3 > >(
-		const ExtendedPointPtr& point )
+	template< typename NodeContents >
+	void RenderingState< Vec3 >::handleNodeRendering( RenderingState& state, const NodeContents& contents )
 	{
-		RenderingStateBase::m_positions.push_back( *point->getPos() );
-		RenderingStateBase::m_colors.push_back( *point->getColor() );
-		RenderingStateBase::m_normals.push_back( *point->getNormal() );
-	}
-	
-	template< typename Vec3 >
-	inline void RenderingState< Vec3 >::handleNodeRendering< ExtendedPointVectorPtr< float, vec3 > >(
-		const ExtendedPointVectorPtr& points )
-	{
-		for( ExtendedPointPtr point : *points )
-		{
-			RenderingStateBase::m_positions.push_back( *point->getPos() );
-			RenderingStateBase::m_colors.push_back( *point->getColor() );
-			RenderingStateBase::m_normals.push_back( *point->getNormal() );
-		}
+		NodeRenderingHandler::handle< Vec3, NodeContents >( state, contents );
 	}
 }
 
