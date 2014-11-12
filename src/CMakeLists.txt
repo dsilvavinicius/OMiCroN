@@ -88,7 +88,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h			${CPP_DIR}/${UTIL_DIR}/Stream.cpp
-	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h	${CPP_DIR}/${UTIL_DIR}/PlyPointReader.cpp)
+	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h)
 
 # Qt 5 modules.
 target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
