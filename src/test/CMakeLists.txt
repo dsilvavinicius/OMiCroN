@@ -16,6 +16,8 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
+	
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
 	${CPP_DIR}/main.cpp)
 

@@ -1,11 +1,13 @@
 #ifndef MORTON_CODE_H
 #define MORTON_CODE_H
 
+#include <cassert>
 #include <vector>
 #include <stdexcept>
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <boost/functional/hash.hpp>
 #include <glm/ext.hpp>
 
 using namespace std;
@@ -46,15 +48,15 @@ namespace model
 	{
 	public:
 		/** Use this method to calculate code from position. */
-		void build(const T& x, const T& y, const T& z, const unsigned int& level);
+		void build( const T& x, const T& y, const T& z, const unsigned int& level );
 		
 		/** Use this method to inform the code. */
-		void build(const T& codeBits);
+		void build( const T& codeBits );
 		
 		/** Decodes this morton code into an array of 3 coordinates. Use this when the level of code is known
 		 * a priori. */
 		// TODO: Use a template to specify a vec3 type here.
-		vector<T> decode(const unsigned int& level) const;
+		vector<T> decode( const unsigned int& level ) const;
 		
 		/** Decodes this morton code into an array of 3 coordinates. Use this when the level of the code is
 		 * unknown (slower). */
@@ -69,21 +71,21 @@ namespace model
 		shared_ptr< MortonCode< T > > traverseUp() const;
 		vector< shared_ptr< MortonCode< T > >  > traverseDown() const;
 		
-		bool operator==(const MortonCode& other);
-		bool operator!=(const MortonCode& other);
+		bool operator==( const MortonCode& other ) const;
+		bool operator!=( const MortonCode& other ) const;
 		
 		/** Prints the nodes in the path from this node to the root node.
 		 * @param simple indicates that the node should be printed in a simpler representation. */
-		void printPathToRoot(ostream& out, bool simple);
+		void printPathToRoot( ostream& out, bool simple ) const;
 		
-		template <typename Precision>
-		friend ostream& operator<<(ostream& out, const MortonCode<Precision>& dt);
+		template< typename Precision >
+		friend ostream& operator<<( ostream& out, const MortonCode<Precision>& dt );
 	private:
 		/** Spreads the bits to build Morton code. */
-		T spread3(T x);
+		T spread3( T x );
 		
 		/** Compacts the bits in code to decode it as a coordinate. */
-		T compact3(T x) const;
+		T compact3( T x ) const;
 		
 		T m_bits;
 	};
@@ -165,14 +167,7 @@ namespace model
 		T bits = getBits();
 		T shifted = bits << 3;
 		
-		// TODO: Code this overflow check as an assert.
-		// Checks for overflow.
-		if(shifted < bits)
-		{
-			stringstream ss;
-			ss << "Overflow detected while traversing down morton code " << hex << bits;
-			throw logic_error(ss.str());
-		}
+		assert( shifted > bits && "MortonCode traversal overflow." );
 		
 		for (int i = 0; i < 8; ++i)
 		{
@@ -185,19 +180,26 @@ namespace model
 	}
 	
 	template <typename T>
-	bool MortonCode< T >::operator==(const MortonCode< T >& other)
+	bool MortonCode< T >::operator==(const MortonCode< T >& other) const
 	{
 		return m_bits == other.getBits();
 	}
 	
 	template <typename T>
-	bool MortonCode< T >::operator!=(const MortonCode< T >& other)
+	bool MortonCode< T >::operator!=(const MortonCode< T >& other) const
 	{
 		return !(m_bits == other.getBits());
 	}
 	
+	template< typename T >
+	std::size_t hash_value( const MortonCode< T >& code )
+	{
+		boost::hash< T > hasher;
+        return hasher( code.getBits() );
+	}
+	
 	template <typename T>
-	void MortonCode< T >::printPathToRoot(ostream& out, bool simple)
+	void MortonCode< T >::printPathToRoot(ostream& out, bool simple) const
 		{
 			MortonCodePtr< T > ancestor = traverseUp();
 			out << "Path to root: ";

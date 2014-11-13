@@ -69,7 +69,7 @@ namespace model
 	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
 	{
-		assert( !innerNode->isLeaf() );
+		assert( !innerNode->isLeaf() && "InnerNode cannot be leaf." );
 		
 		PointVectorPtr points = innerNode-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( renderingState, points );

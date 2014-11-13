@@ -99,10 +99,10 @@ namespace model
 		
 		// TODO: Make tests for this function.
 		/** Computes the boundaries of the node indicated by the given morton code. */
-		pair< Vec3, Vec3 > getBoundaries( MortonCodePtr< MortonPrecision > ) const;
+		QBox3D getBoundaries( MortonCodePtr< MortonPrecision > ) const;
 		
 		/** Checks if this node is culled by frustrum test. */
-		bool isCullable( MortonCodePtr< MortonPrecision > code, QGLPainter* painter, QBox3D& box ) const;
+		bool isCullable( QBox3D& box, QGLPainter* painter ) const;
 		
 		/** Check if this node is at desired LOD and thus if it should be rendered. The LOD condition is the
 		 * projection of node's bouding box is greater than a given projection threshold. */
@@ -388,7 +388,7 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline pair<Vec3, Vec3> OctreeBase< MortonPrecision, Float, Vec3, Point >::getBoundaries(
+	inline QBox3D OctreeBase< MortonPrecision, Float, Vec3, Point >::getBoundaries(
 		MortonCodePtr< MortonPrecision > code ) const
 	{
 		unsigned int level = code->getLevel();
@@ -408,19 +408,16 @@ namespace model
 			 << "min coords = " << glm::to_string(minBoxVert) << endl
 			 << "max coords = " << glm::to_string(maxBoxVert) << endl;*/
 		
-		return pair< Vec3, Vec3 >(minBoxVert, maxBoxVert);
+		QBox3D box( QVector3D( minBoxVert.x, minBoxVert.y, minBoxVert.z ),
+					QVector3D( maxBoxVert.x, maxBoxVert.y, maxBoxVert.z ) );
+		
+		return box;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( MortonCodePtr< MortonPrecision > code,
-																			   QGLPainter* painter, QBox3D& box ) const
+	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( QBox3D& box, QGLPainter* painter ) const
 	{
-		pair< Vec3, Vec3 > boxVerts = getBoundaries(code);
-		Vec3 v0 = boxVerts.first;
-		Vec3 v1 = boxVerts.second;
-		box = QBox3D(QVector3D(v0.x, v0.y, v0.z), QVector3D(v1.x, v1.y, v1.z));
-			
-		return painter->isCullable(box);
+		return painter->isCullable( box );
 	}
 		
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -467,9 +464,9 @@ namespace model
 		{
 			MortonCodePtr< MortonPrecision > code = nodeIt->first;
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
-			QBox3D box;
+			QBox3D box = getBoundaries( code );
 			
-			if( !isCullable( code, renderingState.getPainter(), box ) )
+			if( !isCullable( box, renderingState.getPainter() ) )
 			{
 				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
 				if( isRenderable( box, renderingState.getPainter(), projThresh ) )
@@ -510,7 +507,7 @@ namespace model
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
 	{
-		assert( !innerNode->isLeaf() );
+		assert( !innerNode->isLeaf() && "InnerNode cannot be leaf." );
 		
 		PointPtr point = innerNode-> template getContents< Point >();
 		renderingState.handleNodeRendering( renderingState, point );
@@ -581,8 +578,8 @@ namespace model
 		for (pair< MortonCodePtr< MortonPrecision >, OctreeNodePtr< MortonPrecision, Float, Vec3 > > entry : *m_hierarchy)
 		{
 			MortonCodePtr< MortonPrecision > code = entry.first;
-			QBox3D box;
-			bool cullable = isCullable(code, painter, box);
+			QBox3D box = getBoundaries( code );
+			bool cullable = isCullable( box, painter );
 			bool renderable = isRenderable( box, painter, projThresh );
 			
 			if (passProjTestOnly)
@@ -709,7 +706,7 @@ namespace model
 	{
 		OctreeBase< unsigned int, Float, Vec3, Point >::m_maxMortonLevel = 10; // 0 to 10.
 		assert( ( OctreeBase< unsigned int, Float, Vec3, Point >::m_maxLevel <=
-			OctreeBase< unsigned int, Float, Vec3, Point >::m_maxMortonLevel ) );
+			OctreeBase< unsigned int, Float, Vec3, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
 	}
 	
 	template< typename Float, typename Vec3, typename Point >
@@ -718,7 +715,7 @@ namespace model
 	{
 		OctreeBase< unsigned long, Float, Vec3, Point >::m_maxMortonLevel = 20; // 0 to 20.
 		assert( ( OctreeBase< unsigned long, Float, Vec3, Point >::m_maxLevel <=
-			OctreeBase< unsigned long, Float, Vec3, Point >::m_maxMortonLevel ) );
+			OctreeBase< unsigned long, Float, Vec3, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
 	}
 	
 	template< typename Float, typename Vec3, typename Point >
@@ -727,7 +724,7 @@ namespace model
 	{
 		OctreeBase< unsigned long long, Float, Vec3, Point >::m_maxMortonLevel = 42; // 0 to 42
 		assert( ( OctreeBase< unsigned long long, Float, Vec3, Point >::m_maxLevel <=
-			OctreeBase< unsigned long long, Float, Vec3, Point >::m_maxMortonLevel ) );
+			OctreeBase< unsigned long long, Float, Vec3, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
 	}
 }
 
