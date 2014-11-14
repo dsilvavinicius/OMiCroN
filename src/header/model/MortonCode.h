@@ -108,10 +108,10 @@ namespace model
 	}
 	
 	template <typename T>
-	void MortonCode<T>::build(const T& codeBits) { m_bits = codeBits; }
+	inline void MortonCode<T>::build(const T& codeBits) { m_bits = codeBits; }
 	
 	template <typename T>
-	vector<T> MortonCode<T>::decode(const unsigned int& level) const
+	inline vector<T> MortonCode<T>::decode(const unsigned int& level) const
 	{
 		vector<T> coords(3);
 		
@@ -126,14 +126,14 @@ namespace model
 	}
 	
 	template <typename T>
-	vector<T> MortonCode<T>::decode() const
+	inline vector<T> MortonCode<T>::decode() const
 	{
 		unsigned int level = getLevel();
 		return decode(level);
 	}
 	
 	template <typename T>
-	unsigned int MortonCode<T>::getLevel() const
+	inline unsigned int MortonCode<T>::getLevel() const
 	{
 		// Finds the MortonCode level.
 		unsigned int numBits = sizeof(T) * 8;
@@ -149,10 +149,10 @@ namespace model
 	}
 	
 	template <typename T>
-	T MortonCode<T>::getBits() const{ return m_bits; }
+	inline T MortonCode<T>::getBits() const{ return m_bits; }
 	
 	template <typename T>
-	MortonCodePtr<T> MortonCode<T>::traverseUp() const
+	inline MortonCodePtr<T> MortonCode<T>::traverseUp() const
 	{
 		T bits = getBits() >> 3;
 		MortonCodePtr<T> parentMorton = make_shared< MortonCode<T> >();
@@ -161,7 +161,7 @@ namespace model
 	}
 	
 	template <typename T>
-	vector< MortonCodePtr< T > >  MortonCode<T>::traverseDown() const
+	inline vector< MortonCodePtr< T > >  MortonCode<T>::traverseDown() const
 	{
 		vector< MortonCodePtr<T> > children(8);
 		T bits = getBits();
@@ -180,19 +180,19 @@ namespace model
 	}
 	
 	template <typename T>
-	bool MortonCode< T >::operator==(const MortonCode< T >& other) const
+	inline bool MortonCode< T >::operator==(const MortonCode< T >& other) const
 	{
 		return m_bits == other.getBits();
 	}
 	
 	template <typename T>
-	bool MortonCode< T >::operator!=(const MortonCode< T >& other) const
+	inline bool MortonCode< T >::operator!=(const MortonCode< T >& other) const
 	{
 		return !(m_bits == other.getBits());
 	}
 	
 	template< typename T >
-	std::size_t hash_value( const MortonCode< T >& code )
+	inline std::size_t hash_value( const MortonCode< T >& code )
 	{
 		boost::hash< T > hasher;
         return hasher( code.getBits() );
@@ -242,27 +242,87 @@ namespace model
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
 	template <>
-	unsigned int MortonCode<unsigned int>::spread3(unsigned int x);
+	inline unsigned int MortonCode< unsigned int >::spread3(unsigned int x)
+	{
+		x &= 0x3ff;
+		x = (x | x << 16) & 0x30000ff;
+		x = (x | x << 8) & 0x300f00f;
+		x = (x | x << 4) & 0x30c30c3;
+		x = (x | x << 2) & 0x9249249;
+		
+		return x;
+	}
 	
 	template <>
-	unsigned int MortonCode<unsigned int>::compact3(unsigned int x) const;
+	inline unsigned int MortonCode< unsigned int >::compact3(unsigned int x) const
+	{
+		x &= 0x09249249;
+		x = (x ^ (x >>  2)) & 0x030c30c3;
+		x = (x ^ (x >>  4)) & 0x0300f00f;
+		x = (x ^ (x >>  8)) & 0xff0000ff;
+		x = (x ^ (x >> 16)) & 0x000003ff;
+		
+		return x;
+	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
 	template <>
-	unsigned long MortonCode<unsigned long>::spread3(unsigned long x);
+	inline unsigned long MortonCode< unsigned long >::spread3(unsigned long x)
+	{
+		x &= 0x1fffffUL;
+		x = (x | x << 32UL) & 0x1f00000000ffffUL;
+		x = (x | x << 16UL) & 0x1f0000ff0000ffUL;
+		x = (x | x << 8UL) & 0x100f00f00f00f00fUL;
+		x = (x | x << 4UL) & 0x10c30c30c30c30c3UL;
+		x = (x | x << 2UL) & 0x1249249249249249UL;
+		
+		return x;
+	}
 	
 	template <>
-	unsigned long MortonCode<unsigned long>::compact3(unsigned long x) const;
+	inline unsigned long MortonCode< unsigned long >::compact3(unsigned long x) const
+	{
+		x &= 0x1249249249249249UL;
+		x = (x ^ x >> 2UL) & 0x10c30c30c30c30c3UL;
+		x = (x ^ x >> 4UL) & 0x100f00f00f00f00fUL;
+		x = (x ^ x >> 8UL) & 0x001f0000ff0000ffUL;
+		x = (x ^ x >> 16UL) & 0x001f00000000ffffUL;
+		x = (x ^ x >> 32UL) & 0x00000000001fffffUL;
+		
+		return x;
+	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
 	template <>
-	unsigned long long MortonCode<unsigned long long>::spread3(unsigned long long x);
+	inline unsigned long long MortonCode< unsigned long long >::spread3(unsigned long long x)
+	{
+		x &= 0x3ffffffffffLL;
+		x = (x | x << 64) & 0x3ff0000000000000000ffffffffLL;
+		x = (x | x << 32) & 0x3ff00000000ffff00000000ffffLL;
+		x = (x | x << 16) & 0x30000ff0000ff0000ff0000ff0000ffLL;
+		x = (x | x << 8) & 0x300f00f00f00f00f00f00f00f00f00fLL;
+		x = (x | x << 4) & 0x30c30c30c30c30c30c30c30c30c30c3LL;
+		x = (x | x << 2) & 0x9249249249249249249249249249249LL;
+		
+		return x;
+	}
 	
-	// TODO: Finish this.
-	//template <>
-	//unsigned long long * MortonCode<unsigned long long>::compact3(unsigned long long) const;
+	// TODO: Finish this (so boring!).
+	/*template <>
+	inline unsigned long long MortonCode< unsigned long long >::compact3(unsigned long long x) const
+	{
+		x &= 0x3ffffffffffLL;
+		x = (x | x << 64) & 0x3ff0000000000000000ffffffffLL;
+		x = (x | x << 32) & 0x3ff00000000ffff00000000ffffLL;
+		x = (x | x << 16) & 0x30000ff0000ff0000ff0000ff0000ffLL;
+		x = (x | x << 8) & 0x300f00f00f00f00f00f00f00f00f00fLL;
+		x = (x | x << 4) & 0x30c30c30c30c30c30c30c30c30c30c3LL;
+		x = (x | x << 2) & 0x9249249249249249249249249249249LL;
+		
+		return x;
+	}*/
 }
 
 #endif

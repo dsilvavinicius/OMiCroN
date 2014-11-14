@@ -102,26 +102,24 @@ namespace model
 		QBox3D getBoundaries( MortonCodePtr< MortonPrecision > ) const;
 		
 		/** Checks if this node is culled by frustrum test. */
-		bool isCullable( QBox3D& box, QGLPainter* painter ) const;
+		bool isCullable( QBox3D& box, RenderingState& renderingState ) const;
 		
 		/** Check if this node is at desired LOD and thus if it should be rendered. The LOD condition is the
 		 * projection of node's bouding box is greater than a given projection threshold. */
-		bool isRenderable( QBox3D& box, QGLPainter* painter, const Float& projThresh ) const;
+		bool isRenderable( QBox3D& box, RenderingState& renderingState, const Float& projThresh ) const;
 		
 		/** Traversal recursion. */
 		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode,
 							   RenderingState& renderingState,
 							   const Float& projThresh );
 		
-		/** Method called in the traversal a node should be rendered. */
-		//virtual handleRenderedNode();
-		
-		/** Method called in the traversal a node should not be rendered. */
-		//virtual handleNotRenderedNode();
-		
 		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
 		virtual void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
 											  RenderingState& renderingState ) const;
+		
+		/** Setups the rendering of an leaf node, putting all necessary points into the rendering list. */
+		virtual void setupLeafNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
+											 RenderingState& renderingState ) const;
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
@@ -415,19 +413,20 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( QBox3D& box, QGLPainter* painter ) const
+	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( QBox3D& box, RenderingState& renderingState )
+	const
 	{
-		return painter->isCullable( box );
+		return renderingState.getPainter()->isCullable( box );
 	}
 		
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isRenderable( QBox3D& box,
-																		  QGLPainter* painter,
+	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isRenderable( QBox3D& box, RenderingState& renderingState,
 																	      const Float& projThresh ) const
 	{
 		QVector4D min( box.minimum(), 1 );
 		QVector4D max( box.maximum(), 1 );
 		
+		QGLPainter* painter = renderingState.getPainter();
 		QMatrix4x4 modelViewProjection = painter->combinedMatrix();
 		
 		QVector4D proj0 = modelViewProjection.map( min );
@@ -466,16 +465,15 @@ namespace model
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
 			QBox3D box = getBoundaries( code );
 			
-			if( !isCullable( box, renderingState.getPainter() ) )
+			if( !isCullable( box, renderingState ) )
 			{
 				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
-				if( isRenderable( box, renderingState.getPainter(), projThresh ) )
+				if( isRenderable( box, renderingState, projThresh ) )
 				{
 					//cout << *nodeCode << "RENDERED!" << endl << endl;
 					if ( node->isLeaf() )
 					{
-						PointVectorPtr points = node-> template getContents< PointVector >();
-						renderingState.handleNodeRendering( renderingState, points );
+						setupLeafNodeRendering( node, renderingState );
 					}
 					else
 					{
@@ -486,8 +484,7 @@ namespace model
 				{
 					if (node->isLeaf())
 					{
-						PointVectorPtr points = node-> template getContents< PointVector >();
-						renderingState.handleNodeRendering( renderingState, points );
+						setupLeafNodeRendering( node, renderingState );
 					}
 					else
 					{
@@ -507,10 +504,20 @@ namespace model
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
 	{
-		assert( !innerNode->isLeaf() && "InnerNode cannot be leaf." );
+		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
 		PointPtr point = innerNode-> template getContents< Point >();
 		renderingState.handleNodeRendering( renderingState, point );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupLeafNodeRendering(
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode, RenderingState& renderingState ) const
+	{
+		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
+		
+		PointVectorPtr points = leafNode-> template getContents< PointVector >();
+		renderingState.handleNodeRendering( renderingState, points );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -575,12 +582,14 @@ namespace model
 		vector< Vec3 > verts;
 		vector< Vec3 > colors;
 		
+		RenderingState renderingState( painter, COLORS );
+		
 		for (pair< MortonCodePtr< MortonPrecision >, OctreeNodePtr< MortonPrecision, Float, Vec3 > > entry : *m_hierarchy)
 		{
 			MortonCodePtr< MortonPrecision > code = entry.first;
 			QBox3D box = getBoundaries( code );
-			bool cullable = isCullable( box, painter );
-			bool renderable = isRenderable( box, painter, projThresh );
+			bool cullable = isCullable( box, renderingState );
+			bool renderable = isRenderable( box, renderingState, projThresh );
 			
 			if (passProjTestOnly)
 			{

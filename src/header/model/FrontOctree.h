@@ -7,7 +7,7 @@
 #include <boost/multi_index/identity.hpp>
 #include <boost/multi_index/member.hpp>
 
-#include "Octree.h"
+#include "RandomSampleOctree.h"
 
 using boost::multi_index_container;
 using namespace ::boost;
@@ -46,7 +46,7 @@ namespace model
 	
 	/** Hierarchy front. The front is formed by all nodes in which the hierarchy traversal ends. */
 	template< typename MortonPrecision >
-	using Front = typename BidirectionalMap< unsigned long, MortonCode< MortonPrecision > >::Container;
+	using Front = typename BidirectionalMap< unsigned long, MortonCodePtr< MortonPrecision > >::Container;
 	
 	using ShallowFront = Front< unsigned int >;
 	using DeepFront = Front< unsigned long >;
@@ -54,23 +54,35 @@ namespace model
 	/** Octree that supports temporal coherence by hierarchy front tracking.  */
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	class FrontOctree
-	: public Octree< MortonPrecision, Float, Vec3, Point >
+	: public RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
 	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
+		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using Front = model::Front< MortonPrecision >;
 		using RenderingState = model::RenderingState< Vec3 >;
-		using MortonVector = vector< MortonCode >;
+		using MortonVector = vector< MortonCodePtr >;
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
 		/** Tracks the hierarchy front. */
 		void trackFront( QGLPainter* painter, const Attributes& attribs, const Float& projThresh );
 		
-		/** Check if the node and their siblings should be pruned from the front, giving place to their parent. */
-		bool checkPrune( const RenderingState& renderingState, const MortonCode& code ) const;
+		/** Checks if the node and their siblings should be pruned from the front, giving place to their parent. */
+		bool checkPrune( const RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const;
+		
+		/** Creates the deletion and insertion entries related with the prunning of the node and their siblings. */
+		void prune( const MortonCodePtr& code );
 		
 		/** Check if the node should be branched, giving place to its children. */
-		bool checkBranch( const RenderingState& renderingState, const MortonCode& code ) const;
+		bool checkBranch( const RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const;
+		
+		/** Creates the deletion and insertion entries related with the branching of the node. */
+		void branch( const MortonCodePtr& code );
+		
+		void setupLeafNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode,
+									 RenderingState& renderingState );
+		
+		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
+									  RenderingState& renderingState );
 	private:
 		/** Hierarchy front. */
 		Front m_front;
@@ -87,7 +99,7 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	FrontOctree< MortonPrecision, Float, Vec3, Point >::FrontOctree( const int& maxPointsPerNode, const int& maxLevel )
-	:Octree< MortonPrecision, Float, Vec3, Point >::Octree( maxPointsPerNode, maxLevel )
+	:RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::Octree( maxPointsPerNode, maxLevel )
 	{}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -101,58 +113,82 @@ namespace model
 		
 		for( typename Front::iterator it = m_front.begin(); it != m_front.end(); ++it )
 		{
-			MortonCode code = it->right;
-			QBox3D box = getBoundaries( code );
+			MortonCodePtr code = it->right;
 			
-			if( projThresh < m_lastProjThresh )
+			bool oneLevelPruneDone = checkPrune( renderingState, code, projThresh );
+			if( oneLevelPruneDone )
 			{
-				while( checkPrune( renderingState, code ) )
+				prune( code );
+				code = code->traverseUp();
+				while( checkPrune( renderingState, code, projThresh ) )
 				{
+					prune( code );
+					code = code->traverseUp();
 				}
 			}
 			else
 			{
-				while( checkBranch( renderingState, code ) )
+				if( checkBranch( renderingState, code, projThresh ) )
 				{
+					traverse( code, renderingState );
 				}
 			}
 		}
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point >::checkPrune( const RenderingState& renderingState,
-																				const MortonCode& code ) const
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::prune( const MortonCodePtr& code )
 	{
-		/*if( isCullable( code, renderingState.getPainter(), box ) )
+		MortonCodePtr insertedNode = code->traverseUp();
+		MortonVector deletedNodes = insertedNode->traverseDown();
+		
+		frontDeletionList.insert( frontDeletionList.end(), deletedNodes.begin(), deletedNodes.end() );
+		frontInsertionList.push_back( insertedNode );
+	}
+	
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point >::checkPrune( const RenderingState& renderingState,
+																				const MortonCodePtr& code,
+																			 const Float& projThresh ) const
+	{
+		MortonCodePtr parent = code->traverseUp();
+		QBox3D box = getBoundaries( parent );
+		bool parentIsCullable = isCullable( box, renderingState );
+		
+		if( parentIsCullable )
 		{
-			if( !isRenderable( box, renderingState.getPainter(), projThresh ) )
-			{
-				
-			}
-			MortonCode parent = code->traverseUp();
-			vector< MortonCode > parentChildren = parent->traverseDown();
-			
-			for( MortonCode parentChild : parentChildren )
-			{
-				if( parentChild != code )
-				{
-					if( isCullable( code, renderingState.getPainter(), box ) || isRenderable )
-				}
-			}
-			
-			//cout << *nodeCode << "NOT CULLED!" << endl << endl;
-			if( !isRenderable( box, renderingState.getPainter(), projThresh ) )
-			{
-			}
-		}*/
-		return false;
+			return true;
+		}
+		
+		bool parentIsRenderable = isRenderable( box, renderingState, projThresh );
+		if( !parentIsRenderable )
+		{
+			return false;
+		}
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point >::checkBranch( const RenderingState& renderingState,
-																				 const MortonCode& code ) const
+																				 const MortonCodePtr& code,
+																			  const Float& projThresh ) const
 	{
-		return false;
+		QBox3D box = getBoundaries( code );
+		return !isRenderable( box, renderingState, projThresh );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	void FrontOctree< MortonPrecision, Float, Vec3, Point >::setupLeafNodeRendering(
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState )
+	{
+		
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	void FrontOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState )
+	{
+		
 	}
 }
 

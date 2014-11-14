@@ -17,17 +17,17 @@ namespace model
 		TEST_F( FrontTest, Compilation )
 		{
 			ShallowFront front;
-			ShallowMortonCode code;
-			code.build( 0x1 );
+			ShallowMortonCodePtr code = make_shared< ShallowMortonCode >();
+			code->build( 0x1 );
 			
 			front.insert( ShallowFront::value_type( 1L, code ) );
-			code.build( 0x8 );
+			code->build( 0x8 );
 			front.insert( ShallowFront::value_type( 10L, code ) );
-			code.build( 0x9 );
+			code->build( 0x9 );
 			front.insert( ShallowFront::value_type( 25L, code ) );
-			code.build( 0xA );
+			code->build( 0xA );
 			front.insert( ShallowFront::value_type( 100L, code ) );
-			code.build( 0xB );
+			code->build( 0xB );
 			front.insert( ShallowFront::value_type( 125L, code ) );
 		}
 	}

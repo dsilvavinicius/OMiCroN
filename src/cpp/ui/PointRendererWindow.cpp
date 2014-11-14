@@ -19,7 +19,7 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		SimplePointReader reader( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
+		SimplePointReader reader( "../../src/data/real/tempietto_all.ply", SimplePointReader::SINGLE, NORMALS );
 		//ExtendedPointReader reader( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE,
 		//							COLORS_AND_NORMALS );
 		
