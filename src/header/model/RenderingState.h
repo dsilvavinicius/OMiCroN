@@ -30,7 +30,7 @@ namespace model
 		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
 		 * been already handled.
 		 * @returns the number of rendered points. */
-		unsigned long render();
+		unsigned int render();
 		
 		/** Indicates that the node contents passed should be rendered. A static method was used to overcome C++ limitation of
 		* class member specializations.
@@ -80,7 +80,7 @@ namespace model
 	}
 	
 	template< typename Vec3 >
-	unsigned long RenderingState< Vec3 >::render()
+	unsigned int RenderingState< Vec3 >::render()
 	{
 		// TODO: Find a way to specify the precision properly here,
 		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &m_positions[0] );
@@ -108,7 +108,7 @@ namespace model
 			}
 		}
 		
-		unsigned long numRenderedPoints = m_positions.size();
+		unsigned int numRenderedPoints = m_positions.size();
 		m_painter->draw( QGL::Points, numRenderedPoints );
 		
 		return numRenderedPoints;

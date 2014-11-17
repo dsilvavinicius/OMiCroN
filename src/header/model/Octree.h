@@ -102,11 +102,11 @@ namespace model
 		QBox3D getBoundaries( MortonCodePtr< MortonPrecision > ) const;
 		
 		/** Checks if this node is culled by frustrum test. */
-		bool isCullable( QBox3D& box, RenderingState& renderingState ) const;
+		bool isCullable( const QBox3D& box, RenderingState& renderingState ) const;
 		
 		/** Check if this node is at desired LOD and thus if it should be rendered. The LOD condition is the
 		 * projection of node's bouding box is greater than a given projection threshold. */
-		bool isRenderable( QBox3D& box, RenderingState& renderingState, const Float& projThresh ) const;
+		bool isRenderable( const QBox3D& box, RenderingState& renderingState, const Float& projThresh ) const;
 		
 		/** Traversal recursion. */
 		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode,
@@ -115,11 +115,11 @@ namespace model
 		
 		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
 		virtual void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-											  RenderingState& renderingState ) const;
+											  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState ) const;
 		
 		/** Setups the rendering of an leaf node, putting all necessary points into the rendering list. */
 		virtual void setupLeafNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-											 RenderingState& renderingState ) const;
+											 MortonCodePtr< MortonPrecision > code, RenderingState& renderingState ) const;
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
@@ -413,14 +413,16 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( QBox3D& box, RenderingState& renderingState )
+	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( const QBox3D& box,
+																			   RenderingState& renderingState )
 	const
 	{
 		return renderingState.getPainter()->isCullable( box );
 	}
 		
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isRenderable( QBox3D& box, RenderingState& renderingState,
+	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isRenderable( const QBox3D& box,
+																				 RenderingState& renderingState,
 																	      const Float& projThresh ) const
 	{
 		QVector4D min( box.minimum(), 1 );
@@ -473,18 +475,18 @@ namespace model
 					//cout << *nodeCode << "RENDERED!" << endl << endl;
 					if ( node->isLeaf() )
 					{
-						setupLeafNodeRendering( node, renderingState );
+						setupLeafNodeRendering( node, code, renderingState );
 					}
 					else
 					{
-						setupInnerNodeRendering( node, renderingState );
+						setupInnerNodeRendering( node, code, renderingState );
 					}
 				}
 				else
 				{
 					if (node->isLeaf())
 					{
-						setupLeafNodeRendering( node, renderingState );
+						setupLeafNodeRendering( node, code, renderingState );
 					}
 					else
 					{
@@ -502,7 +504,8 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, MortonCodePtr< MortonPrecision > code,
+		RenderingState& renderingState ) const
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
@@ -512,7 +515,8 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupLeafNodeRendering(
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode, RenderingState& renderingState ) const
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode, MortonCodePtr< MortonPrecision > code,
+		RenderingState& renderingState ) const
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
 		

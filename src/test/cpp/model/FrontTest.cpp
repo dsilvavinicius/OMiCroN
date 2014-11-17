@@ -16,7 +16,7 @@ namespace model
 
 		TEST_F( FrontTest, Compilation )
 		{
-			ShallowFront front;
+			/*ShallowFront front;
 			ShallowMortonCodePtr code = make_shared< ShallowMortonCode >();
 			code->build( 0x1 );
 			
@@ -28,7 +28,7 @@ namespace model
 			code->build( 0xA );
 			front.insert( ShallowFront::value_type( 100L, code ) );
 			code->build( 0xB );
-			front.insert( ShallowFront::value_type( 125L, code ) );
+			front.insert( ShallowFront::value_type( 125L, code ) );*/
 		}
 	}
 }

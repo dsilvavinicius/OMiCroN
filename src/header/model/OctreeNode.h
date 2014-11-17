@@ -52,7 +52,7 @@ namespace model
 		else
 		{
 			InnerNode< MortonPrecision, Float, Vec3, Contents >* node =
-				reinterpret_cast< LeafNode< MortonPrecision, Float, Vec3, Contents > >(this);
+				reinterpret_cast< LeafNode< MortonPrecision, Float, Vec3, Contents > >( this );
 			
 			node->setContents(contents);
 		}

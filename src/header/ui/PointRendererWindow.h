@@ -11,7 +11,8 @@
 #include <QTimer>
 
 #include "ExtendedPoint.h"
-#include "RandomSampleOctree.h"
+//#include "RandomSampleOctree.h"
+#include "FrontOctree.h"
 
 using namespace std;
 using namespace model;
@@ -44,8 +45,10 @@ namespace ui
 		
 		//ShallowOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		//MediumOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
-		ShallowRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		//ShallowRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		//MediumRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		ShallowFrontOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		
 		QPoint m_lastMousePos;
 		
 		QTimer *m_timer;
@@ -61,7 +64,7 @@ namespace ui
 		Attributes m_attribs;
 	};
 
-	using PointRendererWindowPtr = shared_ptr<PointRendererWindow>;
+	using PointRendererWindowPtr = shared_ptr< PointRendererWindow >;
 }
 
 #endif // POINT_RENDERER_WINDOW_H

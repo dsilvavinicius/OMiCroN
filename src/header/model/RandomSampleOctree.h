@@ -1,5 +1,5 @@
-#ifndef RANDOM_SAMPLE__OCTREE
-#define RANDOM_SAMPLE__OCTREE
+#ifndef RANDOM_SAMPLE__OCTREE_H
+#define RANDOM_SAMPLE__OCTREE_H
 
 #include <time.h>
 #include "Octree.h"
@@ -29,7 +29,7 @@ namespace model
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
 		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-									  RenderingState& renderingState ) const;
+									  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState ) const;
 
 		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec,
 						   int& numChildren, int& numLeaves) const;
@@ -67,9 +67,10 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, RenderingState& renderingState ) const
+		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, MortonCodePtr< MortonPrecision > code,
+		RenderingState& renderingState ) const
 	{
-		assert( !innerNode->isLeaf() && "InnerNode cannot be leaf." );
+		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
 		PointVectorPtr points = innerNode-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( renderingState, points );
