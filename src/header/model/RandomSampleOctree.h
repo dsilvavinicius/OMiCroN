@@ -29,7 +29,7 @@ namespace model
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
 		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-									  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState ) const;
+									  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState );
 
 		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec,
 						   int& numChildren, int& numLeaves) const;
@@ -68,7 +68,7 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, MortonCodePtr< MortonPrecision > code,
-		RenderingState& renderingState ) const
+		RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		

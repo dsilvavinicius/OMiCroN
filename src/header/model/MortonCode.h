@@ -137,7 +137,7 @@ namespace model
 	{
 		// Finds the MortonCode level.
 		unsigned int numBits = sizeof(T) * 8;
-		T bits = getBits();
+		T bits = m_bits;
 		unsigned int level = 0;
 		for (level = numBits / 3; level > 0; --level)
 		{
@@ -154,7 +154,8 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr<T> MortonCode<T>::traverseUp() const
 	{
-		T bits = getBits() >> 3;
+		assert( m_bits > 1 );
+		T bits = m_bits >> 3;
 		MortonCodePtr<T> parentMorton = make_shared< MortonCode<T> >();
 		parentMorton->build(bits);
 		return parentMorton;
@@ -164,7 +165,7 @@ namespace model
 	inline vector< MortonCodePtr< T > >  MortonCode<T>::traverseDown() const
 	{
 		vector< MortonCodePtr<T> > children(8);
-		T bits = getBits();
+		T bits = m_bits;
 		T shifted = bits << 3;
 		
 		assert( shifted > bits && "MortonCode traversal overflow." );
@@ -182,13 +183,13 @@ namespace model
 	template <typename T>
 	inline bool MortonCode< T >::operator==(const MortonCode< T >& other) const
 	{
-		return m_bits == other.getBits();
+		return m_bits == other.m_bits;
 	}
 	
 	template <typename T>
 	inline bool MortonCode< T >::operator!=(const MortonCode< T >& other) const
 	{
-		return !(m_bits == other.getBits());
+		return !( m_bits == other.m_bits );
 	}
 	
 	template< typename T >
@@ -201,24 +202,24 @@ namespace model
 	template <typename T>
 	void MortonCode< T >::printPathToRoot(ostream& out, bool simple) const
 		{
-			MortonCodePtr< T > ancestor = traverseUp();
+			MortonCode< T > code = *this;
 			out << "Path to root: ";
 			
 			if (simple)
 			{
-				out << "0x" << hex << getBits() << dec;
+				out << "0x" << hex << code.getBits() << dec;
 				do {
-					out << " -> 0x" << hex << ancestor->getBits() << dec;
-					ancestor = ancestor->traverseUp();
-				} while (ancestor->getBits() != 0);	
+					code = *code.traverseUp();
+					out << " -> 0x" << hex << code.getBits() << dec;
+				} while( code.getBits() != 1 );	
 			}
 			else
 			{
-				out << *this;
+				out << code;
 				do {
-					out << " -> " << *ancestor << dec;
-					ancestor = ancestor->traverseUp();
-				} while (ancestor->getBits() != 0);	
+					code = *code.traverseUp();
+					out << " -> " << code << dec;
+				} while( code.getBits() != 1 );	
 			}
 			cout << endl;
 		}

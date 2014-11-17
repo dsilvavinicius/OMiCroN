@@ -115,11 +115,14 @@ namespace model
 		
 		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
 		virtual void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-											  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState ) const;
+											  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState );
 		
 		/** Setups the rendering of an leaf node, putting all necessary points into the rendering list. */
 		virtual void setupLeafNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-											 MortonCodePtr< MortonPrecision > code, RenderingState& renderingState ) const;
+											 MortonCodePtr< MortonPrecision > code, RenderingState& renderingState );
+		
+		/** Handler called whenever a node is culled on traversal. Default implementation does nothing. */
+		virtual void handleCulledNode( const MortonCodePtr< MortonPrecision > code ) {};
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
@@ -499,13 +502,17 @@ namespace model
 					}
 				}
 			}
+			else
+			{
+				handleCulledNode( code );
+			}
 		}
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, MortonCodePtr< MortonPrecision > code,
-		RenderingState& renderingState ) const
+		RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
@@ -516,7 +523,7 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::setupLeafNodeRendering(
 		OctreeNodePtr< MortonPrecision, Float, Vec3 > leafNode, MortonCodePtr< MortonPrecision > code,
-		RenderingState& renderingState ) const
+		RenderingState& renderingState )
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
 		

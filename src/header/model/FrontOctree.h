@@ -76,8 +76,10 @@ namespace model
 		/** Creates the deletion and insertion entries related with the prunning of the node and their siblings. */
 		void prune( const MortonCodePtr& code, RenderingState& renderingState );
 		
-		/** Check if the node should be branched, giving place to its children. */
-		bool checkBranch( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const;
+		/** Check if the node should be branched, giving place to its children.
+		 * @param isCullable is an output that indicates if the node was culled by frustrum. */
+		bool checkBranch( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh,
+			bool& out_isCullable ) const;
 		
 		/** Creates the deletion and insertion entries related with the branching of the node. */
 		void branch( const MortonCodePtr& code );
@@ -85,6 +87,8 @@ namespace model
 		void setupLeafNodeRendering( OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState );
 		
 		void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		
+		void handleCulledNode( MortonCodePtr code );
 	
 	private:
 		/** Internal setup method for both leaf and inner node cases. */
@@ -121,9 +125,11 @@ namespace model
 		{
 			MortonCodePtr code = *it;
 			
+			bool isCullable = false;
 			bool oneLevelPruneDone = checkPrune( renderingState, code, projThresh );
 			if( oneLevelPruneDone )
 			{
+				//cout << "Passed prune." << endl << endl;
 				prune( code, renderingState );
 				code = code->traverseUp();
 				while( checkPrune( renderingState, code, projThresh ) )
@@ -132,19 +138,26 @@ namespace model
 					code = code->traverseUp();
 				}
 			}
-			else if( checkBranch( renderingState, code, projThresh ) )
+			else if( checkBranch( renderingState, code, projThresh, isCullable ) )
 			{
+				//cout << "Passed branching." << endl << endl;
+				m_front.erase( code );
 				RandomSampleOctree::traverse( code, renderingState, projThresh );
 			}
 			else
 			{
-				// No prunning or branching done. Just send the current front node for rendering.
-				auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
-				assert( nodeIt != m_hierarchy->end() );
-				
-				OctreeNodePtr node = nodeIt->second;
-				PointVectorPtr points = node-> template getContents< PointVector >();
-				renderingState.handleNodeRendering( renderingState, points );
+				//cout << "Still node." << endl << endl;
+				if( !isCullable )
+				{
+					//cout << "Not Culled." << endl << endl;
+					// No prunning or branching done. Just send the current front node for rendering.
+					auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
+					assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
+					
+					OctreeNodePtr node = nodeIt->second;
+					PointVectorPtr points = node-> template getContents< PointVector >();
+					renderingState.handleNodeRendering( renderingState, points );
+				}
 			}
 		}
 		
@@ -164,7 +177,7 @@ namespace model
 		}
 		
 		auto nodeIt = RandomSampleOctree::m_hierarchy->find( insertedCode );
-		assert( nodeIt != m_hierarchy->end() );
+		assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
 		OctreeNodePtr insertedNode = nodeIt->second;
 		setupNodeRendering( insertedNode, insertedCode, renderingState );
 		
@@ -178,6 +191,11 @@ namespace model
 																				const MortonCodePtr& code,
 																			 const Float& projThresh ) const
 	{
+		if( code->getBits() == 1 )
+		{	// Don't prune the root node.
+			return false;
+		}
+		
 		MortonCodePtr parent = code->traverseUp();
 		QBox3D box = RandomSampleOctree::getBoundaries( parent );
 		bool parentIsCullable = RandomSampleOctree::isCullable( box, renderingState );
@@ -197,11 +215,13 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point >::checkBranch( RenderingState& renderingState,
 																				 const MortonCodePtr& code,
-																			  const Float& projThresh ) const
+																			  const Float& projThresh,
+																			  bool& out_isCullable ) const
 	{
 		QBox3D box = RandomSampleOctree::getBoundaries( code );
-		return  !RandomSampleOctree::isRenderable( box, renderingState, projThresh ) &&
-				!RandomSampleOctree::isCullable( box, renderingState );
+		out_isCullable = RandomSampleOctree::isCullable( box, renderingState );
+		
+		return !RandomSampleOctree::isRenderable( box, renderingState, projThresh ) && !out_isCullable;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -232,6 +252,12 @@ namespace model
 		
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( renderingState, points );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::handleCulledNode( MortonCodePtr code )
+	{
+		m_front.insert( code );
 	}
 	
 	//=====================================================================
