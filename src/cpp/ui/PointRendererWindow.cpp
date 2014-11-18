@@ -19,7 +19,8 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		SimplePointReader reader( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
+		//SimplePointReader reader( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
+		SimplePointReader reader( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
 		//ExtendedPointReader reader( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE,
 		//							COLORS_AND_NORMALS );
 		
@@ -35,7 +36,9 @@ namespace ui
 		//m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
 		//m_octree = make_shared< MediumRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		m_octree = make_shared< ShallowFrontOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
-		m_octree->build(points);
+		m_octree->build( points );
+		
+		//cout << *m_octree << endl << endl;
 	}
 	
 	PointRendererWindow::~PointRendererWindow() {}
@@ -50,7 +53,7 @@ namespace ui
 		
 		painter->setCamera( cam );
 		
-		m_octree->traverse( painter, m_attribs, m_projThresh );
+		//m_octree->traverse( painter, m_attribs, m_projThresh );
 		
 		// Render the scene one time to init m_renderTime for future projection threshold adaptations.
 		clock_t timing = clock();
@@ -87,6 +90,8 @@ namespace ui
 		timing = clock() - timing;
 		
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+		
+		//m_octree->drawBoundaries( painter, false, m_projThresh );
 		
 		// Render debug data.
 		stringstream debugSS;

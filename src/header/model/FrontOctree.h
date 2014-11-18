@@ -84,11 +84,17 @@ namespace model
 		/** Creates the deletion and insertion entries related with the branching of the node. */
 		void branch( const MortonCodePtr& code );
 		
+		/** Overriden to add rendered node into front addition list. */
 		void setupLeafNodeRendering( OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState );
 		
+		/** Overriden to add rendered node into front addition list. */
 		void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
 		
+		/** Overriden to add culled node into front addition list. */
 		void handleCulledNode( MortonCodePtr code );
+		
+		/** Overriden to push the front addition list to the front itself. */
+		void onTraversalEnd();
 	
 	private:
 		/** Internal setup method for both leaf and inner node cases. */
@@ -98,10 +104,10 @@ namespace model
 		Front m_front;
 		
 		/** List with the nodes that will be deleted in current front tracking. */
-		//MortonVector frontDeletionList;
+		//MortonVector m_frontDeletionList;
 		
 		/** List with the nodes that will be included in current front tracking. */
-		//MortonVector frontInsertionList;
+		MortonVector m_frontInsertionList;
 		
 		/** The projection threshold used in the last frame. Used to track the front. */
 		//Float m_lastProjThresh;
@@ -118,18 +124,37 @@ namespace model
 	{
 		RenderingState renderingState( painter, attribs );
 		
-		//frontDeletionList.clear();
-		//frontInsertionList.clear();
+		//m_frontDeletionList.clear();
+		m_frontInsertionList.clear();
 		
-		for( typename Front::iterator it = m_front.begin(); it != m_front.end(); ++it )
+		// Flag to indicate if the previous front entry should be deleted. This can be done only after the
+		// iterator to the entry to be deleted is incremented. Otherwise the iterator will be invalidated before
+		// increment.
+		bool erasePrevious = false;
+		
+		typename Front::iterator end = m_front.end();
+		
+		//cout << "========== Starting front tracking ==========";
+		
+		for( typename Front::iterator it = m_front.begin(); it != end; ++it, end = m_front.end() )
 		{
+			//cout << endl << "Current: " << hex << ( *it )->getBits() << dec << endl;
+			if( erasePrevious )
+			{
+				typename Front::iterator prevIt = std::prev( it );
+				//cout << "Erased: " << hex << ( *prevIt )->getBits() << dec << endl;
+				m_front.erase( prevIt );
+			}
+			erasePrevious = false;
+			
 			MortonCodePtr code = *it;
 			
 			bool isCullable = false;
 			bool oneLevelPruneDone = checkPrune( renderingState, code, projThresh );
 			if( oneLevelPruneDone )
 			{
-				//cout << "Passed prune." << endl << endl;
+				//cout << "Prune" << endl;
+				erasePrevious = true;
 				prune( code, renderingState );
 				code = code->traverseUp();
 				while( checkPrune( renderingState, code, projThresh ) )
@@ -137,19 +162,23 @@ namespace model
 					prune( code, renderingState );
 					code = code->traverseUp();
 				}
+				
+				auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
+				assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
+				OctreeNodePtr node = nodeIt->second;
+				setupNodeRendering( node, code, renderingState );
 			}
 			else if( checkBranch( renderingState, code, projThresh, isCullable ) )
 			{
-				//cout << "Passed branching." << endl << endl;
-				m_front.erase( code );
+				//cout << "Branch" << endl;
+				erasePrevious = true;
 				RandomSampleOctree::traverse( code, renderingState, projThresh );
 			}
 			else
 			{
-				//cout << "Still node." << endl << endl;
+				//cout << "Still" << endl;
 				if( !isCullable )
 				{
-					//cout << "Not Culled." << endl << endl;
 					// No prunning or branching done. Just send the current front node for rendering.
 					auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
 					assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
@@ -161,6 +190,16 @@ namespace model
 			}
 		}
 		
+		// Delete the node from last iteration, if necessary.
+		if( erasePrevious )
+		{
+			m_front.erase( --end );
+		}
+		
+		onTraversalEnd();
+		
+		//cout << "========== Ending front tracking ==========" << endl << endl;
+		
 		return renderingState.render();
 	}
 	
@@ -168,18 +207,16 @@ namespace model
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::prune( const MortonCodePtr& code,
 																		   RenderingState& renderingState )
 	{
-		MortonCodePtr insertedCode = code->traverseUp();
-		MortonVector deletedCodes = insertedCode->traverseDown();
+		MortonVector deletedCodes = code->traverseUp()->traverseDown();
 		
 		for( MortonCodePtr deletedNode : deletedCodes )
 		{
-			m_front.erase( deletedNode );
+			if( deletedNode != code )
+			{
+				//cout << "Pruned: " << hex << deletedNode->getBits() << dec << endl;
+				m_front.erase( deletedNode );
+			}
 		}
-		
-		auto nodeIt = RandomSampleOctree::m_hierarchy->find( insertedCode );
-		assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
-		OctreeNodePtr insertedNode = nodeIt->second;
-		setupNodeRendering( insertedNode, insertedCode, renderingState );
 		
 		//frontDeletionList.insert( frontDeletionList.end(), deletedNodes.begin(), deletedNodes.end() );
 		//frontInsertionList.push_back( insertedNode );
@@ -248,7 +285,8 @@ namespace model
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::setupNodeRendering( OctreeNodePtr node, MortonCodePtr code,
 																						RenderingState& renderingState )
 	{
-		m_front.insert( code );
+		//cout << "Inserted: " << hex << code->getBits() << dec << endl;
+		m_frontInsertionList.push_back( code );
 		
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( renderingState, points );
@@ -257,7 +295,13 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::handleCulledNode( MortonCodePtr code )
 	{
-		m_front.insert( code );
+		m_frontInsertionList.push_back( code );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	void FrontOctree< MortonPrecision, Float, Vec3, Point >::onTraversalEnd()
+	{
+		m_front.insert( m_frontInsertionList.begin(), m_frontInsertionList.end() );
 	}
 	
 	//=====================================================================

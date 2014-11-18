@@ -113,8 +113,8 @@ namespace model
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > genericNode = nodeIt->second;
 			
 			out << "Node: {" << endl << *code << "," << endl;
-			operator<< < PointVector >( out, *genericNode );
-			out << "}" << endl;
+			operator<< < MortonPrecision, Float, Vec3, PointVector >( out, *genericNode );
+			out << endl << "}" << endl << endl;
 		}
 		out << "=========== End Octree ============" << endl << endl;
 		return out;

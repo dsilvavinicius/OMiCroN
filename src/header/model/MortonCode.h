@@ -10,6 +10,8 @@
 #include <boost/functional/hash.hpp>
 #include <glm/ext.hpp>
 
+#include "Stream.h"
+
 using namespace std;
 
 namespace model
@@ -80,6 +82,10 @@ namespace model
 		
 		template< typename Precision >
 		friend ostream& operator<<( ostream& out, const MortonCode<Precision>& dt );
+		
+		template< typename Precision >
+		friend ostream& operator<<( ostream& out, const MortonCodePtr<Precision>& dt );
+		
 	private:
 		/** Spreads the bits to build Morton code. */
 		T spread3( T x );
@@ -207,21 +213,22 @@ namespace model
 			
 			if (simple)
 			{
-				out << "0x" << hex << code.getBits() << dec;
-				do {
+				while( code.getBits() != 1 )
+				{
+					out << "0x" << hex << code.getBits() << dec << "->";
 					code = *code.traverseUp();
-					out << " -> 0x" << hex << code.getBits() << dec;
-				} while( code.getBits() != 1 );	
+				}
+				out << "0x" << hex << code.getBits() << dec;
 			}
 			else
 			{
-				out << code;
-				do {
+				while( code.getBits() != 1 )
+				{
+					out << code << dec << " -> ";
 					code = *code.traverseUp();
-					out << " -> " << code << dec;
-				} while( code.getBits() != 1 );	
+				}
+				out << code << dec;
 			}
-			cout << endl;
 		}
 	
 	template <typename Precision>
@@ -230,9 +237,19 @@ namespace model
 		unsigned int level = code.getLevel();
 		vector< Precision > decoded = code.decode(level);
 		out << "MortonCode: " << endl << "level = " << level << endl
-			<< "coords = " << decoded << endl
-			<< "0x" << hex << code.m_bits << dec << endl
-			<< "parent: 0x" << hex << code.traverseUp()->m_bits << dec << endl;
+			<< "coords = " << decoded << endl;
+		
+		code.printPathToRoot( out, true );
+		
+		out << endl;
+		
+		return out;
+	}
+	
+	template <typename Precision>
+	ostream& operator<<(ostream& out, const MortonCodePtr<Precision>& code)
+	{
+		out << *code;
 		return out;
 	}
 	

@@ -2,6 +2,7 @@
 #define STREAM_H
 
 #include <vector>
+#include <set>
 #include <iostream>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -19,7 +20,7 @@ namespace model
 	template< typename T >
 	ostream& operator<<( ostream& out, const vector< T >& v )
 	{
-		out << "{";
+		out << "{" << endl;
 		bool first = true;
 		for( T element : v )
 		{
@@ -30,10 +31,32 @@ namespace model
 			}
 			else
 			{
-				out << ", " << element;
+				out << endl << ", " << endl << element;
 			}
 		}
-		out << "}";
+		out << "}" << endl;
+		
+		return out;
+	}
+	
+	template< typename T >
+	ostream& operator<<( ostream& out, const set< T >& s )
+	{
+		out << "{" << endl;
+		bool first = true;
+		for( T element : s )
+		{
+			if( first )
+			{
+				out << element;
+				first = false;
+			}
+			else
+			{
+				out << endl << ", " << endl << element;
+			}
+		}
+		out << "}" << endl;
 		
 		return out;
 	}

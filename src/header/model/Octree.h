@@ -124,6 +124,9 @@ namespace model
 		/** Handler called whenever a node is culled on traversal. Default implementation does nothing. */
 		virtual void handleCulledNode( const MortonCodePtr< MortonPrecision > code ) {};
 		
+		/** Event called on traversal ending, before rendering. Default implementation does nothing. */
+		virtual void onTraversalEnd() {};
+		
 		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
 										  const bool& isCullable, const bool& isRenderable );
@@ -384,6 +387,8 @@ namespace model
 		rootCode->build( 0x1 );
 		
 		traverse( rootCode, renderingState, projThresh );
+		
+		onTraversalEnd();
 		
 		return renderingState.render();
 	}
@@ -678,7 +683,7 @@ namespace model
 			{
 				out << "Node: {" << endl << *code << "," << endl;
 				operator<< < MortonPrecision, Float, Vec3, PointVector >( out, *genericNode );
-				out << "}" << endl;
+				out << endl << "}" << endl << endl;
 			}
 			else
 			{
