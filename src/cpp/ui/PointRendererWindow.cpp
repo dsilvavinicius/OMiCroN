@@ -20,7 +20,7 @@ namespace ui
 		m_renderTime( 0.f )
 	{
 		//SimplePointReader reader( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
-		SimplePointReader reader( "../../src/data/real/tempietto_dense.ply", SimplePointReader::SINGLE, COLORS );
+		SimplePointReader reader( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
 		//ExtendedPointReader reader( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE,
 		//							COLORS_AND_NORMALS );
 		
@@ -85,8 +85,8 @@ namespace ui
 		
 		// Render the scene.
 		clock_t timing = clock();
-		//unsigned int numRenderedPoints = m_octree->traverse( painter, m_attribs, m_projThresh );
-		unsigned int numRenderedPoints = m_octree->trackFront( painter, m_attribs, m_projThresh );
+		//OctreeStats stats = m_octree->traverse( painter, m_attribs, m_projThresh );
+		FrontOctreeStats stats = m_octree->trackFront( painter, m_attribs, m_projThresh );
 		timing = clock() - timing;
 		
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
@@ -97,7 +97,7 @@ namespace ui
 		stringstream debugSS;
 		debugSS << "Render time: " << m_renderTime << " ms" << endl
 				<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
-				<< "Rendered points: " << numRenderedPoints << endl;
+				<< stats << endl;
 		
 		//cout << debugSS.str() << endl << endl;
 		

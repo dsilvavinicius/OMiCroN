@@ -80,6 +80,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h				${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h			${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RandomSampleOctree.h
+	${HEADER_DIR}/${MODEL_DIR}/OctreeStats.h
 	${HEADER_DIR}/${MODEL_DIR}/Octree.h
 	${HEADER_DIR}/${MODEL_DIR}/OctreeNode.h
 	${HEADER_DIR}/${MODEL_DIR}/InnerNode.h

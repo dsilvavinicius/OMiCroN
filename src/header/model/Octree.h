@@ -15,6 +15,7 @@
 #include "OctreeMapTypes.h"
 #include "Stream.h"
 #include "RenderingState.h"
+#include "OctreeStats.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ namespace model
 		
 		/** Traverses the octree, rendering all necessary points.
 		 * @returns the number of rendered points. */
-		virtual unsigned long traverse( QGLPainter *painter, const Attributes& attribs, const Float& projThresh );
+		virtual OctreeStats traverse( QGLPainter *painter, const Attributes& attribs, const Float& projThresh );
 		
 		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
@@ -378,7 +379,7 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	unsigned long  OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, const Attributes& attribs,
+	OctreeStats OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, const Attributes& attribs,
 																	  const Float& projThresh )
 	{
 		RenderingState renderingState( painter, attribs );
@@ -390,7 +391,9 @@ namespace model
 		
 		onTraversalEnd();
 		
-		return renderingState.render();
+		unsigned int numRenderedPoints = renderingState.render();
+		
+		return OctreeStats( numRenderedPoints );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
