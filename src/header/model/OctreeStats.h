@@ -30,32 +30,32 @@ namespace model
 	: OctreeStats
 	{
 	public:
-		FrontOctreeStats( const unsigned int numRenderedPoints, const unsigned int numFrontNodes,
-						  const unsigned int numInvalidNodes )
+		FrontOctreeStats( const unsigned int numRenderedPoints, const unsigned int numFrontNodes/*,
+						  const unsigned int numInvalidNodes*/ )
 		: OctreeStats::OctreeStats( numRenderedPoints ),
-		m_numFrontNodes( numFrontNodes ),
-		m_numInvalidNodes( numInvalidNodes ) {}
+		m_numFrontNodes( numFrontNodes )/*,
+		m_numInvalidNodes( numInvalidNodes )*/ {}
 		
-		FrontOctreeStats( OctreeStats& stats, unsigned int numFrontNodes, unsigned int numInvalidNodes )
-		: FrontOctreeStats::FrontOctreeStats( stats.m_numRenderedPoints, numFrontNodes, numInvalidNodes ) {}
+		FrontOctreeStats( OctreeStats& stats, unsigned int numFrontNodes/*, unsigned int numInvalidNodes*/ )
+		: FrontOctreeStats::FrontOctreeStats( stats.m_numRenderedPoints, numFrontNodes/*, numInvalidNodes*/ ) {}
 		
 		FrontOctreeStats( FrontOctreeStats&& other )
 		: OctreeStats( std::move( other ) ),
-		m_numFrontNodes( other.m_numFrontNodes ),
-		m_numInvalidNodes( other.m_numInvalidNodes ) {}
+		m_numFrontNodes( other.m_numFrontNodes )/*,
+		m_numInvalidNodes( other.m_numInvalidNodes )*/ {}
 		
 		friend ostream& operator<<( ostream& out, const FrontOctreeStats& frontOctreeStats )
 		{
 			
 			out << ( OctreeStats& ) frontOctreeStats;
 			out << "Front total nodes: " << frontOctreeStats.m_numFrontNodes << endl
-				<< "Front invalid nodes: " << frontOctreeStats.m_numInvalidNodes << endl;
+				/*<< "Front invalid nodes: " << frontOctreeStats.m_numInvalidNodes << endl*/;
 			return out;
 		}
 		
 	public:
 		const unsigned int m_numFrontNodes;
-		const unsigned int m_numInvalidNodes;
+		//const unsigned int m_numInvalidNodes;
 	};
 }
 
