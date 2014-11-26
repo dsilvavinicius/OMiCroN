@@ -58,17 +58,19 @@ namespace model
 	class FrontOctree
 	: public RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
 	{
+		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using RandomSampleOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
 		using RenderingState = model::RenderingState< Vec3 >;
-		using MortonVector = vector< MortonCodePtr >;
+		using MortonPtrVector = vector< MortonCodePtr >;
+		using MortonVector = vector< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
 		using PointVector = model::PointVector< Float, Vec3 >;
 		using PointVectorPtr = model::PointVectorPtr< Float, Vec3 >;
 		
 		/** The front node is formed by a MortonCodePtr identifier and a boolean indicating the validity of the node
 		 * ( true means valid, false means invalid ). */
-		using Front = unordered_set< MortonCodePtr >;
+		using Front = unordered_set< MortonCode >;
 		
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -135,21 +137,15 @@ namespace model
 																				  const Float& projThresh )
 	{
 		//cout << "========== Starting front tracking ==========" << endl;
-		//m_frontDeletionList.clear();
 		m_frontInsertionList.clear();
 		
-		/*unsigned int frontSize = m_front.size();
-		// If the number of invalid nodes exceeds a threshold, traverse from root, reseting the front.
-		if( m_invalidFrontNodes > frontSize * 0.05 )
+		//
+		/*cout << "Front: " << endl;
+		for( MortonCode code : m_front )
 		{
-			//cout << "Traverse from root." << endl << endl;
-			m_invalidFrontNodes = 0;
-			m_front.clear();
-			OctreeStats stats = RandomSampleOctree::traverse( painter, attribs, projThresh );
-			return FrontOctreeStats( stats, frontSize , m_invalidFrontNodes );
+			cout << hex << code.getBits() << dec << endl;
 		}*/
-		
-		//cout << "Track the front." << endl << endl;
+		//
 		
 		RenderingState renderingState( painter, attribs );
 		
@@ -163,49 +159,25 @@ namespace model
 		
 		for( typename Front::iterator it = m_front.begin(); it != end; prev = it, ++it, end = m_front.end() )
 		{
-			//cout << endl << "Current: " << hex << ( *it )->getBits() << dec << endl;
+			//cout << endl << "Current: " << hex << it->getBits() << dec << endl;
 			if( erasePrevious )
 			{
-				//cout << "Erased: " << hex << ( *prev )->getBits() << dec << endl;
+				//cout << "Erased: " << hex << prev->getBits() << dec << endl;
 				m_front.erase( prev );
 			}
 			erasePrevious = false;
 			
-			MortonCodePtr code = *it;
+			MortonCodePtr code = make_shared< MortonCode >( *it );
 			
 			bool isCullable = false;
-			// Code for non-prunnable front.
-			/*if( checkPrune( renderingState, code, projThresh ) )
-			{
-				//cout << "Prune" << endl;
-				bool& codeState = m_front[ code ];
-				if( codeState )
-				{
-					codeState = false;
-					++m_invalidFrontNodes;
-				}
-				
-				auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
-				assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
-				OctreeNodePtr node = nodeIt->second;
-				
-				PointVectorPtr points = node-> template getContents< PointVector >();
-				renderingState.handleNodeRendering( renderingState, points );
-			}*/
 			
 			// Code for prunnable front
-			bool oneLevelPruneDone = checkPrune( renderingState, code, projThresh );
-			if( oneLevelPruneDone )
+			if( checkPrune( renderingState, code, projThresh ) )
 			{
 				//cout << "Prune" << endl;
 				erasePrevious = true;
 				prune( code, renderingState );
 				code = code->traverseUp();
-				while( checkPrune( renderingState, code, projThresh ) )
-				{
-					prune( code, renderingState );
-					code = code->traverseUp();
-				}
 				
 				auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
 				assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
@@ -215,8 +187,40 @@ namespace model
 			else if( checkBranch( renderingState, code, projThresh, isCullable ) )
 			{
 				//cout << "Branch" << endl;
-				erasePrevious = true;
-				RandomSampleOctree::traverse( code, renderingState, projThresh );
+				erasePrevious = false;
+				
+				MortonPtrVector children = code->traverseDown();
+				
+				for( MortonCodePtr child : children  )
+				{
+					auto nodeIt = RandomSampleOctree::m_hierarchy->find( child );
+					
+					if( nodeIt != RandomSampleOctree::m_hierarchy->end() )
+					{
+						erasePrevious = true;
+						//cout << "Inserted in front: " << hex << child->getBits() << dec << endl;
+						m_frontInsertionList.push_back( *child );
+						
+						QBox3D box = RandomSampleOctree::getBoundaries( child );
+						if( !RandomSampleOctree::isCullable( box, renderingState ) )
+						{
+							//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
+							OctreeNodePtr node = nodeIt->second;
+							PointVectorPtr points = node-> template getContents< PointVector >();
+							renderingState.handleNodeRendering( renderingState, points );
+						}
+					}
+				}
+				
+				if( !erasePrevious )
+				{
+					auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
+					assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
+					
+					OctreeNodePtr node = nodeIt->second;
+					PointVectorPtr points = node-> template getContents< PointVector >();
+					renderingState.handleNodeRendering( renderingState, points );
+				}
 			}
 			else
 			{
@@ -237,6 +241,7 @@ namespace model
 		// Delete the node from last iteration, if necessary.
 		if( erasePrevious )
 		{
+			//cout << "Erased: " << hex << prev->getBits() << dec << endl;
 			m_front.erase( prev );
 		}
 		
@@ -253,24 +258,22 @@ namespace model
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::prune( const MortonCodePtr& code,
 																		   RenderingState& renderingState )
 	{
-		MortonVector deletedCodes = code->traverseUp()->traverseDown();
+		MortonPtrVector deletedCodes = code->traverseUp()->traverseDown();
 		
-		for( MortonCodePtr deletedNode : deletedCodes )
+		for( MortonCodePtr deletedCode : deletedCodes )
 		{
-			if( deletedNode != code )
+			if( *deletedCode != *code )
 			{
-				//cout << "Prunning: " << hex << deletedNode->getBits() << dec << endl;
-				typename Front::iterator it = m_front.find( deletedNode );
+				//cout << "Prunning: " << hex << deletedCode->getBits() << dec << endl;
+				
+				typename Front::iterator it = m_front.find( *deletedCode );
 				if( it != m_front.end()  )
 				{
-					//cout << "Pruned: " << hex << deletedNode->getBits() << dec << endl;
+					//cout << "Pruned: " << hex << deletedCode->getBits() << dec << endl;
 					m_front.erase( it );
 				}
 			}
 		}
-		
-		//frontDeletionList.insert( frontDeletionList.end(), deletedNodes.begin(), deletedNodes.end() );
-		//frontInsertionList.push_back( insertedNode );
 	}
 	
 	
@@ -337,7 +340,7 @@ namespace model
 																						RenderingState& renderingState )
 	{
 		//cout << "Inserted draw: " << hex << code->getBits() << dec << endl;
-		m_frontInsertionList.push_back( code );
+		m_frontInsertionList.push_back( *code );
 		
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( renderingState, points );
@@ -347,16 +350,12 @@ namespace model
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point >::handleCulledNode( MortonCodePtr code )
 	{
 		//cout << "Inserted cull: " << hex << code->getBits() << dec << endl;
-		m_frontInsertionList.push_back( code );
+		m_frontInsertionList.push_back( *code );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	void FrontOctree< MortonPrecision, Float, Vec3, Point >::onTraversalEnd()
 	{
-		/*for( MortonCodePtr code : m_frontInsertionList )
-		{
-			m_front[ code ] = true;
-		}*/
 		m_front.insert( m_frontInsertionList.begin(), m_frontInsertionList.end() );
 	}
 	

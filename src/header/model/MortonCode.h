@@ -170,11 +170,17 @@ namespace model
 	template <typename T>
 	inline vector< MortonCodePtr< T > >  MortonCode<T>::traverseDown() const
 	{
-		vector< MortonCodePtr<T> > children(8);
 		T bits = m_bits;
 		T shifted = bits << 3;
 		
-		assert( shifted > bits && "MortonCode traversal overflow." );
+		if( shifted < bits )
+		{
+			// Overflow: cannot go deeper.
+			return vector< MortonCodePtr<T> >();
+		}
+		//assert( shifted > bits && "MortonCode traversal overflow." );
+		
+		vector< MortonCodePtr<T> > children(8);
 		
 		for (int i = 0; i < 8; ++i)
 		{
@@ -196,13 +202,6 @@ namespace model
 	inline bool MortonCode< T >::operator!=(const MortonCode< T >& other) const
 	{
 		return !( m_bits == other.m_bits );
-	}
-	
-	template< typename T >
-	inline std::size_t hash_value( const MortonCode< T >& code )
-	{
-		boost::hash< T > hasher;
-        return hasher( code.getBits() );
 	}
 	
 	template <typename T>
@@ -341,6 +340,22 @@ namespace model
 		
 		return x;
 	}*/
+}
+
+namespace std
+{
+	template<>
+    struct hash< model::MortonCode< unsigned int > >
+    {
+        typedef model::MortonCode< unsigned int > argument_type;
+        typedef size_t result_type;
+
+        size_t operator()( const model::MortonCode< unsigned int >& code ) const
+        {
+			boost::hash< unsigned int > hasher;
+			return hasher( code.getBits() );
+        }
+    };
 }
 
 #endif
