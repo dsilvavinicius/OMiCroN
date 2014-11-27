@@ -345,14 +345,15 @@ namespace model
 namespace std
 {
 	template<>
-    struct hash< model::MortonCode< unsigned int > >
+	template< typename MortonPrecision >
+    struct hash< model::MortonCode< MortonPrecision > >
     {
-        typedef model::MortonCode< unsigned int > argument_type;
+        typedef model::MortonCode< MortonPrecision > argument_type;
         typedef size_t result_type;
 
-        size_t operator()( const model::MortonCode< unsigned int >& code ) const
+        size_t operator()( const model::MortonCode< MortonPrecision >& code ) const
         {
-			boost::hash< unsigned int > hasher;
+			boost::hash< MortonPrecision > hasher;
 			return hasher( code.getBits() );
         }
     };

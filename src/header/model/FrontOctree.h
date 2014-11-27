@@ -301,6 +301,8 @@ namespace model
 		{
 			return false;
 		}
+		
+		return true;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

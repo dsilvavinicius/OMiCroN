@@ -48,6 +48,7 @@ namespace ui
 		//ShallowRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		//MediumRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		ShallowFrontOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		//MediumFrontOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
 		
 		QPoint m_lastMousePos;
 		

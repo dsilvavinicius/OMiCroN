@@ -36,6 +36,7 @@ namespace ui
 		//m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
 		//m_octree = make_shared< MediumRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		m_octree = make_shared< ShallowFrontOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
+		//m_octree = make_shared< MediumFrontOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		m_octree->build( points );
 		
 		//cout << *m_octree << endl << endl;
