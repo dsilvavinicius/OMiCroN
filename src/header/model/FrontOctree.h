@@ -136,6 +136,8 @@ namespace model
 																					 const Attributes& attribs,
 																				  const Float& projThresh )
 	{
+		clock_t timing = clock();
+		
 		//cout << "========== Starting front tracking ==========" << endl;
 		m_frontInsertionList.clear();
 		
@@ -147,7 +149,7 @@ namespace model
 		}*/
 		//
 		
-		RenderingState renderingState( painter, attribs );
+		TransientRenderingState< Vec3 > renderingState( painter, attribs );
 		
 		// Flag to indicate if the previous front entry should be deleted. This can be done only after the
 		// iterator to the entry to be deleted is incremented. Otherwise the iterator will be invalidated before
@@ -247,11 +249,19 @@ namespace model
 		
 		onTraversalEnd();
 		
+		timing = clock() - timing;
+		float traversalTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+		
+		timing = clock();
+		
 		unsigned int numRenderedPoints = renderingState.render();
+		
+		timing = clock() - timing;
+		float renderingTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 		
 		//cout << "========== Ending front tracking ==========" << endl << endl;
 		
-		return FrontOctreeStats( numRenderedPoints, m_front.size()/* , m_invalidFrontNodes*/ );
+		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_front.size() );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

@@ -10,19 +10,27 @@ namespace model
 	class OctreeStats
 	{
 	public:
-		OctreeStats( const unsigned int numRenderedPoints )
-		: m_numRenderedPoints( numRenderedPoints ) {}
+		OctreeStats( const float traversalTime, const float renderingTime, const unsigned int numRenderedPoints )
+		: m_traversalTime( traversalTime ),
+		m_renderingTime( renderingTime ),
+		m_numRenderedPoints( numRenderedPoints ) {}
 		
 		OctreeStats( OctreeStats&& other )
-		: m_numRenderedPoints( other.m_numRenderedPoints ) {}
+		: m_traversalTime( other.m_traversalTime ),
+		m_renderingTime( other.m_renderingTime ),
+		m_numRenderedPoints( other.m_numRenderedPoints ) {}
 		
 		friend ostream& operator<<( ostream& out, const OctreeStats& octreeStats )
 		{
-			out << "Rendered points: " << octreeStats.m_numRenderedPoints << endl;
+			out << "Traversal time: " << octreeStats.m_traversalTime << endl
+				<< "Rendering time: " << octreeStats.m_renderingTime << endl
+				<< "Rendered points: " << octreeStats.m_numRenderedPoints << endl;
 			return out;
 		}
 		
 	public:
+		const float m_traversalTime;
+		const float m_renderingTime;
 		const unsigned int m_numRenderedPoints;
 	};
 	
@@ -30,32 +38,29 @@ namespace model
 	: OctreeStats
 	{
 	public:
-		FrontOctreeStats( const unsigned int numRenderedPoints, const unsigned int numFrontNodes/*,
-						  const unsigned int numInvalidNodes*/ )
-		: OctreeStats::OctreeStats( numRenderedPoints ),
-		m_numFrontNodes( numFrontNodes )/*,
-		m_numInvalidNodes( numInvalidNodes )*/ {}
+		FrontOctreeStats( const float traversalTime, const float renderingTime, const unsigned int numRenderedPoints,
+						  const unsigned int numFrontNodes )
+		: OctreeStats::OctreeStats( traversalTime, renderingTime, numRenderedPoints ),
+		m_numFrontNodes( numFrontNodes ) {}
 		
-		FrontOctreeStats( OctreeStats& stats, unsigned int numFrontNodes/*, unsigned int numInvalidNodes*/ )
-		: FrontOctreeStats::FrontOctreeStats( stats.m_numRenderedPoints, numFrontNodes/*, numInvalidNodes*/ ) {}
+		FrontOctreeStats( OctreeStats& stats, unsigned int numFrontNodes )
+		: FrontOctreeStats::FrontOctreeStats( stats.m_traversalTime, stats.m_renderingTime, stats.m_numRenderedPoints,
+											  numFrontNodes ) {}
 		
 		FrontOctreeStats( FrontOctreeStats&& other )
 		: OctreeStats( std::move( other ) ),
-		m_numFrontNodes( other.m_numFrontNodes )/*,
-		m_numInvalidNodes( other.m_numInvalidNodes )*/ {}
+		m_numFrontNodes( other.m_numFrontNodes ) {}
 		
 		friend ostream& operator<<( ostream& out, const FrontOctreeStats& frontOctreeStats )
 		{
 			
 			out << ( OctreeStats& ) frontOctreeStats;
-			out << "Front total nodes: " << frontOctreeStats.m_numFrontNodes << endl
-				/*<< "Front invalid nodes: " << frontOctreeStats.m_numInvalidNodes << endl*/;
+			out << "Front total nodes: " << frontOctreeStats.m_numFrontNodes << endl;
 			return out;
 		}
 		
 	public:
 		const unsigned int m_numFrontNodes;
-		//const unsigned int m_numInvalidNodes;
 	};
 }
 

@@ -17,20 +17,20 @@ namespace model
 		COLORS_AND_NORMALS = 0x3
 	};
 	
-	/** Transient rendering related data used while traversing octree. USAGE: call handleNodeRendering()
-	 * to indicate that the contents of an octree node should be rendered. After all nodes are issued for
-	 * rendering, call render() to render them all.
+	/** Rendering related data used while traversing octree. USAGE: call setPainter() when the painter is known in the
+	 * rendering loop and call several handleNodeRendering() afterwards to indicate that the contents of octree nodes should be
+	 * rendered. After all nodes are issued for rendering, call render() to render them all.
 	 * @param Vec3 is the type for 3-dimensional vector. */
 	template< typename Vec3 >
 	class RenderingState
 	{
 	public:
-		RenderingState( QGLPainter* painter, const Attributes& attribs );
+		RenderingState( const Attributes& attribs );
 		
 		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
 		 * been already handled.
 		 * @returns the number of rendered points. */
-		unsigned int render();
+		virtual unsigned int render() = 0;
 		
 		/** Indicates that the node contents passed should be rendered. A static method was used to overcome C++ limitation of
 		* class member specializations.
@@ -40,11 +40,15 @@ namespace model
 		void handleNodeRendering( RenderingState< Vec3 >& state, const NodeContents& contents );
 		
 		QGLPainter* getPainter() { return m_painter; };
+		
+		/** This method should be called on the starting of the rendering loop, when the painter is known. */
+		void setPainter( QGLPainter* painter ) { m_painter = painter; }
+		
 		vector< Vec3 >& getPositions() { return m_positions; };
 		vector< Vec3 >& getColors() { return m_colors; };
 		vector< Vec3 >& getNormals() { return m_normals; };
 	
-	private:
+	protected:
 		QGLPainter* m_painter;
 		vector< Vec3 > m_positions;
 		vector< Vec3 > m_colors;
@@ -53,66 +57,8 @@ namespace model
 	};
 	
 	template< typename Vec3 >
-	RenderingState< Vec3 >::RenderingState( QGLPainter* painter, const Attributes& attribs )
-	: m_painter( painter ),
-	m_attribs( attribs )
-	{
-		m_painter->clearAttributes();
-		
-		switch( m_attribs )
-		{
-			case Attributes::NORMALS:
-			{
-				m_painter->setStandardEffect( QGL::LitMaterial );
-				break;
-			}
-			case Attributes::COLORS:
-			{
-				m_painter->setStandardEffect( QGL::FlatPerVertexColor );
-				break;
-			}
-			case Attributes::COLORS_AND_NORMALS:
-			{
-				throw logic_error( "Colors and normals not supported yet." );
-				break;
-			}
-		}
-	}
-	
-	template< typename Vec3 >
-	unsigned int RenderingState< Vec3 >::render()
-	{
-		// TODO: Find a way to specify the precision properly here,
-		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &m_positions[0] );
-		QGLAttributeValue colorValues( 3, GL_FLOAT, 0, &m_colors[0] );
-		m_painter->setVertexAttribute( QGL::Position, pointValues );
-		
-		switch( m_attribs )
-		{
-			case Attributes::NORMALS:
-			{
-				m_painter->setVertexAttribute( QGL::Normal, colorValues );
-				break;
-			}
-			case Attributes::COLORS:
-			{
-				m_painter->setVertexAttribute( QGL::Color, colorValues );
-				break;
-			}
-			case Attributes::COLORS_AND_NORMALS:
-			{
-				QGLAttributeValue normalValues( 3, GL_FLOAT, 0, &m_normals[0] );
-				m_painter->setVertexAttribute( QGL::Color, colorValues );
-				m_painter->setVertexAttribute( QGL::Normal, normalValues );
-				break;
-			}
-		}
-		
-		unsigned int numRenderedPoints = m_positions.size();
-		m_painter->draw( QGL::Points, numRenderedPoints );
-		
-		return numRenderedPoints;
-	}
+	RenderingState< Vec3 >::RenderingState( const Attributes& attribs )
+	: m_attribs( attribs ) {}
 	
 	namespace NodeRenderingHandler
 	{

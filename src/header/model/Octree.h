@@ -3,6 +3,7 @@
 
 #include <cassert>
 #include <map>
+#include <ctime>
 #include <glm/ext.hpp>
 #include <Qt3D/QGLPainter>
 
@@ -14,7 +15,7 @@
 #include "OctreeTypes.h"
 #include "OctreeMapTypes.h"
 #include "Stream.h"
-#include "RenderingState.h"
+#include "TransientRenderingState.h"
 #include "OctreeStats.h"
 
 using namespace std;
@@ -382,7 +383,9 @@ namespace model
 	OctreeStats OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, const Attributes& attribs,
 																	  const Float& projThresh )
 	{
-		RenderingState renderingState( painter, attribs );
+		clock_t timing = clock();
+		
+		TransientRenderingState< Vec3 > renderingState( painter, attribs );
 		
 		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
 		rootCode->build( 0x1 );
@@ -391,9 +394,17 @@ namespace model
 		
 		onTraversalEnd();
 		
-		unsigned int numRenderedPoints = renderingState.render();
+		timing = clock() - timing;
+		float traversalTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 		
-		return OctreeStats( numRenderedPoints );
+		timing = clock();
+		
+		unsigned int numRenderedPoints = renderingState.render();
+		timing = clock() - timing;
+		
+		float renderingTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+		
+		return OctreeStats( traversalTime, renderingTime, numRenderedPoints );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -601,7 +612,7 @@ namespace model
 		vector< Vec3 > verts;
 		vector< Vec3 > colors;
 		
-		RenderingState renderingState( painter, COLORS );
+		TransientRenderingState< Vec3 > renderingState( painter, COLORS );
 		
 		for (pair< MortonCodePtr< MortonPrecision >, OctreeNodePtr< MortonPrecision, Float, Vec3 > > entry : *m_hierarchy)
 		{
