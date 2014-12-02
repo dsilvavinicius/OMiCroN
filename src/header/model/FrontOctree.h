@@ -3,56 +3,11 @@
 
 #include <unordered_set>
 
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/identity.hpp>
-#include <boost/multi_index/member.hpp>
-
 #include "RandomSampleOctree.h"
 #include "FrontWrapper.h"
-//using boost::multi_index_container;
-//using namespace ::boost;
-//using namespace boost::multi_index;
 
 namespace model
 {
-	/** Bidirectional map with an ordered index and a hashed index. */
-	/*template< typename FromType, typename ToType >
-	struct BidirectionalMap
-	{
-		struct from{};
-		struct to{};
-		
-		struct ValueType
-		{
-			ValueType( const FromType& first, const ToType& second ):
-			m_first( first ),
-			m_second( second )
-			{}
-
-			FromType m_first;
-			ToType   m_second;
-		};
-		
-		using Container = multi_index_container<
-			ValueType,
-			indexed_by<
-				ordered_unique<
-					tag< from >, member< ValueType, FromType, &ValueType::m_first > >,
-				hashed_unique<
-					tag< to >,   member< ValueType, ToType,   &ValueType::m_second > >
-			>
-		>;
-	};*/
-	
-	/** Hierarchy front. The front is formed by all nodes in which the hierarchy traversal ends. */
-	/*template< typename MortonPrecision >
-	using Front = typename BidirectionalMap< unsigned long, MortonCodePtr< MortonPrecision > >::Container;
-	
-	using ShallowFront = Front< unsigned int >;
-	using DeepFront = Front< unsigned long >;*/
-	
 	/** Octree that supports temporal coherence by hierarchy front tracking. */
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	class FrontOctree
