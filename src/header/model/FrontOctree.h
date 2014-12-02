@@ -10,7 +10,7 @@
 #include <boost/multi_index/member.hpp>
 
 #include "RandomSampleOctree.h"
-
+#include "FrontWrapper.h"
 //using boost::multi_index_container;
 //using namespace ::boost;
 //using namespace boost::multi_index;
@@ -53,65 +53,6 @@ namespace model
 	using ShallowFront = Front< unsigned int >;
 	using DeepFront = Front< unsigned long >;*/
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
-	class FrontOctree;
-	
-	/** Wrapper used to specialize just some parts of the front behavior. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
-	struct FrontWrapper
-	{
-		using RenderingState = model::RenderingState< Vec3 >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front >;
-		
-		/** Tracks the octree front.
-		 * @returns true if the last node should be deleted, false otherwise. */
-		static void trackFront( FrontOctree& octree, RenderingState& renderingState, const Float& projThresh );
-	};
-	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	struct FrontWrapper< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > > >
-	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
-		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
-		using RenderingState = model::RenderingState< Vec3 >;
-		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front >;
-		
-		static void trackFront( FrontOctree& octree, RenderingState& renderingState, const Float& projThresh )
-		{
-			// Flag to indicate if the previous front entry should be deleted. This can be done only after the
-			// iterator to the entry to be deleted is incremented. Otherwise the iterator will be invalidated before
-			// increment.
-			bool erasePrevious = false;
-			
-			typename Front::iterator end = octree.m_front.end();
-			typename Front::iterator prev;
-			
-			for( typename Front::iterator it = octree.m_front.begin(); it != end; prev = it, ++it,
-				end = octree.m_front.end() )
-			{
-				//cout << endl << "Current: " << hex << it->getBits() << dec << endl;
-				if( erasePrevious )
-				{
-					//cout << "Erased: " << hex << prev->getBits() << dec << endl;
-					octree.m_front.erase( prev );
-				}
-				//erasePrevious = false;
-				
-				MortonCodePtr code = make_shared< MortonCode >( *it );
-				
-				erasePrevious = octree.trackNode( code, renderingState, projThresh );
-			}
-			
-			// Delete the node from last iteration, if necessary.
-			if( erasePrevious )
-			{
-				//cout << "Erased: " << hex << prev->getBits() << dec << endl;
-				octree.m_front.erase( prev );
-			}
-		}
-	};
-	
 	/** Octree that supports temporal coherence by hierarchy front tracking. */
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	class FrontOctree
@@ -126,8 +67,9 @@ namespace model
 		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
 		using PointVector = model::PointVector< Float, Vec3 >;
 		using PointVectorPtr = model::PointVectorPtr< Float, Vec3 >;
+		using FrontWrapper = model::FrontWrapper< MortonPrecision, Float, Vec3, Point, Front >;
 		
-		friend struct FrontWrapper< MortonPrecision, Float, Vec3, Point, Front >;
+		friend FrontWrapper;
 		
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -144,7 +86,7 @@ namespace model
 		bool checkPrune( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const;
 		
 		/** Creates the deletion and insertion entries related with the prunning of the node and their siblings. */
-		void prune( const MortonCodePtr& code, RenderingState& renderingState );
+		void prune( const MortonCodePtr& code );
 		
 		/** Check if the node should be branched, giving place to its children.
 		 * @param isCullable is an output that indicates if the node was culled by frustrum. */
@@ -201,7 +143,7 @@ namespace model
 		
 		TransientRenderingState< Vec3 > renderingState( painter, attribs );
 		
-		FrontWrapper< MortonPrecision, Float, Vec3, Point, Front >::trackFront( *this, renderingState, projThresh );
+		FrontWrapper::trackFront( *this, renderingState, projThresh );
 		
 		onTraversalEnd();
 		
@@ -232,7 +174,7 @@ namespace model
 		{
 			//cout << "Prune" << endl;
 			erasePrevious = true;
-			prune( code, renderingState );
+			prune( code );
 			code = code->traverseUp();
 			
 			auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
@@ -297,25 +239,9 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::prune( const MortonCodePtr& code,
-																				  RenderingState& renderingState )
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::prune( const MortonCodePtr& code )
 	{
-		MortonPtrVector deletedCodes = code->traverseUp()->traverseDown();
-		
-		for( MortonCodePtr deletedCode : deletedCodes )
-		{
-			if( *deletedCode != *code )
-			{
-				//cout << "Prunning: " << hex << deletedCode->getBits() << dec << endl;
-				
-				typename Front::iterator it = m_front.find( *deletedCode );
-				if( it != m_front.end()  )
-				{
-					//cout << "Pruned: " << hex << deletedCode->getBits() << dec << endl;
-					m_front.erase( it );
-				}
-			}
-		}
+		FrontWrapper::prune( *this, code );
 	}
 	
 	
@@ -396,7 +322,7 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::onTraversalEnd()
 	{
-		m_front.insert( m_frontInsertionList.begin(), m_frontInsertionList.end() );
+		FrontWrapper::insert( *this, m_frontInsertionList );
 	}
 	
 	//=====================================================================
