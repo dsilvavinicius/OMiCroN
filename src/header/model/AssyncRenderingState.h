@@ -2,7 +2,6 @@
 #define ASSYNC_RENDERING_STATE
 
 #include "RenderingState.h"
-#include <GL/gl.h>
 
 namespace model
 {

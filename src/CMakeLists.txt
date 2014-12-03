@@ -79,6 +79,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h
 	${HEADER_DIR}/${MODEL_DIR}/AssyncRenderingState.h
+	${HEADER_DIR}/${MODEL_DIR}/CompactionRenderingState.h
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h				${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h			${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RandomSampleOctree.h
@@ -111,6 +112,8 @@ add_executable (Point_Based_Renderer
 	./CMakeLists.txt)
 target_include_directories (Point_Based_Renderer PUBLIC Point_Based_Renderer_Lib)
 target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)
-	
+
+file( COPY "shaders" ${CMAKE_CURRENT_BINARY_DIR}/shaders )
+
 # Tests directory.
 add_subdirectory (test)

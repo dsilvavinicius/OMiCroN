@@ -1,0 +1,18 @@
+layout( local_size_x = 1024 ) in;
+
+layout( binding = 0 ) coherent buffer block1
+{
+	float flags[ gl_WorkGroupSize.x ];
+};
+
+layout( binding = 1 ) coherent buffer block2
+{
+	float prefixSum[ gl_WorkGroupSize.x ];
+};
+
+layout( binding = 2 ) coherent buffer block3
+{
+	float prefixSum[ gl_WorkGroupSize.x ];
+};
+
+shared float shared_data[ gl_WorkGroupSize.x * 2 ];
