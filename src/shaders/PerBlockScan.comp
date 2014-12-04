@@ -1,0 +1,88 @@
+#version 430 core
+
+// Per-block prefix-sum ( scan ) implementation based on Eficient Parallel Scan Algorithms for GPUs
+// ( http://mgarland.org/files/papers/nvr-2008-003.pdf ).
+
+layout( local_size_x = 1024 ) in;
+
+layout( binding = 0 ) coherent buffer block1
+{
+	float gInput[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+};
+
+layout( binding = 1 ) coherent buffer block2
+{
+	float gOutput[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+};
+
+shared float sScan[ gl_WorkGroupSize.x ];
+
+// Warp scan. Warp size is assumed to be equal 32. Because Compute Shaders are SIMT, there is no need for syncs. Loop was unrolled.
+uint scanWarp()
+{
+	const uint idx = gl_LocalInvocationIndex;
+	const uint lane = idx & 31;
+	
+	// index of thread in warp (0..31)
+	if( lane >= 1 ) sScan[ idx ] = sScan[ idx - 1 ] + sScan[ idx ];
+	
+	if( lane >= 2 ) sScan[ idx ] = sScan[ idx - 2 ] + sScan[ idx ];
+	
+	if( lane >= 4 ) sScan[ idx ] = sScan[ idx - 4 ] + sScan[ idx ];
+	
+	if( lane >= 8 ) sScan[ idx ] = sScan[ idx - 8 ] + sScan[ idx ];
+	
+	if( lane >= 16 ) sScan[ idx ] = sScan[ idx - 16 ] + sScan[ idx ];
+
+	return (lane >0) ? sScan[ idx -1 ] : 0;
+}
+
+// Block scan.
+uint scanBlock()
+{
+	const uint idx = gl_LocalInvocationIndex;
+	const uint lane = idx & 31;
+	const uint warpid = idx >> 5;
+
+	// Step 1: Intra -warp scan in each warp
+	T val = scanWarp();
+	barrier();
+	memoryBarrierShared();
+	
+	// Step 2: Collect per-warp partial results
+	if( lane==31 ) sScan[ warpid ] = sScan[ idx ];
+	barrier();
+	memoryBarrierShared();
+
+	// Step 3: Use 1st warp to scan per-warp results
+	if( warpid==0 ) scanWarp();
+	barrier();
+	memoryBarrierShared();
+
+	// Step 4: Accumulate results from Steps 1 and 3
+	if( warpid > 0 ) val = sScan[ warpid - 1 ] + val;
+	barrier();
+	memoryBarrierShared();
+
+	// Step 5: Write and return the final result
+	sScan[ idx ] = val;
+	barrier();
+	memoryBarrierShared();
+
+	return val;
+}
+
+void main( void )
+{
+	uint idx = gl_LocalInvocationIndex;
+	uint globalIdx = gl_GlobalInvocationID.x;
+	
+	// Acquire data from global memory input array.
+	sScan[ idx ] = gInput[ globalIdx ];
+	barrier();
+	memoryBarrierShared();
+	
+	uint val = scanBlock();
+	
+	gOutput[ idx ] = sScan[ globalIdx ];
+}
