@@ -1,0 +1,32 @@
+#version 430 core
+
+// Implementation of the 3rd pass of parallel scan algorithm described in Eficient Parallel Scan Algorithms for GPUs
+// ( http://mgarland.org/files/papers/nvr-2008-003.pdf ). In this pass the global prefixes are summed to all per-block prefixes.
+
+layout( local_size_x = 1024 ) in;
+
+layout( binding = 0 ) coherent buffer block0
+{
+	uint gScan[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+};
+
+layout( binding = 1 ) coherent buffer block1
+{
+	uint gGlobalPrefixes[ gl_WorkGroupSize.x ];
+};
+
+shared uint sGlobalPrefix;
+
+void main()
+{
+	if( gl_LocalInvocationIndex == 0 )
+	{
+		sGlobalPrefix = gGlobalPrefixes[ gl_WorkGroupID.x ];
+	}
+	barrier();
+	memoryBarrierShared();	
+	
+	uint globalIdx = gl_GlobalInvocationID.x;
+	
+	gScan[ globalIdx ] = gScan[ globalIdx ] + sGlobalPrefix;
+}

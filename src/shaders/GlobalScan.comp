@@ -1,18 +1,24 @@
 #version 430 core
 
-// Implementation of the 1st pass of parallel scan algorithm described in Eficient Parallel Scan Algorithms for GPUs
-// ( http://mgarland.org/files/papers/nvr-2008-003.pdf ). This pass is the per-block scan.
+// Implementation of the 2nd pass of parallel scan algorithm described in Eficient Parallel Scan Algorithms for GPUs
+// ( http://mgarland.org/files/papers/nvr-2008-003.pdf ). This pass is the calculation of global prefixes to be summed to the prefixes
+// found on 1st pass.
 
 layout( local_size_x = 1024 ) in;
 
 layout( binding = 0 ) coherent buffer block0
 {
-	uint gInput[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+	uint gOriginalValues[];
 };
 
 layout( binding = 1 ) coherent buffer block1
 {
-	uint gPerBlockScan[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+	uint gPerBlockScan[];
+};
+
+layout( binding = 2 ) coherent buffer block2
+{
+	uint gGlobalPrefixes[ gl_WorkGroupSize.x ];
 };
 
 shared uint sScan[ gl_WorkGroupSize.x ];
@@ -75,16 +81,18 @@ uint scanBlock()
 void main( void )
 {
 	uint idx = gl_LocalInvocationIndex;
-	uint globalIdx = gl_GlobalInvocationID.x;
+	uint numBlocks = ceil( (float) gPerBlockScan.length / gl_WorkGroupSize );
 	
-	// Transfer data from global memory input array to shared memory.
-	sScan[ idx ] = gInput[ globalIdx ];
+	uint rIdx = idx * gl_WorkGroupSize + gl_WorkGroupSize - 1;
+	
+	// The original value of the last elements in the block is added to perform an inclusive scan in the associated block.
+	uint val = ( idx < numBlocks) ? gPerBlockScan[ rIdx ] + gOriginalValues[ rIdx ] : 0;
+	
+	sScan[ idx ] = val;
 	barrier();
 	memoryBarrierShared();
 	
-	// Do the per block scan.
-	uint val = scanBlock();
+	val = scanBlock();
 	
-	// Output.
-	gPerBlockScan[ idx ] = sScan[ globalIdx ];
+	gGlobalPrefixes[ idx ] = val;
 }
