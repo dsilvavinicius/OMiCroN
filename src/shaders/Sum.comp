@@ -5,12 +5,12 @@
 
 layout( local_size_x = 1024 ) in;
 
-layout( binding = 0 ) coherent buffer block0
+layout( binding = 0 ) coherent buffer scan
 {
 	uint gScan[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
 };
 
-layout( binding = 1 ) coherent buffer block1
+layout( binding = 1 ) coherent buffer globalPrefixes
 {
 	uint gGlobalPrefixes[ gl_WorkGroupSize.x ];
 };

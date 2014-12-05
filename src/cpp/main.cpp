@@ -11,9 +11,7 @@ int main(int argc, char **argv)
 	format.setSamples(16);
 
 	PointRendererWindow window(format);
-	//window.setFormat(format);
 	window.resize(640, 480);
-	//window.setAnimating(true);
 	window.show();
 
     return app.exec();

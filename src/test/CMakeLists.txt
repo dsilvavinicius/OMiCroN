@@ -5,7 +5,8 @@
 
 create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
-include_directories (include/)
+include_directories( include/
+	${HEADER_DIR}/${MODEL_DIR}/ )
 
 add_subdirectory (gtest/)
 
@@ -17,6 +18,8 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
+	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h	${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
+	${CPP_DIR}/${MODEL_DIR}/ScanTest.cpp
 	
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
 	${CPP_DIR}/main.cpp)

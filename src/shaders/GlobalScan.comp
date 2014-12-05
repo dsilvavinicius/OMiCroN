@@ -6,17 +6,17 @@
 
 layout( local_size_x = 1024 ) in;
 
-layout( binding = 0 ) coherent buffer block0
+layout( binding = 0 ) coherent buffer original
 {
 	uint gOriginalValues[];
 };
 
-layout( binding = 1 ) coherent buffer block1
+layout( binding = 1 ) coherent buffer perBlockScan
 {
 	uint gPerBlockScan[];
 };
 
-layout( binding = 2 ) coherent buffer block2
+layout( binding = 2 ) coherent buffer globalPrefixes
 {
 	uint gGlobalPrefixes[ gl_WorkGroupSize.x ];
 };

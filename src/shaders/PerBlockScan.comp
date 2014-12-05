@@ -5,17 +5,17 @@
 
 layout( local_size_x = 1024 ) in;
 
-layout( binding = 0 ) coherent buffer block0
+layout( binding = 0 ) coherent buffer original
 {
-	uint gInput[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+	uint gInput[];
 };
 
-layout( binding = 1 ) coherent buffer block1
+layout( binding = 1 ) coherent buffer perBlockScan
 {
-	uint gPerBlockScan[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+	uint gPerBlockScan[];
 };
 
-shared uint sScan[ gl_WorkGroupSize.x ];
+shared uint sScan[ 1024 ];
 
 // Warp scan. Warp size is assumed to be equal 32. Because Compute Shaders are SIMT, there is no need for sync. Loop was unrolled.
 uint scanWarp()
