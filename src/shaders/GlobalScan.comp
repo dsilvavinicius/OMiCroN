@@ -21,7 +21,7 @@ layout( binding = 2 ) coherent buffer globalPrefixes
 	uint gGlobalPrefixes[ gl_WorkGroupSize.x ];
 };
 
-shared uint sScan[ gl_WorkGroupSize.x ];
+shared uint sScan[ 1024 ];
 
 // Warp scan. Warp size is assumed to be equal 32. Because Compute Shaders are SIMT, there is no need for sync. Loop was unrolled.
 uint scanWarp()
@@ -30,17 +30,39 @@ uint scanWarp()
 	const uint lane = idx & 31;
 	
 	// index of thread in warp (0..31)
-	if( lane >= 1 ) sScan[ idx ] = sScan[ idx - 1 ] + sScan[ idx ];
+	if( lane >= 1 )
+	{
+		sScan[ idx ] = sScan[ idx - 1 ] + sScan[ idx ];
+	}
 	
-	if( lane >= 2 ) sScan[ idx ] = sScan[ idx - 2 ] + sScan[ idx ];
+	if( lane >= 2 )
+	{
+		sScan[ idx ] = sScan[ idx - 2 ] + sScan[ idx ];
+	}
 	
-	if( lane >= 4 ) sScan[ idx ] = sScan[ idx - 4 ] + sScan[ idx ];
+	if( lane >= 4 )
+	{
+		sScan[ idx ] = sScan[ idx - 4 ] + sScan[ idx ];
+	}
 	
-	if( lane >= 8 ) sScan[ idx ] = sScan[ idx - 8 ] + sScan[ idx ];
+	if( lane >= 8 )
+	{
+		sScan[ idx ] = sScan[ idx - 8 ] + sScan[ idx ];
+	}
 	
-	if( lane >= 16 ) sScan[ idx ] = sScan[ idx - 16 ] + sScan[ idx ];
+	if( lane >= 16 )
+	{
+		sScan[ idx ] = sScan[ idx - 16 ] + sScan[ idx ];
+	}
 
-	return ( lane > 0 ) ? sScan[ idx -1 ] : 0;
+	if( lane > 0 )
+	{
+		return sScan[ idx -1 ];
+	}
+	else
+	{
+		return 0;
+	}
 }
 
 // Block scan.
@@ -51,22 +73,31 @@ uint scanBlock()
 	const uint warpid = idx >> 5;
 
 	// Step 1: Intra -warp scan in each warp
-	T val = scanWarp();
+	uint val = scanWarp();
 	barrier();
 	memoryBarrierShared();
 	
 	// Step 2: Collect per-warp partial results
-	if( lane==31 ) sScan[ warpid ] = sScan[ idx ];
+	if( lane==31 )
+	{
+		sScan[ warpid ] = sScan[ idx ];
+	}
 	barrier();
 	memoryBarrierShared();
 
 	// Step 3: Use 1st warp to scan per-warp results
-	if( warpid==0 ) scanWarp();
+	if( warpid==0 )
+	{
+		scanWarp();
+	}
 	barrier();
 	memoryBarrierShared();
 
 	// Step 4: Accumulate results from Steps 1 and 3
-	if( warpid > 0 ) val = sScan[ warpid - 1 ] + val;
+	if( warpid > 0 )
+	{
+		val = sScan[ warpid - 1 ] + val;
+	}
 	barrier();
 	memoryBarrierShared();
 
@@ -80,13 +111,25 @@ uint scanBlock()
 
 void main( void )
 {
+	// Just one block runs on this Compute Shader. Each thread t(i) of this block calculates the prefix sum for one
+	// segment s(i) of the scan array generated on 1st pass ( per-block scan ).
 	uint idx = gl_LocalInvocationIndex;
-	uint numBlocks = ceil( (float) gPerBlockScan.length / gl_WorkGroupSize );
+	uint numBlocks = uint( ceil( float( gPerBlockScan.length ) / gl_WorkGroupSize.x ) );
 	
-	uint rIdx = idx * gl_WorkGroupSize + gl_WorkGroupSize - 1;
-	
-	// The original value of the last elements in the block is added to perform an inclusive scan in the associated block.
-	uint val = ( idx < numBlocks) ? gPerBlockScan[ rIdx ] + gOriginalValues[ rIdx ] : 0;
+	uint val;
+	if( idx > 0 && idx < numBlocks )
+	{
+		// rIdx is the index for the last element of segment s(i-1). Used to compute the prefix of segment s(i).
+		uint rIdx = idx * gl_WorkGroupSize.x;
+		
+		// The original value of the last element in s(i-1) is added to perform an inclusive scan in s(i-1). s(i-1) is
+		// equal to the prefix sum of segment s(i).
+		val = gPerBlockScan[ rIdx ] + gOriginalValues[ rIdx ];
+	}
+	else
+	{
+		val = 0;
+	}
 	
 	sScan[ idx ] = val;
 	barrier();

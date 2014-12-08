@@ -35,22 +35,21 @@ namespace model
 			{
 				case PER_BLOCK_SCAN :
 				{
-					program->addShaderFromSourceFile( QOpenGLShader::Compute, (shaderFolder + "/PerBlockScan.comp").c_str() );
+					program->addShaderFromSourceFile( QOpenGLShader::Compute, ( shaderFolder + "/PerBlockScan.comp" ).c_str() );
 					break;
 				}
 				case GLOBAL_SCAN :
 				{
-					program->addShaderFromSourceFile( QOpenGLShader::Compute, (shaderFolder + "/GlobalScan.comp").c_str() );
+					program->addShaderFromSourceFile( QOpenGLShader::Compute, ( shaderFolder + "/GlobalScan.comp" ).c_str() );
 					break;
 				}
 				case FINAL_SUM :
 				{
-					program->addShaderFromSourceFile( QOpenGLShader::Compute, (shaderFolder + "/Sum.comp").c_str() ); break;
+					program->addShaderFromSourceFile( QOpenGLShader::Compute, ( shaderFolder + "/Sum.comp" ).c_str() ); break;
 				}
 			}
-			
 			program->link();
-			cout << program->log().toStdString();
+			cout << "Linked correctly? " << program->isLinked() << endl;
 			
 			program->bind();
 			
