@@ -2,7 +2,6 @@
 
 // Implementation of the 1st pass of parallel scan algorithm described in Eficient Parallel Scan Algorithms for GPUs
 // ( http://mgarland.org/files/papers/nvr-2008-003.pdf ). This pass is the per-block scan.
-
 layout( local_size_x = 1024 ) in;
 
 layout( binding = 0 ) coherent buffer original

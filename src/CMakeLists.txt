@@ -114,7 +114,19 @@ add_executable (Point_Based_Renderer
 target_include_directories (Point_Based_Renderer PUBLIC Point_Based_Renderer_Lib)
 target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)
 
-file( COPY "shaders" DESTINATION ${CMAKE_CURRENT_BINARY_DIR} )
+# Shader files copy target.
+add_custom_target( Copy )
+get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
+get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
+add_custom_command( TARGET Copy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders ${Renderer_Dir}/shaders )
+add_dependencies( Point_Based_Renderer Copy )
+
+#add_custom_command( TARGET Point_Based_Renderer_Lib POST_BUILD
+#	COMMAND ${CMAKE_COMMAND} -E remove_directory $<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/shaders
+#	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders
+#		$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/shaders
+#)
 
 # Tests directory.
 add_subdirectory (test)
