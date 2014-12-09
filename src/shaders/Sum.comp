@@ -7,12 +7,12 @@ layout( local_size_x = 1024 ) in;
 
 layout( binding = 0 ) coherent buffer scan
 {
-	uint gScan[ gl_WorkGroupSize.x * gl_NumWorkGroups ];
+	uint gScan[];
 };
 
 layout( binding = 1 ) coherent buffer globalPrefixes
 {
-	uint gGlobalPrefixes[ gl_WorkGroupSize.x ];
+	uint gGlobalPrefixes[];
 };
 
 shared uint sGlobalPrefix;

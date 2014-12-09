@@ -45,7 +45,8 @@ namespace model
 				}
 				case FINAL_SUM :
 				{
-					program->addShaderFromSourceFile( QOpenGLShader::Compute, ( shaderFolder + "/Sum.comp" ).c_str() ); break;
+					program->addShaderFromSourceFile( QOpenGLShader::Compute, ( shaderFolder + "/Sum.comp" ).c_str() );
+					break;
 				}
 			}
 			program->link();

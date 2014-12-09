@@ -2,8 +2,12 @@
 #include "Stream.h"
 #include <gtest/gtest.h>
 #include <iostream>
+#include <QApplication>
 
 using namespace std;
+
+extern "C" int g_argc;
+extern "C" char** g_argv;
 
 namespace util
 {
@@ -12,12 +16,25 @@ namespace util
         class PlyPointReaderTest : public ::testing::Test
 		{
 		protected:
-			void SetUp() {}
+			static void SetUpTestCase() {
+				QApplication app( g_argc, g_argv );
+				m_appDirPath = new string( QCoreApplication::applicationDirPath().toStdString() );
+			}
+			
+			static void TearDownTestCase() {
+				delete m_appDirPath;
+				m_appDirPath = nullptr;
+			}
+			
+			static string* m_appDirPath;
 		};
+		
+		string* PlyPointReaderTest::m_appDirPath = NULL;
 
 		TEST_F( PlyPointReaderTest, Read )
 		{
-			SimplePointReader reader( "../../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
+			SimplePointReader reader( *m_appDirPath + "/../../../src/data/tests/test.ply",
+									  SimplePointReader::SINGLE, COLORS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
 			Point< float, vec3 > expectedPoint0( vec3( ( float )81 / 255, ( float )63 / 255, ( float )39 / 255 ),
@@ -37,7 +54,9 @@ namespace util
 		
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
-			SimplePointReader reader( "../../../src/data/tests/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
+			
+			SimplePointReader reader( *m_appDirPath + "/../../../src/data/tests/test_normals.ply",
+									  SimplePointReader::SINGLE, NORMALS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
 			Point< float, vec3 > expectedPoint0( vec3( 11.321565, 4.658535, 7.163479 ),
@@ -57,8 +76,8 @@ namespace util
 		
 		TEST_F( PlyPointReaderTest, ReadExtendedPoints )
 		{
-			ExtendedPointReader reader( "../../../src/data/tests/test_extended_points.ply", ExtendedPointReader::SINGLE,
-										COLORS_AND_NORMALS );
+			ExtendedPointReader reader( *m_appDirPath + "/../../../src/data/tests/test_extended_points.ply",
+										ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 			ExtendedPointVector< float, vec3 > points = reader.getPoints();
 			
 			ExtendedPoint< float, vec3 > expectedPoint0( vec3( 0.003921569, 0.007843137, 0.011764706 ),

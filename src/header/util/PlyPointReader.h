@@ -72,7 +72,7 @@ namespace util
 		if( !ply )
 		{
 			setlocale( LC_NUMERIC, old_locale );
-			throw runtime_error( "Cannot open .ply point file" );
+			throw runtime_error( fileName + ": cannot open .ply point file." );
 		}
 		if( !ply_read_header( ply ) )
 		{

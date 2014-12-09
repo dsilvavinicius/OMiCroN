@@ -2,7 +2,7 @@
 
 #include "Scan.h"
 #include <QApplication>
-#include <QDir>
+//#include <QDir>
 
 namespace model
 {
@@ -14,7 +14,7 @@ namespace model
 		
 		void ScanQGLView::initializeGL ( QGLPainter * painter )
 		{
-			string exePath = QDir::currentPath().toStdString();
+			string exePath = QCoreApplication::applicationDirPath().toStdString();
 			Scan scan( exePath + "/../shaders", *m_scanResults );
 			scan.doScan();
 			m_scanResults = scan.getResultCPU();
