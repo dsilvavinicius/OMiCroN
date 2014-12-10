@@ -1,7 +1,8 @@
 #include "Scan.h"
 
 #include <iostream>
-#include <QOpenGLFunctions_4_3_Core>
+#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_4_3_Compatibility>
 
 using namespace std;
 
@@ -114,17 +115,30 @@ namespace model
 		}
 	}
 	
-	void Scan::doScan()
+	void Scan::doScan( QOpenGLContext* context )
 	{
-		QOpenGLFunctions_4_3_Core openGLFunctions;
-		m_programs[ PER_BLOCK_SCAN ]->bind();
-		openGLFunctions.glDispatchCompute( m_nBlocks, 1, 1 );
+		QOpenGLFunctions_4_3_Compatibility* openGLFunctions =
+			context->versionFunctions< QOpenGLFunctions_4_3_Compatibility >();
+		openGLFunctions->initializeOpenGLFunctions();
 		
-		m_programs[ GLOBAL_SCAN ]->bind();
-		openGLFunctions.glDispatchCompute( 1, 1, 1 );
+		QOpenGLShaderProgram* program = m_programs[ PER_BLOCK_SCAN ];
+		program->bind();
+		program->enableAttributeArray( "original" );
+		program->enableAttributeArray( "perBlockScan" );
+		openGLFunctions->glDispatchCompute( m_nBlocks, 1, 1 );
 		
-		m_programs[ FINAL_SUM ]->bind();
-		openGLFunctions.glDispatchCompute( m_nBlocks, 1, 1 );
+		program = m_programs[ GLOBAL_SCAN ];
+		program->bind();
+		program->enableAttributeArray( "original" );
+		program->enableAttributeArray( "perBlockScan" );
+		program->enableAttributeArray( "globalPrefixes" );
+		openGLFunctions->glDispatchCompute( 1, 1, 1 );
+		
+		program = m_programs[ FINAL_SUM ];
+		program->bind();
+		program->enableAttributeArray( "scan" );
+		program->enableAttributeArray( "globalPrefixes" );
+		openGLFunctions->glDispatchCompute( m_nBlocks, 1, 1 );
 	}
 	
 	shared_ptr< vector< unsigned int > > Scan::getResultCPU()

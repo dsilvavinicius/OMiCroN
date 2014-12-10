@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <QOpenGLContext>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 
@@ -19,7 +20,7 @@ namespace model
 		~Scan();
 		
 		/** Do the actual scan. */
-		void doScan();
+		void doScan( QOpenGLContext* context );
 		
 		/** Transfer the results back to the CPU and return a pointer for them. The transfer is costly, so this method
 		 * should be used judiciously. Also, the results will be available only after doScan() is called. */

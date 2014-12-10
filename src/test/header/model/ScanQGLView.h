@@ -20,7 +20,8 @@ namespace model
 			shared_ptr< vector< unsigned int > > m_scanResults;
 		
 		protected:
-			void initializeGL ( QGLPainter * painter );
+			void initializeGL( QGLPainter * painter );
+			void paintGL( QGLPainter * painter );
 		};
 	}
 }

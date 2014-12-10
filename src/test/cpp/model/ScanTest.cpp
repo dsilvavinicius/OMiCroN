@@ -24,7 +24,10 @@ namespace model
 			QGuiApplication app( g_argc, g_argv );
 	
 			QSurfaceFormat format;
-			format.setSamples(16);
+			format.setVersion( 4, 3 );
+			format.setRenderableType( QSurfaceFormat::OpenGL );
+			format.setSwapBehavior( QSurfaceFormat::DoubleBuffer );
+			format.setSamples( 16 );
 
 			ScanQGLView window( values, format );
 			window.resize(640, 480);

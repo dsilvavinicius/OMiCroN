@@ -104,7 +104,7 @@ uint scanBlock()
 
 void main( void )
 {
-	uint idx = gl_LocalInvocationIndex;
+	uint idx = gl_LocalInvocationID.x;
 	uint globalIdx = gl_GlobalInvocationID.x;
 	
 	// Transfer data from global memory input array to shared memory.
@@ -116,5 +116,5 @@ void main( void )
 	uint val = scanBlock();
 	
 	// Output.
-	gPerBlockScan[ idx ] = sScan[ globalIdx ];
+	gPerBlockScan[ globalIdx ] = sScan[ idx ];
 }
