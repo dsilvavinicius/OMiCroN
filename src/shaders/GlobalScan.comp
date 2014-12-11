@@ -6,17 +6,17 @@
 
 layout( local_size_x = 1024 ) in;
 
-layout( binding = 0 ) coherent buffer original
+layout( std430, binding = 0 ) coherent buffer original
 {
 	uint gOriginalValues[];
 };
 
-layout( binding = 1 ) coherent buffer perBlockScan
+layout( std430, binding = 1 ) coherent buffer perBlockScan
 {
 	uint gPerBlockScan[];
 };
 
-layout( binding = 2 ) coherent buffer globalPrefixes
+layout( std430, binding = 2 ) coherent buffer globalPrefixes
 {
 	uint gGlobalPrefixes[];
 };
@@ -24,7 +24,7 @@ layout( binding = 2 ) coherent buffer globalPrefixes
 shared uint sScan[ 1024 ];
 
 // Warp scan. Warp size is assumed to be equal 32. Because Compute Shaders are SIMT, there is no need for sync. Loop was unrolled.
-uint scanWarp()
+uint scanWarp( bool inclusive )
 {
 	const uint idx = gl_LocalInvocationIndex;
 	const uint lane = idx & 31;
@@ -55,25 +55,32 @@ uint scanWarp()
 		sScan[ idx ] = sScan[ idx - 16 ] + sScan[ idx ];
 	}
 
-	if( lane > 0 )
+	if( inclusive )
 	{
-		return sScan[ idx -1 ];
+		return sScan[ idx ];
 	}
 	else
 	{
-		return 0;
+		if( lane > 0 )
+		{
+			return sScan[ idx -1 ];
+		}
+		else
+		{
+			return 0;
+		}
 	}
 }
 
 // Block scan.
-uint scanBlock()
+uint scanBlock( bool inclusive )
 {
 	const uint idx = gl_LocalInvocationIndex;
 	const uint lane = idx & 31;
 	const uint warpid = idx >> 5;
 
 	// Step 1: Intra -warp scan in each warp
-	uint val = scanWarp();
+	uint val = scanWarp( inclusive );
 	barrier();
 	memoryBarrierShared();
 	
@@ -88,7 +95,7 @@ uint scanBlock()
 	// Step 3: Use 1st warp to scan per-warp results
 	if( warpid==0 )
 	{
-		scanWarp();
+		scanWarp( inclusive );
 	}
 	barrier();
 	memoryBarrierShared();
@@ -120,10 +127,10 @@ void main( void )
 	if( idx > 0 && idx < numBlocks )
 	{
 		// rIdx is the index for the last element of segment s(i-1). Used to compute the prefix of segment s(i).
-		uint rIdx = idx * gl_WorkGroupSize.x;
+		uint rIdx = idx * gl_WorkGroupSize.x - 1;
 		
-		// The original value of the last element in s(i-1) is added to perform an inclusive scan in s(i-1). s(i-1) is
-		// equal to the prefix sum of segment s(i).
+		// The original value of the last element in s(i-1) is added to perform an inclusive scan in s(i-1). This inclusive
+		// scan of s(i-1) is equal to the prefix sum of s(i).
 		val = gPerBlockScan[ rIdx ] + gOriginalValues[ rIdx ];
 	}
 	else
@@ -135,7 +142,7 @@ void main( void )
 	barrier();
 	memoryBarrierShared();
 	
-	val = scanBlock();
+	val = scanBlock( true );
 	
 	gGlobalPrefixes[ idx ] = val;
 }

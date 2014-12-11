@@ -6,6 +6,7 @@
 #include <QOpenGLContext>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
+#include <QOpenGLFunctions_4_3_Compatibility>
 
 using namespace std;
 
@@ -16,15 +17,19 @@ namespace model
 	class Scan
 	{
 	public:
-		Scan( const string& shaderFolder, const vector< unsigned int >& values );
+		/** @param shaderFolder is the path to the folder with shaders.
+		 * @param values are the values that should be scanned.
+		 * @param openGL is the openGL functions wrapper ( assumed to be already initialized properly ).*/
+		Scan( const string& shaderFolder, const unsigned int* values, unsigned int nValues,
+			  QOpenGLFunctions_4_3_Compatibility* openGL );
 		~Scan();
 		
 		/** Do the actual scan. */
-		void doScan( QOpenGLContext* context );
+		void doScan();
 		
 		/** Transfer the results back to the CPU and return a pointer for them. The transfer is costly, so this method
 		 * should be used judiciously. Also, the results will be available only after doScan() is called. */
-		shared_ptr< vector< unsigned int > > getResultCPU();
+		vector< unsigned int > getResultCPU();
 		
 	private:
 		enum BufferType
@@ -51,11 +56,15 @@ namespace model
 		
 		static const int BLOCK_SIZE = 1024;
 		
+		/** OpenGL Context. */
+		QOpenGLFunctions_4_3_Compatibility* m_openGL;
+		
 		/** Compute Shader programs used to do the passes of the algorithm. */
 		QOpenGLShaderProgram* m_programs[ N_PROGRAM_TYPES ];
 		
 		/** Buffers used in the scan. */
-		QOpenGLBuffer* m_buffers[ N_BUFFER_TYPES ];
+		
+		GLuint m_buffers[ N_BUFFER_TYPES ];
 		
 		/** Number of blocks used to compute the scan. */
 		int m_nBlocks;

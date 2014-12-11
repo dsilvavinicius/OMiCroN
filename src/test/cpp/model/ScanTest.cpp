@@ -19,8 +19,6 @@ namespace model
 
 		TEST_F( ScanTest, Scan )
 		{
-			vector< unsigned int > values( 3000, 1 );
-			
 			QGuiApplication app( g_argc, g_argv );
 	
 			QSurfaceFormat format;
@@ -29,18 +27,20 @@ namespace model
 			format.setSwapBehavior( QSurfaceFormat::DoubleBuffer );
 			format.setSamples( 16 );
 
-			ScanQGLView window( values, format );
+			ScanQGLView window( format );
 			window.resize(640, 480);
 			window.show();
 
 			app.exec();
 			
-			shared_ptr< vector< unsigned int > > scanResults = window.m_scanResults;
+			vector< unsigned int > scanResults = window.m_scanResults;
 			
-			for( unsigned int value : *scanResults )
+			cout << "Final Scan." << endl;
+			for( unsigned int value : scanResults )
 			{
-				cout << value << ", " << endl;
+				cout << value << endl;
 			}
+			cout << endl;
 		}
 	}
 }

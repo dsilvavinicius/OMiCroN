@@ -15,9 +15,9 @@ namespace model
 		: public QGLView
 		{
 		public:
-			ScanQGLView( const vector< unsigned int >& values, const QSurfaceFormat &format, QWindow *parent = 0 );
+			ScanQGLView( const QSurfaceFormat &format, QWindow *parent = 0 );
 			
-			shared_ptr< vector< unsigned int > > m_scanResults;
+			vector< unsigned int > m_scanResults;
 		
 		protected:
 			void initializeGL( QGLPainter * painter );

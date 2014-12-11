@@ -4,12 +4,12 @@
 // ( http://mgarland.org/files/papers/nvr-2008-003.pdf ). This pass is the per-block scan.
 layout( local_size_x = 1024 ) in;
 
-layout( binding = 0 ) coherent buffer original
+layout( std430, binding = 0 ) coherent buffer original
 {
 	uint gInput[];
 };
 
-layout( binding = 1 ) coherent buffer perBlockScan
+layout( std430, binding = 1 ) coherent buffer perBlockScan
 {
 	uint gPerBlockScan[];
 };
