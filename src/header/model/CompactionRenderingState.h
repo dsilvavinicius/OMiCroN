@@ -1,8 +1,10 @@
 #ifndef COMPACTION_RENDERING_STATE_H
 #define COMPACTION_RENDERING_STATE_H
 
-#include <QGLBuffer>
+#include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
+#include <QCoreApplication>
+#include "Scan.h"
 #include "RenderingState.h"
 
 namespace model
@@ -17,10 +19,14 @@ namespace model
 	 * vertices attrib arrays. */
 	template< typename Vec3 >
 	class CompactionRenderingState
-	: RenderingState< Vec3 >
+	: public RenderingState< Vec3 >
 	{
 	public:
-		CompactionRenderingState( const Attributes& attribs );
+		/** @param posBuffer is the buffer with vertex positions.
+		 *  @param attrib0Buffer is the buffer with first vertex attribute ( normal or color).
+		 *	@param attrib1Buffer is the buffer with second vertex attribute ( normal ). Can be NULL if the vertices have only first attributes. If not NULL, first attribute is assumed to be color. */
+		CompactionRenderingState( QOpenGLBuffer* posBuffer, QOpenGLBuffer* attrib0Buffer, QOpenGLBuffer* attrib1Buffer,
+								  QOpenGLFunctions_4_3_Compatibility* openGL, const Attributes& attribs );
 		~CompactionRenderingState();
 		
 		/** Sets the compaction array. Each position of this array has a boolean indicating whether the vertex at that position
@@ -29,15 +35,23 @@ namespace model
 		
 		unsigned int render();
 		
-		static const int N_MAX_VERTICES = 10000000;
+		static const int N_MAX_VERTICES = 1000000;
 	
 	private:
+		enum BufferType
+		{
+			POS,
+			ATTRIB0,
+			ATTRIB1,
+			N_BUFFERS
+		};
+		
 		QOpenGLShaderProgram* m_compactionProgram;
 		
-		static const int N_BUFFERS = 3;
+		Scan scan;
 		
-		/** Vertex attrib buffers. */
-		QGLBuffer* m_buffers[ N_BUFFERS ];
+		QOpenGLBuffer* m_inputBuffers[ 3 ];
+		QOpenGLBuffer* m_outputBuffers[ 3 ];
 		
 		/** Transient vector that indicates which vertices will be deleted ( false ) in compaction and which will be
 		 * maintained ( true ). */
@@ -45,24 +59,35 @@ namespace model
 		
 		static const int BYTES_PER_VERTEX = 12;
 		static const int MAX_BYTES = BYTES_PER_VERTEX * N_MAX_VERTICES;
-	}
+	};
 	
 	template< typename Vec3 >
-	CompactionRenderingState< Vec3 >::CompactionRenderingState( const Attributes& attribs )
-	: RenderingState< Vec3 >( attribs )
+	CompactionRenderingState< Vec3 >::CompactionRenderingState( QOpenGlBuffer* posBuffer, QOpenGLBuffer* attrib0Buffer,
+																QOpenGLBuffer* attrib1Buffer,
+															 QOpenGLFunctions_4_3_Compatibility* openGL,
+															 const Attributes& attribs )
+	: RenderingState< Vec3 >( attribs ),
+	scan( QCoreApplication::applicationDirPath().toStdString() + "/shaders", N_MAX_VERTICES, openGL ),
+	m_inputBuffers[ POS ]( vertexBuffer ),
+	m_inputBuffers[ ATTRIB0 ]( attrib0Buffer ),
+	m_inputBuffers[ ATTRIB1 ]( attrib1Buffer )
 	{
+			
 		for( int i = 0; i < N_BUFFERS; ++i)
 		{
-			QGLBuffer* buffer = new QGLBuffer( QGLBuffer::VertexBuffer );
-			buffer->create();
-			buffer->setUsagePattern( QGLBuffer::StaticDraw );
-			buffer->allocate( MAX_BYTES );
-			
-			m_buffers[ i ] = buffer;
+			if( m_inputBuffers != NULL )
+			{
+				m_outputVertexBuffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
+				m_outputVertexBuffer->create();
+				m_outputVertexBuffer->setUsagePattern( QGLBuffer::StaticDraw );
+				m_outputVertexBuffer->bind();
+				m_outputVertexBuffer->allocate( MAX_BYTES );
+				m_buffers[ i ] = buffer;
+			}
 		}
 		
 		m_compactionProgram = new QOpenGLShaderProgram();
-		m_compactionProgram->addShaderFromSourceFile( QOpenGLShader::Compute, "shaders/PrefixSum.comp" );
+		m_compactionProgram->addShaderFromSourceFile( QOpenGLShader::Compute, "shaders/PointCompaction.comp" );
 		cout << m_compactionProgram->log() << endl;
 	}
 	
@@ -71,7 +96,7 @@ namespace model
 	{
 		for( int i = 0; i < N_BUFFERS; ++i)
 		{
-			QGLBuffer* buffer = m_buffers[ i ];
+			QOpenGLBuffer* buffer = m_outputBuffers[ i ];
 			buffer.destroy();
 			delete buffer;
 		}
