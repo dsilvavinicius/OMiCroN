@@ -112,6 +112,7 @@ namespace model
 	unsigned int CompactionRenderingState< Vec3 >::render()
 	{
 		
+		m_scan->doScan();
 	}
 }
 
