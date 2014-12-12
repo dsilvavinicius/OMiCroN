@@ -8,23 +8,29 @@ namespace model
 {
 	namespace test
 	{
-		ScanQGLView::ScanQGLView( const QSurfaceFormat &format, QWindow *parent )
-		: QGLView( format, parent )
+		ScanQGLView::ScanQGLView( const vector< unsigned int >& values, const QSurfaceFormat &format, QWindow *parent )
+		: QGLView( format, parent ),
+		m_values( values )
 		{}
 		
 		void ScanQGLView::initializeGL( QGLPainter *painter )
 		{
-			unsigned int values[ 3000 ];
-			std::fill_n( values, 3000, 1);
-			
 			string exePath = QCoreApplication::applicationDirPath().toStdString();
 			
 			QOpenGLFunctions_4_3_Compatibility* openGL = context()->versionFunctions< QOpenGLFunctions_4_3_Compatibility >();
 			openGL->initializeOpenGLFunctions();
 			
-			Scan scan( exePath + "/../shaders", &values[ 0 ], 3000, openGL );
-			scan.doScan();
-			m_scanResults = scan.getResultCPU();
+			unsigned int* values = ( unsigned int * ) malloc( sizeof( unsigned int ) * m_values.size() );
+			for( int i = 0; i < m_values.size(); ++i )
+			{
+				values[ i ] = m_values[ i ];
+			}
+			
+			Scan scan( exePath + "/../shaders", 10000, openGL );
+			scan.doScan( &values[ 0 ], m_values.size() );
+			m_values = scan.getResultCPU();
+			
+			free( values );
 		}
 		
 		void ScanQGLView::paintGL( QGLPainter *painter )

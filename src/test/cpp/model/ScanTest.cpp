@@ -27,20 +27,26 @@ namespace model
 			format.setSwapBehavior( QSurfaceFormat::DoubleBuffer );
 			format.setSamples( 16 );
 
-			ScanQGLView window( format );
+			vector< unsigned int  > values( 3000 );
+			for( int i = 0; i < values.size(); ++i )
+			{
+				values[ i ] = i;
+			}
+			
+			ScanQGLView window( values, format );
 			window.resize(640, 480);
 			window.show();
 
 			app.exec();
 			
-			vector< unsigned int > scanResults = window.m_scanResults;
+			vector< unsigned int > scanResults = window.m_values;
 			
-			cout << "Final Scan." << endl;
-			for( unsigned int value : scanResults )
+			unsigned int currentSum = 0;
+			for( int i = 0; i < scanResults.size(); ++i )
 			{
-				cout << value << endl;
+				ASSERT_EQ( scanResults[ i ], currentSum );
+				currentSum += i;
 			}
-			cout << endl;
 		}
 	}
 }

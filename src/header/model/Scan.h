@@ -17,21 +17,6 @@ namespace model
 	class Scan
 	{
 	public:
-		/** @param shaderFolder is the path to the folder with shaders.
-		 * @param values are the values that should be scanned.
-		 * @param openGL is the openGL functions wrapper ( assumed to be already initialized properly ).*/
-		Scan( const string& shaderFolder, const unsigned int* values, unsigned int nValues,
-			  QOpenGLFunctions_4_3_Compatibility* openGL );
-		~Scan();
-		
-		/** Do the actual scan. */
-		void doScan();
-		
-		/** Transfer the results back to the CPU and return a pointer for them. The transfer is costly, so this method
-		 * should be used judiciously. Also, the results will be available only after doScan() is called. */
-		vector< unsigned int > getResultCPU();
-		
-	private:
 		enum BufferType
 		{
 			/** Original values to be scanned. */
@@ -43,6 +28,23 @@ namespace model
 			N_BUFFER_TYPES
 		};
 		
+		/** @param shaderFolder is the path to the folder with shaders.
+		 * @param values are the values that should be scanned.
+		 * @param openGL is the openGL functions wrapper ( assumed to be already initialized properly ).*/
+		Scan( const string& shaderFolder, unsigned int nMaxElements, QOpenGLFunctions_4_3_Compatibility* openGL );
+		~Scan();
+		
+		/** Do the actual scan. */
+		void doScan( const unsigned int* values, const unsigned int& nValues );
+		
+		/** Transfer the results back to main memory and return a pointer for them. The transfer is costly, so this method
+		 * should be used judiciously. Also, this method should be called after doScan() so the results are available. */
+		vector< unsigned int > getResultCPU();
+		 
+		/** Returns the buffer id of one the buffers used to scan. */
+		GLuint bufferId( const BufferType& bufferType ){ return m_buffers[ bufferType ]; }
+		
+	private:
 		enum ProgramType
 		{
 			/** 1st pass. */
@@ -53,6 +55,10 @@ namespace model
 			FINAL_SUM,
 			N_PROGRAM_TYPES
 		};
+		
+		/** Dump the buffer with given buffer type to the stream for debug reasons. Transfers data from GPU to main memory,
+		 * so it is costly.*/
+		void dumpBuffer( const BufferType& bufferType, ostream& out );
 		
 		static const int BLOCK_SIZE = 1024;
 		
@@ -66,11 +72,14 @@ namespace model
 		
 		GLuint m_buffers[ N_BUFFER_TYPES ];
 		
-		/** Number of blocks used to compute the scan. */
-		int m_nBlocks;
-		
-		/** Number of input elements. */
+		/** Number of input elements of current input values. */
 		unsigned int m_nElements;
+		
+		/** Number of blocks necessary to launch to scan the current input values. */
+		unsigned int m_nBlocks;
+		
+		/** Maximum number of elements ( used to allocate initial buffers ). */
+		unsigned int m_nMaxElements;
 	};
 }
 

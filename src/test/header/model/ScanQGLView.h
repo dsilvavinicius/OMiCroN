@@ -15,13 +15,15 @@ namespace model
 		: public QGLView
 		{
 		public:
-			ScanQGLView( const QSurfaceFormat &format, QWindow *parent = 0 );
+			ScanQGLView( const vector< unsigned int >& values, const QSurfaceFormat &format, QWindow *parent = 0 );
 			
-			vector< unsigned int > m_scanResults;
+			vector< unsigned int > m_values;
 		
 		protected:
 			void initializeGL( QGLPainter * painter );
 			void paintGL( QGLPainter * painter );
+		private:
+			
 		};
 	}
 }
