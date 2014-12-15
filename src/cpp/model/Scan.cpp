@@ -15,7 +15,7 @@ namespace model
 	: m_openGL( openGL ),
 	m_nMaxElements( nMaxElements )
 	{
-		m_openGL->glGenBuffers( 3, &m_buffers[ 0 ] );
+		m_openGL->glGenBuffers( N_BUFFER_TYPES, &m_buffers[ 0 ] );
 		
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ ORIGINAL ] );
 		m_openGL->glBufferData( GL_SHADER_STORAGE_BUFFER, sizeof( unsigned int ) * nMaxElements, NULL, GL_STREAM_COPY );
@@ -29,6 +29,10 @@ namespace model
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ GLOBAL_PREFIXES ] );
 		m_openGL->glBufferData( GL_SHADER_STORAGE_BUFFER, sizeof( unsigned int ) * nMaxBlocks, NULL, GL_STREAM_COPY );
 		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, GLOBAL_PREFIXES, m_buffers[ GLOBAL_PREFIXES ] );
+		
+		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ REDUCTION ] );
+		m_openGL->glBufferData( GL_SHADER_STORAGE_BUFFER, sizeof( unsigned int ), NULL, GL_STREAM_COPY );
+		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, REDUCTION, m_buffers[ REDUCTION ] );
 		
 		for( int i = 0; i < N_PROGRAM_TYPES; ++i )
 		{
@@ -78,13 +82,16 @@ namespace model
 		}
 	}
 	
-	void Scan::doScan( const unsigned int* values, const unsigned int& nValues )
+	unsigned int Scan::doScan( const unsigned int* values, const unsigned int& nValues )
 	{
 		m_nElements = nValues;
 		m_nBlocks = ( unsigned int ) ceil( ( float ) nValues / BLOCK_SIZE );
 		
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ ORIGINAL ] );
 		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ) * m_nElements, (void *) values );
+		
+		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ REDUCTION ] );
+		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ), (void *) &m_nElements );
 		
 		QOpenGLShaderProgram* program = m_programs[ PER_BLOCK_SCAN ];
 		program->bind();
@@ -110,13 +117,23 @@ namespace model
 		
 		program = m_programs[ FINAL_SUM ];
 		program->bind();
+		program->enableAttributeArray( "original" );
 		program->enableAttributeArray( "scan" );
 		program->enableAttributeArray( "globalPrefixes" );
+		program->enableAttributeArray( "reduction" );
 		
 		m_openGL->glDispatchCompute( m_nBlocks, 1, 1 );
 		
+		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "scan" );
 		program->disableAttributeArray( "globalPrefixes" );
+		program->disableAttributeArray( "reduction" );
+		
+		unsigned int reduction;
+		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ REDUCTION ] );
+		m_openGL->glGetBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ), ( void * ) &reduction );
+		
+		return reduction;
 	}
 	
 	vector< unsigned int > Scan::getResultCPU()

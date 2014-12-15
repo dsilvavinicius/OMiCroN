@@ -25,6 +25,9 @@ namespace model
 			SCAN_RESULT,
 			/** Global prefixes computed while scanning. */
 			GLOBAL_PREFIXES,
+			/** Final reduction of the values in buffer ORIGINAL. It also receives the number of elements to be scanned,
+			 * which is used as input to the 3rd pass shader. */
+			REDUCTION,
 			N_BUFFER_TYPES
 		};
 		
@@ -34,8 +37,9 @@ namespace model
 		Scan( const string& shaderFolder, unsigned int nMaxElements, QOpenGLFunctions_4_3_Compatibility* openGL );
 		~Scan();
 		
-		/** Do the actual scan. */
-		void doScan( const unsigned int* values, const unsigned int& nValues );
+		/** Do the actual scan in values.
+		 * @returns The reduction of values, i.e. the parallel sum of its elements. */
+		unsigned int doScan( const unsigned int* values, const unsigned int& nValues );
 		
 		/** Transfer the results back to main memory and return a pointer for them. The transfer is costly, so this method
 		 * should be used judiciously. Also, this method should be called after doScan() so the results are available. */

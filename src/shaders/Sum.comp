@@ -5,6 +5,11 @@
 
 layout( local_size_x = 1024 ) in;
 
+layout( std430, binding = 0 ) coherent buffer original
+{
+	uint gOriginal[];
+};
+
 layout( std430, binding = 1 ) coherent buffer scan
 {
 	uint gScan[];
@@ -13,6 +18,13 @@ layout( std430, binding = 1 ) coherent buffer scan
 layout( std430, binding = 2 ) coherent buffer globalPrefixes
 {
 	uint gGlobalPrefixes[];
+};
+
+// As input, this buffer receives the number of elements in original. As output, it contains the reduction of the values
+// in gOriginal.
+layout( std430, binding = 3 ) coherent buffer reduction
+{
+	uint gReduction;
 };
 
 shared uint sGlobalPrefix;
@@ -28,5 +40,12 @@ void main()
 	
 	uint globalIdx = gl_GlobalInvocationID.x;
 	
-	gScan[ globalIdx ] = gScan[ globalIdx ] + sGlobalPrefix;
+	uint finalScan = gScan[ globalIdx ] + sGlobalPrefix;
+	gScan[ globalIdx ] = finalScan;
+	
+	// Saves reduction value.
+	if( globalIdx == gReduction - 1 )
+	{
+		gReduction = finalScan + gOriginal[ globalIdx ];
+	}
 }

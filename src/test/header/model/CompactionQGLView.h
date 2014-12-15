@@ -1,5 +1,5 @@
-#ifndef SCAN_QGLVIEW_H
-#define SCAN_QGLVIEW_H
+#ifndef COMPACTION_QGLVIEW_H
+#define COMPACTION_QGLVIEW_H
 
 #include <vector>
 #include <memory>
@@ -11,14 +11,12 @@ namespace model
 {
 	namespace test
 	{
-		class ScanQGLView
+		class CompactionQGLView
 		: public QGLView
 		{
 		public:
-			ScanQGLView( const vector< unsigned int >& values, const QSurfaceFormat &format, QWindow *parent = 0 );
-			
-			vector< unsigned int > m_values;
-			unsigned int m_reduction;
+			CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos, const vector< vec3 > attrib0,
+							   const QSurfaceFormat &format, QWindow *parent = 0 );
 		
 		protected:
 			void initializeGL( QGLPainter * painter );

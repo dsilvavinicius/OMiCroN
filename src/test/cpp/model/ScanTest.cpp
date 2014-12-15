@@ -40,6 +40,7 @@ namespace model
 			app.exec();
 			
 			vector< unsigned int > scanResults = window.m_values;
+			unsigned int reduction = window.m_reduction;
 			
 			unsigned int currentSum = 0;
 			for( int i = 0; i < scanResults.size(); ++i )
@@ -47,6 +48,8 @@ namespace model
 				ASSERT_EQ( scanResults[ i ], currentSum );
 				currentSum += i;
 			}
+			
+			ASSERT_EQ( reduction, currentSum );
 		}
 	}
 }

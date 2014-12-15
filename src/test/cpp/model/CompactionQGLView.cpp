@@ -1,6 +1,6 @@
-#include "ScanQGLView.h"
+#include "CompactionQGLView.h"
 
-#include "Scan.h"
+#include "CompactionRenderingState.h"
 #include <QApplication>
 #include <algorithm>
 
@@ -8,13 +8,12 @@ namespace model
 {
 	namespace test
 	{
-		ScanQGLView::ScanQGLView( const vector< unsigned int >& values, const QSurfaceFormat &format, QWindow *parent )
-		: QGLView( format, parent ),
-		m_values( values ),
-		m_reduction( 0 )
+		CompactionQGLView::CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos,
+											  const vector< vec3 > attrib0, const QSurfaceFormat &format, QWindow *parent )
+		: QGLView( format, parent )
 		{}
 		
-		void ScanQGLView::initializeGL( QGLPainter *painter )
+		void CompactionQGLView::initializeGL( QGLPainter *painter )
 		{
 			string exePath = QCoreApplication::applicationDirPath().toStdString();
 			
@@ -34,9 +33,13 @@ namespace model
 			free( values );
 		}
 		
-		void ScanQGLView::paintGL( QGLPainter *painter )
+		void CompactionQGLView::paintGL( QGLPainter *painter )
 		{
 			QApplication::quit();
 		}
 	}
 }
+
+/*CompactionRenderingState( QOpenGLBuffer* inputBuffers[ 3 ], unsigned int nElements,
+								  QOpenGLFunctions_4_3_Compatibility* openGL,
+								  const Attributes& attribs );*/

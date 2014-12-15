@@ -21,68 +21,102 @@ namespace model
 	class CompactionRenderingState
 	: public RenderingState< Vec3 >
 	{
+		using RenderingState = model::RenderingState< Vec3 >;
 	public:
-		/** @param posBuffer is the buffer with vertex positions.
-		 *  @param attrib0Buffer is the buffer with first vertex attribute ( normal or color).
-		 *	@param attrib1Buffer is the buffer with second vertex attribute ( normal ). Can be NULL if the vertices have only first attributes. If not NULL, first attribute is assumed to be color. */
-		CompactionRenderingState( QOpenGLBuffer* posBuffer, QOpenGLBuffer* attrib0Buffer, QOpenGLBuffer* attrib1Buffer,
-								  QOpenGLFunctions_4_3_Compatibility* openGL, const Attributes& attribs );
+		enum BufferType
+		{
+			POS,
+			ATTRIB0,
+			ATTRIB1,
+			N_BUFFER_TYPES
+		};
+		
+		/** @param inputBuffers is the input buffers array, which will be compacted latter on. This array must have the
+		 * buffers in the same order as the enum BufferType. The contents of the buffers in inputBuffers are copied to
+		 * internaly managed buffers and released later to conserve memory.
+		 *	@param nElements is the number of elements in inputBuffers. */
+		CompactionRenderingState( QOpenGLBuffer* inputBuffers[ 3 ], unsigned int nElements,
+								  QOpenGLFunctions_4_3_Compatibility* openGL,
+								  const Attributes& attribs );
 		~CompactionRenderingState();
 		
 		/** Sets the compaction array. Each position of this array has a boolean indicating whether the vertex at that position
 		 * should stay in the vertex attrib arrays ( true ) or not ( false ). */
 		void setCompactionArray( const vector< bool >& flags );
 		
+		/** Compacts the point stream, given that the compaction array is already set using setCompactionArray().
+		 * @returns the number of points in the stream after compaction. */
+		unsigned int compact();
+		
 		unsigned int render();
 		
 		static const int N_MAX_VERTICES = 1000000;
 	
 	private:
-		enum BufferType
-		{
-			POS,
-			ATTRIB0,
-			ATTRIB1,
-			N_BUFFERS
-		};
-		
+		QOpenGLFunctions_4_3_Compatibility* m_openGL;
 		QOpenGLShaderProgram* m_compactionProgram;
 		
-		Scan scan;
+		Scan m_scan;
 		
 		QOpenGLBuffer* m_inputBuffers[ 3 ];
 		QOpenGLBuffer* m_outputBuffers[ 3 ];
 		
 		/** Transient vector that indicates which vertices will be deleted ( false ) in compaction and which will be
 		 * maintained ( true ). */
-		vector< bool >* m_compactionFlags;
+		vector< bool > m_compactionFlags;
 		
 		static const int BYTES_PER_VERTEX = 12;
 		static const int MAX_BYTES = BYTES_PER_VERTEX * N_MAX_VERTICES;
+		static const int BLOCK_SIZE = 1024;
 	};
 	
 	template< typename Vec3 >
-	CompactionRenderingState< Vec3 >::CompactionRenderingState( QOpenGlBuffer* posBuffer, QOpenGLBuffer* attrib0Buffer,
-																QOpenGLBuffer* attrib1Buffer,
-															 QOpenGLFunctions_4_3_Compatibility* openGL,
+	CompactionRenderingState< Vec3 >::CompactionRenderingState( QOpenGlBuffer* inputBuffers[ 3 ], unsigned int nElements,
+																QOpenGLFunctions_4_3_Compatibility* openGL,
 															 const Attributes& attribs )
 	: RenderingState< Vec3 >( attribs ),
-	scan( QCoreApplication::applicationDirPath().toStdString() + "/shaders", N_MAX_VERTICES, openGL ),
-	m_inputBuffers[ POS ]( vertexBuffer ),
-	m_inputBuffers[ ATTRIB0 ]( attrib0Buffer ),
-	m_inputBuffers[ ATTRIB1 ]( attrib1Buffer )
+	m_openGL( openGL ),
+	m_scan( QCoreApplication::applicationDirPath().toStdString() + "/shaders", N_MAX_VERTICES, openGL )
 	{
-			
-		for( int i = 0; i < N_BUFFERS; ++i)
+		for( int i = 0; i < N_BUFFER_TYPES; ++i )
 		{
-			if( m_inputBuffers != NULL )
+			if( inputBuffers[ i ] != NULL )
 			{
-				m_outputVertexBuffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
-				m_outputVertexBuffer->create();
-				m_outputVertexBuffer->setUsagePattern( QGLBuffer::StaticDraw );
-				m_outputVertexBuffer->bind();
-				m_outputVertexBuffer->allocate( MAX_BYTES );
-				m_buffers[ i ] = buffer;
+				// Allocate input buffer.
+				QOpenGLBuffer* buffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
+				buffer->create();
+				buffer->setUsagePattern( QGLBuffer::StaticDraw );
+				buffer->bind();
+				buffer->allocate( MAX_BYTES );
+				
+				// Copies parameter buffer to created buffer.
+				openGL->glBindBuffer( GL_COPY_WRITE_BUFFER, buffer->bufferId() );
+				openGL->glBindBuffer( GL_COPY_READ_BUFFER, inputBuffers[ i ] );
+				openGL->glCopyBufferSubData( GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, nElements * BYTES_PER_VERTEX );
+				
+				m_inputBuffers[ i ] = buffer;
+				
+				// Release parameter buffer.
+				inputBuffers[ i ]->destroy();
+			}
+			else
+			{
+				m_inputBuffers[ i ] = NULL;
+			}
+		}
+		
+		for( int i = 0; i < N_BUFFER_TYPES; ++i)
+		{
+			if( m_inputBuffers[ i ] != NULL )
+			{
+				// Allocate input buffer.
+				QOpenGLBuffer* buffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
+				buffer->create();
+				buffer->setUsagePattern( QGLBuffer::StaticDraw );
+				buffer->bind();
+				buffer->allocate( MAX_BYTES );
+				
+				m_outputBuffers[ i ] = buffer;
 			}
 		}
 		
@@ -94,25 +128,83 @@ namespace model
 	template< typename Vec3 >
 	CompactionRenderingState< Vec3 >::~CompactionRenderingState()
 	{
-		for( int i = 0; i < N_BUFFERS; ++i)
+		for( int i = 0; i < N_BUFFER_TYPES; ++i)
 		{
 			QOpenGLBuffer* buffer = m_outputBuffers[ i ];
+			buffer.destroy();
+			delete buffer;
+			
+			buffer = m_inputBuffers[ i ];
 			buffer.destroy();
 			delete buffer;
 		}
 	}
 	
 	template< typename Vec3 >
-	void CompactionRenderingState< Vec3 >::setCompactionArray( const vector< bool >* flags )
+	void CompactionRenderingState< Vec3 >::setCompactionArray( const vector< bool >& flags )
 	{
-		m_compationFlags = flags;
+		m_compactionFlags = flags;
+	}
+	
+	template< typename Vec3 >
+	unsigned int CompactionRenderingState< Vec3 >::compact()
+	{
+		// Makes the compaction of the unused points.
+		unsigned int nElements = m_compactionFlags.size();
+		unsigned int nBlocks = ( unsigned int ) ceil( ( float ) nElements / BLOCK_SIZE );
+		nElements = m_scan->doScan( &m_compationFlags[ 0 ], nElements );
+		
+		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, Scan::N_BUFFER_TYPES + POS, m_inputBuffers[ POS ] );
+		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, Scan::N_BUFFER_TYPES + ATTRIB0, m_inputBuffers[ ATTRIB0 ] );
+		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, Scan::N_BUFFER_TYPES + N_BUFFER_TYPES + POS,
+									m_outputBuffers[ POS ] );
+		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, Scan::N_BUFFER_TYPES + N_BUFFER_TYPES + ATTRIB0,
+									m_outputBuffers[ ATTRIB0 ] );
+		
+		m_compactionProgram->bind();
+		m_compactionProgram->enableAttributeArray( "flags" );
+		m_compactionProgram->enableAttributeArray( "prefixes" );
+		m_compactionProgram->enableAttributeArray( "inputVertices" );
+		m_compactionProgram->enableAttributeArray( "inputAttrib0" );
+		m_compactionProgram->enableAttributeArray( "outputVertices" );
+		m_compactionProgram->enableAttributeArray( "outputAttrib0" );
+		
+		m_openGL->glDispatchCompute( nBlocks, 1, 1 );
+		
+		m_compactionProgram->disableAttributeArray( "flags" );
+		m_compactionProgram->disableAttributeArray( "prefixes" );
+		m_compactionProgram->disableAttributeArray( "inputVertices" );
+		m_compactionProgram->disableAttributeArray( "inputAttrib0" );
+		m_compactionProgram->disableAttributeArray( "outputVertices" );
+		m_compactionProgram->disableAttributeArray( "outputAttrib0" );
+		
+		return nElements;
 	}
 	
 	template< typename Vec3 >
 	unsigned int CompactionRenderingState< Vec3 >::render()
 	{
+		compact();
 		
-		m_scan->doScan();
+		// Sends new points to GPU.
+		QOpenGLBuffer* buffer = m_outputBuffers[ POS ];
+		buffer->bind();
+		buffer->write( nElements, ( void * ) &RenderingState::m_positions[ 0 ],
+					   RenderingState::m_positions.count() * BYTES_PER_VERTEX );
+		
+		buffer = m_outputBuffers[ ATTRIB0 ];
+		buffer->bind();
+		buffer->write( nElements, ( void * ) &RenderingState::m_colors[ 0 ],
+					   RenderingState::m_colors.count() * BYTES_PER_VERTEX );
+		
+		// Draws the resulting points.
+		
+		
+		// Swaps buffers for the next frame.
+		for( int i = 0; i < N_BUFFER_TYPES; ++i )
+		{
+			std::swap( m_inputBuffers[ i ], m_outputBuffers[ i ] );
+		}
 	}
 }
 
