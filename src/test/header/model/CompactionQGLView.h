@@ -2,10 +2,11 @@
 #define COMPACTION_QGLVIEW_H
 
 #include <vector>
-#include <memory>
 #include <QGLView>
+#include <glm/glm.hpp>
 
 using namespace std;
+using namespace glm;
 
 namespace model
 {
@@ -15,9 +16,12 @@ namespace model
 		: public QGLView
 		{
 		public:
-			CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos, const vector< vec3 > attrib0,
+			CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos, const vector< vec3 >& attrib0,
 							   const QSurfaceFormat &format, QWindow *parent = 0 );
 		
+			const vector< vec3 > m_compactedPos;
+			const vector< vec3 > m_compactedAttrib0;
+			
 		protected:
 			void initializeGL( QGLPainter * painter );
 			void paintGL( QGLPainter * painter );

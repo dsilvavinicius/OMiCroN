@@ -18,8 +18,10 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
-	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h	${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
+	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
 	${CPP_DIR}/${MODEL_DIR}/ScanTest.cpp
+	${HEADER_DIR}/${MODEL_DIR}/CompactionQGLView.h	${CPP_DIR}/${MODEL_DIR}/CompactionQGLView.cpp
+	${CPP_DIR}/${MODEL_DIR}/CompactionTest.cpp
 	
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
 	${CPP_DIR}/main.cpp)

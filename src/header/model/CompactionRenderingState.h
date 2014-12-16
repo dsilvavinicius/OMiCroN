@@ -4,6 +4,7 @@
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 #include <QCoreApplication>
+
 #include "Scan.h"
 #include "RenderingState.h"
 
@@ -44,15 +45,19 @@ namespace model
 		 * should stay in the vertex attrib arrays ( true ) or not ( false ). */
 		void setCompactionArray( const vector< bool >& flags );
 		
-		/** Compacts the point stream, given that the compaction array is already set using setCompactionArray().
-		 * @returns the number of points in the stream after compaction. */
-		unsigned int compact();
-		
 		unsigned int render();
+		
+		/** Transfer the results back to main memory and them. The transfer is costly, so this method should be used
+		 * judiciously. Also, this method should be called after render() so the results are available. */
+		vector< vector< Vec3 > > getResultCPU();
 		
 		static const int N_MAX_VERTICES = 1000000;
 	
 	private:
+		/** Compacts the point stream, given that the compaction array is already set using setCompactionArray().
+		 * @returns the number of points in the stream after compaction. */
+		unsigned int compact();
+		
 		QOpenGLFunctions_4_3_Compatibility* m_openGL;
 		QOpenGLShaderProgram* m_compactionProgram;
 		
@@ -65,7 +70,10 @@ namespace model
 		 * maintained ( true ). */
 		vector< bool > m_compactionFlags;
 		
-		static const int BYTES_PER_VERTEX = 12;
+		/** Number of elements in buffers after compaction and insertion of new nodes. */
+		unsigned int m_nElements;
+		
+		static const int BYTES_PER_VERTEX = sizeof( Vec3 );
 		static const int MAX_BYTES = BYTES_PER_VERTEX * N_MAX_VERTICES;
 		static const int BLOCK_SIZE = 1024;
 	};
@@ -76,7 +84,8 @@ namespace model
 															 const Attributes& attribs )
 	: RenderingState< Vec3 >( attribs ),
 	m_openGL( openGL ),
-	m_scan( QCoreApplication::applicationDirPath().toStdString() + "/shaders", N_MAX_VERTICES, openGL )
+	m_scan( QCoreApplication::applicationDirPath().toStdString() + "/shaders", N_MAX_VERTICES, openGL ),
+	m_nElements( 0 )
 	{
 		for( int i = 0; i < N_BUFFER_TYPES; ++i )
 		{
@@ -131,11 +140,11 @@ namespace model
 		for( int i = 0; i < N_BUFFER_TYPES; ++i)
 		{
 			QOpenGLBuffer* buffer = m_outputBuffers[ i ];
-			buffer.destroy();
+			buffer->destroy();
 			delete buffer;
 			
 			buffer = m_inputBuffers[ i ];
-			buffer.destroy();
+			buffer->destroy();
 			delete buffer;
 		}
 	}
@@ -152,7 +161,7 @@ namespace model
 		// Makes the compaction of the unused points.
 		unsigned int nElements = m_compactionFlags.size();
 		unsigned int nBlocks = ( unsigned int ) ceil( ( float ) nElements / BLOCK_SIZE );
-		nElements = m_scan->doScan( &m_compationFlags[ 0 ], nElements );
+		nElements = m_scan.doScan( &m_compactionFlags[ 0 ], nElements );
 		
 		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, Scan::N_BUFFER_TYPES + POS, m_inputBuffers[ POS ] );
 		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, Scan::N_BUFFER_TYPES + ATTRIB0, m_inputBuffers[ ATTRIB0 ] );
@@ -184,8 +193,9 @@ namespace model
 	template< typename Vec3 >
 	unsigned int CompactionRenderingState< Vec3 >::render()
 	{
-		compact();
+		m_nElements = compact();
 		
+		/*
 		// Sends new points to GPU.
 		QOpenGLBuffer* buffer = m_outputBuffers[ POS ];
 		buffer->bind();
@@ -196,7 +206,7 @@ namespace model
 		buffer->bind();
 		buffer->write( nElements, ( void * ) &RenderingState::m_colors[ 0 ],
 					   RenderingState::m_colors.count() * BYTES_PER_VERTEX );
-		
+		*/
 		// Draws the resulting points.
 		
 		
@@ -205,6 +215,32 @@ namespace model
 		{
 			std::swap( m_inputBuffers[ i ], m_outputBuffers[ i ] );
 		}
+	}
+	
+	template< typename Vec3 >
+	vector< vector< Vec3 > > CompactionRenderingState< Vec3 >::getResultCPU()
+	{
+		unsigned int resultSize = sizeof( Vec3 ) * m_nElements;
+		Vec3* result = ( Vec3* ) malloc( resultSize );
+		
+		vector< vector< Vec3 > > results;
+		
+		for( int i = 0; i < N_BUFFER_TYPES; ++i )
+		{
+			if( m_inputBuffers[ i ] != NULL )
+			{
+				m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_inputBuffers[ POS ]->bufferId() );
+				m_openGL->glGetBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, resultSize, ( void * ) result );
+				
+				vector< Vec3 > tempVec( m_nElements );
+				std::copy( result, result + m_nElements, tempVec.begin() );
+				results.push_back( tempVec );
+			}
+		}
+		
+		free( result );
+		
+		return results;
 	}
 }
 

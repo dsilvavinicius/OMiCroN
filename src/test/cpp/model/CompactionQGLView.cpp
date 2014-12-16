@@ -9,28 +9,46 @@ namespace model
 	namespace test
 	{
 		CompactionQGLView::CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos,
-											  const vector< vec3 > attrib0, const QSurfaceFormat &format, QWindow *parent )
-		: QGLView( format, parent )
+											  const vector< vec3 >& attrib0, const QSurfaceFormat &format, QWindow *parent )
+		: QGLView( format, parent ),
+		m_compactedPos( pos ),
+		m_compactedAttrib0( attrib0 )
 		{}
 		
 		void CompactionQGLView::initializeGL( QGLPainter *painter )
 		{
-			string exePath = QCoreApplication::applicationDirPath().toStdString();
+			QOpenGLBuffer* buffers[ 3 ];
+			unsigned int bufferSize = sizeof( vec3 ) * m_compactedPos.size();
+			for( int i = 0; i < CompactionRenderingState< vec3 >::ATTRIB1; ++i )
+			{
+				QOpenGLBuffer buffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
+				buffer->create();
+				buffer->setUsagePattern( QGLBuffer::StaticDraw );
+				buffer->bind();
+				
+				buffers[ i ] = buffer;
+			}
+			buffers[ CompactionRenderingState< vec3 >::ATTRIB1 ] = NULL;
+			
+			QOpenGLBuffer* buffer = buffers[ CompactionRenderingState< vec3 >::POS ];
+			buffer->bind();
+			buffer->allocate( ( void * ) &m_compactedPos[ 0 ], bufferSize );
+			
+			buffer = buffers[ CompactionRenderingState< vec3 >::ATTRIB0 ];
+			buffer->bind();
+			buffer->allocate( ( void * ) &attrib0[ 0 ], bufferSize );
 			
 			QOpenGLFunctions_4_3_Compatibility* openGL = context()->versionFunctions< QOpenGLFunctions_4_3_Compatibility >();
 			openGL->initializeOpenGLFunctions();
 			
-			unsigned int* values = ( unsigned int * ) malloc( sizeof( unsigned int ) * m_values.size() );
-			for( int i = 0; i < m_values.size(); ++i )
-			{
-				values[ i ] = m_values[ i ];
-			}
+			CompactionRenderingState< vec3 > renderingState( buffers, m_compactedPos.size(), openGL, COLORS );
+			renderingState.setPainter( painter );
+			renderingState.setCompactionArray( flags );
+			renderingState.render();
 			
-			Scan scan( exePath + "/../shaders", 10000, openGL );
-			m_reduction = scan.doScan( &values[ 0 ], m_values.size() );
-			m_values = scan.getResultCPU();
-			
-			free( values );
+			vector< vector< vec3 > > compacted = renderingState.getResultCPU();
+			m_compactedPos = compacted[ 0 ];
+			m_compactedAttrib0 = compacted[ 1 ];
 		}
 		
 		void CompactionQGLView::paintGL( QGLPainter *painter )
@@ -39,7 +57,3 @@ namespace model
 		}
 	}
 }
-
-/*CompactionRenderingState( QOpenGLBuffer* inputBuffers[ 3 ], unsigned int nElements,
-								  QOpenGLFunctions_4_3_Compatibility* openGL,
-								  const Attributes& attribs );*/
