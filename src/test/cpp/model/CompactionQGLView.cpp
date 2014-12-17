@@ -1,8 +1,9 @@
 #include "CompactionQGLView.h"
 
-#include "CompactionRenderingState.h"
 #include <QApplication>
 #include <algorithm>
+
+#include "CompactionRenderingState.h"
 
 namespace model
 {
@@ -11,6 +12,7 @@ namespace model
 		CompactionQGLView::CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos,
 											  const vector< vec3 >& attrib0, const QSurfaceFormat &format, QWindow *parent )
 		: QGLView( format, parent ),
+		m_flags( flags ),
 		m_compactedPos( pos ),
 		m_compactedAttrib0( attrib0 )
 		{}
@@ -21,9 +23,9 @@ namespace model
 			unsigned int bufferSize = sizeof( vec3 ) * m_compactedPos.size();
 			for( int i = 0; i < CompactionRenderingState< vec3 >::ATTRIB1; ++i )
 			{
-				QOpenGLBuffer buffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
+				QOpenGLBuffer* buffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
 				buffer->create();
-				buffer->setUsagePattern( QGLBuffer::StaticDraw );
+				buffer->setUsagePattern( QOpenGLBuffer::StaticDraw );
 				buffer->bind();
 				
 				buffers[ i ] = buffer;
@@ -36,14 +38,14 @@ namespace model
 			
 			buffer = buffers[ CompactionRenderingState< vec3 >::ATTRIB0 ];
 			buffer->bind();
-			buffer->allocate( ( void * ) &attrib0[ 0 ], bufferSize );
+			buffer->allocate( ( void * ) &m_compactedAttrib0[ 0 ], bufferSize );
 			
 			QOpenGLFunctions_4_3_Compatibility* openGL = context()->versionFunctions< QOpenGLFunctions_4_3_Compatibility >();
 			openGL->initializeOpenGLFunctions();
 			
 			CompactionRenderingState< vec3 > renderingState( buffers, m_compactedPos.size(), openGL, COLORS );
 			renderingState.setPainter( painter );
-			renderingState.setCompactionArray( flags );
+			renderingState.setCompactionArray( m_flags );
 			renderingState.render();
 			
 			vector< vector< vec3 > > compacted = renderingState.getResultCPU();

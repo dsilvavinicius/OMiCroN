@@ -39,7 +39,7 @@ namespace model
 		
 		/** Do the actual scan in values.
 		 * @returns The reduction of values, i.e. the parallel sum of its elements. */
-		unsigned int doScan( const unsigned int* values, const unsigned int& nValues );
+		unsigned int doScan( const vector< unsigned int >& values );
 		
 		/** Transfer the results back to main memory and return a pointer for them. The transfer is costly, so this method
 		 * should be used judiciously. Also, this method should be called after doScan() so the results are available. */

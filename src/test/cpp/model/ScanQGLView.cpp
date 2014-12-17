@@ -21,17 +21,9 @@ namespace model
 			QOpenGLFunctions_4_3_Compatibility* openGL = context()->versionFunctions< QOpenGLFunctions_4_3_Compatibility >();
 			openGL->initializeOpenGLFunctions();
 			
-			unsigned int* values = ( unsigned int * ) malloc( sizeof( unsigned int ) * m_values.size() );
-			for( int i = 0; i < m_values.size(); ++i )
-			{
-				values[ i ] = m_values[ i ];
-			}
-			
 			Scan scan( exePath + "/../shaders", 10000, openGL );
-			m_reduction = scan.doScan( &values[ 0 ], m_values.size() );
+			m_reduction = scan.doScan( m_values );
 			m_values = scan.getResultCPU();
-			
-			free( values );
 		}
 		
 		void ScanQGLView::paintGL( QGLPainter *painter )

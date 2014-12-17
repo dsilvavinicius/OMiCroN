@@ -82,13 +82,13 @@ namespace model
 		}
 	}
 	
-	unsigned int Scan::doScan( const unsigned int* values, const unsigned int& nValues )
+	unsigned int Scan::doScan( const vector< unsigned int >& values )
 	{
-		m_nElements = nValues;
-		m_nBlocks = ( unsigned int ) ceil( ( float ) nValues / BLOCK_SIZE );
+		m_nElements = values.size();
+		m_nBlocks = ( unsigned int ) ceil( ( float ) m_nElements / BLOCK_SIZE );
 		
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ ORIGINAL ] );
-		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ) * m_nElements, (void *) values );
+		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ) * m_nElements, (void *) &values[ 0 ] );
 		
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ REDUCTION ] );
 		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ), (void *) &m_nElements );
