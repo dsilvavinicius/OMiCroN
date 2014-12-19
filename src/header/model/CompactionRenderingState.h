@@ -7,6 +7,7 @@
 
 #include "Scan.h"
 #include "RenderingState.h"
+#include "Stream.h"
 
 namespace model
 {
@@ -58,6 +59,10 @@ namespace model
 		 * @returns the number of points in the stream after compaction. */
 		unsigned int compact();
 		
+		/** Dump the buffer with given buffer type to the stream for debug reasons. Transfers data from GPU to main memory,
+		 * so it is costly.*/
+		void dumpBuffer( const BufferType& bufferType, bool isInput, ostream& out );
+		
 		QOpenGLFunctions_4_3_Compatibility* m_openGL;
 		QOpenGLShaderProgram* m_compactionProgram;
 		
@@ -85,7 +90,7 @@ namespace model
 	: RenderingState( attribs ),
 	m_openGL( openGL ),
 	m_scan( QCoreApplication::applicationDirPath().toStdString() + "/../shaders", N_MAX_VERTICES, openGL ),
-	m_nElements( 0 )
+	m_nElements( nElements )
 	{
 		for( int i = 0; i < N_BUFFER_TYPES; ++i )
 		{
@@ -101,7 +106,7 @@ namespace model
 				// Copies parameter buffer to created buffer.
 				openGL->glBindBuffer( GL_COPY_WRITE_BUFFER, buffer->bufferId() );
 				openGL->glBindBuffer( GL_COPY_READ_BUFFER, inputBuffers[ i ]->bufferId() );
-				openGL->glCopyBufferSubData( GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, nElements * BYTES_PER_VERTEX );
+				openGL->glCopyBufferSubData( GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, m_nElements * BYTES_PER_VERTEX );
 				
 				m_inputBuffers[ i ] = buffer;
 				
@@ -127,6 +132,10 @@ namespace model
 				
 				m_outputBuffers[ i ] = buffer;
 			}
+			else
+			{
+				m_outputBuffers[ i ] = NULL;
+			}
 		}
 		
 		m_compactionProgram = new QOpenGLShaderProgram();
@@ -141,13 +150,16 @@ namespace model
 	{
 		for( int i = 0; i < N_BUFFER_TYPES; ++i)
 		{
-			QOpenGLBuffer* buffer = m_outputBuffers[ i ];
-			buffer->destroy();
-			delete buffer;
-			
-			buffer = m_inputBuffers[ i ];
-			buffer->destroy();
-			delete buffer;
+			if( m_inputBuffers[ i ] != NULL )
+			{
+				QOpenGLBuffer* buffer = m_outputBuffers[ i ];
+				buffer->destroy();
+				delete buffer;
+				
+				buffer = m_inputBuffers[ i ];
+				buffer->destroy();
+				delete buffer;
+			}
 		}
 	}
 	
@@ -232,7 +244,7 @@ namespace model
 		{
 			if( m_inputBuffers[ i ] != NULL )
 			{
-				m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_inputBuffers[ POS ]->bufferId() );
+				m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_inputBuffers[ i ]->bufferId() );
 				m_openGL->glGetBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, resultSize, ( void * ) result );
 				
 				vector< Vec3 > tempVec( m_nElements );
@@ -244,6 +256,34 @@ namespace model
 		free( result );
 		
 		return results;
+	}
+	
+	template< typename Vec3 >
+	void CompactionRenderingState< Vec3 >::dumpBuffer( const BufferType& bufferType, bool isInput, ostream& out )
+	{
+		if( m_inputBuffers[ bufferType ] != NULL )
+		{
+			unsigned int resultSize = sizeof( Vec3 ) * m_nElements;
+			Vec3* result = ( Vec3* ) malloc( resultSize );
+			
+			if( isInput )
+			{
+				m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_inputBuffers[ bufferType ]->bufferId() );
+				m_openGL->glGetBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, resultSize, ( void * ) result );
+			}
+			else
+			{
+				m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_outputBuffers[ bufferType ]->bufferId() );
+				m_openGL->glGetBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, resultSize, ( void * ) result );
+			}
+			
+			vector< Vec3 > tempVec( m_nElements );
+			std::copy( result, result + m_nElements, tempVec.begin() );
+			
+			out << "Dumping buffer " << bufferType << endl << tempVec << endl;
+			
+			free( result );
+		}
 	}
 }
 

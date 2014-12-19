@@ -30,6 +30,10 @@ namespace model
 		m_openGL->glBufferData( GL_SHADER_STORAGE_BUFFER, sizeof( unsigned int ) * nMaxBlocks, NULL, GL_STREAM_COPY );
 		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, GLOBAL_PREFIXES, m_buffers[ GLOBAL_PREFIXES ] );
 		
+		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ N_ELEMENTS ] );
+		m_openGL->glBufferData( GL_SHADER_STORAGE_BUFFER, sizeof( unsigned int ), NULL, GL_STREAM_COPY );
+		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, N_ELEMENTS, m_buffers[ N_ELEMENTS ] );
+		
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ REDUCTION ] );
 		m_openGL->glBufferData( GL_SHADER_STORAGE_BUFFER, sizeof( unsigned int ), NULL, GL_STREAM_COPY );
 		m_openGL->glBindBufferBase( GL_SHADER_STORAGE_BUFFER, REDUCTION, m_buffers[ REDUCTION ] );
@@ -90,7 +94,7 @@ namespace model
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ ORIGINAL ] );
 		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ) * m_nElements, (void *) &values[ 0 ] );
 		
-		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ REDUCTION ] );
+		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ N_ELEMENTS ] );
 		m_openGL->glBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ), (void *) &m_nElements );
 		
 		QOpenGLShaderProgram* program = m_programs[ PER_BLOCK_SCAN ];
@@ -120,6 +124,7 @@ namespace model
 		program->enableAttributeArray( "original" );
 		program->enableAttributeArray( "scan" );
 		program->enableAttributeArray( "globalPrefixes" );
+		program->enableAttributeArray( "nElements" );
 		program->enableAttributeArray( "reduction" );
 		
 		m_openGL->glDispatchCompute( m_nBlocks, 1, 1 );
@@ -127,6 +132,7 @@ namespace model
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "scan" );
 		program->disableAttributeArray( "globalPrefixes" );
+		program->disableAttributeArray( "nElements" );
 		program->disableAttributeArray( "reduction" );
 		
 		unsigned int reduction;

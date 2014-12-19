@@ -25,8 +25,9 @@ namespace model
 			SCAN_RESULT,
 			/** Global prefixes computed while scanning. */
 			GLOBAL_PREFIXES,
-			/** Final reduction of the values in buffer ORIGINAL. It also receives the number of elements to be scanned,
-			 * which is used as input to the 3rd pass shader. */
+			/** Receives the number of elements to be scanned, which is used as input to the 3rd pass shader. */
+			N_ELEMENTS,
+			/** Final reduction of the values in buffer ORIGINAL. */
 			REDUCTION,
 			N_BUFFER_TYPES
 		};
@@ -45,6 +46,10 @@ namespace model
 		 * should be used judiciously. Also, this method should be called after doScan() so the results are available. */
 		vector< unsigned int > getResultCPU();
 		 
+		/** Dump the buffer with given buffer type to the stream for debug reasons. Transfers data from GPU to main memory,
+		 * so it is costly.*/
+		void dumpBuffer( const BufferType& bufferType, ostream& out );
+		
 		/** Returns the buffer id of one the buffers used to scan. */
 		GLuint bufferId( const BufferType& bufferType ){ return m_buffers[ bufferType ]; }
 		
@@ -59,10 +64,6 @@ namespace model
 			FINAL_SUM,
 			N_PROGRAM_TYPES
 		};
-		
-		/** Dump the buffer with given buffer type to the stream for debug reasons. Transfers data from GPU to main memory,
-		 * so it is costly.*/
-		void dumpBuffer( const BufferType& bufferType, ostream& out );
 		
 		static const int BLOCK_SIZE = 1024;
 		

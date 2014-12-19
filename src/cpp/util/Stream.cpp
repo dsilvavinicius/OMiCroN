@@ -11,12 +11,12 @@ namespace model
 		{
 			if (first)
 			{
-				out << glm::to_string(element);
+				out << element << endl;
 				first = false;
 			}
 			else
 			{
-				out << ", " << glm::to_string(element);
+				out << ", " << element << endl;
 			}
 		}
 		out << "}";
@@ -40,6 +40,13 @@ namespace model
 	{
 		out << "top left:" << rect.topLeft() << endl << "bottom right:" << rect.bottomRight()
 			<< endl << "size:" << rect.size() << endl;
+		return out;
+	}
+	
+	ostream& operator<<( ostream& out, const vec3& vec )
+	{
+		out << glm::to_string( vec );
+		
 		return out;
 	}
 }

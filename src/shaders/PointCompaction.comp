@@ -4,6 +4,12 @@
 
 layout( local_size_x = 1024 ) in;
 
+// This struct is used because vec3 has alignment of 16 bits in layout std430 . This alignment messes the arrays of vec3
+// without padding.
+struct vec3Dim {
+  float x, y, z;
+};
+
 layout( std430, binding = 0 ) coherent buffer flags
 {
 	uint gFlags[];
@@ -14,34 +20,42 @@ layout( std430, binding = 1 ) coherent buffer prefixes
 	uint gPrefixes[];
 };
 
-layout( std430, binding = 4 ) coherent buffer inputVertices
+layout( std430, binding = 3 ) coherent buffer nElements
 {
-	vec3 gInputVertices[];
+	uint gNElements;
 };
 
-layout( std430, binding = 5 ) coherent buffer inputAttrib0
+layout( std430, binding = 5 ) coherent buffer inputVertices
 {
-	vec3 gInputAttrib0[];
+	vec3Dim gInputVertices[];
 };
 
-layout( std430, binding = 7 ) coherent buffer outputVertices
+layout( std430, binding = 6 ) coherent buffer inputAttrib0
 {
-	vec3 gOutputVertices[];
+	vec3Dim gInputAttrib0[];
 };
 
-layout( std430, binding = 8 ) coherent buffer outputAttrib0
+layout( std430, binding = 8 ) coherent buffer outputVertices
 {
-	vec3 gOutputAttrib0[];
+	vec3Dim gOutputVertices[];
+};
+
+layout( std430, binding = 9 ) coherent buffer outputAttrib0
+{
+	vec3Dim gOutputAttrib0[];
 };
 
 void main( void )
 {
 	uint globalIdx = gl_GlobalInvocationID.x;
 	
-	if( gFlags[ globalIdx ] == 1 )
+	if( globalIdx < gNElements )
 	{
-		uint prefix = gPrefixes[ globalIdx ];
-		gOutputVertices[ prefix ] = gInputVertices[ globalIdx ];
-		gOutputAttrib0[ prefix ] = gInputAttrib0[ globalIdx ];
+		if( gFlags[ globalIdx ] == 1 )
+		{
+			uint prefix = gPrefixes[ globalIdx ];
+			gOutputVertices[ prefix ] = gInputVertices[ globalIdx ];
+			gOutputAttrib0[ prefix ] = gInputAttrib0[ globalIdx ];
+		}
 	}
 }

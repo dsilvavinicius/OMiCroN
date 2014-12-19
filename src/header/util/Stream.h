@@ -109,6 +109,8 @@ namespace model
 	ostream& operator<<( ostream& out, const QPoint& point );
 	
 	ostream& operator<<( ostream& out, const QRect& rect );
+	
+	ostream& operator<<( ostream& out, const vec3& vec );
 }
 
 #endif

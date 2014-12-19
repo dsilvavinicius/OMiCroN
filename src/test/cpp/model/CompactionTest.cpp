@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "CompactionQGLView.h"
+#include "Stream.h"
 
 using namespace std;
 using namespace glm;
@@ -55,8 +56,11 @@ namespace model
 			float expected = 1.;
 			for( int i = 0; i < pos.size(); ++i, expected += 2 )
 			{
-				ASSERT_EQ( pos[ i ], vec3( expected, expected, expected ) );
-				ASSERT_EQ( attrib0[ i ], vec3( expected + nElements, expected + nElements, expected + nElements ) );
+				vec3 expectedVec( expected, expected, expected );
+				ASSERT_EQ( pos[ i ], expectedVec );
+				
+				expectedVec = vec3( expected + nElements, expected + nElements, expected + nElements );
+				ASSERT_EQ( attrib0[ i ], expectedVec );
 			}
 		}
 	}
