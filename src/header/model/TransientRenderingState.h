@@ -5,7 +5,7 @@
 
 namespace model
 {
-	/** Transient rendering state. It is transient because is designed to be instatiated and used in a single rendering loop
+	/** Transient rendering state. Transient because it is designed to be instatiated and used in a single rendering loop
 	 * iteration. */
 	template< typename Vec3 >
 	class TransientRenderingState

@@ -106,7 +106,11 @@ namespace model
 				// Copies parameter buffer to created buffer.
 				openGL->glBindBuffer( GL_COPY_WRITE_BUFFER, buffer->bufferId() );
 				openGL->glBindBuffer( GL_COPY_READ_BUFFER, inputBuffers[ i ]->bufferId() );
+				
 				openGL->glCopyBufferSubData( GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, m_nElements * BYTES_PER_VERTEX );
+				
+				openGL->glBindBuffer( GL_COPY_WRITE_BUFFER, 0 );
+				openGL->glBindBuffer( GL_COPY_READ_BUFFER, 0 );
 				
 				m_inputBuffers[ i ] = buffer;
 				
@@ -202,6 +206,8 @@ namespace model
 		m_compactionProgram->disableAttributeArray( "outputVertices" );
 		m_compactionProgram->disableAttributeArray( "outputAttrib0" );
 		
+		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, 0 );
+		
 		return nElements;
 	}
 	
@@ -210,20 +216,65 @@ namespace model
 	{
 		m_nElements = compact();
 		
-		/*
 		// Sends new points to GPU.
 		QOpenGLBuffer* buffer = m_outputBuffers[ POS ];
 		buffer->bind();
-		buffer->write( nElements, ( void * ) &RenderingState::m_positions[ 0 ],
-					   RenderingState::m_positions.count() * BYTES_PER_VERTEX );
+		buffer->write( m_nElements * BYTES_PER_VERTEX, ( void * ) &RenderingState::m_positions[ 0 ],
+					   RenderingState::m_positions.size() * BYTES_PER_VERTEX );
 		
 		buffer = m_outputBuffers[ ATTRIB0 ];
 		buffer->bind();
-		buffer->write( nElements, ( void * ) &RenderingState::m_colors[ 0 ],
-					   RenderingState::m_colors.count() * BYTES_PER_VERTEX );
-		*/
-		// Draws the resulting points.
+		buffer->write( m_nElements * BYTES_PER_VERTEX, ( void * ) &RenderingState::m_colors[ 0 ],
+					   RenderingState::m_colors.size() * BYTES_PER_VERTEX );
 		
+		m_nElements += RenderingState::m_positions.size();
+		
+		// Draws the resulting points.
+		unsigned int bufferOffset = 0;
+		switch( RenderingState::m_attribs )
+		{
+			case Attributes::NORMALS:
+			{
+				RenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
+				
+				m_outputBuffers[ POS ]->bind();
+				m_openGL->glEnableVertexAttribArray( QGL::Position );
+				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				
+				m_outputBuffers[ ATTRIB0 ]->bind();
+				m_openGL->glEnableVertexAttribArray( QGL::Normal );
+				m_openGL->glVertexAttribPointer( QGL::Normal, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				
+				break;
+			}
+			case Attributes::COLORS:
+			{
+				RenderingState::m_painter->setStandardEffect( QGL::FlatPerVertexColor );
+				
+				m_outputBuffers[ POS ]->bind();
+				m_openGL->glEnableVertexAttribArray( QGL::Position );
+				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				
+				m_outputBuffers[ ATTRIB0 ]->bind();
+				m_openGL->glEnableVertexAttribArray( QGL::Color );
+				m_openGL->glVertexAttribPointer( QGL::Color, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				
+				break;
+			}
+			case Attributes::COLORS_AND_NORMALS:
+			{
+				throw logic_error( "Colors and normals not supported yet." );
+				break;
+			}
+		}
+		
+		//m_openGL->glDrawArrays( GL_POINTS, 0, m_nElements );
+		
+		m_openGL->glDisableVertexAttribArray( QGL::Position );
+		m_openGL->glDisableVertexAttribArray( QGL::Normal );
+		m_openGL->glDisableVertexAttribArray( QGL::Color );
+		
+		m_openGL->glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		
 		// Swaps buffers for the next frame.
 		for( int i = 0; i < N_BUFFER_TYPES; ++i )
