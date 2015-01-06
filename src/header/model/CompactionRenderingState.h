@@ -3,6 +3,7 @@
 
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLVertexArrayObject>
 #include <QCoreApplication>
 
 #include "Scan.h"
@@ -65,6 +66,8 @@ namespace model
 		
 		QOpenGLFunctions_4_3_Compatibility* m_openGL;
 		QOpenGLShaderProgram* m_compactionProgram;
+		QOpenGLShaderProgram* m_renderingProgram;
+		QOpenGLVertexArrayObject* m_arrayObj;
 		
 		Scan m_scan;
 		
@@ -103,7 +106,7 @@ namespace model
 				buffer->bind();
 				buffer->allocate( MAX_BYTES );
 				
-				// Copies parameter buffer to created buffer.
+				// Copies the buffer passed as parameter to the created buffer.
 				openGL->glBindBuffer( GL_COPY_WRITE_BUFFER, buffer->bufferId() );
 				openGL->glBindBuffer( GL_COPY_READ_BUFFER, inputBuffers[ i ]->bufferId() );
 				
@@ -114,7 +117,7 @@ namespace model
 				
 				m_inputBuffers[ i ] = buffer;
 				
-				// Release parameter buffer.
+				// Release the buffer passed as parameter.
 				inputBuffers[ i ]->destroy();
 			}
 			else
@@ -142,11 +145,24 @@ namespace model
 			}
 		}
 		
+		m_arrayObj = new QOpenGLVertexArrayObject;
+		m_arrayObj->create();
+		
+		string appDirPath = QCoreApplication::applicationDirPath().toStdString();
+		
 		m_compactionProgram = new QOpenGLShaderProgram();
 		m_compactionProgram->addShaderFromSourceFile( QOpenGLShader::Compute,
-													  ( QCoreApplication::applicationDirPath().toStdString() +
-													  "/../shaders/PointCompaction.comp" ).c_str() );
-		cout << m_compactionProgram->log().toStdString() << endl;
+													  ( appDirPath + "/../shaders/PointCompaction.comp" ).c_str() );
+		m_compactionProgram->link();
+		cout << "Compaction program linking log: " << endl << m_compactionProgram->log().toStdString() << endl;
+		
+		m_renderingProgram = new QOpenGLShaderProgram();
+		m_renderingProgram->addShaderFromSourceFile( QOpenGLShader::Vertex,
+													 ( appDirPath + "/../shaders/PerVertColor.vert" ).c_str() );
+		m_renderingProgram->addShaderFromSourceFile( QOpenGLShader::Vertex,
+													 ( appDirPath + "/../shaders/PerVertColor.vert" ).c_str() );
+		m_renderingProgram->link();
+		cout << "Rendering program linking log: " << endl << m_renderingProgram->log().toStdString() << endl;
 	}
 	
 	template< typename Vec3 >
@@ -165,6 +181,10 @@ namespace model
 				delete buffer;
 			}
 		}
+		
+		delete m_arrayObj;
+		delete m_compactionProgram;
+		delete m_renderingProgram;
 	}
 	
 	template< typename Vec3 >
@@ -230,6 +250,8 @@ namespace model
 		m_nElements += RenderingState::m_positions.size();
 		
 		// Draws the resulting points.
+		m_arrayObj->bind();
+		
 		unsigned int bufferOffset = 0;
 		switch( RenderingState::m_attribs )
 		{
@@ -238,26 +260,26 @@ namespace model
 				RenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
 				
 				m_outputBuffers[ POS ]->bind();
-				m_openGL->glEnableVertexAttribArray( QGL::Position );
 				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glEnableVertexAttribArray( QGL::Position );
 				
 				m_outputBuffers[ ATTRIB0 ]->bind();
-				m_openGL->glEnableVertexAttribArray( QGL::Normal );
 				m_openGL->glVertexAttribPointer( QGL::Normal, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glEnableVertexAttribArray( QGL::Normal );
 				
 				break;
 			}
 			case Attributes::COLORS:
 			{
-				RenderingState::m_painter->setStandardEffect( QGL::FlatPerVertexColor );
+				m_renderingProgram->bind();
 				
 				m_outputBuffers[ POS ]->bind();
-				m_openGL->glEnableVertexAttribArray( QGL::Position );
 				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glEnableVertexAttribArray( QGL::Position );
 				
 				m_outputBuffers[ ATTRIB0 ]->bind();
-				m_openGL->glEnableVertexAttribArray( QGL::Color );
 				m_openGL->glVertexAttribPointer( QGL::Color, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glEnableVertexAttribArray( QGL::Color );
 				
 				break;
 			}
@@ -268,13 +290,15 @@ namespace model
 			}
 		}
 		
-		//m_openGL->glDrawArrays( GL_POINTS, 0, m_nElements );
+		m_openGL->glDrawArrays( GL_POINTS, 0, m_nElements );
 		
 		m_openGL->glDisableVertexAttribArray( QGL::Position );
 		m_openGL->glDisableVertexAttribArray( QGL::Normal );
 		m_openGL->glDisableVertexAttribArray( QGL::Color );
 		
 		m_openGL->glBindBuffer( GL_ARRAY_BUFFER, 0 );
+		m_renderingProgram->release();
+		m_arrayObj->release();
 		
 		// Swaps buffers for the next frame.
 		for( int i = 0; i < N_BUFFER_TYPES; ++i )
