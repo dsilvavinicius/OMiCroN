@@ -155,14 +155,16 @@ namespace model
 													  ( appDirPath + "/../shaders/PointCompaction.comp" ).c_str() );
 		m_compactionProgram->link();
 		cout << "Compaction program linking log: " << endl << m_compactionProgram->log().toStdString() << endl;
+		assert( m_compactionProgram->isLinked() && "Compaction Program is not linked" );
 		
 		m_renderingProgram = new QOpenGLShaderProgram();
 		m_renderingProgram->addShaderFromSourceFile( QOpenGLShader::Vertex,
 													 ( appDirPath + "/../shaders/PerVertColor.vert" ).c_str() );
-		m_renderingProgram->addShaderFromSourceFile( QOpenGLShader::Vertex,
-													 ( appDirPath + "/../shaders/PerVertColor.vert" ).c_str() );
+		m_renderingProgram->addShaderFromSourceFile( QOpenGLShader::Fragment,
+													 ( appDirPath + "/../shaders/PerVertColor.frag" ).c_str() );
 		m_renderingProgram->link();
 		cout << "Rendering program linking log: " << endl << m_renderingProgram->log().toStdString() << endl;
+		assert( m_renderingProgram->isLinked() && "Rendering Program is not linked" );
 	}
 	
 	template< typename Vec3 >
@@ -290,6 +292,7 @@ namespace model
 			}
 		}
 		
+		m_openGL->glMemoryBarrier( GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT );
 		m_openGL->glDrawArrays( GL_POINTS, 0, m_nElements );
 		
 		m_openGL->glDisableVertexAttribArray( QGL::Position );
@@ -310,6 +313,8 @@ namespace model
 	template< typename Vec3 >
 	vector< vector< Vec3 > > CompactionRenderingState< Vec3 >::getResultCPU()
 	{
+		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+		
 		unsigned int resultSize = sizeof( Vec3 ) * m_nElements;
 		Vec3* result = ( Vec3* ) malloc( resultSize );
 		
@@ -336,6 +341,8 @@ namespace model
 	template< typename Vec3 >
 	void CompactionRenderingState< Vec3 >::dumpBuffer( const BufferType& bufferType, bool isInput, ostream& out )
 	{
+		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+		
 		if( m_inputBuffers[ bufferType ] != NULL )
 		{
 			unsigned int resultSize = sizeof( Vec3 ) * m_nElements;

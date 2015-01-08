@@ -61,7 +61,7 @@ namespace model
 				}
 			}
 			program->link();
-			cout << "Linked correctly? " << program->isLinked() << endl;
+			cout << "Linked correctly? " << program->isLinked() << endl << "Log:" << program->log().toStdString() <<endl;
 			
 			program->bind();
 			

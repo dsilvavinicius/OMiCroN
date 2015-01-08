@@ -57,9 +57,11 @@ namespace model
 			for( int i = 0; i < pos.size(); ++i, expected += 2 )
 			{
 				vec3 expectedVec( expected, expected, expected );
+				cout << "Pos: " << pos[ i ] << ". Expected: " << expectedVec << endl;
 				ASSERT_EQ( pos[ i ], expectedVec );
 				
 				expectedVec = vec3( expected + nElements, expected + nElements, expected + nElements );
+				cout << "Attrib0: " << attrib0[ i ] << ". Expected: " << expectedVec << endl << endl;
 				ASSERT_EQ( attrib0[ i ], expectedVec );
 			}
 		}

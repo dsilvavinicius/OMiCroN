@@ -4,7 +4,7 @@
 
 layout( local_size_x = 1024 ) in;
 
-// This struct is used because vec3 has alignment of 16 bits in layout std430 . This alignment messes the arrays of vec3
+// This struct is used because vec3 has alignment of 4 bytes in layout std430 . This alignment messes the arrays of vec3
 // without padding.
 struct vec3Dim {
   float x, y, z;
