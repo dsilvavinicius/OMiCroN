@@ -14,6 +14,7 @@ namespace model
 		class ScanQGLView
 		: public QGLView
 		{
+		Q_OBJECT
 		public:
 			ScanQGLView( const vector< unsigned int >& values, const QSurfaceFormat &format, QWindow *parent = 0 );
 			

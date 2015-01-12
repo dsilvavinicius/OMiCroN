@@ -145,7 +145,15 @@ namespace model
 			}
 		}
 		
-		m_arrayObj = new QOpenGLVertexArrayObject;
+		//
+		for( int i = 0; i < N_BUFFER_TYPES; ++i )
+		{
+			cout << "Input buffer " << i << ":" << m_inputBuffers[ i ] << endl;
+			cout << "Output buffer " << i << ":" << m_outputBuffers[ i ] << endl << endl;
+		}
+		//
+		
+		m_arrayObj = new QOpenGLVertexArrayObject();
 		m_arrayObj->create();
 		
 		string appDirPath = QCoreApplication::applicationDirPath().toStdString();
@@ -219,7 +227,9 @@ namespace model
 		m_compactionProgram->enableAttributeArray( "outputVertices" );
 		m_compactionProgram->enableAttributeArray( "outputAttrib0" );
 		
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		m_openGL->glDispatchCompute( nBlocks, 1, 1 );
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		
 		m_compactionProgram->disableAttributeArray( "flags" );
 		m_compactionProgram->disableAttributeArray( "prefixes" );
@@ -236,6 +246,7 @@ namespace model
 	template< typename Vec3 >
 	unsigned int CompactionRenderingState< Vec3 >::render()
 	{
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		m_nElements = compact();
 		
 		// Sends new points to GPU.
@@ -254,7 +265,6 @@ namespace model
 		// Draws the resulting points.
 		m_arrayObj->bind();
 		
-		unsigned int bufferOffset = 0;
 		switch( RenderingState::m_attribs )
 		{
 			case Attributes::NORMALS:
@@ -262,11 +272,11 @@ namespace model
 				RenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
 				
 				m_outputBuffers[ POS ]->bind();
-				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, ( void * ) 0 );
 				m_openGL->glEnableVertexAttribArray( QGL::Position );
 				
 				m_outputBuffers[ ATTRIB0 ]->bind();
-				m_openGL->glVertexAttribPointer( QGL::Normal, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glVertexAttribPointer( QGL::Normal, 3, GL_FLOAT, GL_FALSE, 0, ( void * ) 0 );
 				m_openGL->glEnableVertexAttribArray( QGL::Normal );
 				
 				break;
@@ -276,11 +286,11 @@ namespace model
 				m_renderingProgram->bind();
 				
 				m_outputBuffers[ POS ]->bind();
-				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, ( void * ) 0 );
 				m_openGL->glEnableVertexAttribArray( QGL::Position );
 				
 				m_outputBuffers[ ATTRIB0 ]->bind();
-				m_openGL->glVertexAttribPointer( QGL::Color, 3, GL_FLOAT, GL_FALSE, 0, &bufferOffset );
+				m_openGL->glVertexAttribPointer( QGL::Color, 3, GL_FLOAT, GL_FALSE, 0, ( void * ) 0 );
 				m_openGL->glEnableVertexAttribArray( QGL::Color );
 				
 				break;
@@ -292,8 +302,9 @@ namespace model
 			}
 		}
 		
-		m_openGL->glMemoryBarrier( GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT );
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		m_openGL->glDrawArrays( GL_POINTS, 0, m_nElements );
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		
 		m_openGL->glDisableVertexAttribArray( QGL::Position );
 		m_openGL->glDisableVertexAttribArray( QGL::Normal );
@@ -313,7 +324,17 @@ namespace model
 	template< typename Vec3 >
 	vector< vector< Vec3 > > CompactionRenderingState< Vec3 >::getResultCPU()
 	{
-		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+		//
+		for( int i = 0; i < N_BUFFER_TYPES; ++i )
+		{
+			cout << "Input buffer " << i << ":" << m_inputBuffers[ i ] << endl;
+			cout << "Output buffer " << i << ":" << m_outputBuffers[ i ] << endl << endl;
+		}
+		//
+		
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
+		
+		cout << "m_nElements in getResultCPU: " << m_nElements << endl << endl;
 		
 		unsigned int resultSize = sizeof( Vec3 ) * m_nElements;
 		Vec3* result = ( Vec3* ) malloc( resultSize );
@@ -341,7 +362,15 @@ namespace model
 	template< typename Vec3 >
 	void CompactionRenderingState< Vec3 >::dumpBuffer( const BufferType& bufferType, bool isInput, ostream& out )
 	{
-		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
+		//
+		for( int i = 0; i < N_BUFFER_TYPES; ++i )
+		{
+			cout << "Input buffer " << i << ":" << m_inputBuffers[ i ] << endl;
+			cout << "Output buffer " << i << ":" << m_outputBuffers[ i ] << endl << endl;
+		}
+		//
+		
+		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		
 		if( m_inputBuffers[ bufferType ] != NULL )
 		{

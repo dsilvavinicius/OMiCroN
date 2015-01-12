@@ -23,6 +23,7 @@ namespace model
 			unsigned int bufferSize = sizeof( vec3 ) * m_compactedPos.size();
 			for( int i = 0; i < CompactionRenderingState< vec3 >::ATTRIB1; ++i )
 			{
+				cout << "CompactionQGLView buffer creation: " << i << endl;
 				QOpenGLBuffer* buffer = new QOpenGLBuffer( QOpenGLBuffer::VertexBuffer );
 				buffer->create();
 				buffer->setUsagePattern( QOpenGLBuffer::StaticDraw );

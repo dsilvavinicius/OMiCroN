@@ -15,6 +15,7 @@ namespace model
 		class CompactionQGLView
 		: public QGLView
 		{
+		Q_OBJECT
 		public:
 			CompactionQGLView( const vector< unsigned int >& flags, const vector< vec3 >& pos, const vector< vec3 >& attrib0,
 							   const QSurfaceFormat &format, QWindow *parent = 0 );

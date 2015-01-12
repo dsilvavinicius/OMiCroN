@@ -103,6 +103,7 @@ namespace model
 		program->enableAttributeArray( "perBlockScan" );
 		
 		m_openGL->glDispatchCompute( m_nBlocks, 1, 1 );
+		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 		
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "perBlockScan" );
@@ -114,6 +115,7 @@ namespace model
 		program->enableAttributeArray( "globalPrefixes" );
 		
 		m_openGL->glDispatchCompute( 1, 1, 1 );
+		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 		
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "perBlockScan" );
@@ -128,6 +130,7 @@ namespace model
 		program->enableAttributeArray( "reduction" );
 		
 		m_openGL->glDispatchCompute( m_nBlocks, 1, 1 );
+		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 		
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "scan" );
