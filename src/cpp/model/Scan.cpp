@@ -103,7 +103,6 @@ namespace model
 		program->enableAttributeArray( "perBlockScan" );
 		
 		m_openGL->glDispatchCompute( m_nBlocks, 1, 1 );
-		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 		
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "perBlockScan" );
@@ -114,8 +113,8 @@ namespace model
 		program->enableAttributeArray( "perBlockScan" );
 		program->enableAttributeArray( "globalPrefixes" );
 		
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
 		m_openGL->glDispatchCompute( 1, 1, 1 );
-		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 		
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "perBlockScan" );
@@ -129,8 +128,8 @@ namespace model
 		program->enableAttributeArray( "nElements" );
 		program->enableAttributeArray( "reduction" );
 		
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
 		m_openGL->glDispatchCompute( m_nBlocks, 1, 1 );
-		m_openGL->glMemoryBarrier( GL_SHADER_STORAGE_BARRIER_BIT );
 		
 		program->disableAttributeArray( "original" );
 		program->disableAttributeArray( "scan" );
@@ -147,6 +146,8 @@ namespace model
 	
 	vector< unsigned int > Scan::getResultCPU()
 	{
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
+		
 		unsigned int* result = ( unsigned int* ) malloc( sizeof( unsigned int ) * m_nElements );
 		m_openGL->glBindBuffer( GL_SHADER_STORAGE_BUFFER, m_buffers[ SCAN_RESULT ] );
 		m_openGL->glGetBufferSubData( GL_SHADER_STORAGE_BUFFER, 0, sizeof( unsigned int ) * m_nElements, ( void * ) result );
@@ -161,6 +162,8 @@ namespace model
 	
 	void Scan::dumpBuffer( const BufferType& bufferType, ostream& out )
 	{
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
+		
 		switch( bufferType )
 		{			
 			case ORIGINAL :

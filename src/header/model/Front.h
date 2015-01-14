@@ -3,24 +3,26 @@
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/ordered_index.hpp>
-#include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/sequenced_index.hpp>
 #include <boost/multi_index/member.hpp>
+
 #include "MortonCode.h"
 
-using boost::multi_index_container;
-using namespace ::boost;
 using namespace boost::multi_index;
 
 namespace model
 {
-	/** Bidirectional map with an ordered index and a hashed index. */
-	template
-	struct Front
+	/** This struct has all types used to represent the front as a set with an ordered index and a hashed index. */
+	template< typename MortonPrecision >
+	struct FrontTypes
 	{
-		struct sequential {};
-		struct hashed {};
+		using MortonCode = model::MortonCode< MortonPrecision >;
 		
+		struct sequential {};
+		struct morton {};
+		
+		/** Front entry. Has all the necessary info to query a node on the octree and to find the related data in the point array
+		 * used for rendering. */;
 		struct Entry
 		{
 			Entry( const unsigned int& offset, const int& nPoints, const MortonCode& code ):
@@ -40,18 +42,22 @@ namespace model
 			MortonCode m_code;
 		};
 		
-		using Container = multi_index_container<
-			ValueType,
+		/** The container has the actual front entries. */
+		using Front = multi_index_container<
+			Entry,
 			indexed_by<
 				sequenced< tag< sequential > >,
 				hashed_unique<
-					tag< hashed >, member< Entry, MortonCode, &Entry::m_code > >
+					tag< morton >, member< Entry, MortonCode, &Entry::m_code > >
 			>
 		>;
+		
+		using FrontBySequence = typename Front::template index< sequential >::type;
+		using FrontByMorton = typename Front::template index< morton >::type;
 	};
 	
-	using ShallowFront = Front< unsigned int >;
-	using DeepFront = Front< unsigned long >;
+	using ShallowFront = FrontTypes< unsigned int >::Front;
+	using DeepFront = FrontTypes< unsigned long >::Front;
 }
 
 #endif

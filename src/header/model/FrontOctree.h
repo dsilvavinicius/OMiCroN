@@ -29,7 +29,9 @@ namespace model
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
-		/** Tracks the hierarchy front, by prunning or branching nodes (just one level only). */
+		/** Tracks the hierarchy front, by prunning or branching nodes ( one level only ). This method should be called after
+		 * RandomSampleOctree::traverse( QGLPainter *painter, const Attributes& attribs, const Float& projThresh ), so the front can
+		 * be init in a traversal from root. */
 		FrontOctreeStats trackFront( QGLPainter* painter, const Attributes& attribs, const Float& projThresh );
 	
 	protected:

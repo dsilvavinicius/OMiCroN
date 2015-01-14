@@ -17,7 +17,7 @@ namespace model
 	 * arrays.
 	 * USAGE: as usual, setPainter() should be called for setup. However, calls for handleNodeRendering() will set data to be
 	 * appended to the vertex attrib arrays after compaction instead of overwriting all content from previous frames. In
-	 * addition, setCompactionArray() should be called to set the compaction flags, indicating vertices that will be erased or
+	 * addition, setCompactionArray() should be called in order to set the compaction flags, indicating vertices that will be erased or
 	 * maintained in compaction. After that, render() can be called to perform the compaction and to append the new data on the
 	 * vertices attrib arrays. */
 	template< typename Vec3 >
@@ -145,14 +145,6 @@ namespace model
 			}
 		}
 		
-		//
-		for( int i = 0; i < N_BUFFER_TYPES; ++i )
-		{
-			cout << "Input buffer " << i << ":" << m_inputBuffers[ i ] << endl;
-			cout << "Output buffer " << i << ":" << m_outputBuffers[ i ] << endl << endl;
-		}
-		//
-		
 		m_arrayObj = new QOpenGLVertexArrayObject();
 		m_arrayObj->create();
 		
@@ -227,9 +219,8 @@ namespace model
 		m_compactionProgram->enableAttributeArray( "outputVertices" );
 		m_compactionProgram->enableAttributeArray( "outputAttrib0" );
 		
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
 		m_openGL->glDispatchCompute( nBlocks, 1, 1 );
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		
 		m_compactionProgram->disableAttributeArray( "flags" );
 		m_compactionProgram->disableAttributeArray( "prefixes" );
@@ -246,7 +237,6 @@ namespace model
 	template< typename Vec3 >
 	unsigned int CompactionRenderingState< Vec3 >::render()
 	{
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		m_nElements = compact();
 		
 		// Sends new points to GPU.
@@ -302,9 +292,8 @@ namespace model
 			}
 		}
 		
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
+		m_openGL->glMemoryBarrier( GL_VERTEX_ATTRIB_ARRAY_BARRIER_BIT );
 		m_openGL->glDrawArrays( GL_POINTS, 0, m_nElements );
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
 		
 		m_openGL->glDisableVertexAttribArray( QGL::Position );
 		m_openGL->glDisableVertexAttribArray( QGL::Normal );
@@ -324,15 +313,7 @@ namespace model
 	template< typename Vec3 >
 	vector< vector< Vec3 > > CompactionRenderingState< Vec3 >::getResultCPU()
 	{
-		//
-		for( int i = 0; i < N_BUFFER_TYPES; ++i )
-		{
-			cout << "Input buffer " << i << ":" << m_inputBuffers[ i ] << endl;
-			cout << "Output buffer " << i << ":" << m_outputBuffers[ i ] << endl << endl;
-		}
-		//
-		
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
 		
 		cout << "m_nElements in getResultCPU: " << m_nElements << endl << endl;
 		
@@ -362,15 +343,7 @@ namespace model
 	template< typename Vec3 >
 	void CompactionRenderingState< Vec3 >::dumpBuffer( const BufferType& bufferType, bool isInput, ostream& out )
 	{
-		//
-		for( int i = 0; i < N_BUFFER_TYPES; ++i )
-		{
-			cout << "Input buffer " << i << ":" << m_inputBuffers[ i ] << endl;
-			cout << "Output buffer " << i << ":" << m_outputBuffers[ i ] << endl << endl;
-		}
-		//
-		
-		m_openGL->glMemoryBarrier( GL_ALL_BARRIER_BITS );
+		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
 		
 		if( m_inputBuffers[ bufferType ] != NULL )
 		{
