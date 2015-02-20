@@ -254,12 +254,9 @@ namespace model
 			
 			typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator firstChildIt = m_hierarchy->begin(); 
 			
-			while( true ) // Loops per siblings in a level.
+			// Loops per siblings in a level.
+			while( firstChildIt != m_hierarchy->end() && firstChildIt->first->getBits() < mortonLvlBoundary )
 			{
-				// Stop conditions.
-				if( firstChildIt == m_hierarchy->end() ) { break; }
-				if( firstChildIt->first->getBits() >= mortonLvlBoundary ) { break; }
-				
 				MortonCodePtr< MortonPrecision > parentCode = firstChildIt->first->traverseUp();
 				
 				// These counters are used to check if the accumulated number of child node points is less than a threshold.
@@ -277,10 +274,8 @@ namespace model
 				
 				// Adds points of remaining child nodes.
 				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator currentChildIt = firstChildIt;
-				while( ( ++currentChildIt ) != m_hierarchy->end() )
+				while( ( ++currentChildIt ) != m_hierarchy->end() && *currentChildIt->first->traverseUp() == *parentCode )
 				{
-					if( *currentChildIt->first->traverseUp() != *parentCode ) { break; }
-					
 					OctreeNodePtr< MortonPrecision, Float, Vec3 > currentChild = currentChildIt->second;
 					
 					appendPoints( currentChild, childrenPoints, numChildren, numLeaves );

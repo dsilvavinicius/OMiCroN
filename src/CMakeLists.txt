@@ -58,11 +58,13 @@ find_package (Qt5Core REQUIRED)
 find_package (Qt5Gui REQUIRED)
 find_package (Qt5Widgets REQUIRED)
 find_package (Qt53D REQUIRED)
+find_package (Qt5Sql REQUIRED)
 
 include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
 	${Qt53D_INCLUDE_DIRS}
+	${Qt5Sql_INCLUDE_DIRS}
 	include/
 	
 	${HEADER_DIR}/${UI_DIR}/
@@ -103,6 +105,7 @@ target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
 	Qt5::Gui
 	Qt5::Widgets
 	Qt5::3D
+	Qt5::Sql
 	${OPENGL_LIBRARIES}
 	${GLML_LIBRARIES}
 	RPly)
