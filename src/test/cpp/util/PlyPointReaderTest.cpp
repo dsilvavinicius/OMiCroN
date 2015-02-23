@@ -6,34 +6,18 @@
 
 using namespace std;
 
-extern "C" int g_argc;
-extern "C" char** g_argv;
+extern "C" string g_appPath;
 
 namespace util
 {
 	namespace test
 	{
         class PlyPointReaderTest : public ::testing::Test
-		{
-		protected:
-			static void SetUpTestCase() {
-				QApplication app( g_argc, g_argv );
-				m_appDirPath = new string( QCoreApplication::applicationDirPath().toStdString() );
-			}
-			
-			static void TearDownTestCase() {
-				delete m_appDirPath;
-				m_appDirPath = nullptr;
-			}
-			
-			static string* m_appDirPath;
-		};
-		
-		string* PlyPointReaderTest::m_appDirPath = NULL;
+		{};
 
 		TEST_F( PlyPointReaderTest, Read )
 		{
-			SimplePointReader reader( *m_appDirPath + "/../../../src/data/tests/test.ply",
+			SimplePointReader reader( g_appPath + "/../../../src/data/tests/test.ply",
 									  SimplePointReader::SINGLE, COLORS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
@@ -55,7 +39,7 @@ namespace util
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
 			
-			SimplePointReader reader( *m_appDirPath + "/../../../src/data/tests/test_normals.ply",
+			SimplePointReader reader( g_appPath + "/../../../src/data/tests/test_normals.ply",
 									  SimplePointReader::SINGLE, NORMALS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
@@ -76,7 +60,7 @@ namespace util
 		
 		TEST_F( PlyPointReaderTest, ReadExtendedPoints )
 		{
-			ExtendedPointReader reader( *m_appDirPath + "/../../../src/data/tests/test_extended_points.ply",
+			ExtendedPointReader reader( g_appPath + "/../../../src/data/tests/test_extended_points.ply",
 										ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 			ExtendedPointVector< float, vec3 > points = reader.getPoints();
 			

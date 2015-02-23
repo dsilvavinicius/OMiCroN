@@ -187,10 +187,13 @@ namespace model
 	{
 		PlyPointReader< Float, Vec3, Point > reader( plyFileName, precision, attribs );
 		
+		cout << "After reading points" << endl << endl;
+		
 		PointVector points = reader.getPoints();
-		//ExtendedPointVector< float, vec3 > points = reader.getPoints();
 		
 		cout << "Attributes:" << reader.getAttributes() << endl << endl;
+		
+		cout << "Read points: " << endl << points << endl; 
 		
 		build( points );
 	}

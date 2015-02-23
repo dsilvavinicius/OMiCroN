@@ -1,10 +1,12 @@
-#include "Octree.h"
-
 #include <gtest/gtest.h>
 #include <QApplication>
 
+#include "Octree.h"
+#include "Stream.h"
+
 extern "C" int g_argc;
 extern "C" char** g_argv;
+extern "C" string g_appPath;
 
 namespace model
 {
@@ -22,6 +24,22 @@ namespace model
 		{
 			using Point = model::Point< float, vec3 >;
 			using PointVector = vector< shared_ptr< Point > >;
+			
+		public:
+			static void SetUpTestCase()
+			{
+				string exeFilename = string( g_argv[ 0 ] );
+				m_plyFileName = new string( g_appPath +
+					"/../../../src/data/tests/simple_point_octree.ply" );
+			}
+		
+			static void TearDownTestCase()
+			{
+				delete m_plyFileName;
+				m_plyFileName = nullptr;
+			}
+			
+			static string* m_plyFileName;
 			
 		protected:
 			void SetUp()
@@ -53,15 +71,12 @@ namespace model
 				m_points.push_back( addPoint2 );
 				m_points.push_back( addPoint3 );
 				m_points.push_back( addPoint4 );
-				
-				QApplication app( g_argc, g_argv );
-				m_plyFileName = QCoreApplication::applicationDirPath().toStdString() +
-					"/../../../src/data/tests/simple_point_octree.ply";
 			}
 			
 			PointVector m_points;
-			string m_plyFileName;
 		};
+		
+		string* OctreeTest< Point< float, vec3 > >::m_plyFileName;
 		
 		template<>
 		class OctreeTest< ExtendedPoint< float, vec3 > >
@@ -70,6 +85,22 @@ namespace model
 			using Point = ExtendedPoint< float, vec3 >;
 			using PointVector = vector< shared_ptr< Point > >;
 		
+		public:
+			static void SetUpTestCase()
+			{
+				string exeFilename = string( g_argv[ 0 ] );
+				m_plyFileName = new string( exeFilename.substr( 0, exeFilename.find_last_of( "/" ) ) +
+					"/../../../src/data/tests/extended_point_octree.ply" );
+			}
+			
+			static void TearDownTestCase()
+			{
+				delete m_plyFileName;
+				m_plyFileName = nullptr;
+			}
+			
+			static string* m_plyFileName;
+			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
@@ -112,16 +143,12 @@ namespace model
 				m_points.push_back( addPoint2 );
 				m_points.push_back( addPoint3 );
 				m_points.push_back( addPoint4 );
-				
-				QApplication app( g_argc, g_argv );
-				m_plyFileName = QCoreApplication::applicationDirPath().toStdString() +
-					"/../../../src/data/tests/extended_point_octree.ply";
 			}
 			
 			PointVector m_points;
-			string m_plyFileName;
 		};
 		
+		string* OctreeTest< ExtendedPoint< float, vec3 > >::m_plyFileName;
 		
 		using testing::Types;
 		
@@ -232,7 +259,11 @@ namespace model
 		{
 			//See ShallowHierarchy for details.
 			auto octree = make_shared< ShallowOctree< float, vec3, TypeParam > >(1, 10);
-			octree->build( this->m_plyFileName, PlyPointReader<float, vec3, TypeParam>::SINGLE, Attributes::COLORS );
+			
+			cout << "ShallowHierarchyFromFile filename: " << *( this->m_plyFileName ) << endl;
+			
+			octree->build( *( this->m_plyFileName ), PlyPointReader<float, vec3, TypeParam>::SINGLE,
+						   Attributes::COLORS );
 			
 			checkShallowHierarchy( octree );
 		}
