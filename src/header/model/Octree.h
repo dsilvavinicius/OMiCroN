@@ -17,8 +17,10 @@
 #include "Stream.h"
 #include "TransientRenderingState.h"
 #include "OctreeStats.h"
+#include "PlyPointReader.h"
 
 using namespace std;
+using namespace util;
 
 namespace model
 {	
@@ -38,11 +40,17 @@ namespace model
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using RenderingState = model::RenderingState< Vec3 >;
+		using Precision = typename PlyPointReader< Float, Vec3, Point >::Precision;
 		
 	public:
 		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum level
 		 * of the hierarchy. */
 		OctreeBase( const int& maxPointsPerNode, const int& maxLevel );
+		
+		/** Builds the octree for a given point cloud file. The points are expected to be in world coordinates.
+		 * @param precision tells the floating precision in which coordinates will be interpreted.
+		 * @param attribs tells which point attributes will be loaded from the file. */
+		virtual void build( const string& plyFileName, const Precision& precision, const Attributes& attribs );
 		
 		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. */
 		virtual void build( const PointVector& points );
@@ -171,6 +179,20 @@ namespace model
 	{
 		buildBoundaries( points );
 		buildNodes( points );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	void OctreeBase< MortonPrecision, Float, Vec3, Point >::build( const string& plyFileName,
+																   const Precision& precision, const Attributes& attribs )
+	{
+		PlyPointReader< Float, Vec3, Point > reader( plyFileName, precision, attribs );
+		
+		PointVector points = reader.getPoints();
+		//ExtendedPointVector< float, vec3 > points = reader.getPoints();
+		
+		cout << "Attributes:" << reader.getAttributes() << endl << endl;
+		
+		build( points );
 	}
 	
 	template < typename MortonPrecision, typename Float, typename Vec3, typename Point >

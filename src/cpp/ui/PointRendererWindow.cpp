@@ -19,18 +19,6 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		//SimplePointReader reader( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
-		SimplePointReader reader( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
-		//ExtendedPointReader reader( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE,
-		//							COLORS_AND_NORMALS );
-		
-		m_attribs = reader.getAttributes();
-		
-		PointVector< float, vec3 > points = reader.getPoints();
-		//ExtendedPointVector< float, vec3 > points = reader.getPoints();
-		
-		cout << "Attributes:" << m_attribs << endl << endl;
-		
 		//m_octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
 		//m_octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		//m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
@@ -38,7 +26,10 @@ namespace ui
 		m_octree = make_shared< ShallowFrontOctree< float, vec3, Point< float, vec3 >,
 													unordered_set< ShallowMortonCode > > >( 1, 10 );
 		//m_octree = make_shared< MediumFrontOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
-		m_octree->build( points );
+		
+		//m_octree->build( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
+		m_octree->build( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
+		//m_octree->build( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 		
 		//cout << *m_octree << endl << endl;
 	}
