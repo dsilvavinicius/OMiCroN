@@ -1,45 +1,49 @@
 #include "Frustum.h"
 
-void ExtractPlanes( Plane* p_planes, const Matrix4x4 & comboMatrix, bool normalize )
+namespace model
 {
-	// Left clipping plane
-	p_planes[ 0 ].a = comboMatrix._41 + comboMatrix._11;
-	p_planes[ 0 ].b = comboMatrix._42 + comboMatrix._12;
-	p_planes[ 0 ].c = comboMatrix._43 + comboMatrix._13;
-	p_planes[ 0 ].d = comboMatrix._44 + comboMatrix._14;
-	// Right clipping plane
-	p_planes[ 1 ].a = comboMatrix._41 - comboMatrix._11;
-	p_planes[ 1 ].b = comboMatrix._42 - comboMatrix._12;
-	p_planes[ 1 ].c = comboMatrix._43 - comboMatrix._13;
-	p_planes[ 1 ].d = comboMatrix._44 - comboMatrix._14;
-	// Top clipping plane
-	p_planes[ 2 ].a = comboMatrix._41 - comboMatrix._21;
-	p_planes[ 2 ].b = comboMatrix._42 - comboMatrix._22;
-	p_planes[ 2 ].c = comboMatrix._43 - comboMatrix._23;
-	p_planes[ 2 ].d = comboMatrix._44 - comboMatrix._24;
-	// Bottom clipping plane
-	p_planes[ 3 ].a = comboMatrix._41 + comboMatrix._21;
-	p_planes[ 3 ].b = comboMatrix._42 + comboMatrix._22;
-	p_planes[ 3 ].c = comboMatrix._43 + comboMatrix._23;
-	p_planes[ 3 ].d = comboMatrix._44 + comboMatrix._24;
-	// Near clipping plane
-	p_planes[ 4 ].a = comboMatrix._41 + comboMatrix._31;
-	p_planes[ 4 ].b = comboMatrix._42 + comboMatrix._32;
-	p_planes[ 4 ].c = comboMatrix._43 + comboMatrix._33;
-	p_planes[ 4 ].d = comboMatrix._44 + comboMatrix._34;
-	// Far clipping plane
-	p_planes[ 5 ].a = comboMatrix._41 - comboMatrix._31;
-	p_planes[ 5 ].b = comboMatrix._42 - comboMatrix._32;
-	p_planes[ 5 ].c = comboMatrix._43 - comboMatrix._33;
-	p_planes[ 5 ].d = comboMatrix._44 - comboMatrix._34;
-	// Normalize the plane equations, if requested
-	if ( normalize == true )
+	void Frustum::extractPlanes( const Matrix4f& modelViewProjection, const bool& normalize )
 	{
-		NormalizePlane( p_planes[0] );
-		NormalizePlane( p_planes[1] );
-		NormalizePlane( p_planes[2] );
-		NormalizePlane( p_planes[3] );
-		NormalizePlane( p_planes[4] );
-		NormalizePlane( p_planes[5] );
+		/*
+		// Left clipping plane
+		m_planes[ 0 ].a = modelViewProjection._41 + modelViewProjection._11;
+		m_planes[ 0 ].b = modelViewProjection._42 + modelViewProjection._12;
+		m_planes[ 0 ].c = modelViewProjection._43 + modelViewProjection._13;
+		m_planes[ 0 ].d = modelViewProjection._44 + modelViewProjection._14;
+		// Right clipping plane
+		m_planes[ 1 ].a = modelViewProjection._41 - modelViewProjection._11;
+		m_planes[ 1 ].b = modelViewProjection._42 - modelViewProjection._12;
+		m_planes[ 1 ].c = modelViewProjection._43 - modelViewProjection._13;
+		m_planes[ 1 ].d = modelViewProjection._44 - modelViewProjection._14;
+		// Top clipping plane
+		m_planes[ 2 ].a = modelViewProjection._41 - modelViewProjection._21;
+		m_planes[ 2 ].b = modelViewProjection._42 - modelViewProjection._22;
+		m_planes[ 2 ].c = modelViewProjection._43 - modelViewProjection._23;
+		m_planes[ 2 ].d = modelViewProjection._44 - modelViewProjection._24;
+		// Bottom clipping plane
+		m_planes[ 3 ].a = modelViewProjection._41 + modelViewProjection._21;
+		m_planes[ 3 ].b = modelViewProjection._42 + modelViewProjection._22;
+		m_planes[ 3 ].c = modelViewProjection._43 + modelViewProjection._23;
+		m_planes[ 3 ].d = modelViewProjection._44 + modelViewProjection._24;
+		// Near clipping plane
+		m_planes[ 4 ].a = modelViewProjection._41 + modelViewProjection._31;
+		m_planes[ 4 ].b = modelViewProjection._42 + modelViewProjection._32;
+		m_planes[ 4 ].c = modelViewProjection._43 + modelViewProjection._33;
+		m_planes[ 4 ].d = modelViewProjection._44 + modelViewProjection._34;
+		// Far clipping plane
+		m_planes[ 5 ].a = modelViewProjection._41 - modelViewProjection._31;
+		m_planes[ 5 ].b = modelViewProjection._42 - modelViewProjection._32;
+		m_planes[ 5 ].c = modelViewProjection._43 - modelViewProjection._33;
+		m_planes[ 5 ].d = modelViewProjection._44 - modelViewProjection._34;
+		// Normalize the plane equations, if requested
+		if ( normalize == true )
+		{
+			NormalizePlane( m_planes[0] );
+			NormalizePlane( m_planes[1] );
+			NormalizePlane( m_planes[2] );
+			NormalizePlane( m_planes[3] );
+			NormalizePlane( m_planes[4] );
+			NormalizePlane( m_planes[5] );
+		}*/
 	}
 }

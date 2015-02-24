@@ -1,8 +1,12 @@
 #ifndef FRUSTUM_H
+#define FRUSTUM_H
 
 #include <glm/glm.hpp>
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 using namespace glm;
+using namespace Eigen;
 
 namespace model
 {
@@ -10,14 +14,20 @@ namespace model
 	class Frustum
 	{
 	public:
-		Frustum( const mat4x4& modelViewProjection );
+		Frustum( const Matrix4f& modelViewProjection );
 		
 		/** Updates the frustrum after changing camera's intrinsic parameters ( fov, ratio, near or far plane ). */
-		void update( const mat4x4& modelViewProjection );
+		void update( const Matrix4f& modelViewProjection );
 	
+		
+		
 	private:
+		/** Extracts the 6 frustum planes from the model-view-projection matrix.
+		 * @param normalize indicates that the final plane equation should be normalized. */
+		void extractPlanes( const Matrix4f& modelViewProjection, const bool& normalize );
+		
 		// Planes are defined
-		vec4[ 6 ] planes;
+		Hyperplane< float, 3 >* m_planes[ 6 ];
 	};
 }
 

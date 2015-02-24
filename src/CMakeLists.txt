@@ -95,6 +95,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h
 	${HEADER_DIR}/${MODEL_DIR}/Point.h
 	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h
+	${HEADER_DIR}/${MODEL_DIR}/Frustum.h			${CPP_DIR}/${MODEL_DIR}/Frustum.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/FrontOctree.h
 	${HEADER_DIR}/${MODEL_DIR}/FrontWrapper.h
