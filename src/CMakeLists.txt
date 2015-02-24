@@ -59,12 +59,14 @@ find_package (Qt5Gui REQUIRED)
 find_package (Qt5Widgets REQUIRED)
 find_package (Qt53D REQUIRED)
 find_package (Qt5Sql REQUIRED)
+find_package (Eigen3 REQUIRED)
 
 include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
 	${Qt53D_INCLUDE_DIRS}
 	${Qt5Sql_INCLUDE_DIRS}
+	${EIGEN3_INCLUDE_DIR}
 	include/
 	
 	${HEADER_DIR}/${UI_DIR}/
