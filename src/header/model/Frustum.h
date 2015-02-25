@@ -40,6 +40,33 @@ namespace model
 		// Planes are defined
 		vector< Plane* > m_planes;
 	};
+	
+	bool Frustum::isCullable( const Box& box )
+	{
+		Vector3f boxSizes = box.sizes();
+		Vector3f boxMin = box.min();
+		Vector3f boxMax = box.max();
+		
+		// Performs frustum plane dilatation, finds n only, since p is necessary just for detecting intersections points
+		// and verify if they are inside or outside the frustum.
+		for( int i = 0; i < 6; ++i )
+		{
+			Plane* plane = m_planes[ i ];
+			Vector3f normal = plane->normal();
+			float dilatation = abs( boxSizes.dot( normal ) );
+			float offset = plane->offset() + dilatation;
+			Plane dilatatedPlane( normal, offset );
+			
+			Vector3f n;
+			
+			n[ 0 ] = ( normal[ 0 ] < 0 ) ? boxMax[ 0 ] : boxMin[ 0 ];
+			n[ 1 ] = ( normal[ 1 ] < 0 ) ? boxMax[ 1 ] : boxMin[ 1 ];
+			n[ 2 ] = ( normal[ 2 ] < 0 ) ? boxMax[ 2 ] : boxMin[ 2 ];
+			
+			if( dilatatedPlane.signedDistance( n ) > 0 ) return true;
+		}
+		return false;
+	}
 }
 
 #endif
