@@ -9,11 +9,13 @@
 #include <QPoint>
 #include <QRect>
 #include <QSize>
+#include <Eigen/Geometry>
 #include "Point.h"
 #include <ExtendedPoint.h>
 
 using namespace std;
 using namespace glm;
+using namespace Eigen;
 
 namespace model
 {
@@ -32,6 +34,28 @@ namespace model
 			else
 			{
 				out << endl << ", " << endl << element;
+			}
+		}
+		out << "}" << endl;
+		
+		return out;
+	}
+	
+	template< typename T >
+	ostream& operator<<( ostream& out, const vector< T* >& v )
+	{
+		out << "{" << endl;
+		bool first = true;
+		for( T* element : v )
+		{
+			if( first )
+			{
+				out << *element;
+				first = false;
+			}
+			else
+			{
+				out << endl << ", " << endl << *element;
 			}
 		}
 		out << "}" << endl;
@@ -79,6 +103,8 @@ namespace model
 			}
 		}
 		out << "}";
+		
+		return out;
 	}
 	
 	template< typename Float, typename Vec3 >
@@ -99,6 +125,24 @@ namespace model
 			}
 		}
 		out << "}";
+		
+		return out;
+	}
+	
+	template< typename Scalar, int Dim >
+	ostream& operator<<( ostream& out, const Hyperplane< Scalar, Dim >& plane )
+	{
+		out << "normal:" << plane.normal() << endl << ", offset: " << plane.offset();
+		
+		return out;
+	}
+	
+	template< typename Scalar, int Dim >
+	ostream& operator<<( ostream& out, const AlignedBox< Scalar, Dim >& box )
+	{
+		out << "min:" << box.min() << endl << ", max: " << box.max() << endl << ", size: " << box.sizes();
+		
+		return out;
 	}
 	
 	template<>
