@@ -38,42 +38,42 @@ namespace model
 		leftCoeffs[ 0 ] = mvp( 3, 0 ) + mvp( 0, 0 );
 		leftCoeffs[ 1 ] = mvp( 3, 1 ) + mvp( 0, 1 );
 		leftCoeffs[ 2 ] = mvp( 3, 2 ) + mvp( 0, 2 );
-		leftCoeffs[ 3 ] = mvp( 3, 3 ) + mvp( 0, 3 );
+		leftCoeffs[ 3 ] = -( mvp( 3, 3 ) + mvp( 0, 3 ) );
 		
 		// Right clipping plane
 		Vector4f& rightCoeffs = m_planes[ 1 ]->coeffs();
 		rightCoeffs[ 0 ] = mvp( 3, 0 ) - mvp( 0, 0 );
 		rightCoeffs[ 1 ] = mvp( 3, 1 ) - mvp( 0, 1 );
 		rightCoeffs[ 2 ] = mvp( 3, 2 ) - mvp( 0, 2 );
-		rightCoeffs[ 3 ] = mvp( 3, 3 ) - mvp( 0, 3 );
+		rightCoeffs[ 3 ] = -( mvp( 3, 3 ) - mvp( 0, 3 ) );
 		
 		// Top clipping plane
 		Vector4f& topCoeffs = m_planes[ 2 ]->coeffs();
 		topCoeffs[ 0 ] = mvp( 3, 0 ) - mvp( 1, 0 );
 		topCoeffs[ 1 ] = mvp( 3, 1 ) - mvp( 1, 1 );
 		topCoeffs[ 2 ] = mvp( 3, 2 ) - mvp( 1, 2 );
-		topCoeffs[ 3 ] = mvp( 3, 3 ) - mvp( 1, 3 );
+		topCoeffs[ 3 ] = -( mvp( 3, 3 ) - mvp( 1, 3 ) );
 		
 		// Bottom clipping plane
 		Vector4f& botCoeffs = m_planes[ 3 ]->coeffs();
 		botCoeffs[ 0 ] = mvp( 3, 0 ) + mvp( 1, 0 );
 		botCoeffs[ 1 ] = mvp( 3, 1 ) + mvp( 1, 1 );
 		botCoeffs[ 2 ] = mvp( 3, 2 ) + mvp( 1, 2 );
-		botCoeffs[ 3 ] = mvp( 3, 3 ) + mvp( 1, 3 );
+		botCoeffs[ 3 ] = -( mvp( 3, 3 ) + mvp( 1, 3 ) );
 		
 		// Near clipping plane
 		Vector4f& nearCoeffs = m_planes[ 4 ]->coeffs();
 		nearCoeffs[ 0 ] = mvp( 3, 0 ) + mvp( 2, 0 );
 		nearCoeffs[ 1 ] = mvp( 3, 1 ) + mvp( 2, 1 );
 		nearCoeffs[ 2 ] = mvp( 3, 2 ) + mvp( 2, 2 );
-		nearCoeffs[ 3 ] = mvp( 3, 3 ) + mvp( 2, 3 );
+		nearCoeffs[ 3 ] = -( mvp( 3, 3 ) + mvp( 2, 3 ) );
 		
 		// Far clipping plane
 		Vector4f& farCoeffs = m_planes[ 5 ]->coeffs();
 		farCoeffs[ 0 ] = mvp( 3, 0 ) - mvp( 2, 0 );
 		farCoeffs[ 1 ] = mvp( 3, 1 ) - mvp( 2, 1 );
 		farCoeffs[ 2 ] = mvp( 3, 2 ) - mvp( 2, 2 );
-		farCoeffs[ 3 ] = mvp( 3, 3 ) - mvp( 2, 3 );
+		farCoeffs[ 3 ] = -( mvp( 3, 3 ) - mvp( 2, 3 ) );
 		
 		if ( normalize )
 		{
@@ -83,21 +83,21 @@ namespace model
 			}
 		}
 		
-		Matrix4f inverse = modelView.inverse();
+		/*Matrix4f inverse = modelView.inverse();
 		
 		cout << "To world transform: " << endl << inverse << endl << endl;
 		
 		for( Plane* plane : m_planes )
 		{
 			transformPlaneToWorld( inverse, plane );
-		}
+		}*/
 		
 		cout << *this << endl;
 	}
 	
 	void Frustum::transformPlaneToWorld( const Matrix4f& toWorld, Plane* plane ) const
 	{
-		cout << "Transforming plane to world coords" << endl << endl;
+		cout << "Transforming plane to world coords:" << endl << *plane << endl << endl;
 		
 		Vector3f normal = plane->normal();
 		
@@ -126,6 +126,8 @@ namespace model
 		cout << "Transformed normal: " << normal << endl << endl;
 		
 		*plane = Plane( normal, tempPointInPlane );
+		
+		cout << "Transformed plane: " << *plane << endl << endl;
 		
 		cout << "Ending plane transform" << endl << endl;
 	}
