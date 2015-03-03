@@ -14,7 +14,8 @@ using namespace Eigen;
 
 namespace model
 {
-	/** Camera's frustum. Provide culling of axis-aligned boxes. The camera frustum planes will be in world coordinates.*/
+	/** Camera's frustum. Provide culling of axis-aligned boxes. The camera frustum planes will be in model
+	 * coordinates. To get the planes in world coordinates, pass a view matrix in place of the model-view */
 	class Frustum
 	{
 		using Plane = Hyperplane< float, 3 >;
