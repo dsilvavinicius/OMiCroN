@@ -39,7 +39,8 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using RenderingState = model::RenderingState< Vec3 >;
+		using RenderingState = model::RenderingState< Vec3, Float >;
+		using TransientRenderingState = model::TransientRenderingState< Vec3, Float >;
 		using Precision = typename PlyPointReader< Float, Vec3, Point >::Precision;
 		
 	public:
@@ -108,15 +109,10 @@ namespace model
 								   int& numChildren, int& numLeaves ) const;
 		
 		// TODO: Make tests for this function.
-		/** Computes the boundaries of the node indicated by the given morton code. */
-		QBox3D getBoundaries( MortonCodePtr< MortonPrecision > ) const;
-		
-		/** Checks if this node is culled by frustrum test. */
-		bool isCullable( const QBox3D& box, RenderingState& renderingState ) const;
-		
-		/** Check if this node is at desired LOD and thus if it should be rendered. The LOD condition is the
-		 * projection of node's bouding box is greater than a given projection threshold. */
-		bool isRenderable( const QBox3D& box, RenderingState& renderingState, const Float& projThresh ) const;
+		/** Computes the boundaries of the node indicated by the given morton code.
+		 * @returns a pair of vertices: the first is the box's minimum vertex an the last is the box's maximum
+		 * vertex. */
+		pair< Vec3, Vec3 > getBoundaries( MortonCodePtr< MortonPrecision > ) const;
 		
 		/** Traversal recursion. */
 		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode,
@@ -138,8 +134,9 @@ namespace model
 		virtual void onTraversalEnd() {};
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */
-		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors, const QBox3D& box,
-										  const bool& isCullable, const bool& isRenderable );
+		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors,
+										  const pair< Vec3, Vec3 >& box, const bool& isCullable,
+									const bool& isRenderable );
 		
 		/** The hierarchy itself. */
 		OctreeMapPtr< MortonPrecision, Float, Vec3 > m_hierarchy;
@@ -193,7 +190,7 @@ namespace model
 		
 		cout << "Attributes:" << reader.getAttributes() << endl << endl;
 		
-		cout << "Read points: " << endl << points << endl; 
+		//cout << "Read points: " << endl << points << endl; 
 		
 		build( points );
 	}
@@ -405,7 +402,7 @@ namespace model
 	{
 		clock_t timing = clock();
 		
-		TransientRenderingState< Vec3 > renderingState( painter, attribs );
+		TransientRenderingState renderingState( painter, attribs );
 		
 		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
 		rootCode->build( 0x1 );
@@ -428,7 +425,7 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline QBox3D OctreeBase< MortonPrecision, Float, Vec3, Point >::getBoundaries(
+	inline pair< Vec3, Vec3 > OctreeBase< MortonPrecision, Float, Vec3, Point >::getBoundaries(
 		MortonCodePtr< MortonPrecision > code ) const
 	{
 		unsigned int level = code->getLevel();
@@ -448,52 +445,9 @@ namespace model
 			 << "min coords = " << glm::to_string(minBoxVert) << endl
 			 << "max coords = " << glm::to_string(maxBoxVert) << endl;*/
 		
-		QBox3D box( QVector3D( minBoxVert.x, minBoxVert.y, minBoxVert.z ),
-					QVector3D( maxBoxVert.x, maxBoxVert.y, maxBoxVert.z ) );
+		pair< Vec3, Vec3 > box( minBoxVert, maxBoxVert );
 		
 		return box;
-	}
-	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isCullable( const QBox3D& box,
-																			   RenderingState& renderingState )
-	const
-	{
-		return renderingState.getPainter()->isCullable( box );
-	}
-		
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline bool OctreeBase< MortonPrecision, Float, Vec3, Point >::isRenderable( const QBox3D& box,
-																				 RenderingState& renderingState,
-																	      const Float& projThresh ) const
-	{
-		QVector4D min( box.minimum(), 1 );
-		QVector4D max( box.maximum(), 1 );
-		
-		QGLPainter* painter = renderingState.getPainter();
-		QMatrix4x4 modelViewProjection = painter->combinedMatrix();
-		
-		QVector4D proj0 = modelViewProjection.map( min );
-		QVector2D normalizedProj0( proj0 / proj0.w() );
-		
-		QVector4D proj1 = modelViewProjection.map( max );
-		QVector2D normalizedProj1( proj1 / proj1.w() );
-		
-		QVector2D diagonal0 = normalizedProj1 - normalizedProj0;
-		
-		QVector3D boxSize = box.size();
-		
-		proj0 = modelViewProjection.map( QVector4D(min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1) );
-		normalizedProj0 = QVector2D( proj0 / proj0.w() );
-		
-		proj1 = modelViewProjection.map( QVector4D(max.x(), max.y(), max.z() + boxSize.z(), 1) );
-		normalizedProj1 = QVector2D( proj1 / proj1.w() );
-		
-		QVector2D diagonal1 = normalizedProj1 - normalizedProj0;
-		
-		Float maxDiagLength = glm::max( diagonal0.lengthSquared(), diagonal1.lengthSquared() );
-		
-		return maxDiagLength < projThresh;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -507,12 +461,12 @@ namespace model
 		{
 			MortonCodePtr< MortonPrecision > code = nodeIt->first;
 			OctreeNodePtr< MortonPrecision, Float, Vec3 > node = nodeIt->second;
-			QBox3D box = getBoundaries( code );
+			pair< Vec3, Vec3 > box = getBoundaries( code );
 			
-			if( !isCullable( box, renderingState ) )
+			if( !renderingState.isCullable( box ) )
 			{
 				//cout << *nodeCode << "NOT CULLED!" << endl << endl;
-				if( isRenderable( box, renderingState, projThresh ) )
+				if( renderingState.isRenderable( box, projThresh ) )
 				{
 					//cout << *nodeCode << "RENDERED!" << endl << endl;
 					if ( node->isLeaf() )
@@ -556,7 +510,7 @@ namespace model
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
 		PointPtr point = innerNode-> template getContents< Point >();
-		renderingState.handleNodeRendering( renderingState, point );
+		renderingState.handleNodeRendering( point );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -567,18 +521,20 @@ namespace model
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
 		
 		PointVectorPtr points = leafNode-> template getContents< PointVector >();
-		renderingState.handleNodeRendering( renderingState, points );
+		renderingState.handleNodeRendering( points );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::insertBoundaryPoints( vector< Vec3 >& verts,
 																						 vector< Vec3 >& colors,
-																						 const QBox3D& box,
-																						 const bool& isCullable,
-																						 const bool& isRenderable )
+																					const pair< Vec3, Vec3 >& box,
+																					const bool& isCullable,
+																					const bool& isRenderable )
 	{
-		QVector3D qv0 = box.minimum();
-		QVector3D qv6 = box.maximum();
+		Vec3 min = box.first;
+		Vec3 max = box.second;
+		QVector3D qv0( min.x, min.y, min.z );
+		QVector3D qv6( max.x, max.y, max.z );
 			
 		Vec3 v0(qv0.x(), qv0.y(), qv0.z());
 		Vec3 v6(qv6.x(), qv6.y(), qv6.z());
@@ -632,14 +588,14 @@ namespace model
 		vector< Vec3 > verts;
 		vector< Vec3 > colors;
 		
-		TransientRenderingState< Vec3 > renderingState( painter, COLORS );
+		TransientRenderingState renderingState( painter, COLORS );
 		
 		for (pair< MortonCodePtr< MortonPrecision >, OctreeNodePtr< MortonPrecision, Float, Vec3 > > entry : *m_hierarchy)
 		{
 			MortonCodePtr< MortonPrecision > code = entry.first;
-			QBox3D box = getBoundaries( code );
-			bool cullable = isCullable( box, renderingState );
-			bool renderable = isRenderable( box, renderingState, projThresh );
+			pair< Vec3, Vec3 > box = getBoundaries( code );
+			bool cullable = renderingState.isCullable( box );
+			bool renderable = renderingState.isRenderable( box, projThresh );
 			
 			if (passProjTestOnly)
 			{

@@ -7,11 +7,11 @@ namespace model
 {
 	/** Transient rendering state. Transient because it is designed to be instatiated and used in a single rendering loop
 	 * iteration. */
-	template< typename Vec3 >
+	template< typename Vec3, typename Float >
 	class TransientRenderingState
-	: public RenderingState< Vec3 >
+	: public RenderingState< Vec3, Float >
 	{
-		using RenderingState = model::RenderingState< Vec3 >;
+		using RenderingState = model::RenderingState< Vec3, Float >;
 	public:
 		TransientRenderingState( QGLPainter* painter, const Attributes& attribs );
 		~TransientRenderingState() {}
@@ -19,8 +19,9 @@ namespace model
 		unsigned int render();
 	};
 	
-	template< typename Vec3 >
-	TransientRenderingState< Vec3 >::TransientRenderingState( QGLPainter* painter, const Attributes& attribs )
+	template< typename Vec3, typename Float >
+	TransientRenderingState< Vec3, Float >::TransientRenderingState( QGLPainter* painter,
+																	 const Attributes& attribs )
 	: RenderingState( attribs )
 	{
 		RenderingState::setPainter( painter );
@@ -46,8 +47,8 @@ namespace model
 		}
 	}
 	
-	template< typename Vec3 >
-	unsigned int TransientRenderingState< Vec3 >::render()
+	template< typename Vec3, typename Float >
+	unsigned int TransientRenderingState< Vec3, Float >::render()
 	{
 		// TODO: Find a way to specify the precision properly here,
 		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &RenderingState::m_positions[0] );

@@ -16,7 +16,8 @@ namespace model
 		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using RandomSampleOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
-		using RenderingState = model::RenderingState< Vec3 >;
+		using RenderingState = model::RenderingState< Vec3, Float >;
+		using TransientRenderingState = model::TransientRenderingState< Vec3, Float >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using MortonVector = vector< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
@@ -98,7 +99,7 @@ namespace model
 		}*/
 		//
 		
-		TransientRenderingState< Vec3 > renderingState( painter, attribs );
+		TransientRenderingState renderingState( painter, attribs );
 		
 		FrontWrapper::trackFront( *this, renderingState, projThresh );
 		
@@ -156,13 +157,13 @@ namespace model
 					//cout << "Inserted in front: " << hex << child->getBits() << dec << endl;
 					m_frontInsertionList.push_back( *child );
 					
-					QBox3D box = RandomSampleOctree::getBoundaries( child );
-					if( !RandomSampleOctree::isCullable( box, renderingState ) )
+					pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( child );
+					if( !renderingState.isCullable( box ) )
 					{
 						//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
 						OctreeNodePtr node = nodeIt->second;
 						PointVectorPtr points = node-> template getContents< PointVector >();
-						renderingState.handleNodeRendering( renderingState, points );
+						renderingState.handleNodeRendering( points );
 					}
 				}
 			}
@@ -174,7 +175,7 @@ namespace model
 				
 				OctreeNodePtr node = nodeIt->second;
 				PointVectorPtr points = node-> template getContents< PointVector >();
-				renderingState.handleNodeRendering( renderingState, points );
+				renderingState.handleNodeRendering( points );
 			}
 		}
 		else
@@ -188,7 +189,7 @@ namespace model
 				
 				OctreeNodePtr node = nodeIt->second;
 				PointVectorPtr points = node-> template getContents< PointVector >();
-				renderingState.handleNodeRendering( renderingState, points );
+				renderingState.handleNodeRendering( points );
 			}
 		}
 		
@@ -212,15 +213,15 @@ namespace model
 		}
 		
 		MortonCodePtr parent = code->traverseUp();
-		QBox3D box = RandomSampleOctree::getBoundaries( parent );
-		bool parentIsCullable = RandomSampleOctree::isCullable( box, renderingState );
+		pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( parent );
+		bool parentIsCullable = renderingState.isCullable( box );
 		
 		if( parentIsCullable )
 		{
 			return true;
 		}
 		
-		bool parentIsRenderable = RandomSampleOctree::isRenderable( box, renderingState, projThresh );
+		bool parentIsRenderable = renderingState.isRenderable( box, projThresh );
 		if( !parentIsRenderable )
 		{
 			return false;
@@ -234,10 +235,10 @@ namespace model
 		RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh, bool& out_isCullable )
 		const
 	{
-		QBox3D box = RandomSampleOctree::getBoundaries( code );
-		out_isCullable = RandomSampleOctree::isCullable( box, renderingState );
+		pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( code );
+		out_isCullable = renderingState.isCullable( box );
 		
-		return !RandomSampleOctree::isRenderable( box, renderingState, projThresh ) && !out_isCullable;
+		return !renderingState.isRenderable( box, projThresh ) && !out_isCullable;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
@@ -266,7 +267,7 @@ namespace model
 		m_frontInsertionList.push_back( *code );
 		
 		PointVectorPtr points = node-> template getContents< PointVector >();
-		renderingState.handleNodeRendering( renderingState, points );
+		renderingState.handleNodeRendering( points );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >

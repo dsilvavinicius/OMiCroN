@@ -20,8 +20,9 @@ namespace model
 	/** Rendering related data used while traversing octree. USAGE: call setPainter() when the painter is known in the
 	 * rendering loop and call several handleNodeRendering() afterwards to indicate that the contents of octree nodes should be
 	 * rendered. After all nodes are issued for rendering, call render() to render them all.
-	 * @param Vec3 is the type for 3-dimensional vector. */
-	template< typename Vec3 >
+	 * @param Vec3 is the type for 3-dimensional vector.
+	 * @param Float is the type for floating point numbers. */
+	template< typename Vec3, typename Float >
 	class RenderingState
 	{
 	public:
@@ -32,12 +33,21 @@ namespace model
 		 * @returns the number of rendered points. */
 		virtual unsigned int render() = 0;
 		
+		/** Checks if the axis-aligned box is culled by camera frustum.
+		 * @returns true if the box should be culled and false otherwise. */
+		virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const;
+		
+		/** Checks if the axis-aligned box is renderable with the current projection threshold.
+		 * @returns true if the box has a projection compatible with the current threshold and, thus, should be
+		 * rendered. False otherwise (indicating that the traversal should proceed deeper in the hierarchy). */
+		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
+		
 		/** Indicates that the node contents passed should be rendered. A static method was used to overcome C++ limitation of
 		* class member specializations.
 		* @param NodeContents is the type of nodes' contents. The octree is aware of this type.
 		*/
 		template< typename NodeContents >
-		void handleNodeRendering( RenderingState< Vec3 >& state, const NodeContents& contents );
+		void handleNodeRendering( const NodeContents& contents );
 		
 		QGLPainter* getPainter() { return m_painter; };
 		
@@ -56,26 +66,26 @@ namespace model
 		Attributes m_attribs;
 	};
 	
-	template< typename Vec3 >
-	RenderingState< Vec3 >::RenderingState( const Attributes& attribs )
+	template< typename Vec3, typename Float >
+	RenderingState< Vec3, Float >::RenderingState( const Attributes& attribs )
 	: m_attribs( attribs ) {}
 	
 	namespace NodeRenderingHandler
 	{
-		template< typename Vec3, typename NodeContents >
-		void handle( RenderingState< Vec3 >& state, const NodeContents& contents );
+		template< typename Vec3, typename Float, typename NodeContents >
+		void handle( RenderingState< Vec3, Float >& state, const NodeContents& contents );
 		
 		template<>
-		inline void handle< vec3, PointPtr< float, vec3 > >( RenderingState< vec3 >& state,
-															 const PointPtr< float, vec3 >& point )
+		inline void handle< vec3, float, PointPtr< float, vec3 > >( RenderingState< vec3, float >& state,
+																	const PointPtr< float, vec3 >& point )
 		{
 			state.getPositions().push_back( *point->getPos() );
 			state.getColors().push_back( *point->getColor() );
 		}
 	
 		template<>
-		inline void handle< vec3, PointVectorPtr< float, vec3 > >( RenderingState< vec3 >& state,
-																   const PointVectorPtr< float, vec3 >& points )
+		inline void handle< vec3, float, PointVectorPtr< float, vec3 > >( RenderingState< vec3, float >& state,
+																	const PointVectorPtr< float, vec3 >& points )
 		{
 			for( PointPtr< float, vec3 > point : *points )
 			{
@@ -85,8 +95,8 @@ namespace model
 		}
 	
 		template<>
-		inline void handle< vec3, ExtendedPointPtr< float, vec3 > >( RenderingState< vec3 >& state,
-																		 const ExtendedPointPtr< float, vec3 >& point )
+		inline void handle< vec3, float, ExtendedPointPtr< float, vec3 > >( RenderingState< vec3, float >& state,
+																	const ExtendedPointPtr< float, vec3 >& point )
 		{
 			state.getPositions().push_back( *point->getPos() );
 			state.getColors().push_back( *point->getColor() );
@@ -94,8 +104,8 @@ namespace model
 		}
 	
 		template<>
-		inline void handle< vec3, ExtendedPointVectorPtr< float, vec3 > >( RenderingState< vec3 >& state,
-																		const ExtendedPointVectorPtr< float, vec3 >& points )
+		inline void handle< vec3, float, ExtendedPointVectorPtr< float, vec3 > >(
+			RenderingState< vec3, float >& state, const ExtendedPointVectorPtr< float, vec3 >& points )
 		{
 			for( ExtendedPointPtr< float, vec3 > point : *points )
 			{
@@ -106,11 +116,59 @@ namespace model
 		}
 	}
 	
-	template< typename Vec3 >
+	template< typename Vec3, typename Float >
 	template< typename NodeContents >
-	void RenderingState< Vec3 >::handleNodeRendering( RenderingState& state, const NodeContents& contents )
+	void RenderingState< Vec3, Float >::handleNodeRendering( const NodeContents& contents )
 	{
-		NodeRenderingHandler::handle< Vec3, NodeContents >( state, contents );
+		NodeRenderingHandler::handle< Vec3, Float, NodeContents >( *this, contents );
+	}
+	
+	template< typename Vec3, typename Float >
+	inline bool RenderingState< Vec3, Float >::isCullable( const pair< Vec3, Vec3 >& box ) const
+	{
+		Vec3 minBoxVert = box.first;
+		Vec3 maxBoxVert = box.second;
+		QBox3D qBox( QVector3D( minBoxVert.x, minBoxVert.y, minBoxVert.z ),
+					 QVector3D( maxBoxVert.x, maxBoxVert.y, maxBoxVert.z ) );
+		
+		return m_painter->isCullable( qBox );
+	}
+	
+	template< typename Vec3, typename Float >
+	inline bool RenderingState< Vec3, Float >::isRenderable( const pair< Vec3, Vec3 >& box,
+															 const Float& projThresh )
+	const
+	{
+		Vec3 rawMin = box.first;
+		Vec3 rawMax = box.second;
+		QVector4D min( rawMin.x, rawMin.y, rawMin.z, 1 );
+		QVector4D max( rawMax.x, rawMax.y, rawMax.z, 1 );
+		
+		QGLPainter* painter = m_painter;
+		QMatrix4x4 modelViewProjection = painter->combinedMatrix();
+		
+		QVector4D proj0 = modelViewProjection.map( min );
+		QVector2D normalizedProj0( proj0 / proj0.w() );
+		
+		QVector4D proj1 = modelViewProjection.map( max );
+		QVector2D normalizedProj1( proj1 / proj1.w() );
+		
+		QVector2D diagonal0 = normalizedProj1 - normalizedProj0;
+		
+		Vec3 rawSize = rawMax - rawMin;
+		QVector3D boxSize( rawSize.x, rawSize.y, rawSize.z );
+		
+		proj0 = modelViewProjection.map( QVector4D(min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1) );
+		normalizedProj0 = QVector2D( proj0 / proj0.w() );
+		
+		proj1 = modelViewProjection.map( QVector4D(max.x(), max.y(), max.z() + boxSize.z(), 1) );
+		normalizedProj1 = QVector2D( proj1 / proj1.w() );
+		
+		QVector2D diagonal1 = normalizedProj1 - normalizedProj0;
+		
+		Float maxDiagLength = glm::max( diagonal0.lengthSquared(), diagonal1.lengthSquared() );
+		
+		return maxDiagLength < projThresh;
 	}
 }
 

@@ -24,7 +24,7 @@ namespace model
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
-		using RenderingState = model::RenderingState< Vec3 >;
+		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Front = unordered_set< MortonCode >;
 		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front >;
 		
@@ -99,7 +99,7 @@ namespace model
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
-		using RenderingState = model::CompactionRenderingState< Vec3 >;
+		using RenderingState = model::CompactionRenderingState< Vec3, Float >;
 		using FrontTypes = model::FrontTypes< MortonPrecision >;
 		using Front = typename FrontTypes::Front;
 		using FrontOctree = model::CompactionFrontOctree< MortonPrecision, Float, Vec3, Point >;

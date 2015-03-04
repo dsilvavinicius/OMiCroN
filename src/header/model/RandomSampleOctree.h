@@ -15,7 +15,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using RenderingState = model::RenderingState< Vec3 >;
+		using RenderingState = model::RenderingState< Vec3, Float >;
 		
 	public:
 		RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -73,7 +73,7 @@ namespace model
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
 		PointVectorPtr points = innerNode-> template getContents< PointVector >();
-		renderingState.handleNodeRendering( renderingState, points );
+		renderingState.handleNodeRendering( points );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
