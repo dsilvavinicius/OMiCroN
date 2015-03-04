@@ -1,7 +1,7 @@
-#ifndef QT_RENDERING_STATE_H
-#define QT_RENDERING_STATE_H
+#ifndef TRANSIENT_RENDERING_STATE_H
+#define TRANSIENT_RENDERING_STATE_H
 
-#include "RenderingState.h"
+#include "QtRenderingState.h"
 
 namespace model
 {
@@ -9,9 +9,10 @@ namespace model
 	 * iteration. */
 	template< typename Vec3, typename Float >
 	class TransientRenderingState
-	: public RenderingState< Vec3, Float >
+	: public QtRenderingState< Vec3, Float >
 	{
 		using RenderingState = model::RenderingState< Vec3, Float >;
+		using QtRenderingState = model::QtRenderingState< Vec3, Float >;
 	public:
 		TransientRenderingState( QGLPainter* painter, const Attributes& attribs );
 		~TransientRenderingState() {}
@@ -22,21 +23,21 @@ namespace model
 	template< typename Vec3, typename Float >
 	TransientRenderingState< Vec3, Float >::TransientRenderingState( QGLPainter* painter,
 																	 const Attributes& attribs )
-	: RenderingState( attribs )
+	: QtRenderingState( attribs )
 	{
-		RenderingState::setPainter( painter );
-		RenderingState::m_painter->clearAttributes();
+		QtRenderingState::setPainter( painter );
+		QtRenderingState::m_painter->clearAttributes();
 		
 		switch( RenderingState::m_attribs )
 		{
 			case Attributes::NORMALS:
 			{
-				RenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
+				QtRenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
 				break;
 			}
 			case Attributes::COLORS:
 			{
-				RenderingState::m_painter->setStandardEffect( QGL::FlatPerVertexColor );
+				QtRenderingState::m_painter->setStandardEffect( QGL::FlatPerVertexColor );
 				break;
 			}
 			case Attributes::COLORS_AND_NORMALS:
@@ -53,31 +54,31 @@ namespace model
 		// TODO: Find a way to specify the precision properly here,
 		QGLAttributeValue pointValues( 3, GL_FLOAT, 0, &RenderingState::m_positions[0] );
 		QGLAttributeValue colorValues( 3, GL_FLOAT, 0, &RenderingState::m_colors[0] );
-		RenderingState::m_painter->setVertexAttribute( QGL::Position, pointValues );
+		QtRenderingState::m_painter->setVertexAttribute( QGL::Position, pointValues );
 		
 		switch( RenderingState::m_attribs )
 		{
 			case Attributes::NORMALS:
 			{
-				RenderingState::m_painter->setVertexAttribute( QGL::Normal, colorValues );
+				QtRenderingState::m_painter->setVertexAttribute( QGL::Normal, colorValues );
 				break;
 			}
 			case Attributes::COLORS:
 			{
-				RenderingState::m_painter->setVertexAttribute( QGL::Color, colorValues );
+				QtRenderingState::m_painter->setVertexAttribute( QGL::Color, colorValues );
 				break;
 			}
 			case Attributes::COLORS_AND_NORMALS:
 			{
 				QGLAttributeValue normalValues( 3, GL_FLOAT, 0, &RenderingState::m_normals[0] );
-				RenderingState::m_painter->setVertexAttribute( QGL::Color, colorValues );
-				RenderingState::m_painter->setVertexAttribute( QGL::Normal, normalValues );
+				QtRenderingState::m_painter->setVertexAttribute( QGL::Color, colorValues );
+				QtRenderingState::m_painter->setVertexAttribute( QGL::Normal, normalValues );
 				break;
 			}
 		}
 		
 		unsigned int numRenderedPoints = RenderingState::m_positions.size();
-		RenderingState::m_painter->draw( QGL::Points, numRenderedPoints );
+		QtRenderingState::m_painter->draw( QGL::Points, numRenderedPoints );
 		
 		return numRenderedPoints;
 	}

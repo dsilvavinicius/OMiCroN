@@ -25,13 +25,13 @@ using namespace util;
 namespace model
 {	
 	/** Base Octree implemented as a hash-map using morton code as explained here:
-	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf. All parts of construction and traversal are free
-	 * for reimplementation of derived classes.
+	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf. All parts of construction and
+	 * traversal are free for reimplementation of derived classes.
 	 * 
-	 * MortonPrecision is the precision of the morton code for nodes.
-	 * Float is the glm type specifying the floating point type / precision.
-	 * Vec3 is the glm type specifying the type / precision of the vector with 3 coordinates.
-	 * Point is the type used to represent renderable points.
+	 * @param MortonPrecision is the precision of the morton code for nodes.
+	 * @param Float is the glm type specifying the floating point type / precision.
+	 * @param Vec3 is the type specifying of the vector with 3 coordinates.
+	 * @param Point is the type used to represent renderable points.
 	 */
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	class OctreeBase

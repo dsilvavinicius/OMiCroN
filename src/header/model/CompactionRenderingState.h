@@ -7,7 +7,7 @@
 #include <QCoreApplication>
 
 #include "Scan.h"
-#include "RenderingState.h"
+#include "QtRenderingState.h"
 #include "Stream.h"
 
 namespace model
@@ -22,9 +22,10 @@ namespace model
 	 * vertices attrib arrays. */
 	template< typename Vec3, typename Float >
 	class CompactionRenderingState
-	: public RenderingState< Vec3, Float >
+	: public QtRenderingState< Vec3, Float >
 	{
 		using RenderingState = model::RenderingState< Vec3, Float >;
+		using QtRenderingState = model::QtRenderingState< Vec3, Float >;
 	public:
 		enum BufferType
 		{
@@ -91,7 +92,7 @@ namespace model
 																	   const unsigned int& nElements,
 																	QOpenGLFunctions_4_3_Compatibility* openGL,
 																	const Attributes& attribs )
-	: RenderingState( attribs ),
+	: QtRenderingState( attribs ),
 	m_openGL( openGL ),
 	m_scan( QCoreApplication::applicationDirPath().toStdString() + "/../shaders", N_MAX_VERTICES, openGL ),
 	m_nElements( nElements )
@@ -260,7 +261,7 @@ namespace model
 		{
 			case Attributes::NORMALS:
 			{
-				RenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
+				QtRenderingState::m_painter->setStandardEffect( QGL::LitMaterial );
 				
 				m_outputBuffers[ POS ]->bind();
 				m_openGL->glVertexAttribPointer( QGL::Position, 3, GL_FLOAT, GL_FALSE, 0, ( void * ) 0 );

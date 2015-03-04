@@ -82,9 +82,14 @@ add_library (Point_Based_Renderer_Lib
 	
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h				${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h
+	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h
 	${HEADER_DIR}/${MODEL_DIR}/AssyncRenderingState.h
 	${HEADER_DIR}/${MODEL_DIR}/CompactionRenderingState.h
+	
+	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h
+	${HEADER_DIR}/${MODEL_DIR}/Frustum.h			${CPP_DIR}/${MODEL_DIR}/Frustum.cpp
+	
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h				${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h			${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RandomSampleOctree.h
@@ -95,7 +100,6 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/LeafNode.h
 	${HEADER_DIR}/${MODEL_DIR}/Point.h
 	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h
-	${HEADER_DIR}/${MODEL_DIR}/Frustum.h			${CPP_DIR}/${MODEL_DIR}/Frustum.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/FrontOctree.h
 	${HEADER_DIR}/${MODEL_DIR}/FrontWrapper.h
