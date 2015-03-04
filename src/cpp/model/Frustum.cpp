@@ -3,7 +3,7 @@
 
 namespace model
 {
-	Frustum::Frustum( const Matrix4f& modelView, const Matrix4f& projection )
+	Frustum::Frustum( const Matrix4f& mvp )
 	{
 		
 		for( int i = 0; i < 6; ++i )
@@ -11,7 +11,7 @@ namespace model
 			m_planes.push_back( new Plane() );
 		}
 		
-		extractPlanes( modelView, projection, true );
+		extractPlanes( mvp, true );
 	}
 	
 	Frustum::~Frustum()
@@ -22,16 +22,15 @@ namespace model
 		}
 	}
 	
-	void Frustum::update( const Matrix4f& modelView, const Matrix4f& projection )
+	void Frustum::update( const Matrix4f& mvp )
 	{
-		extractPlanes( modelView, projection, true );
+		extractPlanes( mvp, true );
 	}
 	
-	void Frustum::extractPlanes( const Matrix4f& modelView, const Matrix4f& projection, const bool& normalize )
+	void Frustum::extractPlanes( const Matrix4f& mvp, const bool& normalize )
 	{
 		// It seems that the d plane coefficient has wrong sign in the original algorithm, so all d coefficients are being
 		// multiplied by -1 in this implementation.
-		Matrix4f mvp = projection * modelView;
 		
 		// Left clipping plane
 		Vector4f& leftCoeffs = m_planes[ 0 ]->coeffs();
@@ -95,7 +94,8 @@ namespace model
 		cout << *this << endl;
 	}
 	
-	void Frustum::transformPlaneToWorld( const Matrix4f& toWorld, Plane* plane ) const
+	// This method is not tested properly yet, so comented.
+	/*void Frustum::transformPlaneToWorld( const Matrix4f& toWorld, Plane* plane ) const
 	{
 		cout << "Transforming plane to world coords:" << endl << *plane << endl << endl;
 		
@@ -130,7 +130,7 @@ namespace model
 		cout << "Transformed plane: " << *plane << endl << endl;
 		
 		cout << "Ending plane transform" << endl << endl;
-	}
+	}*/
 	
 	ostream& operator<<( ostream& out, const Frustum& f )
 	{

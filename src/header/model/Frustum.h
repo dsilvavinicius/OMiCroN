@@ -15,18 +15,20 @@ using namespace Eigen;
 namespace model
 {
 	/** Camera's frustum. Provide culling of axis-aligned boxes. The camera frustum planes will be in model
-	 * coordinates. To get the planes in world coordinates, pass a view matrix in place of the model-view */
+	 * coordinates. To get the planes in world coordinates, pass a view-projection matrix in place of the
+	 * model-view-projection */
 	class Frustum
 	{
 		using Plane = Hyperplane< float, 3 >;
 		using Box = AlignedBox< float, 3 >;
 	public:
-		
-		Frustum( const Matrix4f& modelView, const Matrix4f& projection );
+		/** @param mvp is the model-view-projection matrix. */
+		Frustum( const Matrix4f& mvp );
 		~Frustum();
 		
-		/** Updates the frustrum after changing camera's intrinsic parameters ( fov, ratio, near or far plane ). */
-		void update( const Matrix4f& modelView, const Matrix4f& projection );
+		/** Updates the frustrum after changing camera.
+		 *	@param mvp is the model-view-projection matrix. */
+		void update( const Matrix4f& mvp );
 		
 		/** Performs optimized view frustum culling as explained in paper Optimized View Frustum Culling Algorithms for
 		 * Bounding Boxes. Available in: @link http://www.cse.chalmers.se/~uffe/vfc_bbox.pdf. Differently from the algorithm
@@ -41,12 +43,12 @@ namespace model
 		 * Fast Extraction of Viewing Frustum Planes from the World-View-Projection Matrix. Available in
 		 * @link gamedevs.org/uploads/fast-extraction-viewing-frustum-planes-from-world-view-projection-matrix.pdf .
 		 * @param normalize indicates that the final plane equation should be normalized. */
-		void extractPlanes( const Matrix4f& modelView, const Matrix4f& projection, const bool& normalize );
+		void extractPlanes( const Matrix4f& mvp, const bool& normalize );
 		
 		/** Transforms the plane to world coordinates. Affine transformation is assumed.
 		 *	@param toWorld is the inverse of the model-view matrix, i.e. the transformation from eye to world
 		 * coordinates. */
-		void transformPlaneToWorld( const Matrix4f& toWorld, Plane* plane ) const;
+		//void transformPlaneToWorld( const Matrix4f& toWorld, Plane* plane ) const;
 		
 		// Planes are defined
 		vector< Plane* > m_planes;

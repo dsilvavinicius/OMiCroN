@@ -23,7 +23,7 @@ namespace model
 					0.f, 0.f, -1.22f, -2.22f,
 					0.f, 0.f,  -1.0f,    0.f;
 			
-			Frustum frustum( Matrix4f::Identity() , proj );
+			Frustum frustum( proj );
 			
 			// The boxes here are given in eye coordinates.
 			// 1st case: outside box.
@@ -43,8 +43,8 @@ namespace model
 		{
 			// Default OpenGL camera is at origin, pointing to the negative z axis. Thus, model-view is only a reflection
 			// of the x and z axes.
-			Matrix4f modelView;
-			modelView << -1.f, 0.f,  0.f,  0.f,
+			Matrix4f view;
+			view << -1.f, 0.f,  0.f,  0.f,
 						  0.f, 1.f,  0.f,  0.f,
 						  0.f, 0.f, -1.f,  0.f,
 						  0.f, 0.f,  0.f,  1.f;
@@ -58,7 +58,7 @@ namespace model
 					0.f, 0.f, -1.22f, -2.22f,
 					0.f, 0.f, -1.0f , 0.f;
 			
-			Frustum frustum( modelView , proj );
+			Frustum frustum( proj * view );
 			
 			// The boxes here are given in world coordinates.
 			// 1st case: outside box.
@@ -76,9 +76,9 @@ namespace model
 		
 		TEST_F( FrustumTest, CompleteModelViewProjection )
 		{
-			Matrix4f modelView;
+			Matrix4f view;
 			// Transformation to default camera coords.
-			modelView << -1.f, 0.f,  0.f,  0.f,
+			view << -1.f, 0.f,  0.f,  0.f,
 						  0.f, 1.f,  0.f,  0.f,
 						  0.f, 0.f, -1.f,  0.f,
 						  0.f, 0.f,  0.f,  1.f;
@@ -87,12 +87,12 @@ namespace model
 			Matrix3f tempRotation = AngleAxisf( 0.25 * M_PI, Vector3f::UnitY() ).matrix();
 			Matrix4f rotation = Matrix4f::Identity();
 			rotation.block( 0, 0, 3, 3 ) = tempRotation;
-			modelView = rotation * modelView;
+			view = rotation * view;
 			
 			// Translates 10 in the direction the camera is pointing out.
-			modelView( 0, 3 ) = 0.f; modelView( 1, 3 ) = 0.f; modelView( 2, 3 ) = 10.f;
+			view( 0, 3 ) = 0.f; view( 1, 3 ) = 0.f; view( 2, 3 ) = 10.f;
 			
-			cout << "Model-view: " << endl << modelView << endl << endl;
+			cout << "Model-view: " << endl << view << endl << endl;
 			
 			// This projection matrix represents a frustum with planes in the following coordinates in the related view
 			// space axis:
@@ -103,7 +103,7 @@ namespace model
 					0.f, 0.f, -1.22f, -2.22f,
 					0.f, 0.f, -1.0f , 0.f;
 			
-			Frustum frustum( modelView , proj );
+			Frustum frustum( proj * view );
 			
 			// The boxes here are given in world coordinates.
 			// 1st case: outside box.
