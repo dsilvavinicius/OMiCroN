@@ -68,6 +68,7 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	${Qt5Sql_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIR}
 	include/
+	include/tucano/src/
 	
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
@@ -79,6 +80,9 @@ add_subdirectory(lib)
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
+	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
+	${HEADER_DIR}/${UI_DIR}/MainWindow.h			${CPP_DIR}/${UI_DIR}/MainWindow.cpp
+	${HEADER_DIR}/${UI_DIR}/mainwindow.ui
 	
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h				${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h
@@ -134,12 +138,6 @@ add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/tucano/effects/shaders
 	${Renderer_Dir}/shaders/tucano )
 add_dependencies( Point_Based_Renderer Copy )
-
-#add_custom_command( TARGET Point_Based_Renderer_Lib POST_BUILD
-#	COMMAND ${CMAKE_COMMAND} -E remove_directory $<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/shaders
-#	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders
-#		$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/shaders
-#)
 
 # Tests directory.
 add_subdirectory (test)

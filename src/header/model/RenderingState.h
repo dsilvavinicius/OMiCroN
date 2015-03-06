@@ -3,7 +3,6 @@
 
 #include <stdexcept>
 #include <vector>
-#include <QGLPainter>
 #include "ExtendedPoint.h"
 
 using namespace std;

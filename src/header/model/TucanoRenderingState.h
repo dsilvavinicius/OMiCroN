@@ -1,8 +1,8 @@
 #ifndef TUCANO_RENDERING_STATE_H
 #define TUCANO_RENDERING_STATE_H
 
-#include <tucano/src/tucano.hpp>
-#include <tucano/effects/phongshader.hpp>
+#include <tucano.hpp>
+#include <../effects/phongshader.hpp>
 #include "RenderingState.h"
 #include "Frustum.h"
 
@@ -20,7 +20,8 @@ namespace model
 	public:
 		/** @param trackball is the trackball, which has the view-projection matrix.
 		 *	@param attribs is the vertex attributes setup flag. */
-		TucanoRenderingState( Trackball const *  camTrackball, Trackball const * lightTrackball , const Attributes& attribs );
+		TucanoRenderingState( Trackball const *  camTrackball, Trackball const * lightTrackball , Mesh* mesh,
+							  const Attributes& attribs );
 		
 		~TucanoRenderingState();
 		
@@ -46,7 +47,8 @@ namespace model
 	};
 	
 	template< typename Vec3, typename Float >
-	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball const *  camTrackball, Trackball const * lightTrackball,
+	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball const *  camTrackball,
+															   Trackball const * lightTrackball, Mesh* mesh,
 															   const Attributes& attribs, const string& shaderPath )
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
@@ -54,7 +56,7 @@ namespace model
 	{
 		Matrix4f viewProj = getViewProjection();
 		m_frustum = new Frustum( viewProj );
-		m_mesh = new Mesh();
+		m_mesh = mesh;
 		
 		m_phong = new Phong();
 		m_phong->setShadersDir( shaderPath );
@@ -65,7 +67,6 @@ namespace model
 	TucanoRenderingState< Vec3, Float >::~TucanoRenderingState()
 	{
 		delete m_phong;
-		delete m_mesh;
 		delete m_frustum;
 	}
 	

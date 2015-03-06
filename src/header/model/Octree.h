@@ -5,7 +5,6 @@
 #include <map>
 #include <ctime>
 #include <glm/ext.hpp>
-#include <Qt3D/QGLPainter>
 
 #include "MortonCode.h"
 #include "OctreeNode.h"
