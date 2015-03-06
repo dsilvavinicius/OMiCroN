@@ -130,6 +130,9 @@ get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
 get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders ${Renderer_Dir}/shaders )
+add_custom_command( TARGET Copy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/tucano/effects/shaders
+	${Renderer_Dir}/shaders/tucano )
 add_dependencies( Point_Based_Renderer Copy )
 
 #add_custom_command( TARGET Point_Based_Renderer_Lib POST_BUILD
