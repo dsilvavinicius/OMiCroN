@@ -22,6 +22,7 @@ namespace ui
 	class PointRendererWindow : public QGLView
 	{
 		Q_OBJECT
+		using TransientRenderingState = model::TransientRenderingState< vec3, float >;
 	public:
 		PointRendererWindow( const QSurfaceFormat &format, QWindow *parent = 0 );
 		~PointRendererWindow();

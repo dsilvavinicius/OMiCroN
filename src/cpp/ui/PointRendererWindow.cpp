@@ -15,7 +15,7 @@ using namespace util;
 namespace ui
 {
 	PointRendererWindow::PointRendererWindow( const QSurfaceFormat &format, QWindow *parent )
-		: QGLView( format, parent ),
+	: QGLView( format, parent ),
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
@@ -50,7 +50,9 @@ namespace ui
 		
 		// Render the scene one time to init m_renderTime for future projection threshold adaptations.
 		clock_t timing = clock();
-		m_octree->traverse( painter, m_attribs, m_projThresh );
+		
+		TransientRenderingState renderingState( painter, m_attribs );
+		m_octree->traverse( renderingState, m_projThresh );
 		timing = clock() - timing;
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 	
@@ -79,7 +81,8 @@ namespace ui
 		// Render the scene.
 		clock_t timing = clock();
 		//OctreeStats stats = m_octree->traverse( painter, m_attribs, m_projThresh );
-		FrontOctreeStats stats = m_octree->trackFront( painter, m_attribs, m_projThresh );
+		TransientRenderingState renderer( painter, m_attribs );
+		FrontOctreeStats stats = m_octree->trackFront( renderer, m_projThresh );
 		timing = clock() - timing;
 		
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;

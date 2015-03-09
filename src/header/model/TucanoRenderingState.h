@@ -2,11 +2,12 @@
 #define TUCANO_RENDERING_STATE_H
 
 #include <tucano.hpp>
-#include <../effects/phongshader.hpp>
+#include <phongshader.hpp>
 #include "RenderingState.h"
 #include "Frustum.h"
 
 using namespace Tucano;
+using namespace Effects;
 
 namespace model
 {
@@ -21,7 +22,7 @@ namespace model
 		/** @param trackball is the trackball, which has the view-projection matrix.
 		 *	@param attribs is the vertex attributes setup flag. */
 		TucanoRenderingState( Trackball const *  camTrackball, Trackball const * lightTrackball , Mesh* mesh,
-							  const Attributes& attribs );
+							  const Attributes& attribs, const string& shaderPath );
 		
 		~TucanoRenderingState();
 		
@@ -38,7 +39,7 @@ namespace model
 		/** Acquires current traball's view-projection matrix. */
 		Matrix4f getViewProjection() const;
 		
-		Frutum* m_frustum;
+		Frustum* m_frustum;
 		Trackball const * m_camTrackball;
 		Trackball const * m_lightTrackball;
 		
@@ -117,11 +118,11 @@ namespace model
 			m_mesh->loadNormals( normalData );
 		}
 		
-		m_phong->render( m_mesh, m_camTrackball, m_lightTrackball );
+		m_phong->render( *m_mesh, *m_camTrackball, *m_lightTrackball );
 	}
 	
 	template< typename Vec3, typename Float >
-	inline bool TucanoRenderingState< Vec3, Float >::isCullable( const pair< Vec3, Vec3 >& rawBox )
+	inline bool TucanoRenderingState< Vec3, Float >::isCullable( const pair< Vec3, Vec3 >& rawBox ) const
 	{
 		Vec3 min = rawBox.first;
 		Vec3 max = rawBox.second;
@@ -132,6 +133,7 @@ namespace model
 	
 	template< typename Vec3, typename Float >
 	inline bool TucanoRenderingState< Vec3, Float >::isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh )
+	const
 	{
 		Vec3 rawMin = box.first;
 		Vec3 rawMax = box.second;
@@ -141,20 +143,20 @@ namespace model
 		Matrix4f viewProj = getViewProjection();
 		
 		Vector4f proj0 = viewProj * min;
-		Vector2f normalizedProj0( proj0 / proj0.w() );
+		Vector2f normalizedProj0( proj0.x() / proj0.w(), proj0.y() / proj0.w() );
 		
 		Vector4f proj1 = viewProj * max;
-		Vector2f normalizedProj1( proj1 / proj1.w() );
+		Vector2f normalizedProj1( proj1.x() / proj1.w(), proj1.y() / proj1.w() );
 		
 		Vector2f diagonal0 = normalizedProj1 - normalizedProj0;
 		
 		Vec3 boxSize = rawMax - rawMin;
 		
-		proj0 = viewProj * Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 );
-		normalizedProj0 = Vector2f( proj0 / proj0.w() );
+		proj0 = viewProj * Vector4f( min.x() + boxSize.x, min.y() + boxSize.y, min.z(), 1 );
+		normalizedProj0 = Vector2f( proj0.x() / proj0.w(), proj0.y() / proj0.w() );
 		
-		proj1 = viewProj * Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 );
-		normalizedProj1 = Vector2f( proj1 / proj1.w() );
+		proj1 = viewProj * Vector4f( max.x(), max.y(), max.z() + boxSize.z, 1 );
+		normalizedProj1 = Vector2f( proj1.x() / proj1.w(), proj1.y() / proj1.w() );
 		
 		Vector2f diagonal1 = normalizedProj1 - normalizedProj0;
 		
@@ -167,9 +169,9 @@ namespace model
 	inline Matrix4f TucanoRenderingState< Vec3, Float >::getViewProjection() const
 	{
 		//Matrix4f view = Matrix4f::Identity();
-		//view.block( 0, 0, 3, 4 ) = m_trackball->getViewMatrix().block( 0, 0, 3, 4 );
+		//view.block( 0, 0, 3, 4 ) = m_camTrackball->getViewMatrix().block( 0, 0, 3, 4 );
 		
-		Affine3d view = m_camTrackball->getViewMatrix();
+		Matrix4f view = m_camTrackball->getViewMatrix().matrix();
 		Matrix4f proj = m_camTrackball->getProjectionMatrix();
 		
 		return proj * view;

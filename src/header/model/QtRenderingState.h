@@ -2,6 +2,7 @@
 #define QT_RENDERING_STATE_H
 
 #include "RenderingState.h"
+#include <QGLPainter>
 
 namespace model
 {

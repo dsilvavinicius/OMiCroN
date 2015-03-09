@@ -3,8 +3,8 @@
 
 #include <unordered_set>
 
-#include "RandomSampleOctree.h"
 #include "FrontWrapper.h"
+#include "RandomSampleOctree.h"
 
 namespace model
 {
@@ -30,10 +30,10 @@ namespace model
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
-		/** Tracks the hierarchy front, by prunning or branching nodes ( one level only ). This method should be called after
-		 * RandomSampleOctree::traverse( QGLPainter *painter, const Attributes& attribs, const Float& projThresh ), so the front can
-		 * be init in a traversal from root. */
-		FrontOctreeStats trackFront( QGLPainter* painter, const Attributes& attribs, const Float& projThresh );
+		/** Tracks the hierarchy front, by prunning or branching nodes ( one level only ). This method should be called
+		 * after RandomSampleOctree::traverse( RenderingState& renderer, const Float& projThresh ),
+		 * so the front can be init in a traversal from root. */
+		FrontOctreeStats trackFront( RenderingState& renderer, const Float& projThresh );
 	
 	protected:
 		/** Tracks one node of the front.
@@ -84,7 +84,7 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	FrontOctreeStats FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::trackFront(
-		QGLPainter* painter, const Attributes& attribs, const Float& projThresh )
+		RenderingState& renderer, const Float& projThresh )
 	{
 		clock_t timing = clock();
 		
@@ -99,9 +99,7 @@ namespace model
 		}*/
 		//
 		
-		TransientRenderingState renderingState( painter, attribs );
-		
-		FrontWrapper::trackFront( *this, renderingState, projThresh );
+		FrontWrapper::trackFront( *this, renderer, projThresh );
 		
 		onTraversalEnd();
 		
@@ -110,7 +108,7 @@ namespace model
 		
 		timing = clock();
 		
-		unsigned int numRenderedPoints = renderingState.render();
+		unsigned int numRenderedPoints = renderer.render();
 		
 		timing = clock() - timing;
 		float renderingTime = float( timing ) / CLOCKS_PER_SEC * 1000;

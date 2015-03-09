@@ -1,14 +1,14 @@
 #include <QtGui/QGuiApplication>
 #include <QApplication>
-#include "PointRendererWindow.h"
 #include "MainWindow.h"
+#include "PointRendererWindow.h"
 
 using namespace ui;
 
 int main(int argc, char **argv)
 {
 	// Use this code to run with PointRendererWindow (Qt3D)
-    /*QGuiApplication app(argc, argv);
+    QGuiApplication app(argc, argv);
 	
 	QSurfaceFormat format;
 	format.setVersion( 4, 3 );
@@ -18,10 +18,12 @@ int main(int argc, char **argv)
 
 	PointRendererWindow window(format);
 	window.resize(640, 480);
-	window.show();*/
+	window.show();
+	
+	return app.exec();
 	
 	// Use this code to run with PointRendererWidget (Qt and Tucano)
-	QApplication app( argc, argv );
+	/*QApplication app( argc, argv );
 
 	MainWindow window;
 
@@ -29,5 +31,5 @@ int main(int argc, char **argv)
 
     window.initialize();
 
-    return app.exec();
+    return app.exec();*/
 }

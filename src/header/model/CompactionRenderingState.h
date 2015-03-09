@@ -1,6 +1,7 @@
 #ifndef COMPACTION_RENDERING_STATE_H
 #define COMPACTION_RENDERING_STATE_H
 
+#include <QOpenGLFunctions_4_3_Compatibility>
 #include <QOpenGLBuffer>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include <QOpenGLContext>
+//#include <QOpenGLContext>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions_4_3_Compatibility>

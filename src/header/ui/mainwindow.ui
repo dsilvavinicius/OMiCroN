@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="GLWidget" name="glwidget" native="true">
+   <widget class="PointRendererWidget" name="pointRendererWidget" native="true">
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -155,9 +155,9 @@
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>GLWidget</class>
+   <class>PointRendererWidget</class>
    <extends>QWidget</extends>
-   <header>glwidget.hpp</header>
+   <header>PointRendererWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

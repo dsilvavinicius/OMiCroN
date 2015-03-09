@@ -57,7 +57,7 @@ namespace model
 		
 		/** Traverses the octree, rendering all necessary points.
 		 * @returns the number of rendered points. */
-		virtual OctreeStats traverse( QGLPainter *painter, const Attributes& attribs, const Float& projThresh );
+		virtual OctreeStats traverse( RenderingState& renderingState, const Float& projThresh );
 		
 		virtual OctreeMapPtr< MortonPrecision, Float, Vec3 > getHierarchy() const;
 		
@@ -79,7 +79,7 @@ namespace model
 		
 		/** Draws the boundaries of the nodes.
 		 * @param passProjTestOnly indicates if only the nodes that pass the projection test should be rendered. */
-		virtual void drawBoundaries( QGLPainter * painter, const bool& passProjTestOnly, const Float& projThresh ) const;
+		virtual void drawBoundaries( RenderingState& painter, const bool& passProjTestOnly, const Float& projThresh ) const;
 		
 		template <typename M, typename F, typename V, typename P >
 		friend ostream& operator<<( ostream& out, const OctreeBase< M, F, V, P >& octree );
@@ -396,12 +396,10 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	OctreeStats OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( QGLPainter* painter, const Attributes& attribs,
+	OctreeStats OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( RenderingState& renderingState,
 																	  const Float& projThresh )
 	{
 		clock_t timing = clock();
-		
-		TransientRenderingState renderingState( painter, attribs );
 		
 		MortonCodePtr< MortonPrecision > rootCode = make_shared< MortonCode< MortonPrecision > >();
 		rootCode->build( 0x1 );
@@ -576,10 +574,12 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void OctreeBase< MortonPrecision, Float, Vec3, Point >::drawBoundaries( QGLPainter * painter,
+	void OctreeBase< MortonPrecision, Float, Vec3, Point >::drawBoundaries( RenderingState& renderingState,
 																			const bool& passProjTestOnly,
 																			const Float& projThresh ) const
 	{
+		// TODO: Move this method to RenderingState.
+		/*
 		// Saves current effect.
 		QGLAbstractEffect* effect = painter->effect();
 		
@@ -618,7 +618,7 @@ namespace model
 		painter->draw(QGL::Lines, verts.size());
 		
 		// Restores previous effect.
-		painter->setUserEffect(effect);
+		painter->setUserEffect(effect);*/
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

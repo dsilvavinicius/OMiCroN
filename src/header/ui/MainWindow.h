@@ -2,7 +2,7 @@
 #define MAIN_WINDOW__H
 
 #include <QMainWindow>
-#include "glwidget.hpp"
+#include "PointRendererWidget.h"
 
 namespace Ui {
 class MainWindow;

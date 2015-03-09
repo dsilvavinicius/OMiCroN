@@ -15,20 +15,22 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialize()
 {
-    ui->glwidget->initialize();
+    ui->pointRendererWidget->initialize();
 
     ui->group_effects->setId( ui->radio_phong, 0 );
     ui->group_effects->setId( ui->radio_jfpbr, 1 );
 
-    connect( ui->group_effects, static_cast< void ( QButtonGroup::* )( int )>( &QButtonGroup::buttonClicked ), ui->glwidget,
-			 &GLWidget::toggleEffect);
-    connect( ui->button_reload_shaders, &QPushButton::clicked, ui->glwidget, &GLWidget::reloadShaders );
+    connect( ui->group_effects, static_cast< void ( QButtonGroup::* )( int )>( &QButtonGroup::buttonClicked ),
+			 ui->pointRendererWidget, &PointRendererWidget::toggleEffect);
+    connect( ui->button_reload_shaders, &QPushButton::clicked, ui->pointRendererWidget,
+			 &PointRendererWidget::reloadShaders );
     connect( ui->spinbox_first_max_distance,
-			 static_cast< void ( QDoubleSpinBox::* )( double )>( &QDoubleSpinBox::valueChanged ), ui->glwidget,
-			 &GLWidget::setJFPBRFirstMaxDistance );
+			 static_cast< void ( QDoubleSpinBox::* )( double )>( &QDoubleSpinBox::valueChanged ), ui->pointRendererWidget,
+			 &PointRendererWidget::setJFPBRFirstMaxDistance );
 //    connect(ui->slider_ssao_blur, &QSlider::valueChanged, ui->glwidget, &GLWidget::setSSAOBlur);
 //    connect(ui->slider_toon_level, &QSlider::valueChanged, ui->glwidget, &GLWidget::setToonQuantLevel);
-    connect( ui->check_trackball, &QCheckBox::stateChanged, ui->glwidget, &GLWidget::toggleDrawTrackball );
+    connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget,
+			 &PointRendererWidget::toggleDrawTrackball );
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *ke)

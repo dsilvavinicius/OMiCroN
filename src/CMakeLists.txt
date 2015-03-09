@@ -52,6 +52,7 @@ create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
 setup_package(OpenGL)
 setup_package(GLM)
+setup_package(GLEW)
 
 # Set Qt dirs.
 find_package (Qt5Core REQUIRED)
@@ -69,6 +70,7 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIR}
 	include/
 	include/tucano/src/
+	include/tucano/effects/
 	
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
@@ -76,13 +78,21 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 
 # Compiles libraries
 add_subdirectory(lib)
-	
+
+QT5_WRAP_UI( UI_HDRS
+    ${HEADER_DIR}/${UI_DIR}/mainwindow.ui
+)
+
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
+	include/tucano/src/utils/qttrackballwidget.hpp #ugly hack to use qmake in this file.
+	
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/MainWindow.h			${CPP_DIR}/${UI_DIR}/MainWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/mainwindow.ui
+	
+	${UI_HDRS}
 	
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h				${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h
@@ -107,6 +117,7 @@ add_library (Point_Based_Renderer_Lib
 	
 	${HEADER_DIR}/${MODEL_DIR}/FrontOctree.h
 	${HEADER_DIR}/${MODEL_DIR}/FrontWrapper.h
+	${HEADER_DIR}/${MODEL_DIR}/CompactionFrontWrapper.h
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h			${CPP_DIR}/${UTIL_DIR}/Stream.cpp
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h)
@@ -119,6 +130,7 @@ target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
 	Qt5::Sql
 	${OPENGL_LIBRARIES}
 	${GLML_LIBRARIES}
+	${GLEW_LIBRARIES}
 	RPly)
 
 # Creates renderer program and links with the renderer library.
