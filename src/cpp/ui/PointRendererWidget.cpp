@@ -41,7 +41,7 @@ void PointRendererWidget::initialize( void )
 	//mesh->normalizeModelMatrix();
 	
 	// Render the scene one time to init m_renderTime for future projection threshold adaptations.
-	m_renderer = new TucanoRenderingState( camera_trackball, light_trackball, &mesh, COLORS_AND_NORMALS,
+	m_renderer = new TucanoRenderingState( camera_trackball, light_trackball, mesh, COLORS_AND_NORMALS,
 											QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	clock_t timing = clock();
 	m_octree->traverse( *m_renderer, m_projThresh );
@@ -99,6 +99,6 @@ void PointRendererWidget::paintGL (void)
 	glEnable(GL_DEPTH_TEST);
 	if( draw_trackball )
 	{
-		camera_trackball->render();
+		camera_trackball.render();
 	}
 }

@@ -21,7 +21,7 @@ namespace model
 	public:
 		/** @param trackball is the trackball, which has the view-projection matrix.
 		 *	@param attribs is the vertex attributes setup flag. */
-		TucanoRenderingState( Trackball const *  camTrackball, Trackball const * lightTrackball , Mesh* mesh,
+		TucanoRenderingState( const Trackball& camTrackball, const Trackball& lightTrackball , Mesh& mesh,
 							  const Attributes& attribs, const string& shaderPath );
 		
 		~TucanoRenderingState();
@@ -40,24 +40,24 @@ namespace model
 		Matrix4f getViewProjection() const;
 		
 		Frustum* m_frustum;
-		Trackball const * m_camTrackball;
-		Trackball const * m_lightTrackball;
+		const Trackball& m_camTrackball;
+		const Trackball& m_lightTrackball;
 		
-		Mesh* m_mesh;
+		Mesh& m_mesh;
 		Phong* m_phong;
 	};
 	
 	template< typename Vec3, typename Float >
-	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball const *  camTrackball,
-															   Trackball const * lightTrackball, Mesh* mesh,
+	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( const Trackball&  camTrackball,
+															   const Trackball& lightTrackball, Mesh& mesh,
 															   const Attributes& attribs, const string& shaderPath )
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
-	m_lightTrackball( lightTrackball )
+	m_lightTrackball( lightTrackball ),
+	m_mesh( mesh )
 	{
 		Matrix4f viewProj = getViewProjection();
 		m_frustum = new Frustum( viewProj );
-		m_mesh = mesh;
 		
 		m_phong = new Phong();
 		m_phong->setShadersDir( shaderPath );
@@ -94,8 +94,8 @@ namespace model
 			vertData[ i ] = Vector4f( pos.x, pos.y, pos.z, 1.f );
 			indices[ i ] = i;
 		}
-		m_mesh->loadVertices( vertData );
-		m_mesh->loadIndices( indices );
+		m_mesh.loadVertices( vertData );
+		m_mesh.loadIndices( indices );
 		
 		if( RenderingState::m_attribs & Attributes::COLORS  )
 		{
@@ -104,7 +104,7 @@ namespace model
 				Vec3 color = RenderingState::m_colors[ i ];
 				vertData[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
 			}
-			m_mesh->loadColors( vertData );
+			m_mesh.loadColors( vertData );
 		}
 		
 		if( RenderingState::m_attribs & Attributes::NORMALS )
@@ -115,10 +115,10 @@ namespace model
 				Vec3 normal = RenderingState::m_normals[ i ];
 				normalData[ i ] = Vector3f( normal.x, normal.y, normal.z );
 			}
-			m_mesh->loadNormals( normalData );
+			m_mesh.loadNormals( normalData );
 		}
 		
-		m_phong->render( *m_mesh, *m_camTrackball, *m_lightTrackball );
+		m_phong->render( m_mesh, m_camTrackball, m_lightTrackball );
 	}
 	
 	template< typename Vec3, typename Float >
@@ -171,8 +171,8 @@ namespace model
 		//Matrix4f view = Matrix4f::Identity();
 		//view.block( 0, 0, 3, 4 ) = m_camTrackball->getViewMatrix().block( 0, 0, 3, 4 );
 		
-		Matrix4f view = m_camTrackball->getViewMatrix().matrix();
-		Matrix4f proj = m_camTrackball->getProjectionMatrix();
+		Matrix4f view = m_camTrackball.getViewMatrix().matrix();
+		Matrix4f proj = m_camTrackball.getProjectionMatrix();
 		
 		return proj * view;
 	}

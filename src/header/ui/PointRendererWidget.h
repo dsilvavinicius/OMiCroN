@@ -39,10 +39,10 @@ public:
 	*/
 	virtual void resizeGL( void )
 	{
-		camera_trackball->setViewport( Eigen::Vector2f( ( float )this->width(), ( float )this->height() ) );
-		camera_trackball->setPerspectiveMatrix( camera_trackball->getFovy(), this->width() / this->height(), 0.1f,
+		camera_trackball.setViewport( Eigen::Vector2f( ( float )this->width(), ( float )this->height() ) );
+		camera_trackball.setPerspectiveMatrix( camera_trackball.getFovy(), this->width() / this->height(), 0.1f,
 												100.0f );
-		light_trackball->setViewport( Eigen::Vector2f( ( float )this->width(), ( float )this->height() ) );
+		light_trackball.setViewport( Eigen::Vector2f( ( float )this->width(), ( float )this->height() ) );
 
 		//jfpbr->resize( this->width(), this->height() );
 		updateGL();
@@ -103,8 +103,9 @@ public slots:
 		{
 			delete m_renderer;
 		}
-		m_renderer = new TucanoRenderingState( camera_trackball, light_trackball, &mesh, vertAttribs,
-												QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+		m_renderer = new TucanoRenderingState( camera_trackball, light_trackball, mesh, vertAttribs,
+												QApplication::applicationDirPath().toStdString() +
+												"/shaders/tucano/" );
 	}
 
 private:
