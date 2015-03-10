@@ -187,6 +187,14 @@ namespace model
 		
 		PointVector points = reader.getPoints();
 		
+		//
+		/*cout << "Read points" << endl << endl;
+		for( int i = 0; i < 10; ++i )
+		{
+			cout << *points[ i ] << endl << endl;
+		}*/
+		//
+		
 		cout << "Attributes:" << reader.getAttributes() << endl << endl;
 		
 		//cout << "Read points: " << endl << points << endl; 

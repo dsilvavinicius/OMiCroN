@@ -34,7 +34,10 @@ namespace ui
 		//cout << *m_octree << endl << endl;
 	}
 	
-	PointRendererWindow::~PointRendererWindow() {}
+	PointRendererWindow::~PointRendererWindow()
+	{
+		delete m_timer;
+	}
 
 	void PointRendererWindow::initializeGL( QGLPainter *painter )
 	{	

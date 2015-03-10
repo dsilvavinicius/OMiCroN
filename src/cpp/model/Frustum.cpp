@@ -91,7 +91,7 @@ namespace model
 			transformPlaneToWorld( inverse, plane );
 		}*/
 		
-		cout << *this << endl;
+		//cout << *this << endl;
 	}
 	
 	// This method is not tested properly yet, so comented.

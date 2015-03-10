@@ -15,7 +15,7 @@ using namespace Eigen;
 namespace model
 {
 	/** Camera's frustum. Provide culling of axis-aligned boxes. The camera frustum planes will be in model
-	 * coordinates. To get the planes in world coordinates, pass a view-projection matrix in place of the
+	 * coordinates. To get the planes in world coordinates, pass a view-projection matrix instead of a
 	 * model-view-projection */
 	class Frustum
 	{
@@ -34,7 +34,7 @@ namespace model
 		 * Bounding Boxes. Available in: @link http://www.cse.chalmers.se/~uffe/vfc_bbox.pdf. Differently from the algorithm
 		 * there, we don't distinguish intersection and outside cases.
 		 * @returns true if the box is outside the frustum, false otherwise. */
-		inline bool isCullable( const Box& box );
+		bool isCullable( const Box& box );
 		
 		friend ostream& operator<<( ostream& out, const Frustum& f );
 		
@@ -54,9 +54,9 @@ namespace model
 		vector< Plane* > m_planes;
 	};
 	
-	bool Frustum::isCullable( const Box& box )
+	inline bool Frustum::isCullable( const Box& box )
 	{
-		cout << "==== Starting culling ====" << endl << "Box: " << box << endl;
+		//cout << "==== Starting culling ====" << endl << "Box: " << box << endl;
 		
 		Vector3f boxSizes = box.sizes();
 		Vector3f boxMin = box.min();
@@ -72,7 +72,7 @@ namespace model
 			float offset = plane->offset() - dilatation;
 			Plane dilatatedPlane( normal, offset );
 			
-			cout << endl << "Dilatation:" << dilatation << endl << "Dilatated plane:" << dilatatedPlane << endl;
+			//cout << endl << "Dilatation:" << dilatation << endl << "Dilatated plane:" << dilatatedPlane << endl;
 			
 			Vector3f n;
 			
@@ -81,7 +81,7 @@ namespace model
 			n[ 2 ] = ( normal[ 2 ] < 0 ) ? boxMax[ 2 ] : boxMin[ 2 ];
 			
 			float signedDist = dilatatedPlane.signedDistance( n );
-			cout << "n point: " << n << endl << "signedDist:" << signedDist << endl;
+			//cout << "n point: " << n << endl << "signedDist:" << signedDist << endl;
 			
 			if( signedDist > 0 )
 			{
@@ -95,7 +95,7 @@ namespace model
 					case 4: planeName = "near"; break;
 					case 5: planeName = "far"; break;
 				}
-				cout << "Outside " << planeName << " plane." << endl;
+				//cout << "Outside " << planeName << " plane." << endl;
 				return true;
 			}
 		}

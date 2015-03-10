@@ -21,8 +21,9 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using MortonVector = vector< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
-		using PointVector = model::PointVector< Float, Vec3 >;
-		using PointVectorPtr = model::PointVectorPtr< Float, Vec3 >;
+		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr >;
+		using PointVectorPtr = shared_ptr< PointVector >;
 		using FrontWrapper = model::FrontWrapper< MortonPrecision, Float, Vec3, Point, Front >;
 		
 		friend FrontWrapper;

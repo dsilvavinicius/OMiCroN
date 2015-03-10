@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 #include "ExtendedPoint.h"
+#include "Stream.h"
 
 using namespace std;
 
