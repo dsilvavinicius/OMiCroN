@@ -13,7 +13,6 @@ m_renderer( nullptr )
 {
 	//jfpbr = 0;
 	//phong = 0;    
-	
 }
 
 PointRendererWidget::~PointRendererWidget()
@@ -98,6 +97,9 @@ void PointRendererWidget::paintGL (void)
 	adaptProjThresh( 66.666f ); // 15 fps.
 	//adaptProjThresh( 33.333f ); // 30 fps.
 	//adaptProjThresh( 100.f ); // 10 fps.
+	
+	m_renderer->updateFrustum();
+	mesh.reset();
 	
 	// Render the scene.
 	clock_t timing = clock();

@@ -38,8 +38,8 @@ set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set (CMAKE_AUTOMOC ON)
-# Necessary flags for C++11 and linking to Qt5.
-SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC")
+# Necessary flags for C++11, linking to Qt5 and setup Eigen.
+SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 
 set (HEADER_DIR "header")
 set (CPP_DIR "cpp")
@@ -62,7 +62,10 @@ find_package (Qt53D REQUIRED)
 find_package (Qt5Sql REQUIRED)
 find_package (Eigen3 REQUIRED)
 
-include_directories (${Qt5Core_INCLUDE_DIRS}
+set (RPLY_DIR "lib/rply")
+set (JUMP_FLOODING_DIR "lib/jf-pbr")
+
+include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
 	${Qt53D_INCLUDE_DIRS}
@@ -71,10 +74,13 @@ include_directories (${Qt5Core_INCLUDE_DIRS}
 	include/
 	include/tucano/src/
 	include/tucano/effects/
+	${RPLY_DIR}
+	${JUMP_FLOODING_DIR}
 	
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
-	${HEADER_DIR}/${UTIL_DIR}/)
+	${HEADER_DIR}/${UTIL_DIR}/
+	)
 
 # Compiles libraries
 add_subdirectory(lib)
@@ -85,8 +91,6 @@ QT5_WRAP_UI( UI_HDRS
 
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
-	include/tucano/src/utils/qttrackballwidget.hpp #ugly hack to use qmake in this file.
-	
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/MainWindow.h			${CPP_DIR}/${UI_DIR}/MainWindow.cpp
@@ -120,7 +124,15 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/CompactionFrontWrapper.h
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h			${CPP_DIR}/${UTIL_DIR}/Stream.cpp
-	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h)
+	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h
+	
+	# Tucano related code
+	include/tucano/src/utils/qttrackballwidget.hpp #ugly hack to use qmake in this file.
+	
+	# Jump-flooding related code.
+	${JUMP_FLOODING_DIR}/imgSpacePBR.hpp	${JUMP_FLOODING_DIR}/imgSpacePBR.cpp
+    ${JUMP_FLOODING_DIR}/point_model.hpp	${JUMP_FLOODING_DIR}/point_model.cpp 
+    ${JUMP_FLOODING_DIR}/bin.cpp )
 
 # Qt 5 modules.
 target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
@@ -144,11 +156,21 @@ target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)
 add_custom_target( Copy )
 get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
 get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
+
+# Project shaders.
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders ${Renderer_Dir}/shaders )
+
+# Tucano shaders.
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/tucano/effects/shaders
 	${Renderer_Dir}/shaders/tucano )
+	
+# Jump-flooding shaders.
+add_custom_command( TARGET Copy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/jf-pbr/shaders
+	${Renderer_Dir}/shaders )
+
 add_dependencies( Point_Based_Renderer Copy )
 
 # Tests directory.

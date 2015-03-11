@@ -5,6 +5,7 @@
 //#include <phongshader.hpp>
 //#include <imgSpacePBR.hpp>
 #include <utils/qttrackballwidget.hpp>
+#include <point_model.hpp>
 #include "TucanoRenderingState.h"
 #include <FrontOctree.h>
 #include <QApplication>
@@ -81,6 +82,7 @@ private:
 	/// Flag to draw or not trackball
 	bool draw_trackball;
 
+	PointModel mesh;
 	TucanoRenderingState* m_renderer;
 	ShallowFrontOctree* m_octree;
 	
