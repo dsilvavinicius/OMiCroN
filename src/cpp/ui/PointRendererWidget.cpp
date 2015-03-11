@@ -37,7 +37,7 @@ void PointRendererWidget::initialize( void )
 
 	// initialize the widget, camera and light trackball, and opens default mesh
 	Tucano::QtTrackballWidget::initialize();
-	openMesh( "../../src/data/real/tempietto_dense.ply" );
+	openMesh( "../../src/data/real/pugile.ply" );
 	//Tucano::QtTrackballWidget::openMesh("./cube.ply");
 
 	//mesh = new PointModel();
@@ -109,6 +109,19 @@ void PointRendererWidget::paintGL (void)
 	
 	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 
+	// Render debug data.
+	stringstream debugSS;
+	debugSS << "Render time: " << m_renderTime << " ms" << endl
+			<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
+			<< stats << endl;
+	
+	//cout << debugSS.str() << endl << endl;
+	
+	int textBoxWidth = width() * 0.3;
+	int textBoxHeight = height() * 0.7;
+	int margin = 10;
+	debugInfoDefined( QString( debugSS.str().c_str() ) );
+	
 	glEnable(GL_DEPTH_TEST);
 	if( draw_trackball )
 	{

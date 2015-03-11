@@ -65,7 +65,12 @@ public slots:
 
 	virtual void openMesh( const string& filename );
 
+signals:
+	/** Signals that the per-frame debug info is generated and should be presented. */
+	void debugInfoDefined( const QString& debugInfo );
+
 private:
+	
 	void adaptProjThresh( float desiredRenderTime );
 	
 	/// Jump-Flooding Point Based Renderer

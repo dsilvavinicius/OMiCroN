@@ -31,6 +31,7 @@ void MainWindow::initialize()
 //    connect(ui->slider_toon_level, &QSlider::valueChanged, ui->glwidget, &GLWidget::setToonQuantLevel);
     connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget,
 			 &PointRendererWidget::toggleDrawTrackball );
+	connect( ui->pointRendererWidget, &PointRendererWidget::debugInfoDefined, ui->debug_info, &QLabel::setText);
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *ke)
