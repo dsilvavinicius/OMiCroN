@@ -38,7 +38,7 @@ public:
 	/**
 	* @brief Overload resize callback
 	*/
-	virtual void resizeGL( void );
+	virtual void resizeGL( int width, int height );
 
 signals:
 public slots:

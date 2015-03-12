@@ -18,6 +18,9 @@ public:
 
     void initialize( );
 
+public slots:
+	void on_bt_open_cloud_clicked();
+	
 private:
     Ui::MainWindow *ui;
 

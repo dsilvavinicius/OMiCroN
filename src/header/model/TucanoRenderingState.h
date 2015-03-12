@@ -119,6 +119,8 @@ namespace model
 		}
 		
 		m_phong->render( m_mesh, m_camTrackball, m_lightTrackball );
+		
+		return RenderingState::m_positions.size();
 	}
 	
 	template< typename Vec3, typename Float >

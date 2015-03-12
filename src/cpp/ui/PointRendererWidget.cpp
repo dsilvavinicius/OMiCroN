@@ -2,7 +2,7 @@
 #include <QDebug>
 #include <QTimer>
 
-PointRendererWidget::PointRendererWidget(QWidget *parent)
+PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtTrackballWidget(parent),
 m_projThresh( 0.001f ),
 m_renderTime( 0.f ),
@@ -11,6 +11,7 @@ draw_trackball( true ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
+	cout << "PointRendererWidget parent: " << parent << endl << endl;
 	//jfpbr = 0;
 	//phong = 0;    
 }
@@ -37,7 +38,7 @@ void PointRendererWidget::initialize( void )
 
 	// initialize the widget, camera and light trackball, and opens default mesh
 	Tucano::QtTrackballWidget::initialize();
-	openMesh( "../../src/data/real/pugile.ply" );
+	openMesh( "../../src/data/real/tempietto_dense.ply" );
 	//Tucano::QtTrackballWidget::openMesh("./cube.ply");
 
 	//mesh = new PointModel();
@@ -51,14 +52,14 @@ void PointRendererWidget::initialize( void )
 	m_timer->start( 16.666f ); // Update 60 fps.
 }
 
-void PointRendererWidget::resizeGL( void )
+void PointRendererWidget::resizeGL( int width, int height )
 {
-	camera_trackball.setViewport( Eigen::Vector2f( ( float )this->width(), ( float )this->height() ) );
-	camera_trackball.setPerspectiveMatrix( camera_trackball.getFovy(), this->width() / this->height(), 0.1f,
+	camera_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
+	camera_trackball.setPerspectiveMatrix( camera_trackball.getFovy(), width / height, 0.1f,
 											100.0f );
-	light_trackball.setViewport( Eigen::Vector2f( ( float )this->width(), ( float )this->height() ) );
+	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
-	//jfpbr->resize( this->width(), this->height() );
+	//jfpbr->resize( width, this->height() );
 	updateGL();
 }
 
@@ -98,8 +99,9 @@ void PointRendererWidget::paintGL (void)
 	//adaptProjThresh( 33.333f ); // 30 fps.
 	//adaptProjThresh( 100.f ); // 10 fps.
 	
-	m_renderer->updateFrustum();
 	mesh.reset();
+	m_renderer->clearAttribs();
+	m_renderer->updateFrustum();
 	
 	// Render the scene.
 	clock_t timing = clock();

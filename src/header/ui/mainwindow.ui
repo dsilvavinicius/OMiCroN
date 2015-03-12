@@ -23,7 +23,6 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <zorder>horizontalLayoutWidget</zorder>
      </widget>
     </item>
     <item>
@@ -31,6 +30,13 @@
       <property name="sizeConstraint">
        <enum>QLayout::SetDefaultConstraint</enum>
       </property>
+      <item>
+       <widget class="QPushButton" name="bt_open_cloud">
+        <property name="text">
+         <string>Open Cloud (.ply)</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QCheckBox" name="check_trackball">
         <property name="text">
@@ -98,15 +104,12 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="debug_info">
+       <widget class="QTextBrowser" name="debug_info">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
-        </property>
-        <property name="text">
-         <string>Debug info</string>
         </property>
        </widget>
       </item>

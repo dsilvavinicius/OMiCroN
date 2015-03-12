@@ -1,3 +1,4 @@
+#include <QFileDialog>
 #include "MainWindow.h"
 #include "ui_mainwindow.h"
 
@@ -31,7 +32,17 @@ void MainWindow::initialize()
 //    connect(ui->slider_toon_level, &QSlider::valueChanged, ui->glwidget, &GLWidget::setToonQuantLevel);
     connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget,
 			 &PointRendererWidget::toggleDrawTrackball );
-	connect( ui->pointRendererWidget, &PointRendererWidget::debugInfoDefined, ui->debug_info, &QLabel::setText);
+	connect( ui->pointRendererWidget, &PointRendererWidget::debugInfoDefined, ui->debug_info, &QTextBrowser::setText);
+}
+
+void MainWindow::on_bt_open_cloud_clicked()
+{
+	QFileDialog dialog;
+	dialog.setFileMode(QFileDialog::AnyFile);
+	dialog.exec();
+	
+	QString filename = dialog.selectedFiles().first();;
+	ui->pointRendererWidget->openMesh( filename.toStdString() );
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *ke)

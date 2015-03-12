@@ -53,6 +53,9 @@ namespace model
 		vector< Vec3 >& getColors() { return m_colors; };
 		vector< Vec3 >& getNormals() { return m_normals; };
 	
+		/** Clear all attrib vectors. */
+		void clearAttribs();
+		
 	protected:
 		vector< Vec3 > m_positions;
 		vector< Vec3 > m_colors;
@@ -63,6 +66,14 @@ namespace model
 	template< typename Vec3, typename Float >
 	RenderingState< Vec3, Float >::RenderingState( const Attributes& attribs )
 	: m_attribs( attribs ) {}
+	
+	template< typename Vec3, typename Float >
+	void RenderingState< Vec3, Float >::clearAttribs()
+	{
+		m_positions.clear();
+		m_colors.clear();
+		m_normals.clear();
+	}
 	
 	namespace NodeRenderingHandler
 	{
