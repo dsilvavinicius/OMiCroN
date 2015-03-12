@@ -11,7 +11,6 @@ draw_trackball( true ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
-	cout << "PointRendererWidget parent: " << parent << endl << endl;
 	//jfpbr = 0;
 	//phong = 0;    
 }
@@ -38,7 +37,7 @@ void PointRendererWidget::initialize( void )
 
 	// initialize the widget, camera and light trackball, and opens default mesh
 	Tucano::QtTrackballWidget::initialize();
-	openMesh( "../../src/data/real/tempietto_dense.ply" );
+	openMesh( "../../src/data/real/tempietto_all.ply" );
 	//Tucano::QtTrackballWidget::openMesh("./cube.ply");
 
 	//mesh = new PointModel();
@@ -59,7 +58,12 @@ void PointRendererWidget::resizeGL( int width, int height )
 											100.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
-	//jfpbr->resize( width, this->height() );
+	if( m_renderer )
+	{
+		m_renderer->getImgSpacePBR().resize( width, height );
+		//jfpbr->resize( width, this->height() );
+	}
+	
 	updateGL();
 }
 
@@ -74,6 +78,7 @@ void PointRendererWidget::adaptProjThresh( float desiredRenderTime )
 
 void PointRendererWidget::paintGL (void)
 {
+	clock_t totalTiming = clock();
 	makeCurrent();
 
 	glClearColor(1.0, 1.0, 1.0, 0.0);
@@ -111,12 +116,15 @@ void PointRendererWidget::paintGL (void)
 	
 	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 
+	totalTiming = clock() - totalTiming;
+	
 	// Render debug data.
 	stringstream debugSS;
-	debugSS << "Render time: " << m_renderTime << " ms" << endl
+	debugSS << "Total loop time: " << totalTiming << endl
+			<< "Render time (traversal + rendering): " << m_renderTime << " ms" << endl
 			<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
 			<< stats << endl;
-	
+			
 	//cout << debugSS.str() << endl << endl;
 	
 	int textBoxWidth = width() * 0.3;

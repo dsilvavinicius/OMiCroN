@@ -39,7 +39,7 @@ set (CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set (CMAKE_AUTOMOC ON)
 # Necessary flags for C++11, linking to Qt5 and setup Eigen.
-SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
+SET (CMAKE_CXX_FLAGS "-O3 -std=c++11 -fPIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 
 set (HEADER_DIR "header")
 set (CPP_DIR "cpp")
@@ -169,7 +169,7 @@ add_custom_command( TARGET Copy PRE_BUILD
 # Jump-flooding shaders.
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/jf-pbr/shaders
-	${Renderer_Dir}/shaders )
+	${Renderer_Dir}/shaders/tucano )
 
 add_dependencies( Point_Based_Renderer Copy )
 

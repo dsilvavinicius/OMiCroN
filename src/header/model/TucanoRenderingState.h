@@ -3,6 +3,7 @@
 
 #include <tucano.hpp>
 #include <phongshader.hpp>
+#include <imgSpacePBR.hpp>
 #include "RenderingState.h"
 #include "Frustum.h"
 
@@ -21,8 +22,8 @@ namespace model
 	public:
 		/** @param trackball is the trackball, which has the view-projection matrix.
 		 *	@param attribs is the vertex attributes setup flag. */
-		TucanoRenderingState( const Trackball& camTrackball, const Trackball& lightTrackball , Mesh& mesh,
-							  const Attributes& attribs, const string& shaderPath );
+		TucanoRenderingState( Trackball& camTrackball, Trackball& lightTrackball , Mesh& mesh, const Attributes& attribs,
+							  const string& shaderPath );
 		
 		~TucanoRenderingState();
 		
@@ -35,38 +36,49 @@ namespace model
 		
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
 	
+		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
+		ImgSpacePBR& getImgSpacePBR() { return *m_jfpbr; }
+		
 	private:
 		/** Acquires current traball's view-projection matrix. */
 		Matrix4f getViewProjection() const;
 		
 		Frustum* m_frustum;
-		const Trackball& m_camTrackball;
-		const Trackball& m_lightTrackball;
+		Trackball& m_camTrackball;
+		Trackball& m_lightTrackball;
 		
 		Mesh& m_mesh;
 		Phong* m_phong;
+		ImgSpacePBR *m_jfpbr;
 	};
 	
 	template< typename Vec3, typename Float >
-	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( const Trackball&  camTrackball,
-															   const Trackball& lightTrackball, Mesh& mesh,
+	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball&  camTrackball, Trackball& lightTrackball, Mesh& mesh,
 															   const Attributes& attribs, const string& shaderPath )
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
 	m_lightTrackball( lightTrackball ),
 	m_mesh( mesh )
 	{
+		cout << "Tucano shader path: " << shaderPath << endl << endl;
+		
 		Matrix4f viewProj = getViewProjection();
 		m_frustum = new Frustum( viewProj );
 		
 		m_phong = new Phong();
 		m_phong->setShadersDir( shaderPath );
 		m_phong->initialize();
+		
+		Vector2i viewportSize = m_camTrackball.getViewportSize();
+		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
+		m_jfpbr->setShadersDir( shaderPath );
+		m_jfpbr->initialize();
 	}
 	
 	template< typename Vec3, typename Float >
 	TucanoRenderingState< Vec3, Float >::~TucanoRenderingState()
 	{
+		delete m_jfpbr;
 		delete m_phong;
 		delete m_frustum;
 	}
@@ -118,6 +130,7 @@ namespace model
 			m_mesh.loadNormals( normalData );
 		}
 		
+		//m_jfpbr->render( &m_mesh, &m_camTrackball, &m_lightTrackball, true );
 		m_phong->render( m_mesh, m_camTrackball, m_lightTrackball );
 		
 		return RenderingState::m_positions.size();
