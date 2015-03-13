@@ -6,7 +6,6 @@ PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtTrackballWidget(parent),
 m_projThresh( 0.001f ),
 m_renderTime( 0.f ),
-active_effect( 0 ),
 draw_trackball( true ),
 m_octree( nullptr ),
 m_renderer( nullptr )
@@ -37,7 +36,7 @@ void PointRendererWidget::initialize( void )
 
 	// initialize the widget, camera and light trackball, and opens default mesh
 	Tucano::QtTrackballWidget::initialize();
-	openMesh( "../../src/data/real/tempietto_all.ply" );
+	openMesh( "../../src/data/real/staypuff.ply" );
 	//Tucano::QtTrackballWidget::openMesh("./cube.ply");
 
 	//mesh = new PointModel();
@@ -53,15 +52,14 @@ void PointRendererWidget::initialize( void )
 
 void PointRendererWidget::resizeGL( int width, int height )
 {
-	camera_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera_trackball.setPerspectiveMatrix( camera_trackball.getFovy(), width / height, 0.1f,
-											100.0f );
+	camera.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
+	camera.setPerspectiveMatrix( camera.getFovy(), width / height, 0.1f,
+											1000.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )
 	{
-		m_renderer->getImgSpacePBR().resize( width, height );
-		//jfpbr->resize( width, this->height() );
+		m_renderer->getJumpFlooding().resize( width, height );
 	}
 	
 	updateGL();
@@ -83,19 +81,6 @@ void PointRendererWidget::paintGL (void)
 
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT );
-
-	/*if (mesh)
-	{
-		if (active_effect == 0 && phong)
-		{
-			phong->render(mesh, camera_trackball, light_trackball);
-		}
-		if (active_effect == 1 && jfpbr)
-		{
-			jfpbr->render(mesh, camera_trackball, light_trackball, true);
-
-		}
-	}*/
 	
 	//cout << "STARTING PAINTING!" << endl;
 	//m_octree->drawBoundaries(painter, true);
@@ -135,26 +120,26 @@ void PointRendererWidget::paintGL (void)
 	glEnable(GL_DEPTH_TEST);
 	if( draw_trackball )
 	{
-		camera_trackball.render();
+		camera.render();
 	}
 }
 
 void PointRendererWidget::toggleEffect( int id )
 {
-	active_effect = id;
+	m_renderer->selectEffect( ( TucanoRenderingState::Effect ) id );
 	updateGL();
 }
 
 void PointRendererWidget::reloadShaders( void )
 {
-	//jfpbr->reloadShaders();
-	//phong->reloadShaders();        
+	m_renderer->getPhong().reloadShaders();
+	m_renderer->getJumpFlooding().reloadShaders();
 	updateGL();
 }
 
 void PointRendererWidget::setJFPBRFirstMaxDistance( double value )
 {
-	//jfpbr->setFirstMaxDistance( ( float )value );
+	m_renderer->getJumpFlooding().setFirstMaxDistance( ( float )value );
 	updateGL();
 }
 
@@ -182,7 +167,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new TucanoRenderingState( camera_trackball, light_trackball, mesh, vertAttribs,
+	m_renderer = new TucanoRenderingState( camera, light_trackball, mesh, vertAttribs,
 											QApplication::applicationDirPath().toStdString() +
 											"/shaders/tucano/" );
 	clock_t timing = clock();

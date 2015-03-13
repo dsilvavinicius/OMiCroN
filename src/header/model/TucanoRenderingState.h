@@ -20,10 +20,14 @@ namespace model
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Box = AlignedBox< Float, 3 >;
 	public:
-		/** @param trackball is the trackball, which has the view-projection matrix.
-		 *	@param attribs is the vertex attributes setup flag. */
+		enum Effect
+		{
+			PHONG,
+			JUMP_FLOODING
+		};
+		
 		TucanoRenderingState( Trackball& camTrackball, Trackball& lightTrackball , Mesh& mesh, const Attributes& attribs,
-							  const string& shaderPath );
+							  const string& shaderPath, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
 		
@@ -37,7 +41,13 @@ namespace model
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
 	
 		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
-		ImgSpacePBR& getImgSpacePBR() { return *m_jfpbr; }
+		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
+		
+		/** Gets the phong effect. The caller is reponsable for the correct usage.*/
+		Phong& getPhong() { return *m_phong; }
+		
+		/** Changes the effect used to render the points. */
+		void selectEffect( const Effect& effect ) { m_effect = effect; }
 		
 	private:
 		/** Acquires current traball's view-projection matrix. */
@@ -50,11 +60,14 @@ namespace model
 		Mesh& m_mesh;
 		Phong* m_phong;
 		ImgSpacePBR *m_jfpbr;
+		
+		Effect m_effect; 
 	};
 	
 	template< typename Vec3, typename Float >
 	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball&  camTrackball, Trackball& lightTrackball, Mesh& mesh,
-															   const Attributes& attribs, const string& shaderPath )
+															   const Attributes& attribs, const string& shaderPath,
+															   const Effect& effect )
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
 	m_lightTrackball( lightTrackball ),
@@ -130,8 +143,11 @@ namespace model
 			m_mesh.loadNormals( normalData );
 		}
 		
-		//m_jfpbr->render( &m_mesh, &m_camTrackball, &m_lightTrackball, true );
-		m_phong->render( m_mesh, m_camTrackball, m_lightTrackball );
+		switch( m_effect )
+		{
+			case PHONG: m_phong->render( m_mesh, m_camTrackball, m_lightTrackball ); break;
+			case JUMP_FLOODING: m_jfpbr->render( &m_mesh, &m_camTrackball, &m_lightTrackball, true ); break;
+		}
 		
 		return RenderingState::m_positions.size();
 	}

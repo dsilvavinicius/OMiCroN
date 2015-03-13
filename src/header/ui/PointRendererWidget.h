@@ -72,17 +72,6 @@ signals:
 private:
 	
 	void adaptProjThresh( float desiredRenderTime );
-	
-	/// Jump-Flooding Point Based Renderer
-	//ImgSpacePBR *jfpbr;
-
-	/// Simple Phong Shader
-	//Effects::Phong *phong;
-
-	//PointModel *mesh;
-
-	/// ID of active effect
-	int active_effect;
 
 	/// Flag to draw or not trackball
 	bool draw_trackball;
