@@ -38,6 +38,10 @@ namespace model
 		
 		virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const;
 		
+		/** This implementation will compare the size of the maximum box diagonal in normalized device coordinates with
+		 *	the projection threshold.
+		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in normalized device
+		 *	coordinates. */
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
 	
 		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/

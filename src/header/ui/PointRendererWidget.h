@@ -25,10 +25,7 @@ public:
 	explicit PointRendererWidget( QWidget *parent );
 	~PointRendererWidget();
 	
-	/**
-	* @brief Initializes the shader effect
-	*/
-	void initialize();
+	void initialize( const unsigned int& frameRate );
 
 	/**
 	* Repaints screen buffer.
@@ -43,6 +40,11 @@ public:
 signals:
 public slots:
 	/**
+	 * @brief Toggle write output to image
+	 */
+	void toggleWriteFrames( void );
+	
+	/**
 	* @brief Toggles mean filter flag
 	*/
 	void toggleEffect( int id );
@@ -52,6 +54,9 @@ public slots:
 	*/
 	void reloadShaders( void );
 
+	/** @brief Sets the desired frame rate hint. */
+	void setFrameRate( const unsigned int& frameRate );
+	
 	/**
 	* @brief Modifies the SSAO global intensity value.
 	* @param value New intensity value.
@@ -86,8 +91,14 @@ private:
 	
 	/** Current projection threshold used in octree traversal. */
 	float m_projThresh;
-	/** Current render time used to adapt the projection threshold. */
+	/** Current render time used to adapt the projection threshold. In ms. */
 	float m_renderTime;
+	
+	/** Desired render time. Used to adapt the projection threshold. In ms. */
+	float m_desiredRenderTime;
+	
+	/** Time when a frame is finished. Used to measure performance only. In ms. */
+	clock_t m_endOfFrameTime;
 	
 	/** Point attributes. */
 	Attributes m_attribs;

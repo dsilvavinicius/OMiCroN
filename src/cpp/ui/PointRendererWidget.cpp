@@ -6,44 +6,27 @@ PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtTrackballWidget(parent),
 m_projThresh( 0.001f ),
 m_renderTime( 0.f ),
+m_desiredRenderTime( 0.f ),
+m_endOfFrameTime( clock() ),
 draw_trackball( true ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
-	//jfpbr = 0;
-	//phong = 0;    
 }
 
 PointRendererWidget::~PointRendererWidget()
 {
-	//delete jfpbr;
-	//delete phong;
 	delete m_renderer;
 	delete m_octree;
 	delete m_timer;
 }
 
-void PointRendererWidget::initialize( void )
+void PointRendererWidget::initialize( const unsigned int& frameRate )
 {
-	// initialize the effects
-	//jfpbr = new ImgSpacePBR(this->width(), this->height());
-	//jfpbr->setShadersDir("./shaders/");
-	//jfpbr->initialize();
-
-	//phong = new Effects::Phong();
-	//phong->setShadersDir("../tucano/effects/shaders/");
-	//phong->initialize();
-
-	// initialize the widget, camera and light trackball, and opens default mesh
+	setFrameRate( frameRate );
+	
 	Tucano::QtTrackballWidget::initialize();
 	openMesh( "../../src/data/real/staypuff.ply" );
-	//Tucano::QtTrackballWidget::openMesh("./cube.ply");
-
-	//mesh = new PointModel();
-	//mesh->loadPlyFile("./cube.ply");
-
-	//ShaderLib::MeshImporter::loadPlyFile(mesh, filename);
-	//mesh->normalizeModelMatrix();
 
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -76,7 +59,8 @@ void PointRendererWidget::adaptProjThresh( float desiredRenderTime )
 
 void PointRendererWidget::paintGL (void)
 {
-	clock_t totalTiming = clock();
+	clock_t startOfFrameTime = clock();
+	clock_t totalTiming = startOfFrameTime;
 	makeCurrent();
 
 	glClearColor(1.0, 1.0, 1.0, 0.0);
@@ -85,9 +69,7 @@ void PointRendererWidget::paintGL (void)
 	//cout << "STARTING PAINTING!" << endl;
 	//m_octree->drawBoundaries(painter, true);
 	
-	adaptProjThresh( 66.666f ); // 15 fps.
-	//adaptProjThresh( 33.333f ); // 30 fps.
-	//adaptProjThresh( 100.f ); // 10 fps.
+	adaptProjThresh( m_desiredRenderTime );
 	
 	mesh.reset();
 	m_renderer->clearAttribs();
@@ -105,10 +87,13 @@ void PointRendererWidget::paintGL (void)
 	
 	// Render debug data.
 	stringstream debugSS;
-	debugSS << "Total loop time: " << totalTiming << endl
-			<< "Render time (traversal + rendering): " << m_renderTime << " ms" << endl
-			<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
-			<< stats << endl;
+	debugSS << "Total loop time: " << float( totalTiming ) / CLOCKS_PER_SEC * 1000 << endl << endl
+			<< "Render time (traversal + rendering): " << m_renderTime << " ms" << endl << endl
+			<< stats
+			<< "Time between frames: " << float( startOfFrameTime - m_endOfFrameTime ) / CLOCKS_PER_SEC * 1000 << "ms" << endl
+			<< endl
+			<< "Desired render time: " << m_desiredRenderTime << "ms" << endl << endl
+			<< "Projection threshold: " << m_projThresh << " pixel^2" << endl << endl;
 			
 	//cout << debugSS.str() << endl << endl;
 	
@@ -122,6 +107,14 @@ void PointRendererWidget::paintGL (void)
 	{
 		camera.render();
 	}
+	
+	m_endOfFrameTime = clock();
+}
+
+void PointRendererWidget::toggleWriteFrames()
+{
+	m_renderer->getJumpFlooding().toggleWriteFrames();	
+	updateGL();
 }
 
 void PointRendererWidget::toggleEffect( int id )
@@ -135,6 +128,11 @@ void PointRendererWidget::reloadShaders( void )
 	m_renderer->getPhong().reloadShaders();
 	m_renderer->getJumpFlooding().reloadShaders();
 	updateGL();
+}
+
+void PointRendererWidget::setFrameRate( const unsigned int& frameRate )
+{
+	m_desiredRenderTime = 1000.f / ( float ) frameRate;
 }
 
 void PointRendererWidget::setJFPBRFirstMaxDistance( double value )

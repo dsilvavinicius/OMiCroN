@@ -23,6 +23,7 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
+      <zorder></zorder>
      </widget>
     </item>
     <item>
@@ -44,6 +45,20 @@
         </property>
         <property name="checked">
          <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="bt_write_frames">
+        <property name="text">
+         <string>Draw frames</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lb_effects">
+        <property name="text">
+         <string>Choosen effect</string>
         </property>
        </widget>
       </item>
@@ -86,7 +101,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>max distance</string>
+         <string>Max distance</string>
         </property>
        </widget>
       </item>
@@ -104,11 +119,50 @@
        </widget>
       </item>
       <item>
-       <widget class="QTextBrowser" name="debug_info">
+       <widget class="QLabel" name="lb_frame_rate">
+        <property name="text">
+         <string>Desired frame rate</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSlider" name="sld_frame_rate">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>5</number>
+        </property>
+        <property name="maximum">
+         <number>60</number>
+        </property>
+        <property name="pageStep">
+         <number>5</number>
+        </property>
+        <property name="value">
+         <number>15</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lb_debug">
+        <property name="text">
+         <string>Debug and statistics</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTextBrowser" name="debug_info">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="MinimumExpanding">
+          <horstretch>0</horstretch>
+          <verstretch>10</verstretch>
          </sizepolicy>
         </property>
        </widget>

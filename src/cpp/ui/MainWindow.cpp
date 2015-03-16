@@ -16,7 +16,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialize()
 {
-    ui->pointRendererWidget->initialize();
+    ui->pointRendererWidget->initialize( ui->sld_frame_rate->value() );
 
     ui->group_effects->setId( ui->radio_phong, TucanoRenderingState< vec3, float >::PHONG );
     ui->group_effects->setId( ui->radio_jfpbr, TucanoRenderingState< vec3, float >::JUMP_FLOODING );
@@ -27,14 +27,17 @@ void MainWindow::initialize()
 	connect( ui->button_reload_shaders, &QPushButton::clicked, ui->pointRendererWidget,
 			 &PointRendererWidget::reloadShaders );
     
+	connect( ui->sld_frame_rate, &QSlider::valueChanged, ui->pointRendererWidget, &PointRendererWidget::setFrameRate );
+	
 	connect( ui->spinbox_first_max_distance,
 			 static_cast< void ( QDoubleSpinBox::* )( double )>( &QDoubleSpinBox::valueChanged ), ui->pointRendererWidget,
 			 &PointRendererWidget::setJFPBRFirstMaxDistance );
 //    connect(ui->slider_ssao_blur, &QSlider::valueChanged, ui->glwidget, &GLWidget::setSSAOBlur);
 //    connect(ui->slider_toon_level, &QSlider::valueChanged, ui->glwidget, &GLWidget::setToonQuantLevel);
     
-	connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget,
-			 &PointRendererWidget::toggleDrawTrackball );
+	connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleDrawTrackball );
+	
+	connect( ui->bt_write_frames, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleWriteFrames );
 	
 	connect( ui->pointRendererWidget, &PointRendererWidget::debugInfoDefined, ui->debug_info, &QTextBrowser::setText);
 }

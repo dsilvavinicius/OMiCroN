@@ -28,7 +28,7 @@ namespace ui
 		//m_octree = make_shared< MediumFrontOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
 		
 		//m_octree->build( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
-		m_octree->build( "../../src/data/real/pugile.ply", SimplePointReader::SINGLE, COLORS );
+		m_octree->build( "../../src/data/real/prova5M.ply", SimplePointReader::SINGLE, COLORS );
 		//m_octree->build( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 		
 		//cout << *m_octree << endl << endl;

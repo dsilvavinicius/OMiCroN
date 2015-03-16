@@ -22,9 +22,9 @@ namespace model
 		
 		friend ostream& operator<<( ostream& out, const OctreeStats& octreeStats )
 		{
-			out << "Traversal time: " << octreeStats.m_traversalTime << endl
-				<< "Rendering time: " << octreeStats.m_renderingTime << endl
-				<< "Rendered points: " << octreeStats.m_numRenderedPoints << endl;
+			out << "Traversal time: " << octreeStats.m_traversalTime << endl << endl
+				<< "Rendering time: " << octreeStats.m_renderingTime << endl << endl
+				<< "Rendered points: " << octreeStats.m_numRenderedPoints << endl << endl;
 			return out;
 		}
 		
@@ -55,7 +55,7 @@ namespace model
 		{
 			
 			out << ( OctreeStats& ) frontOctreeStats;
-			out << "Front total nodes: " << frontOctreeStats.m_numFrontNodes << endl;
+			out << "Front total nodes: " << frontOctreeStats.m_numFrontNodes << endl << endl;
 			return out;
 		}
 		
