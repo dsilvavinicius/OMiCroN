@@ -46,7 +46,7 @@ namespace model
 			
 			CompactionRenderingState< vec3, float > renderingState( buffers, m_compactedPos.size(), openGL,
 																	 COLORS );
-			renderingState.setPainter( painter );
+			renderingState.setPainter( painter, size() );
 			renderingState.setCompactionArray( m_flags );
 			renderingState.render();
 			

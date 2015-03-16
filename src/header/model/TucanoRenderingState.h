@@ -38,10 +38,9 @@ namespace model
 		
 		virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const;
 		
-		/** This implementation will compare the size of the maximum box diagonal in normalized device coordinates with
-		 *	the projection threshold.
-		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in normalized device
-		 *	coordinates. */
+		/** This implementation will compare the size of the maximum box diagonal in window coordinates with the projection
+		 *	threshold.
+		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
 	
 		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
@@ -56,6 +55,10 @@ namespace model
 	private:
 		/** Acquires current traball's view-projection matrix. */
 		Matrix4f getViewProjection() const;
+		
+		/** Projects the point in world coordinates to window coordinates. */
+		Vector2f projToWindowCoords( const Vector4f& point, const Matrix4f& viewProjection, const Vector2i& viewportSize )
+		const;
 		
 		Frustum* m_frustum;
 		Trackball& m_camTrackball;
@@ -176,24 +179,19 @@ namespace model
 		Vector4f max( rawMax.x, rawMax.y, rawMax.z, 1 );
 		
 		Matrix4f viewProj = getViewProjection();
+		Vector2i viewportSize = m_camTrackball.getViewportSize();
 		
-		Vector4f proj0 = viewProj * min;
-		Vector2f normalizedProj0( proj0.x() / proj0.w(), proj0.y() / proj0.w() );
+		Vector2f proj0 = projToWindowCoords( min, viewProj, viewportSize );
+		Vector2f proj1 = projToWindowCoords( max, viewProj, viewportSize );
 		
-		Vector4f proj1 = viewProj * max;
-		Vector2f normalizedProj1( proj1.x() / proj1.w(), proj1.y() / proj1.w() );
-		
-		Vector2f diagonal0 = normalizedProj1 - normalizedProj0;
+		Vector2f diagonal0 = proj1 - proj0;
 		
 		Vec3 boxSize = rawMax - rawMin;
 		
-		proj0 = viewProj * Vector4f( min.x() + boxSize.x, min.y() + boxSize.y, min.z(), 1 );
-		normalizedProj0 = Vector2f( proj0.x() / proj0.w(), proj0.y() / proj0.w() );
+		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x, min.y() + boxSize.y, min.z(), 1 ), viewProj, viewportSize );
+		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z, 1 ), viewProj, viewportSize );
 		
-		proj1 = viewProj * Vector4f( max.x(), max.y(), max.z() + boxSize.z, 1 );
-		normalizedProj1 = Vector2f( proj1.x() / proj1.w(), proj1.y() / proj1.w() );
-		
-		Vector2f diagonal1 = normalizedProj1 - normalizedProj0;
+		Vector2f diagonal1 = proj1 - proj0;
 		
 		Float maxDiagLength = glm::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
 		
@@ -203,13 +201,22 @@ namespace model
 	template< typename Vec3, typename Float >
 	inline Matrix4f TucanoRenderingState< Vec3, Float >::getViewProjection() const
 	{
-		//Matrix4f view = Matrix4f::Identity();
-		//view.block( 0, 0, 3, 4 ) = m_camTrackball->getViewMatrix().block( 0, 0, 3, 4 );
-		
 		Matrix4f view = m_camTrackball.getViewMatrix().matrix();
 		Matrix4f proj = m_camTrackball.getProjectionMatrix();
 		
 		return proj * view;
+	}
+	
+	template< typename Vec3, typename Float >
+	inline Vector2f TucanoRenderingState< Vec3, Float >::projToWindowCoords( const Vector4f& point,
+																			 const Matrix4f& viewProj,
+																		  const Vector2i& viewportSize ) const
+	{
+		Vector4f proj = viewProj * point;
+		Vector2f normalizedProj( proj.x() / proj.w(), proj.y() / proj.w() );
+		//Vector2f windowProj = ( normalizedProj + Vector2f( 1.f, 1.f ) ) * 0.5f;
+		//return Vector2f( windowProj.x() * viewportSize.x(), windowProj.y() * viewportSize.y() );
+		return normalizedProj;
 	}
 }
 

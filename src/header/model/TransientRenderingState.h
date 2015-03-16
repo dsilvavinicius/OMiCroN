@@ -14,18 +14,18 @@ namespace model
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using QtRenderingState = model::QtRenderingState< Vec3, Float >;
 	public:
-		TransientRenderingState( QGLPainter* painter, const Attributes& attribs );
+		TransientRenderingState( QGLPainter* painter, const QSize& viewportSize, const Attributes& attribs );
 		~TransientRenderingState() {}
 		
 		unsigned int render();
 	};
 	
 	template< typename Vec3, typename Float >
-	TransientRenderingState< Vec3, Float >::TransientRenderingState( QGLPainter* painter,
+	TransientRenderingState< Vec3, Float >::TransientRenderingState( QGLPainter* painter, const QSize& viewportSize,
 																	 const Attributes& attribs )
 	: QtRenderingState( attribs )
 	{
-		QtRenderingState::setPainter( painter );
+		QtRenderingState::setPainter( painter, viewportSize );
 		QtRenderingState::m_painter->clearAttributes();
 		
 		switch( RenderingState::m_attribs )
