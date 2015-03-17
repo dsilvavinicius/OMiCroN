@@ -85,7 +85,7 @@ namespace model
 			
 			if( signedDist > 0 )
 			{
-				string planeName;
+				/*string planeName;
 				switch( i )
 				{
 					case 0: planeName = "left"; break;
@@ -95,7 +95,7 @@ namespace model
 					case 4: planeName = "near"; break;
 					case 5: planeName = "far"; break;
 				}
-				//cout << "Outside " << planeName << " plane." << endl;
+				cout << "Outside " << planeName << " plane." << endl;*/
 				return true;
 			}
 		}

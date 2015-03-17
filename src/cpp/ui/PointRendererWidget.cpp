@@ -23,9 +23,10 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate )
 {
+	Tucano::QtTrackballWidget::initialize();
+	
 	setFrameRate( frameRate );
 	
-	Tucano::QtTrackballWidget::initialize();
 	openMesh( "../../src/data/real/staypuff.ply" );
 
 	m_timer = new QTimer( this );
@@ -109,6 +110,18 @@ void PointRendererWidget::paintGL (void)
 	}
 	
 	m_endOfFrameTime = clock();
+	
+	// Render a side view of the object for debugging purposes.
+	Trackball tempCamera;
+	Vector2f sideViewportSize( size().width() * 0.333, size().height() * 0.333 );
+	tempCamera.setViewport( sideViewportSize );
+	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), sideViewportSize.x() / sideViewportSize.y(), 0.1f, 1000.0f );
+	tempCamera.resetViewMatrix();
+	tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
+	tempCamera.translate( Vector3f( 0.f, 0.f, 50.f ) );
+	
+	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
+	//
 }
 
 void PointRendererWidget::toggleWriteFrames()

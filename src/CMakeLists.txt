@@ -39,7 +39,7 @@ set (CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set (CMAKE_AUTOMOC ON)
 # Necessary flags for C++11, linking to Qt5 and setup Eigen.
-SET (CMAKE_CXX_FLAGS "-O3 -std=c++11 -fPIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
+SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 
 set (HEADER_DIR "header")
 set (CPP_DIR "cpp")

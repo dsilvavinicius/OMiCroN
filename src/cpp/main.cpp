@@ -8,7 +8,7 @@ using namespace ui;
 int main(int argc, char **argv)
 {
 	// Use this code to run with PointRendererWindow ( Qt3D )
-    QGuiApplication app(argc, argv);
+    /*QGuiApplication app(argc, argv);
 	
 	QSurfaceFormat format;
 	format.setVersion( 4, 3 );
@@ -20,10 +20,10 @@ int main(int argc, char **argv)
 	window.resize(640, 480);
 	window.show();
 	
-	return app.exec();
+	return app.exec();*/
 	
 	// Use this code to run with PointRendererWidget ( Legacy Qt and Tucano )
-	/*QApplication app( argc, argv );
+	QApplication app( argc, argv );
 
 	MainWindow window;
 
@@ -31,5 +31,5 @@ int main(int argc, char **argv)
 
     window.initialize();
 
-    return app.exec();*/
+    return app.exec();
 }

@@ -64,6 +64,8 @@ namespace model
 		Trackball& m_camTrackball;
 		Trackball& m_lightTrackball;
 		
+		Matrix4f m_viewProj;
+		
 		Mesh& m_mesh;
 		Phong* m_phong;
 		ImgSpacePBR *m_jfpbr;
@@ -78,12 +80,10 @@ namespace model
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
 	m_lightTrackball( lightTrackball ),
-	m_mesh( mesh )
+	m_mesh( mesh ),
+	m_viewProj( getViewProjection() )
 	{
-		cout << "Tucano shader path: " << shaderPath << endl << endl;
-		
-		Matrix4f viewProj = getViewProjection();
-		m_frustum = new Frustum( viewProj );
+		m_frustum = new Frustum( m_viewProj );
 		
 		m_phong = new Phong();
 		m_phong->setShadersDir( shaderPath );
@@ -106,9 +106,11 @@ namespace model
 	template< typename Vec3, typename Float >
 	void TucanoRenderingState< Vec3, Float >::updateFrustum()
 	{
-		Matrix4f viewProj = getViewProjection();
+		m_viewProj = getViewProjection();
 		
-		m_frustum->update( viewProj );
+		m_frustum->update( m_viewProj );
+		
+		//cout << "New frustum: " << endl << *m_frustum << endl << endl;
 	}
 	
 	template< typename Vec3, typename Float >
@@ -178,18 +180,18 @@ namespace model
 		Vector4f min( rawMin.x, rawMin.y, rawMin.z, 1 );
 		Vector4f max( rawMax.x, rawMax.y, rawMax.z, 1 );
 		
-		Matrix4f viewProj = getViewProjection();
 		Vector2i viewportSize = m_camTrackball.getViewportSize();
 		
-		Vector2f proj0 = projToWindowCoords( min, viewProj, viewportSize );
-		Vector2f proj1 = projToWindowCoords( max, viewProj, viewportSize );
+		Vector2f proj0 = projToWindowCoords( min, m_viewProj, viewportSize );
+		Vector2f proj1 = projToWindowCoords( max, m_viewProj, viewportSize );
 		
 		Vector2f diagonal0 = proj1 - proj0;
 		
 		Vec3 boxSize = rawMax - rawMin;
 		
-		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x, min.y() + boxSize.y, min.z(), 1 ), viewProj, viewportSize );
-		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z, 1 ), viewProj, viewportSize );
+		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x, min.y() + boxSize.y, min.z(), 1 ), m_viewProj,
+									viewportSize );
+		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z, 1 ), m_viewProj, viewportSize );
 		
 		Vector2f diagonal1 = proj1 - proj0;
 		
@@ -203,6 +205,8 @@ namespace model
 	{
 		Matrix4f view = m_camTrackball.getViewMatrix().matrix();
 		Matrix4f proj = m_camTrackball.getProjectionMatrix();
+		
+		//cout << "Projection to renderer: " << endl << proj << endl << endl;
 		
 		return proj * view;
 	}

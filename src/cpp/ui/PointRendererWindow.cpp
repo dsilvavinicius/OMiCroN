@@ -85,9 +85,9 @@ namespace ui
 		//OctreeStats stats = m_octree->traverse( painter, m_attribs, m_projThresh );
 		TransientRenderingState renderer( painter, size(), m_attribs );
 		
-		renderer. template drawBoundaries <
-			ShallowFrontOctree< float, vec3, Point< float, vec3 >, unordered_set< ShallowMortonCode > >,
-			unsigned int >( *m_octree, false, m_projThresh );
+		//renderer. template drawBoundaries <
+		//	ShallowFrontOctree< float, vec3, Point< float, vec3 >, unordered_set< ShallowMortonCode > >,
+		//	unsigned int >( *m_octree, false, m_projThresh );
 		
 		FrontOctreeStats stats = m_octree->trackFront( renderer, m_projThresh );
 		timing = clock() - timing;
