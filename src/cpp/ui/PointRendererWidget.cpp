@@ -89,11 +89,11 @@ void PointRendererWidget::paintGL (void)
 	stringstream debugSS;
 	debugSS << "Total loop time: " << float( totalTiming ) / CLOCKS_PER_SEC * 1000 << endl << endl
 			<< "Render time (traversal + rendering): " << m_renderTime << " ms" << endl << endl
+			<< "Time between frames: " << float( startOfFrameTime - m_endOfFrameTime ) / CLOCKS_PER_SEC * 1000 <<
+			"ms" << endl
 			<< stats
-			<< "Time between frames: " << float( startOfFrameTime - m_endOfFrameTime ) / CLOCKS_PER_SEC * 1000 << "ms" << endl
-			<< endl
 			<< "Desired render time: " << m_desiredRenderTime << "ms" << endl << endl
-			<< "Projection threshold: " << m_projThresh << " pixel^2" << endl << endl;
+			<< "Projection threshold: " << m_projThresh << endl << endl;
 			
 	//cout << debugSS.str() << endl << endl;
 	

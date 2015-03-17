@@ -75,7 +75,6 @@ namespace ui
 	void PointRendererWindow::paintGL( QGLPainter *painter )
 	{
 		//cout << "STARTING PAINTING!" << endl;
-		//m_octree->drawBoundaries(painter, true);
 		
 		adaptProjThresh( 66.666f ); // 15 fps.
 		//adaptProjThresh( 33.333f ); // 30 fps.
@@ -85,6 +84,11 @@ namespace ui
 		clock_t timing = clock();
 		//OctreeStats stats = m_octree->traverse( painter, m_attribs, m_projThresh );
 		TransientRenderingState renderer( painter, size(), m_attribs );
+		
+		renderer. template drawBoundaries <
+			ShallowFrontOctree< float, vec3, Point< float, vec3 >, unordered_set< ShallowMortonCode > >,
+			unsigned int >( *m_octree, false, m_projThresh );
+		
 		FrontOctreeStats stats = m_octree->trackFront( renderer, m_projThresh );
 		timing = clock() - timing;
 		
@@ -95,7 +99,7 @@ namespace ui
 		// Render debug data.
 		stringstream debugSS;
 		debugSS << "Render time: " << m_renderTime << " ms" << endl
-				<< "Projection threshold: " << m_projThresh << " pixel^2" << endl
+				<< "Projection threshold: " << m_projThresh << endl
 				<< stats << endl;
 		
 		//cout << debugSS.str() << endl << endl;
