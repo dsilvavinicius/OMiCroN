@@ -65,7 +65,7 @@ void PointRendererWidget::paintGL (void)
 	makeCurrent();
 
 	glClearColor(1.0, 1.0, 1.0, 0.0);
-	glClear( GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
 	//cout << "STARTING PAINTING!" << endl;
 	//m_octree->drawBoundaries(painter, true);
@@ -111,16 +111,49 @@ void PointRendererWidget::paintGL (void)
 	
 	m_endOfFrameTime = clock();
 	
-	// Render a side view of the object for debugging purposes.
+	// Render a front view of the object for debugging purposes.
+	Vector4f auxViewportSize( 0.f, 0.f, size().width() * 0.333f, size().height() * 0.333f );
+	
+	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
+	glEnable( GL_SCISSOR_TEST );
+	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
+	
 	Trackball tempCamera;
-	Vector2f sideViewportSize( size().width() * 0.333, size().height() * 0.333 );
-	tempCamera.setViewport( sideViewportSize );
-	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), sideViewportSize.x() / sideViewportSize.y(), 0.1f, 1000.0f );
+	tempCamera.setViewport( auxViewportSize );
+	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
 	tempCamera.resetViewMatrix();
-	tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
-	tempCamera.translate( Vector3f( 0.f, 0.f, 50.f ) );
+	tempCamera.translate( Vector3f( 0.f, 0.f, -200.f ) );
 	
 	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
+	
+	// Render a side view of the object for debugging purposes.
+	auxViewportSize[ 0 ] = size().width() * 0.333f;
+	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
+	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
+	
+	tempCamera.setViewport( auxViewportSize );
+	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
+	tempCamera.resetViewMatrix();
+	tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
+	tempCamera.translate( Vector3f( 200.f, 0.f, 0.f ) );
+	
+	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
+	
+	// Render a top view of the object for debugging purposes.
+	auxViewportSize[ 0 ] = size().width() * 0.666f;
+	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
+	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
+	
+	tempCamera.setViewport( auxViewportSize );
+	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
+	tempCamera.resetViewMatrix();
+	tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitX() ) ) );
+	tempCamera.translate( Vector3f( 0.f, -200.f, 0.f ) );
+	Vector4f viewVector = tempCamera.viewMatrix()->matrix() * Vector4f( 0.f, 0.f, -1.f, 1.f);
+	
+	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
+	
+	glDisable( GL_SCISSOR_TEST );
 	//
 }
 
