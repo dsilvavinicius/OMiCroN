@@ -39,35 +39,29 @@ public:
 
 signals:
 public slots:
-	/**
-	 * @brief Toggle write output to image
-	 */
+	/** @brief Toggle write output to image */
 	void toggleWriteFrames( void );
 	
-	/**
-	* @brief Toggles mean filter flag
-	*/
+	/** @brief Toggles mean filter flag */
 	void toggleEffect( int id );
 	
-	/**
-	* @brief Reload effect shaders.
-	*/
+	/** @brief Reload effect shaders. */
 	void reloadShaders( void );
 
 	/** @brief Sets the desired frame rate hint. */
 	void setFrameRate( const unsigned int& frameRate );
 	
-	/**
-	* @brief Modifies the SSAO global intensity value.
-	* @param value New intensity value.
-	*/
+	/** @brief Modifies the SSAO global intensity value.
+	* @param value New intensity value. */
 	void setJFPBRFirstMaxDistance( double value );
 
-	/**
-	* @brief Toggle draw trackball flag.
-	*/
+	/** @brief Toggle draw trackball flag. */
 	void toggleDrawTrackball( void );
 
+	/** Toggle the auxiliary viewports drawing. */
+	void toggleDrawAuxViewports( void );
+	
+	/** Opens a new point cloud. */
 	virtual void openMesh( const string& filename );
 
 signals:
@@ -75,22 +69,34 @@ signals:
 	void debugInfoDefined( const QString& debugInfo );
 
 private:
+	enum Viewport
+	{
+		FRONT,
+		SIDE,
+		TOP
+	};
 	
+	/** Adaps the projection threshold given a desired render time for a frame. */
 	void adaptProjThresh( float desiredRenderTime );
 
+	/** Render auxiliary viewports for debugging purposes. */
+	void renderAuxViewport( const Viewport& viewport );
+	
 	/// Flag to draw or not trackball
 	bool draw_trackball;
 
+	/** Draws auxiliary viewports flag. */
+	bool m_drawAuxViewports;
+	
 	PointModel mesh;
 	TucanoRenderingState* m_renderer;
 	ShallowFrontOctree* m_octree;
 	
 	QTimer *m_timer;
 	
-	// Adaptive projection threshold related data.
-	
 	/** Current projection threshold used in octree traversal. */
 	float m_projThresh;
+	
 	/** Current render time used to adapt the projection threshold. In ms. */
 	float m_renderTime;
 	

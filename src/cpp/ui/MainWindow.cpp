@@ -37,6 +37,9 @@ void MainWindow::initialize()
     
 	connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleDrawTrackball );
 	
+	connect( ui->ckbx_draw_viewports, &QCheckBox::stateChanged, ui->pointRendererWidget,
+			 &PointRendererWidget::toggleDrawAuxViewports );
+	
 	connect( ui->bt_write_frames, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleWriteFrames );
 	
 	connect( ui->pointRendererWidget, &PointRendererWidget::debugInfoDefined, ui->debug_info, &QTextBrowser::setText);

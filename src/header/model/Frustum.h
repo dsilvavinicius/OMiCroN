@@ -45,12 +45,7 @@ namespace model
 		 * @param normalize indicates that the final plane equation should be normalized. */
 		void extractPlanes( const Matrix4f& mvp, const bool& normalize );
 		
-		/** Transforms the plane to world coordinates. Affine transformation is assumed.
-		 *	@param toWorld is the inverse of the model-view matrix, i.e. the transformation from eye to world
-		 * coordinates. */
-		//void transformPlaneToWorld( const Matrix4f& toWorld, Plane* plane ) const;
-		
-		// Planes are defined
+		/** Frustum planes. */
 		vector< Plane* > m_planes;
 	};
 	

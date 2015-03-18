@@ -23,7 +23,6 @@
         <verstretch>0</verstretch>
        </sizepolicy>
       </property>
-      <zorder></zorder>
      </widget>
     </item>
     <item>
@@ -58,7 +57,7 @@
       <item>
        <widget class="QLabel" name="lb_effects">
         <property name="text">
-         <string>Choosen effect</string>
+         <string>Chosen effect</string>
         </property>
        </widget>
       </item>
@@ -147,6 +146,22 @@
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="ckbx_draw_viewports">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>Draw aux. viewports</string>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>false</bool>
         </property>
        </widget>
       </item>

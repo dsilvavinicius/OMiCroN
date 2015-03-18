@@ -9,6 +9,7 @@ m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
 m_endOfFrameTime( clock() ),
 draw_trackball( true ),
+m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
@@ -111,50 +112,59 @@ void PointRendererWidget::paintGL (void)
 	
 	m_endOfFrameTime = clock();
 	
-	// Render a front view of the object for debugging purposes.
-	Vector4f auxViewportSize( 0.f, 0.f, size().width() * 0.333f, size().height() * 0.333f );
+	if( m_drawAuxViewports )
+	{
+		glEnable( GL_SCISSOR_TEST );
+		renderAuxViewport( FRONT );
+		renderAuxViewport( SIDE );
+		renderAuxViewport( TOP );
+		glDisable( GL_SCISSOR_TEST );
+	}
+}
+
+void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
+{
+	Vector2f viewportPos;
 	
+	switch( viewport )
+	{
+		case FRONT: viewportPos[ 0 ] = 0.f; viewportPos[ 1 ] = 0.f; break;
+		case SIDE: viewportPos[ 0 ] = size().width() * 0.333f; viewportPos[ 1 ] = 0.f; break;
+		case TOP: viewportPos[ 0 ] = size().width() * 0.666f; viewportPos[ 1 ] = 0.f; break;
+	}
+	
+	Vector4f auxViewportSize( viewportPos[ 0 ], viewportPos[ 1 ], size().width() * 0.333f, size().height() * 0.333f );
 	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
-	glEnable( GL_SCISSOR_TEST );
 	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
 	
 	Trackball tempCamera;
 	tempCamera.setViewport( auxViewportSize );
 	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
 	tempCamera.resetViewMatrix();
-	tempCamera.translate( Vector3f( 0.f, 0.f, -200.f ) );
 	
-	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
+	switch( viewport )
+	{
+		case FRONT:
+		{
+			 tempCamera.translate( Vector3f( 0.f, 0.f, -200.f ) );
+			 break;
+		}
+		case SIDE:
+		{
+			tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
+			tempCamera.translate( Vector3f( 200.f, 0.f, 0.f ) );
+			break;
+		}
+		case TOP:
+		{
+			tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitX() ) ) );
+			tempCamera.translate( Vector3f( 0.f, -200.f, 0.f ) );
+			break;
+		}
+	}
 	
-	// Render a side view of the object for debugging purposes.
-	auxViewportSize[ 0 ] = size().width() * 0.333f;
-	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
-	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
-	
-	tempCamera.setViewport( auxViewportSize );
-	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
-	tempCamera.resetViewMatrix();
-	tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
-	tempCamera.translate( Vector3f( 200.f, 0.f, 0.f ) );
-	
-	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
-	
-	// Render a top view of the object for debugging purposes.
-	auxViewportSize[ 0 ] = size().width() * 0.666f;
-	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
-	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
-	
-	tempCamera.setViewport( auxViewportSize );
-	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
-	tempCamera.resetViewMatrix();
-	tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitX() ) ) );
-	tempCamera.translate( Vector3f( 0.f, -200.f, 0.f ) );
-	Vector4f viewVector = tempCamera.viewMatrix()->matrix() * Vector4f( 0.f, 0.f, -1.f, 1.f);
-	
-	m_renderer->getPhong().render( mesh, tempCamera, light_trackball );
-	
-	glDisable( GL_SCISSOR_TEST );
-	//
+	Phong &phong = m_renderer->getPhong();
+	phong.render( mesh, tempCamera, light_trackball );
 }
 
 void PointRendererWidget::toggleWriteFrames()
@@ -190,6 +200,12 @@ void PointRendererWidget::setJFPBRFirstMaxDistance( double value )
 void PointRendererWidget::toggleDrawTrackball( void )
 {
 	draw_trackball = !draw_trackball;
+	updateGL();
+}
+
+void PointRendererWidget::toggleDrawAuxViewports( void )
+{
+	m_drawAuxViewports = !m_drawAuxViewports;
 	updateGL();
 }
 
