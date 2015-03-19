@@ -1,30 +1,24 @@
-#ifndef FRONT_WRAPPER_H
-#define FRONT_WRAPPER_H
+#ifndef COMPACTION_FRONT_BEHAVIOR_H
+#define COMPACTION_FRONT_BEHAVIOR_H
 
-//#include "CompactionRenderingState.h"
-#include "RenderingState.h"
-#include "Front.h"
+#include "FrontBehavior.h"
 
 namespace model
 {
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
-	class FrontOctree;
-	
-	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
-	 * should be tightly coupled with the class that it is "specializing". */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
-	struct FrontWrapper {};
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	class CompactionFrontOctree;
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	struct FrontWrapper< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > > >
+	struct FrontWrapper< MortonPrecision, Float, Vec3, Point, typename FrontTypes< MortonPrecision >::Front >
 	{
 		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
-		using RenderingState = model::RenderingState< Vec3, Float >;
-		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front >;
+		using RenderingState = model::CompactionRenderingState< Vec3, Float >;
+		using FrontTypes = model::FrontTypes< MortonPrecision >;
+		using Front = typename FrontTypes::Front;
+		using FrontOctree = model::CompactionFrontOctree< MortonPrecision, Float, Vec3, Point >;
 		
 		static void trackFront( FrontOctree& octree, RenderingState& renderingState, const Float& projThresh )
 		{
@@ -33,12 +27,11 @@ namespace model
 			// increment.
 			bool erasePrevious = false;
 			
-			Front& front = octree.m_front;
+			typename FrontTypes::FrontBySequence front = octree.m_front.get< FrontTypes::sequential >(); 
+			typename FrontTypes::FrontBySequence::iterator end = front.end();
+			typename FrontTypes::FrontBySequence::iterator prev;
 			
-			typename Front::iterator end = front.end();
-			typename Front::iterator prev;
-			
-			for( typename Front::iterator it = front.begin(); it != end; prev = it, ++it,
+			for( typename FrontTypes::FrontBySequence::iterator it = front.begin(); it != end; prev = it, ++it,
 				end = front.end() )
 			{
 				//cout << endl << "Current: " << hex << it->getBits() << dec << endl;
@@ -58,7 +51,7 @@ namespace model
 			if( erasePrevious )
 			{
 				//cout << "Erased: " << hex << prev->getBits() << dec << endl;
-				octree.m_front.erase( prev );
+				front.erase( prev );
 			}
 		}
 		
@@ -66,7 +59,7 @@ namespace model
 		{
 			MortonPtrVector deletedCodes = code->traverseUp()->traverseDown();
 		
-			Front& front = octree.m_front;
+			typename FrontTypes::FrontBySequence front = octree.m_front.get< FrontTypes::morton >(); 
 			
 			for( MortonCodePtr deletedCode : deletedCodes )
 			{

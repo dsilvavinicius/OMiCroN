@@ -3,7 +3,7 @@
 
 #include <unordered_set>
 
-#include "FrontWrapper.h"
+#include "FrontBehavior.h"
 #include "RandomSampleOctree.h"
 
 namespace model
@@ -24,12 +24,14 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using FrontWrapper = model::FrontWrapper< MortonPrecision, Float, Vec3, Point, Front >;
+		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point, Front >;
 		
-		friend FrontWrapper;
+		friend FrontBehavior;
 		
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
+		
+		~FrontOctree();
 		
 		/** Tracks the hierarchy front, by prunning or branching nodes ( one level only ). This method should be called
 		 * after RandomSampleOctree::traverse( RenderingState& renderer, const Float& projThresh ),
@@ -70,6 +72,9 @@ namespace model
 		/** Internal setup method for both leaf and inner node cases. */
 		void setupNodeRendering( OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState );
 		
+		/** Object with data related behavior of the front. */
+		FrontBehavior* m_frontBehavior;
+		
 		/** Hierarchy front. */
 		Front m_front;
 		
@@ -81,7 +86,15 @@ namespace model
 	FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::FrontOctree( const int& maxPointsPerNode,
 																			const int& maxLevel )
 	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
-	{}
+	{
+		m_frontBehavior = new FrontBehavior( *this );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
+	FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::~FrontOctree()
+	{
+		delete m_frontBehavior;
+	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	FrontOctreeStats FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::trackFront(
@@ -100,7 +113,7 @@ namespace model
 		}*/
 		//
 		
-		FrontWrapper::trackFront( *this, renderer, projThresh );
+		m_frontBehavior->trackFront( renderer, projThresh );
 		
 		onTraversalEnd();
 		
@@ -198,7 +211,7 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::prune( const MortonCodePtr& code )
 	{
-		FrontWrapper::prune( *this, code );
+		m_frontBehavior->prune( code );
 	}
 	
 	
@@ -279,7 +292,7 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::onTraversalEnd()
 	{
-		FrontWrapper::insert( *this, m_frontInsertionList );
+		m_frontBehavior->insert( m_frontInsertionList );
 	}
 	
 	//=====================================================================
