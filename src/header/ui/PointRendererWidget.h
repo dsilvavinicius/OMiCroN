@@ -7,7 +7,7 @@
 #include <utils/qttrackballwidget.hpp>
 #include <point_model.hpp>
 #include "TucanoRenderingState.h"
-#include <FrontOctree.h>
+#include <ParallelOctree.h>
 #include <QApplication>
 
 using namespace std;
@@ -17,9 +17,15 @@ class PointRendererWidget
 : public Tucano::QtTrackballWidget
 {
 	Q_OBJECT
-	using TucanoRenderingState = model::TucanoRenderingState< vec3, float >;
-	using ShallowFrontOctree = model::ShallowFrontOctree< float, vec3, ExtendedPoint< float, vec3 >,
-														  unordered_set< ShallowMortonCode >  >;
+	
+	using MortonCode = model::ShallowMortonCode;
+	using Point = model::ExtendedPoint< float, vec3 >;
+	using PointReader = ExtendedPointReader;
+	using Front = unordered_set< MortonCode >;
+	using InsertionContainer = vector< MortonCode >;
+	using FrontBehavior = ShallowFrontBehavior< float, vec3, Point, Front, InsertionContainer >;
+	using Octree = model::ShallowFrontOctree< float, vec3, Point, FrontBehavior >;
+	using RenderingState = model::TucanoRenderingState< vec3, float >;
 	
 public:
 	explicit PointRendererWidget( QWidget *parent );
@@ -89,8 +95,8 @@ private:
 	bool m_drawAuxViewports;
 	
 	PointModel mesh;
-	TucanoRenderingState* m_renderer;
-	ShallowFrontOctree* m_octree;
+	RenderingState* m_renderer;
+	Octree* m_octree;
 	
 	QTimer *m_timer;
 	

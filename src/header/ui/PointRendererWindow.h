@@ -22,7 +22,15 @@ namespace ui
 	class PointRendererWindow : public QGLView
 	{
 		Q_OBJECT
+		
+		using MortonCode = model::ShallowMortonCode;
+		using Point = model::Point< float, vec3 >;
+		using Front = unordered_set< MortonCode >;
+		using InsertionContainer = vector< MortonCode >;
+		using FrontBehavior = ShallowFrontBehavior< float, vec3, Point, Front, InsertionContainer >;
+		using Octree = model::ShallowFrontOctree< float, vec3, Point, FrontBehavior >;
 		using TransientRenderingState = model::TransientRenderingState< vec3, float >;
+	
 	public:
 		PointRendererWindow( const QSurfaceFormat &format, QWindow *parent = 0 );
 		~PointRendererWindow();
@@ -44,12 +52,7 @@ namespace ui
 		 * @returns true if the adaptation was done, false otherwise. */
 		void adaptProjThresh( float desiredRenderTime );
 		
-		//ShallowOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
-		//MediumOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
-		//ShallowRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
-		//MediumRandomSampleOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
-		ShallowFrontOctreePtr< float, vec3, Point< float, vec3 >, unordered_set< ShallowMortonCode > > m_octree;
-		//MediumFrontOctreePtr< float, vec3, Point< float, vec3 > > m_octree;
+		Octree* m_octree;
 		
 		QPoint m_lastMousePos;
 		

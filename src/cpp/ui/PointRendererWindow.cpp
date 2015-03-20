@@ -19,24 +19,14 @@ namespace ui
 		m_projThresh( 0.001f ),
 		m_renderTime( 0.f )
 	{
-		//m_octree = make_shared< ShallowOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
-		//m_octree = make_shared< MediumOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
-		//m_octree = make_shared< ShallowRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 10 );
-		//m_octree = make_shared< MediumRandomSampleOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
-		m_octree = make_shared< ShallowFrontOctree< float, vec3, Point< float, vec3 >,
-													unordered_set< ShallowMortonCode > > >( 1, 10 );
-		//m_octree = make_shared< MediumFrontOctree< float, vec3, Point< float, vec3 > > >( 1, 12 );
-		
-		//m_octree->build( "../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
+		m_octree = new Octree( 1, 10 );
 		m_octree->build( "../../src/data/real/prova5M.ply", SimplePointReader::SINGLE, COLORS );
-		//m_octree->build( "../../src/data/real/tempietto_dense.ply", ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
-		
-		//cout << *m_octree << endl << endl;
 	}
 	
 	PointRendererWindow::~PointRendererWindow()
 	{
 		delete m_timer;
+		delete m_octree;
 	}
 
 	void PointRendererWindow::initializeGL( QGLPainter *painter )

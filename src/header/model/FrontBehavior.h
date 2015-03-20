@@ -44,7 +44,7 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front >;
+		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >;
 		
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}
@@ -57,19 +57,17 @@ namespace model
 			// increment.
 			bool erasePrevious = false;
 			
-			Front& front = m_octree.m_front;
-			
-			typename Front::iterator end = front.end();
+			typename Front::iterator end = m_front.end();
 			typename Front::iterator prev;
 			
-			for( typename Front::iterator it = front.begin(); it != end; prev = it, ++it,
-				end = front.end() )
+			for( typename Front::iterator it = m_front.begin(); it != end; prev = it, ++it,
+				end = m_front.end() )
 			{
 				//cout << endl << "Current: " << hex << it->getBits() << dec << endl;
 				if( erasePrevious )
 				{
 					//cout << "Erased: " << hex << prev->getBits() << dec << endl;
-					front.erase( prev );
+					m_front.erase( prev );
 				}
 				//erasePrevious = false;
 				
@@ -82,7 +80,7 @@ namespace model
 			if( erasePrevious )
 			{
 				//cout << "Erased: " << hex << prev->getBits() << dec << endl;
-				m_octree.m_front.erase( prev );
+				m_front.erase( prev );
 			}
 		}
 		
@@ -90,8 +88,6 @@ namespace model
 		virtual void prune( const MortonCodePtr& code )
 		{
 			MortonPtrVector deletedCodes = code->traverseUp()->traverseDown();
-		
-			Front& front = m_octree.m_front;
 			
 			for( MortonCodePtr deletedCode : deletedCodes )
 			{
@@ -99,11 +95,11 @@ namespace model
 				{
 					//cout << "Prunning: " << hex << deletedCode->getBits() << dec << endl;
 					
-					typename Front::iterator it = front.find( *deletedCode );
-					if( it != front.end()  )
+					typename Front::iterator it = m_front.find( *deletedCode );
+					if( it != m_front.end()  )
 					{
 						//cout << "Pruned: " << hex << deletedCode->getBits() << dec << endl;
-						front.erase( it );
+						m_front.erase( it );
 					}
 				}
 			}
@@ -118,7 +114,7 @@ namespace model
 		/** Inserts all nodes marked for insertion into front. */
 		virtual void onFrontTrackingEnd()
 		{
-			m_octree.m_front.insert( m_insertionList.begin(), m_insertionList.end() );
+			m_front.insert( m_insertionList.begin(), m_insertionList.end() );
 		}
 		
 		/** Clears the data structures related with the marked nodes. */
@@ -127,12 +123,20 @@ namespace model
 			m_insertionList.clear();
 		}
 		
+		int size() { return m_front.size(); }
+		
 	protected:
 		FrontOctree& m_octree;
+		
+		/** Hierarchy front. */
+		Front m_front;
 		
 		/** List with the nodes that will be included in current front tracking. */
 		InsertionContainer m_insertionList;
 	};
+	
+	template< typename Float, typename Vec3, typename Point, typename Front, typename InsertionContainer >
+	using ShallowFrontBehavior = FrontBehavior< unsigned int, Float, Vec3, Point, Front, InsertionContainer >;
 }
 
 #endif

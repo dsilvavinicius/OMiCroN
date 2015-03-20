@@ -175,7 +175,7 @@ void PointRendererWidget::toggleWriteFrames()
 
 void PointRendererWidget::toggleEffect( int id )
 {
-	m_renderer->selectEffect( ( TucanoRenderingState::Effect ) id );
+	m_renderer->selectEffect( ( RenderingState::Effect ) id );
 	updateGL();
 }
 
@@ -217,8 +217,8 @@ void PointRendererWidget::openMesh( const string& filename )
 	{
 		delete m_octree;
 	}
-	m_octree = new ShallowFrontOctree( 1, 10 );
-	m_octree->build( filename, ExtendedPointReader::SINGLE, vertAttribs );
+	m_octree = new Octree( 1, 10 );
+	m_octree->build( filename, PointReader::SINGLE, vertAttribs );
 	
 	mesh.reset();
 	if( m_renderer )
@@ -227,9 +227,9 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new TucanoRenderingState( camera, light_trackball, mesh, vertAttribs,
-											QApplication::applicationDirPath().toStdString() +
-											"/shaders/tucano/" );
+	m_renderer = new RenderingState( camera, light_trackball, mesh, vertAttribs,
+									 QApplication::applicationDirPath().toStdString() +
+									 "/shaders/tucano/" );
 	clock_t timing = clock();
 	m_octree->traverse( *m_renderer, m_projThresh );
 	timing = clock() - timing;
