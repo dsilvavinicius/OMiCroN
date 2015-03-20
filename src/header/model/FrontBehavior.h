@@ -7,17 +7,35 @@
 
 namespace model
 {
+	/** Just an unifier for some std container API. */
+	struct ContainerAPIUnifier
+	{
+		template< typename Value >
+		static void insert( vector< Value >& container, const Value& value )
+		{
+			container.push_back( value );
+		}
+		
+		template< typename Value >
+		static void insert( unordered_set< Value >& container, const Value& value )
+		{
+			container.insert( value );
+		}
+	};
+	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	class FrontOctree;
 	
 	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
 	 * should be tightly coupled with the class that it is "specializing". */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename InsertionContainer >
 	class FrontBehavior
 	{};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	class FrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > > >
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename InsertionContainer >
+	class FrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > >,
+						 InsertionContainer >
 	{
 	public:
 		using MortonCode = model::MortonCode< MortonPrecision >;
@@ -31,6 +49,7 @@ namespace model
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}
 		
+		/** Main front tracking method. */
 		virtual void trackFront( RenderingState& renderingState, const Float& projThresh )
 		{
 			// Flag to indicate if the previous front entry should be deleted. This can be done only after the
@@ -67,6 +86,7 @@ namespace model
 			}
 		}
 		
+		/** Prune all siblings of a node ( the node itself is not affected ). */
 		virtual void prune( const MortonCodePtr& code )
 		{
 			MortonPtrVector deletedCodes = code->traverseUp()->traverseDown();
@@ -89,13 +109,29 @@ namespace model
 			}
 		}
 		
-		virtual void insert( const MortonVector& toBeInserted )
+		/** Mark a node for insertion in front. */
+		virtual void insert( const MortonCode& code )
 		{
-			m_octree.m_front.insert( toBeInserted.begin(), toBeInserted.end() );
+			ContainerAPIUnifier::insert( m_insertionList, code );
+		}
+		
+		/** Inserts all nodes marked for insertion into front. */
+		virtual void onFrontTrackingEnd()
+		{
+			m_octree.m_front.insert( m_insertionList.begin(), m_insertionList.end() );
+		}
+		
+		/** Clears the data structures related with the marked nodes. */
+		virtual void clearMarkedNodes()
+		{
+			m_insertionList.clear();
 		}
 		
 	protected:
 		FrontOctree& m_octree;
+		
+		/** List with the nodes that will be included in current front tracking. */
+		InsertionContainer m_insertionList;
 	};
 }
 

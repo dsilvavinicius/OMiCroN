@@ -24,7 +24,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point, Front >;
+		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point, Front, MortonVector >;
 		
 		friend FrontBehavior;
 		
@@ -77,9 +77,6 @@ namespace model
 		
 		/** Hierarchy front. */
 		Front m_front;
-		
-		/** List with the nodes that will be included in current front tracking. */
-		MortonVector m_frontInsertionList;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
@@ -103,7 +100,7 @@ namespace model
 		clock_t timing = clock();
 		
 		//cout << "========== Starting front tracking ==========" << endl;
-		m_frontInsertionList.clear();
+		m_frontBehavior->clearMarkedNodes();
 		
 		//
 		/*cout << "Front: " << endl;
@@ -167,7 +164,7 @@ namespace model
 				{
 					erasePrevious = true;
 					//cout << "Inserted in front: " << hex << child->getBits() << dec << endl;
-					m_frontInsertionList.push_back( *child );
+					m_frontBehavior->insert( *child );
 					
 					pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( child );
 					if( !renderingState.isCullable( box ) )
@@ -276,7 +273,7 @@ namespace model
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
 		//cout << "Inserted draw: " << hex << code->getBits() << dec << endl;
-		m_frontInsertionList.push_back( *code );
+		m_frontBehavior->insert( *code );
 		
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
@@ -286,13 +283,13 @@ namespace model
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::handleCulledNode( MortonCodePtr code )
 	{
 		//cout << "Inserted cull: " << hex << code->getBits() << dec << endl;
-		m_frontInsertionList.push_back( *code );
+		m_frontBehavior->insert( *code );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
 	void FrontOctree< MortonPrecision, Float, Vec3, Point, Front >::onTraversalEnd()
 	{
-		m_frontBehavior->insert( m_frontInsertionList );
+		m_frontBehavior->onFrontTrackingEnd();
 	}
 	
 	//=====================================================================

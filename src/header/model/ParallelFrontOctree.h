@@ -10,6 +10,12 @@ namespace model
 	class ParallelFrontOctree
 	: FrontOctree< MortonPrecision, Float, Vec3, Point, Front >
 	{
+		using MortonCode = model::MortonCode< MortonPrecision >;
+		using MortonVector = vector< MortonCode >;
+		
+	private:
+		/** List with the nodes that will be deleted in current front tracking. */
+		MortonVector m_frontDeletionList;
 	};
 }
 
