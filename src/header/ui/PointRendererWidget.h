@@ -21,7 +21,8 @@ class PointRendererWidget
 	using MortonCode = model::ShallowMortonCode;
 	using Point = model::ExtendedPoint< float, vec3 >;
 	using PointReader = ExtendedPointReader;
-	using Octree = model::ShallowParallelOctree< float, vec3, Point >;
+	using Octree = model::ShallowFrontOctree< float, vec3, Point >;
+	//using Octree = model::ShallowRandomSampleOctree< float, vec3, Point >;
 	using RenderingState = model::TucanoRenderingState< vec3, float >;
 	
 public:

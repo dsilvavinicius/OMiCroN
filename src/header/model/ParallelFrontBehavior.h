@@ -42,15 +42,26 @@ namespace model
 				int id = omp_get_thread_num();
 				int nThreads = omp_get_num_threads();
 				
+				int index = id;
+				int frontSize = FrontBehavior::m_front.size();
+				
 				typename Front::iterator it = FrontBehavior::m_front.begin();
-				advance( it, id );
-				while( it != FrontBehavior::m_front.end() )
+				if( index < frontSize )
 				{
+					advance( it, id );
 					MortonCodePtr code = make_shared< MortonCode >( *it );
+					FrontBehavior::m_octree.trackNode( code, renderingState, projThresh );
+					index += nThreads;
+				}
+				
+				while( index < frontSize )
+				{
+					advance( it, nThreads);
 					
+					MortonCodePtr code = make_shared< MortonCode >( *it );
 					FrontBehavior::m_octree.trackNode( code, renderingState, projThresh );
 					
-					advance( it, nThreads);
+					index += nThreads;
 				}
 			}
 		}

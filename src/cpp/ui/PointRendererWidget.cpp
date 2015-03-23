@@ -79,7 +79,7 @@ void PointRendererWidget::paintGL (void)
 	
 	// Render the scene.
 	clock_t timing = clock();
-	//OctreeStats stats = m_octree->traverse( painter, m_attribs, m_projThresh );
+	//OctreeStats stats = m_octree->traverse( *m_renderer, m_projThresh );
 	FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
 	timing = clock() - timing;
 	
