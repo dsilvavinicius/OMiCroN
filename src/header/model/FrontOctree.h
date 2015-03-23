@@ -8,8 +8,12 @@
 
 namespace model
 {
-	/** Octree that supports temporal coherence by hierarchy front tracking. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
+	/** Octree that supports temporal coherence by hierarchy front tracking. Nodes that are added to a insertion container
+	 *	while traversing and added to the actual front at traversal ending.
+	 *	@param: Front is the type used as the actual front container.
+	 *	@param: FrontInsertionContainer is the insertion container, used to track nodes that should be added to the front. */
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
 	class FrontOctree
 	: public RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
 	{
@@ -24,6 +28,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
+		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >;
 		
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -74,22 +79,25 @@ namespace model
 		FrontBehavior* m_frontBehavior;
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::FrontOctree( const int& maxPointsPerNode,
-																			const int& maxLevel )
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::FrontOctree(
+		const int& maxPointsPerNode, const int& maxLevel )
 	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
 	{
 		m_frontBehavior = new FrontBehavior( *this );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::~FrontOctree()
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::~FrontOctree()
 	{
 		delete m_frontBehavior;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	FrontOctreeStats FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::trackFront(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	FrontOctreeStats FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::trackFront(
 		RenderingState& renderer, const Float& projThresh )
 	{
 		clock_t timing = clock();
@@ -124,8 +132,9 @@ namespace model
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_frontBehavior->size() );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::trackNode(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::trackNode(
 		MortonCodePtr& code, RenderingState& renderingState, const Float& projThresh )
 	{
 		bool isCullable = false;
@@ -197,15 +206,18 @@ namespace model
 		return eraseNode;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::prune( const MortonCodePtr& code )
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::prune(
+		const MortonCodePtr& code )
 	{
 		m_frontBehavior->prune( code );
 	}
 	
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::checkPrune(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::checkPrune(
 		RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const
 	{
 		if( code->getBits() == 1 )
@@ -231,8 +243,9 @@ namespace model
 		return true;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::checkBranch(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline bool FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::checkBranch(
 		RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh, bool& out_isCullable )
 		const
 	{
@@ -242,8 +255,9 @@ namespace model
 		return !renderingState.isRenderable( box, projThresh ) && !out_isCullable;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::setupLeafNodeRendering(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::setupLeafNodeRendering(
 		OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
@@ -251,8 +265,9 @@ namespace model
 		setupNodeRendering( leafNode, code, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::setupInnerNodeRendering(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::setupInnerNodeRendering(
 		OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
@@ -260,8 +275,9 @@ namespace model
 		setupNodeRendering( innerNode, code, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::setupNodeRendering(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
 		//cout << "Inserted draw: " << hex << code->getBits() << dec << endl;
@@ -270,23 +286,27 @@ namespace model
 		setupNodeRendering( node, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::setupNodeRendering(
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, RenderingState& renderingState )
 	{
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::handleCulledNode( MortonCodePtr code )
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::handleCulledNode(
+		MortonCodePtr code )
 	{
 		//cout << "Inserted cull: " << hex << code->getBits() << dec << endl;
 		m_frontBehavior->insert( *code );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	void FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >::onTraversalEnd()
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::onTraversalEnd()
 	{
 		m_frontBehavior->onFrontTrackingEnd();
 	}
@@ -295,17 +315,10 @@ namespace model
 	// Type Sugar.
 	//=====================================================================
 	
-	template< typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	using ShallowFrontOctree = FrontOctree< unsigned int, Float, Vec3, Point, FrontBehavior >;
-	
-	template< typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	using ShallowFrontOctreePtr = shared_ptr< ShallowFrontOctree< Float, Vec3, Point, FrontBehavior > >;
-	
-	template< typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	using MediumFrontOctree = FrontOctree< unsigned long, Float, Vec3, Point, FrontBehavior >;
-	
-	template< typename Float, typename Vec3, typename Point, typename FrontBehavior >
-	using MediumFrontOctreePtr = shared_ptr< MediumFrontOctree< Float, Vec3, Point, FrontBehavior > >;
+	/** An front octree with shallow morton code and usual data structures for front and front insertion container. */
+	template< typename Float, typename Vec3, typename Point >
+	using ShallowFrontOctree = FrontOctree< unsigned int, Float, Vec3, Point, unordered_set< MortonCode< unsigned int > >,
+											vector< MortonCode< unsigned int > > >;
 }
 
 #endif

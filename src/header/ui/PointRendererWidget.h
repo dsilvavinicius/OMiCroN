@@ -21,10 +21,7 @@ class PointRendererWidget
 	using MortonCode = model::ShallowMortonCode;
 	using Point = model::ExtendedPoint< float, vec3 >;
 	using PointReader = ExtendedPointReader;
-	using Front = unordered_set< MortonCode >;
-	using InsertionContainer = vector< MortonCode >;
-	using FrontBehavior = ShallowFrontBehavior< float, vec3, Point, Front, InsertionContainer >;
-	using Octree = model::ShallowFrontOctree< float, vec3, Point, FrontBehavior >;
+	using Octree = model::ShallowParallelOctree< float, vec3, Point >;
 	using RenderingState = model::TucanoRenderingState< vec3, float >;
 	
 public:

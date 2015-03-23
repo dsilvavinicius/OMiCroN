@@ -12,7 +12,7 @@
 
 #include "ExtendedPoint.h"
 //#include "RandomSampleOctree.h"
-#include "FrontOctree.h"
+#include "ParallelOctree.h"
 
 using namespace std;
 using namespace model;
@@ -25,10 +25,7 @@ namespace ui
 		
 		using MortonCode = model::ShallowMortonCode;
 		using Point = model::Point< float, vec3 >;
-		using Front = unordered_set< MortonCode >;
-		using InsertionContainer = vector< MortonCode >;
-		using FrontBehavior = ShallowFrontBehavior< float, vec3, Point, Front, InsertionContainer >;
-		using Octree = model::ShallowFrontOctree< float, vec3, Point, FrontBehavior >;
+		using Octree = model::ShallowFrontOctree< float, vec3, Point >;
 		using TransientRenderingState = model::TransientRenderingState< vec3, float >;
 	
 	public:

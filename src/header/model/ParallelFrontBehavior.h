@@ -7,11 +7,17 @@
 
 namespace model
 {
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
-	class ParallelOctree;
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	class FrontOctree;
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	class ParallelFrontBehavior{};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	class ParallelFrontBehavior
+	class ParallelFrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > >,
+								 unordered_set< MortonCode< MortonPrecision > > >
 	: public FrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > >,
 							unordered_set< MortonCode< MortonPrecision > > >
 	{
@@ -21,10 +27,9 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::ParallelOctree< MortonPrecision, Float, Vec3, Point, Front >;
-		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point,
-													unordered_set< MortonCode >,
-													unordered_set< MortonVector > >;
+		using InsertionContainer = unordered_set< MortonCode >;
+		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point, Front, InsertionContainer >;
+		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, InsertionContainer >;
 	
 	public:
 		ParallelFrontBehavior( FrontOctree& octree )
@@ -37,7 +42,8 @@ namespace model
 				int id = omp_get_thread_num();
 				int nThreads = omp_get_num_threads();
 				
-				typename Front::iterator it = advance( FrontBehavior::m_front.begin(), id );
+				typename Front::iterator it = FrontBehavior::m_front.begin();
+				advance( it, id );
 				while( it != FrontBehavior::m_front.end() )
 				{
 					MortonCodePtr code = make_shared< MortonCode >( *it );
@@ -52,7 +58,7 @@ namespace model
 		void prune( const MortonCodePtr& code )
 		{
 			#pragma omp critical (FrontDeletion)
-				m_deletionList.push_back( code );
+				m_deletionList.push_back( *code );
 		}
 		
 		/** Mark a node for insertion in front. */
@@ -85,6 +91,17 @@ namespace model
 		/** List with front nodes to be deleted. */
 		MortonVector m_deletionList;
 	};
+	
+	//=====================================================================
+	// Type Sugar.
+	//=====================================================================
+	
+	/** Front behavior with shallow morton code and usual datastructures that allow parallelism. */
+	template< typename Float, typename Vec3, typename Point >
+	using ShallowParallelFrontBehavior = ParallelFrontBehavior< unsigned int, Float, Vec3, Point,
+																unordered_set< MortonCode< unsigned int > >,
+																unordered_set< MortonCode< unsigned int > >
+															  >;
 }
 
 #endif

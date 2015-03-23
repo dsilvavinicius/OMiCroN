@@ -23,7 +23,8 @@ namespace model
 		}
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front >
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
 	class FrontOctree;
 	
 	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
@@ -44,7 +45,7 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, FrontBehavior >;
+		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, InsertionContainer >;
 		
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}
