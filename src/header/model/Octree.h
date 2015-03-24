@@ -17,6 +17,7 @@
 #include "TransientRenderingState.h"
 #include "OctreeStats.h"
 #include "PlyPointReader.h"
+#include "PointAppender.h"
 
 using namespace std;
 using namespace util;
@@ -41,11 +42,14 @@ namespace model
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using TransientRenderingState = model::TransientRenderingState< Vec3, Float >;
 		using Precision = typename PlyPointReader< Float, Vec3, Point >::Precision;
+		using PointAppender = model::PointAppender< MortonPrecision, Float, Vec3, Point >;
 		
 	public:
 		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum level
 		 * of the hierarchy. */
 		OctreeBase( const int& maxPointsPerNode, const int& maxLevel );
+		
+		~OctreeBase();
 		
 		/** Builds the octree for a given point cloud file. The points are expected to be in world coordinates.
 		 * @param precision tells the floating precision in which coordinates will be interpreted.
@@ -106,8 +110,8 @@ namespace model
 		
 		/** Utility method to append the points of a child node into a vector, incrementing the number of
 		 * parent's children and leaves. */
-		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vector,
-								   int& numChildren, int& numLeaves ) const;
+		//virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vector,
+		//						   int& numChildren, int& numLeaves ) const;
 		
 		/** Traversal recursion. */
 		virtual void traverse( MortonCodePtr< MortonPrecision > nodeCode,
@@ -148,6 +152,9 @@ namespace model
 		
 		/** Maximum level that the type used as morton code of this octree can represent. */
 		unsigned int m_maxMortonLevel;
+		
+		/** Utils to append points before building points. */
+		PointAppender* m_pointAppender;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -159,6 +166,13 @@ namespace model
 		m_maxPointsPerNode = maxPointsPerNode;
 		m_hierarchy = make_shared< OctreeMap< MortonPrecision, Float, Vec3 > >();
 		m_maxLevel = maxLevel;
+		m_pointAppender = new PointAppender();
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	OctreeBase< MortonPrecision, Float, Vec3, Point >::~OctreeBase()
+	{
+		delete m_pointAppender;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -290,7 +304,7 @@ namespace model
 				// Appends first child node.
 				OctreeNodePtr< MortonPrecision, Float, Vec3 > firstChild = firstChildIt->second;
 				
-				appendPoints( firstChild, childrenPoints, numChildren, numLeaves );
+				m_pointAppender->appendPoints( firstChild, childrenPoints, numChildren, numLeaves );
 				
 				// Adds points of remaining child nodes.
 				typename OctreeMap< MortonPrecision, Float, Vec3 >::iterator currentChildIt = firstChildIt;
@@ -298,7 +312,7 @@ namespace model
 				{
 					OctreeNodePtr< MortonPrecision, Float, Vec3 > currentChild = currentChildIt->second;
 					
-					appendPoints( currentChild, childrenPoints, numChildren, numLeaves );
+					m_pointAppender->appendPoints( currentChild, childrenPoints, numChildren, numLeaves );
 				}
 				
 				//cout << "numChildren: " << numChildren << endl << "numLeaves" << numLeaves << endl;
@@ -321,24 +335,6 @@ namespace model
 					
 					( *m_hierarchy )[ parentCode ] = mergedNode;
 				}
-				/* 
-				// The condition below is to build a sparse representation of the octree.
-				else if (numChildren == 1 && numLeaves == 0)
-				{
-					// Inner node child, which forms a chain with the parent and represents the same info.
-					// The parent should just absorb the child node.
-					auto tempIt = firstChildIt;
-					advance(firstChildIt, numChildren);
-					
-					m_hierarchy->erase(tempIt, currentChildIt);
-					
-					// Creates leaf to replace children.
-					LODInnerNodePtr< MortonPrecision, Float, Vec3 > newNode =
-						make_shared< LODInnerNode< MortonPrecision, Float, Vec3 > >();
-					newNode->setContents(*childrenPoints[0]);
-					
-					(*m_hierarchy)[parentCode] = newNode;
-				}*/
 				else
 				{
 					//cout << "Just LOD." << endl << endl;
@@ -374,7 +370,7 @@ namespace model
 	}
 	
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	/*template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::appendPoints( OctreeNodePtr< MortonPrecision,
 																				 Float, Vec3 > node,
 																				 PointVector& vec, int& numChildren,
@@ -392,7 +388,7 @@ namespace model
 			PointPtr LODPoint = node-> template getContents< Point >();
 			vec.push_back(LODPoint);
 		}
-	}
+	}*/
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	OctreeStats OctreeBase< MortonPrecision, Float, Vec3, Point >::traverse( RenderingState& renderingState,

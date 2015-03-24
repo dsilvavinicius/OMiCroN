@@ -16,6 +16,7 @@ namespace model
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
+		using RandomPointAppender = model::RandomPointAppender< MortonPrecision, Float, Vec3, Point >;
 		
 	public:
 		RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -31,8 +32,8 @@ namespace model
 		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
 									  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState );
 
-		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec,
-						   int& numChildren, int& numLeaves) const;
+		//void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec,
+		//				   int& numChildren, int& numLeaves) const;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -40,6 +41,7 @@ namespace model
 																				   const int& maxLevel )
 	: Octree< MortonPrecision, Float, Vec3, Point >::Octree( maxPointsPerNode, maxLevel )
 	{
+		Octree< MortonPrecision, Float, Vec3, Point >::m_pointAppender = new RandomPointAppender();
 		srand( 1 );
 	}
 	
@@ -76,7 +78,7 @@ namespace model
 		renderingState.handleNodeRendering( points );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	/*template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::appendPoints( OctreeNodePtr< MortonPrecision,
 																						 Float, Vec3 > node,
 																					 PointVector& vec,
@@ -91,7 +93,7 @@ namespace model
 		PointVectorPtr childPoints = node-> template getContents< PointVector >();
 		
 		vec.insert( vec.end(), childPoints->begin(), childPoints->end() );
-	}
+	}*/
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonPrecision, Float, Vec3, Point >& octree )
