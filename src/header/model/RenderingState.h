@@ -52,6 +52,7 @@ namespace model
 		vector< Vec3 >& getPositions() { return m_positions; };
 		vector< Vec3 >& getColors() { return m_colors; };
 		vector< Vec3 >& getNormals() { return m_normals; };
+		vector< unsigned int >& getIndices() { return m_indices; };
 	
 		/** Clear all attrib vectors. */
 		void clearAttribs();
@@ -60,6 +61,7 @@ namespace model
 		vector< Vec3 > m_positions;
 		vector< Vec3 > m_colors;
 		vector< Vec3 > m_normals;
+		vector< unsigned int > m_indices;
 		Attributes m_attribs;
 	};
 	
@@ -73,6 +75,7 @@ namespace model
 		m_positions.clear();
 		m_colors.clear();
 		m_normals.clear();
+		m_indices.clear();
 	}
 	
 	namespace NodeRenderingHandler
@@ -117,6 +120,16 @@ namespace model
 				state.getPositions().push_back( *point->getPos() );
 				state.getColors().push_back( *point->getColor() );
 				state.getNormals().push_back( *point->getNormal() );
+			}
+		}
+		
+		template<>
+		inline void handle< vec3, float, shared_ptr< vector< unsigned int > > >(
+			RenderingState< vec3, float >& state, const shared_ptr< vector< unsigned int > >& points )
+		{
+			for( unsigned int index : *points )
+			{
+				state.getIndices().push_back( index );
 			}
 		}
 	}

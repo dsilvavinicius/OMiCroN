@@ -110,6 +110,10 @@ namespace model
 		/** Creates all leaf nodes and put points inside them. */
 		virtual void buildLeaves( const PointVector& points );
 		
+		/** Inserts a point into an octree leaf node identified by the given morton code. Creates the node in the process if
+		 *	necessary. */
+		virtual void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
+		
 		/** Creates all inner nodes, with LOD. Bottom-up. If a node has only leaf chilren and the accumulated number of
 		 * children points is less than a threshold, the children are merged into parent. */
 		virtual void buildInners();
@@ -257,23 +261,32 @@ namespace model
 			MortonCodePtr code = make_shared< MortonCode >();
 			code->build( ( MortonPrecision )index.x, ( MortonPrecision )index.y, ( MortonPrecision )index.z, m_maxLevel );
 			
-			typename OctreeMap::iterator genericLeafIt = m_hierarchy->find( code );
-			if( genericLeafIt == m_hierarchy->end() )
-			{
-				// Creates leaf node.
-				auto leafNode = make_shared< LeafNode >();
-						
-				leafNode->setContents( PointVector() );
-				( *m_hierarchy )[ code ] = leafNode;
-				leafNode->getContents()->push_back( point );
-			}
-			else
-			{
-				// Node already exists. Appends the point there.
-				OctreeNodePtr leafNode = genericLeafIt->second;
-				shared_ptr< PointVector > nodePoints = leafNode-> template getContents< PointVector >();
-				nodePoints->push_back( point );
-			}
+			insertPointInLeaf( point, code );
+		}
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::insertPointInLeaf( const PointPtr& point,
+																					  const MortonCodePtr& code )
+	{
+		typename OctreeMap::iterator genericLeafIt = m_hierarchy->find( code );
+		
+		if( genericLeafIt == m_hierarchy->end() )
+		{
+			// Creates leaf node.
+			auto leafNode = make_shared< LeafNode >();
+			
+			PointVector points;
+			points.push_back( point );
+			leafNode->setContents( points );
+			( *m_hierarchy )[ code ] = leafNode;
+		}
+		else
+		{
+			// Node already exists. Appends the point there.
+			OctreeNodePtr leafNode = genericLeafIt->second;
+			shared_ptr< PointVector > nodePoints = leafNode-> template getContents< PointVector >();
+			nodePoints->push_back( point );
 		}
 	}
 	
@@ -337,8 +350,6 @@ namespace model
 			m_pointAppender->appendPoints( child, childrenPoints, numChildren, numLeaves );
 		}
 		
-		// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
-		// is not leaf.
 		if( numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode )
 		{
 			//cout << "Will merge children." << endl << endl;

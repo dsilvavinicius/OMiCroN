@@ -30,14 +30,16 @@ namespace model
 		friend ostream& operator<<( ostream& out, const RandomSampleOctree< M, F, V, P >& octree );
 		
 	protected:
-		void buildInnerNode( typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
-							 const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children );
-		
-		/** Creates a new inner node by randomly sampling the points of the child nodes. */
-		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
+		virtual void buildInnerNode( typename OctreeMap::iterator& firstChildIt,
+									 const typename OctreeMap::iterator& currentChildIt, const MortonCodePtr& parentCode,
+							   const vector< OctreeNodePtr >& children );
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
 		void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		
+	private:
+		/** Creates a new inner node by randomly sampling the points of the child nodes. */
+		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -68,9 +70,7 @@ namespace model
 		{
 			Octree::m_pointAppender->appendPoints( child, childrenPoints, numChildren, numLeaves );
 		}
-			
-		// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
-		// is not leaf.
+
 		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
 		{
 			//cout << "Will merge children." << endl << endl;
