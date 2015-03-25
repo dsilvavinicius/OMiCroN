@@ -114,13 +114,13 @@ namespace model
 		 * children points is less than a threshold, the children are merged into parent. */
 		virtual void buildInners();
 		
-		/** Builds the inner node given the points in all child nodes. */
-		virtual OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
+		/** Builds the inner node given all child nodes, inserting it into the hierarchy. */
+		virtual void buildInnerNode( typename OctreeMap::iterator& firstChildIt,
+									 const typename OctreeMap::iterator& currentChildIt,
+									 const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children );
 		
 		/** Traversal recursion. */
-		virtual void traverse( MortonCodePtr nodeCode,
-							   RenderingState& renderingState,
-							   const Float& projThresh );
+		virtual void traverse( MortonCodePtr nodeCode, RenderingState& renderingState, const Float& projThresh );
 		
 		/** Setups the rendering of an inner node, putting all necessary points into the rendering list. */
 		virtual void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
@@ -157,6 +157,10 @@ namespace model
 		
 		/** Utils to append points before building points. */
 		PointAppender* m_pointAppender;
+		
+	private:
+		/** Builds the inner node given all child points. */
+		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -294,61 +298,72 @@ namespace model
 			{
 				MortonCodePtr parentCode = firstChildIt->first->traverseUp();
 				
-				// These counters are used to check if the accumulated number of child node points is less than a threshold.
-				// In this case, the children are deleted and their points are merged into the parent.
-				int numChildren = 0;
-				int numLeaves = 0;
+				auto children = vector< OctreeNodePtr >();
 				
-				// Points to be accumulated for LOD or to be merged into the parent.
-				auto childrenPoints = PointVector();
+				// Puts children into vector.
+				children.push_back( firstChildIt->second );
 				
-				// Appends first child node.
-				OctreeNodePtr firstChild = firstChildIt->second;
-				
-				m_pointAppender->appendPoints( firstChild, childrenPoints, numChildren, numLeaves );
-				
-				// Adds points of remaining child nodes.
 				typename OctreeMap::iterator currentChildIt = firstChildIt;
 				while( ( ++currentChildIt ) != m_hierarchy->end() && *currentChildIt->first->traverseUp() == *parentCode )
 				{
 					OctreeNodePtr currentChild = currentChildIt->second;
-					
-					m_pointAppender->appendPoints( currentChild, childrenPoints, numChildren, numLeaves );
+					children.push_back( currentChild );
 				}
 				
-				//cout << "numChildren: " << numChildren << endl << "numLeaves" << numLeaves << endl;
-				
-				// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
-				// is not leaf.
-				if( numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode )
-				{
-					//cout << "Will merge children." << endl << endl;
-					// All children are leaves, but they have less points than the threshold and must be merged.
-					auto tempIt = firstChildIt;
-					advance( firstChildIt, numChildren );
-					
-					m_hierarchy->erase( tempIt, currentChildIt );
-					
-					// Creates leaf to replace children.
-					auto mergedNode = make_shared< LeafNode >();
-					mergedNode->setContents( childrenPoints );
-					
-					( *m_hierarchy )[ parentCode ] = mergedNode;
-				}
-				else
-				{
-					//cout << "Just LOD." << endl << endl;
-					// No merge or absorption is needed. Just does LOD.
-					advance( firstChildIt, numChildren );
-					
-					( *m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
-				}
+				buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
 			}
 			
 			cout << "========== End of level " << level << " ==========" << endl << endl;
 		}
 	}
 
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::buildInnerNode(
+		typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
+		const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children )
+	{
+		// These counters are used to check if the accumulated number of child node points is less than a threshold.
+		// In this case, the children are deleted and their points are merged into the parent.
+		int numChildren = 0;
+		int numLeaves = 0;
+		
+		// Points to be accumulated for LOD or to be merged into the parent.
+		auto childrenPoints = PointVector();
+		
+		//cout << "numChildren: " << numChildren << endl << "numLeaves" << numLeaves << endl;
+		
+		for( OctreeNodePtr child : children )
+		{
+			m_pointAppender->appendPoints( child, childrenPoints, numChildren, numLeaves );
+		}
+		
+		// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
+		// is not leaf.
+		if( numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode )
+		{
+			//cout << "Will merge children." << endl << endl;
+			// All children are leaves, but they have less points than the threshold and must be merged.
+			auto tempIt = firstChildIt;
+			advance( firstChildIt, numChildren );
+			
+			m_hierarchy->erase( tempIt, currentChildIt );
+			
+			// Creates leaf to replace children.
+			auto mergedNode = make_shared< LeafNode >();
+			mergedNode->setContents( childrenPoints );
+			
+			( *m_hierarchy )[ parentCode ] = mergedNode;
+		}
+		else
+		{
+			//cout << "Just LOD." << endl << endl;
+			// No merge or absorption is needed. Just does LOD.
+			advance( firstChildIt, numChildren );
+			
+			( *m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
+		}
+	}
+	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > OctreeBase< MortonPrecision, Float, Vec3, Point >::
 		buildInnerNode( const PointVector& childrenPoints ) const

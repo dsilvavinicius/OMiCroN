@@ -12,9 +12,14 @@ namespace model
 	class RandomSampleOctree
 	: public Octree< MortonPrecision, Float, Vec3, Point >
 	{
+		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
+		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
+		using LeafNode = model::LeafNode< MortonPrecision, Float, Vec3, PointVector >;
+		using OctreeMap = model::OctreeMap< MortonPrecision, Float, Vec3 >;
+		using Octree = model::Octree< MortonPrecision, Float, Vec3, Point >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using RandomPointAppender = model::RandomPointAppender< MortonPrecision, Float, Vec3, Point >;
 		
@@ -25,21 +30,70 @@ namespace model
 		friend ostream& operator<<( ostream& out, const RandomSampleOctree< M, F, V, P >& octree );
 		
 	protected:
+		void buildInnerNode( typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
+							 const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children );
+		
 		/** Creates a new inner node by randomly sampling the points of the child nodes. */
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > buildInnerNode( const PointVector& childrenPoints ) const;
+		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
-		void setupInnerNodeRendering( OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode,
-									  MortonCodePtr< MortonPrecision > code, RenderingState& renderingState );
+		void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::RandomSampleOctree( const int& maxPointsPerNode,
 																				   const int& maxLevel )
-	: Octree< MortonPrecision, Float, Vec3, Point >::Octree( maxPointsPerNode, maxLevel )
+	: Octree::Octree( maxPointsPerNode, maxLevel )
 	{
-		Octree< MortonPrecision, Float, Vec3, Point >::m_pointAppender = new RandomPointAppender();
+		Octree::m_pointAppender = new RandomPointAppender();
 		srand( 1 );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::buildInnerNode(
+		typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
+		const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children )
+	{
+		// These counters are used to check if the accumulated number of child node points is less than a threshold.
+		// In this case, the children are deleted and their points are merged into the parent.
+		int numChildren = 0;
+		int numLeaves = 0;
+		
+		// Points to be accumulated for LOD or to be merged into the parent.
+		auto childrenPoints = PointVector();
+		
+		//cout << "numChildren: " << numChildren << endl << "numLeaves" << numLeaves << endl;
+		
+		for( OctreeNodePtr child : children )
+		{
+			Octree::m_pointAppender->appendPoints( child, childrenPoints, numChildren, numLeaves );
+		}
+			
+		// TODO: Verify what to do with the cases of chains in hierarchy where the deeper chain node
+		// is not leaf.
+		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
+		{
+			//cout << "Will merge children." << endl << endl;
+			// All children are leaves, but they have less points than the threshold and must be merged.
+			auto tempIt = firstChildIt;
+			advance( firstChildIt, numChildren );
+			
+			Octree::m_hierarchy->erase( tempIt, currentChildIt );
+			
+			// Creates leaf to replace children.
+			auto mergedNode = make_shared< LeafNode >();
+			mergedNode->setContents( childrenPoints );
+			
+			( *Octree::m_hierarchy )[ parentCode ] = mergedNode;
+		}
+		else
+		{
+			//cout << "Just LOD." << endl << endl;
+			// No merge or absorption is needed. Just does LOD.
+			advance( firstChildIt, numChildren );
+			
+			( *Octree::m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
+		}
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
@@ -66,8 +120,7 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
-		OctreeNodePtr< MortonPrecision, Float, Vec3 > innerNode, MortonCodePtr< MortonPrecision > code,
-		RenderingState& renderingState )
+		OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
@@ -78,7 +131,10 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonPrecision, Float, Vec3, Point >& octree )
 	{
-		using PointVector = vector< shared_ptr< Point > >;
+		using PointVector = model::PointVector< Float, Vec3 >;
+		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
+		using OctreeMapPtr = model::OctreeMapPtr< MortonPrecision, Float, Vec3 >;
+		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
 		
 		out << endl << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string(*octree.m_origin) << endl
@@ -88,11 +144,11 @@ namespace model
 		
 		/** Maximum level of this octree. */
 		unsigned int m_maxLevel;
-		OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy = octree.getHierarchy();
+		OctreeMapPtr hierarchy = octree.getHierarchy();
 		for( auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt )
 		{
-			MortonCodePtr< MortonPrecision > code = nodeIt->first;
-			OctreeNodePtr< MortonPrecision, Float, Vec3 > genericNode = nodeIt->second;
+			MortonCodePtr code = nodeIt->first;
+			OctreeNodePtr genericNode = nodeIt->second;
 			
 			out << "Node: {" << endl << *code << "," << endl;
 			operator<< < MortonPrecision, Float, Vec3, PointVector >( out, *genericNode );
