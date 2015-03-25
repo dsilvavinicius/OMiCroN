@@ -19,7 +19,7 @@ namespace model
 		using PointVectorPtr = shared_ptr< PointVector >;
 		
 	public:
-		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
+		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
 						   int& numLeaves ) const
 		{
 			++numChildren;
@@ -46,7 +46,7 @@ namespace model
 		using PointVectorPtr = shared_ptr< PointVector >;
 		
 	public:
-		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
+		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
 						   int& numLeaves ) const
 		{
 			++numChildren;
@@ -77,7 +77,7 @@ namespace model
 		using PointVectorPtr = shared_ptr< PointVector >;
 		
 	public:
-		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
+		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
 						   int& numLeaves ) const
 		{
 			++numChildren;
@@ -102,7 +102,7 @@ namespace model
 		using PointVectorPtr = shared_ptr< PointVector >;
 		
 	public:
-		void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
+		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
 						   int& numLeaves ) const
 		{
 			++numChildren;
