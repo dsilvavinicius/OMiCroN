@@ -22,6 +22,8 @@ namespace model
 		using RandomSampleOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
 		
 	public:
+		IndexedOctree( const int& maxPointsPerNode, const int& maxLevel );
+		
 		PointVector& getPoints(){ return m_points; } 
 		
 	protected:
@@ -42,6 +44,10 @@ namespace model
 		/** Point vector which will be indexed in the actual hierarchy. */
 		PointVector m_points;
 	};
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	IndexedOctree< MortonPrecision, Float, Vec3, Point >::IndexedOctree( const int& maxPointsPerNode, const int& maxLevel )
+	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel ) {}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::insertPointInLeaf( const PointPtr& point,

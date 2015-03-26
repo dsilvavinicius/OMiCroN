@@ -12,37 +12,16 @@ namespace model
 {
 	namespace test
 	{
-		template< typename P >
-        class OctreeTest
-        : public ::testing::Test
-        {};
+		template< typename Float, typename Vec3, typename Point >
+		struct OctreeInitializer {};
 		
-		
-		template<>
-		class OctreeTest< Point< float, vec3 > >
-		: public ::testing::Test
+		template< typename Float, typename Vec3 >
+		struct OctreeInitializer< Float, Vec3, Point< Float, Vec3 > >
 		{
-			using Point = model::Point< float, vec3 >;
+			using Point = model::Point< Float, Vec3 >;
 			using PointVector = vector< shared_ptr< Point > >;
 			
-		public:
-			static void SetUpTestCase()
-			{
-				string exeFilename = string( g_argv[ 0 ] );
-				m_plyFileName = new string( g_appPath +
-					"/../../../src/data/tests/simple_point_octree.ply" );
-			}
-		
-			static void TearDownTestCase()
-			{
-				delete m_plyFileName;
-				m_plyFileName = nullptr;
-			}
-			
-			static string* m_plyFileName;
-			
-		protected:
-			void SetUp()
+			static PointVector generatePoints()
 			{
 				// These points should define the boundaries of the octree hexahedron.
 				auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
@@ -59,51 +38,32 @@ namespace model
 				auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) );
 				auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) );
 				
-				m_points.push_back( back );
-				m_points.push_back( front );
-				m_points.push_back( right );
-				m_points.push_back( left );
-				m_points.push_back( down );
-				m_points.push_back( up );
+				PointVector points;
 				
-				m_points.push_back( addPoint0 );
-				m_points.push_back( addPoint1 );
-				m_points.push_back( addPoint2 );
-				m_points.push_back( addPoint3 );
-				m_points.push_back( addPoint4 );
+				points.push_back( back );
+				points.push_back( front );
+				points.push_back( right );
+				points.push_back( left );
+				points.push_back( down );
+				points.push_back( up );
+				
+				points.push_back( addPoint0 );
+				points.push_back( addPoint1 );
+				points.push_back( addPoint2 );
+				points.push_back( addPoint3 );
+				points.push_back( addPoint4 );
+				
+				return points;
 			}
-			
-			PointVector m_points;
 		};
 		
-		string* OctreeTest< Point< float, vec3 > >::m_plyFileName;
-		
-		template<>
-		class OctreeTest< ExtendedPoint< float, vec3 > >
-		: public ::testing::Test
+		template< typename Float, typename Vec3 >
+		struct OctreeInitializer< Float, Vec3, ExtendedPoint< Float, Vec3 > >
 		{
-			using Point = ExtendedPoint< float, vec3 >;
+			using Point = model::ExtendedPoint< Float, Vec3 >;
 			using PointVector = vector< shared_ptr< Point > >;
-		
-		public:
-			static void SetUpTestCase()
-			{
-				string exeFilename = string( g_argv[ 0 ] );
-				m_plyFileName = new string( exeFilename.substr( 0, exeFilename.find_last_of( "/" ) ) +
-					"/../../../src/data/tests/extended_point_octree.ply" );
-			}
 			
-			static void TearDownTestCase()
-			{
-				delete m_plyFileName;
-				m_plyFileName = nullptr;
-			}
-			
-			static string* m_plyFileName;
-			
-		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
-			void SetUp()
+			static PointVector generatePoints()
 			{
 				// These points should define the boundaries of the octree hexahedron.
 				auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
@@ -131,51 +91,211 @@ namespace model
 				auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 0.31f, 0.32f, 0.33f ),
 													   vec3( 12.f, 5.f, 0.f ) );
 				
-				m_points.push_back( back );
-				m_points.push_back( front );
-				m_points.push_back( right );
-				m_points.push_back( left );
-				m_points.push_back( down );
-				m_points.push_back( up );
+				PointVector points;
 				
-				m_points.push_back( addPoint0 );
-				m_points.push_back( addPoint1 );
-				m_points.push_back( addPoint2 );
-				m_points.push_back( addPoint3 );
-				m_points.push_back( addPoint4 );
+				points.push_back( back );
+				points.push_back( front );
+				points.push_back( right );
+				points.push_back( left );
+				points.push_back( down );
+				points.push_back( up );
+				
+				points.push_back( addPoint0 );
+				points.push_back( addPoint1 );
+				points.push_back( addPoint2 );
+				points.push_back( addPoint3 );
+				points.push_back( addPoint4 );
+				
+				return points;
 			}
-			
-			PointVector m_points;
 		};
 		
-		string* OctreeTest< ExtendedPoint< float, vec3 > >::m_plyFileName;
-		
-		using testing::Types;
-		
-		typedef Types< Point< float, vec3 >, ExtendedPoint< float, vec3 > > Implementations;
-		TYPED_TEST_CASE( OctreeTest, Implementations );
-
-		/** Tests the calculated boundaries of the ShallowOctree. */
-		TYPED_TEST( OctreeTest, ShallowBoundaries )
+		class SimplePointTest
+		: public ::testing::Test
 		{
-			auto octree = make_shared< ShallowOctree< float, vec3, TypeParam > >(1, 10);
-			octree->build( this->m_points );
+		public:
+			static void SetUpTestCase()
+			{
+				string exeFilename = string( g_argv[ 0 ] );
+				m_plyFileName = new string( g_appPath +
+					"/../../../src/data/tests/simple_point_octree.ply" );
+			}
+		
+			static void TearDownTestCase()
+			{
+				delete m_plyFileName;
+				m_plyFileName = nullptr;
+			}
 			
-			ASSERT_EQ(octree->getMaxLevel(), 10);
-			ASSERT_EQ(octree->getMaxPointsPerNode(), 1);
+			static string* m_plyFileName;
+		};
+		string* SimplePointTest::m_plyFileName;
+		
+		class ExtendedPointTest
+		: public ::testing::Test
+		{
+		public:
+			static void SetUpTestCase()
+			{
+				string exeFilename = string( g_argv[ 0 ] );
+				m_plyFileName = new string( exeFilename.substr( 0, exeFilename.find_last_of( "/" ) ) +
+					"/../../../src/data/tests/extended_point_octree.ply" );
+			}
 			
-			vec3 origin = *octree->getOrigin();
-			vec3 size = *octree->getSize();
-			vec3 leafSize = *octree->getLeafSize();
+			static void TearDownTestCase()
+			{
+				delete m_plyFileName;
+				m_plyFileName = nullptr;
+			}
 			
+			static string* m_plyFileName;
+		};
+		string* ExtendedPointTest::m_plyFileName;
+		
+		template< typename P >
+        class OctreeTest {};
+		
+		using ShallowPointOctree = model::Octree< unsigned int, float, vec3, Point< float, vec3> >;
+		using MediumPointOctree = model::Octree< unsigned long, float, vec3, Point< float, vec3> >;
+		using ShallowExtendedPointOctree = model::Octree< unsigned int, float, vec3, ExtendedPoint< float, vec3> >;
+		using MediumExtendedPointOctree = model::Octree< unsigned long, float, vec3, ExtendedPoint< float, vec3> >;
+		
+		template<>
+		class OctreeTest< ShallowPointOctree >
+		: public SimplePointTest
+		{
+			using Point = model::Point< float, vec3 >;
+			using PointVector = vector< shared_ptr< Point > >;
+			using Octree = ShallowPointOctree;
+			using OctreePtr = shared_ptr< Octree >;
+			using Test = model::test::OctreeTest< Octree >;
+			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			
+		public:
+			friend OctreeInitializer;
+			
+		protected:
+			void SetUp()
+			{
+				PointVector points = OctreeInitializer::generatePoints();
+				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree->build( points );
+			}
+			
+			OctreePtr m_octree; 
+		};
+		
+		template<>
+		class OctreeTest< MediumPointOctree >
+		: public SimplePointTest
+		{
+			using Point = model::Point< float, vec3 >;
+			using PointVector = vector< shared_ptr< Point > >;
+			using Octree = MediumPointOctree;
+			using OctreePtr = shared_ptr< Octree >;
+			using Test = model::test::OctreeTest< Octree >;
+			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			
+		public:
+			friend OctreeInitializer;
+			
+		protected:
+			void SetUp()
+			{
+				PointVector points = OctreeInitializer::generatePoints();
+				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree->build( points );
+			}
+			
+			OctreePtr m_octree; 
+		};
+		
+		template<>
+		class OctreeTest< ShallowExtendedPointOctree >
+		: public ExtendedPointTest
+		{
+			using Point = ExtendedPoint< float, vec3 >;
+			using PointVector = vector< shared_ptr< Point > >;
+			using Octree = ShallowExtendedPointOctree;
+			using OctreePtr = shared_ptr< Octree >;
+			using Test = model::test::OctreeTest< Octree >;
+			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+		
+		public:
+			friend OctreeInitializer;
+			
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				PointVector points = OctreeInitializer::generatePoints();
+				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree->build( points );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
+		template<>
+		class OctreeTest< MediumExtendedPointOctree >
+		: public ExtendedPointTest
+		{
+			using Point = ExtendedPoint< float, vec3 >;
+			using PointVector = vector< shared_ptr< Point > >;
+			using Octree = MediumExtendedPointOctree;
+			using OctreePtr = shared_ptr< Octree >;
+			using Test = model::test::OctreeTest< Octree >;
+			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+		
+		public:
+			friend OctreeInitializer;
+			
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				PointVector points = OctreeInitializer::generatePoints();
+				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree->build( points );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
+		template< typename Octree >
+		void testShallowBoundaries( const Octree& octree )
+		{
+			ASSERT_EQ( octree.getMaxLevel(), 10 );
+			ASSERT_EQ( octree.getMaxPointsPerNode(), 1 );
+		
+			vec3 origin = *octree.getOrigin();
+			vec3 size = *octree.getSize();
+			vec3 leafSize = *octree.getLeafSize();
+		
 			float epsilon = 10.e-15f;
 			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) ) < epsilon ) ;
 			ASSERT_TRUE( distance2( size, vec3(60.f, 46.f, 75.f) ) < epsilon );
 			ASSERT_TRUE( distance2( leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f ) ) < epsilon ) ;
 		}
 		
-		template<typename MortonPrecision, typename Float, typename Vec3>
-		void checkNode(OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits)
+		template< typename Octree >
+		void testMediumBoundaries( const Octree& octree )
+		{
+			ASSERT_EQ( octree.getMaxLevel(), 20 );
+			ASSERT_EQ( octree.getMaxPointsPerNode(), 1 );
+			
+			vec3 origin = *octree.getOrigin();
+			vec3 size = *octree.getSize();
+			vec3 leafSize = *octree.getLeafSize();
+			
+			float epsilon = 10.e-15f;
+			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) )  < epsilon );
+			ASSERT_TRUE( distance2( size, vec3( 60.f, 46.f, 75.f ) ) < epsilon );
+			ASSERT_TRUE( distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) ) < epsilon );
+		}
+		
+		template< typename MortonPrecision, typename Float, typename Vec3 >
+		void checkNode( OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits )
 		{
 			stringstream ss;
 			ss << "0x" << hex << bits << dec;
@@ -211,26 +331,8 @@ namespace model
 			checkNode< unsigned int >( hierarchy, 0x1U );
 		}
 		
-		template< typename Float, typename Vec3, typename Point >
-		void checkShallowHierarchy( const ShallowOctreePtr< Float, Vec3, Point > octree )
-		{
-			ShallowOctreeMapPtr< Float, Vec3 > hierarchy = octree->getHierarchy();
-			// Check node that should appear in the sparse representation of the octree.
-			checkSparseHierarchy( hierarchy );
-			
-			// Check the other nodes, which would be merged in a sparse octree.
-			checkNode< unsigned int >( hierarchy, 0x14d8U);
-			checkNode< unsigned int >( hierarchy, 0x1864U);
-			checkNode< unsigned int >( hierarchy, 0x29bU);
-			checkNode< unsigned int >( hierarchy, 0x30cU);
-			checkNode< unsigned int >( hierarchy, 0x3b0U);
-			checkNode< unsigned int >( hierarchy, 0x53U);
-			
-			ASSERT_TRUE(hierarchy->empty());
-		}
-		
-		/** Tests the ShallowOctree created hierarchy. */
-		TYPED_TEST(OctreeTest, ShallowHierarchy)
+		template< typename Float, typename Vec3 >
+		void checkHierarchy( const ShallowOctreeMapPtr< Float, Vec3 >& hierarchy )
 		{
 			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
 			// it is a sibling of the node at the same position at the line immediately above.
@@ -248,109 +350,23 @@ namespace model
 			//			 0x1d82 -> 0x3b0 -> 0x76 ->
 			//			 0x1d80 ->
 			
-			auto octree = make_shared< ShallowOctree< float, vec3, TypeParam > >(1, 10);
-			octree->build( this->m_points );
+			// Check node that should appear in the sparse representation of the octree.
+			checkSparseHierarchy( hierarchy );
 			
-			checkShallowHierarchy( octree );
+			// Check the other nodes, which would be merged in a sparse octree.
+			checkNode< unsigned int >( hierarchy, 0x14d8U );
+			checkNode< unsigned int >( hierarchy, 0x1864U );
+			checkNode< unsigned int >( hierarchy, 0x29bU );
+			checkNode< unsigned int >( hierarchy, 0x30cU );
+			checkNode< unsigned int >( hierarchy, 0x3b0U );
+			checkNode< unsigned int >( hierarchy, 0x53U );
+			
+			ASSERT_TRUE( hierarchy->empty() );
 		}
 		
-		/** Tests the ShallowOctree created hierarchy, reading from .ply file. */
-		TYPED_TEST( OctreeTest, ShallowHierarchyFromFile )
+		template< typename Float, typename Vec3 >
+		void checkHierarchy( const MediumOctreeMapPtr< Float, Vec3 >& hierarchy )
 		{
-			//See ShallowHierarchy for details.
-			auto octree = make_shared< ShallowOctree< float, vec3, TypeParam > >(1, 10);
-			
-			cout << "ShallowHierarchyFromFile filename: " << *( this->m_plyFileName ) << endl;
-			
-			octree->build( *( this->m_plyFileName ), PlyPointReader<float, vec3, TypeParam>::SINGLE,
-						   Attributes::COLORS );
-			
-			checkShallowHierarchy( octree );
-		}
-		
-		// TODO: Activate this test when the system has implemented sparse octree representation.
-		/** Checks generated sparse octree. */
-		/*TEST_F(OctreeTest, ShallowSparse_Hierarchy)
-		{	
-			// Expected hierarchy. 0x1 is the root node. The blank spaces are merged nodes. A node with an arrow that
-			// points to nothing means that it is a sibling of the node at the same position at the line immediately
-			// above.
-			//
-			// 0xa6c3 -> 	______ -> _____ -> ____ -> 0xa -> 0x1
-			// 0xa6c0 ->
-			// 								   0x67 -> 0xc ->
-			// 0xc325 -> 	______ -> _____ -> 0x61 ->
-			// 0xc320 ->
-			// 				______ -> _____ -> 0x70 -> 0xe ->
-			// 				______ -> _____ -> 0x71 ->
-			// 				______ -> 0x39f -> 0x73 ->
-			// 				______ -> 0x39d -> 
-			// 				0x1d82 -> _____ -> 0x76 ->
-			// 				0x1d80 ->
-			
-			auto octree = make_shared< ShallowOctree<float, vec3> >(1);
-			octree->build(m_points);
-			
-			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
-			checkSparseHierarchy< float, vec3 >(hierarchy);
-			
-			ASSERT_TRUE(hierarchy->empty());
-		}*/
-		
-		/** Tests the calculated boundaries of the MediumOctree. */
-		TYPED_TEST( OctreeTest, MediumBoundaries )
-		{
-			auto octree = make_shared< MediumOctree< float, vec3, TypeParam > >( 1, 20 );
-			octree->build( this->m_points );
-			
-			ASSERT_EQ(octree->getMaxLevel(), 20);
-			ASSERT_EQ(octree->getMaxPointsPerNode(), 1);
-			
-			vec3 origin = *octree->getOrigin();
-			vec3 size = *octree->getSize();
-			vec3 leafSize = *octree->getLeafSize();
-			
-			float epsilon = 10.e-15f;
-			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) )  < epsilon );
-			ASSERT_TRUE( distance2( size, vec3( 60.f, 46.f, 75.f ) ) < epsilon );
-			ASSERT_TRUE( distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) ) < epsilon );
-		}
-		
-		/** Tests the MediumOctree created hierarchy. */
-		TYPED_TEST( OctreeTest, MediumHierarchy )
-		{
-			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
-			// it is a sibling of the node at the same position at the line immediately above.
-			// 0xa6c3 -> 0x14d8 -> 0x29b -> 0x53 -> 0xa -> 0x1
-			// 0xa6c0 -> 
-			// 0xc325 -> 0x1864 -> 0x30c -> 0x61 -> 0xc
-			// 0xc320 -> 
-			// 							    0x67 ->
-			// 		  	 0x1d82 -> 0x3b0 -> 0x76 -> 0xe
-			// 		  	 0x1d80 -> 
-			// 								0x70 ->
-			// 								0x71 ->
-			// 					   0x39f -> 0x73 ->
-			// 					   0x39d ->
-			
-			// Creates the octree.
-			auto octree = make_shared< MediumOctree< float, vec3, TypeParam > >( 1, 20 );
-			octree->build( this->m_points );
-			MediumOctreeMapPtr< float, vec3 > hierarchy = octree->getHierarchy();
-			
-			// Log the paths to root for all nodes that should be created in the lowest level of the hierarchy.
-			shared_ptr< vec3 > leafSize = octree->getLeafSize();
-			shared_ptr< vec3 > origin = octree->getOrigin();
-			for( PointPtr< float, vec3 > point : this->m_points )
-			{
-				vec3 pos = *( point->getPos() );
-				pos = ( pos - *origin ) / ( *leafSize );
-				
-				MediumMortonCode code;
-				code.build( pos.x, pos.y, pos.z, 21 );
-				code.printPathToRoot( cout, true );
-			}
-			
 			// Checks if the hierarchy has the expected nodes.
 			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc320UL );
 			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc325UL );
@@ -377,5 +393,98 @@ namespace model
 			checkNode< unsigned long, float, vec3 >( hierarchy, 0xaUL );
 			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1UL );
 		}
+		
+		template< typename Octree >
+		struct OctreeTester {};
+		
+		template<>
+		struct OctreeTester< ShallowPointOctree  >
+		{
+			static void testBoundaries( const ShallowPointOctree& octree )
+			{
+				testShallowBoundaries( octree );
+			}
+			
+			static void testHierarchy( const ShallowPointOctree& octree )
+			{
+				checkHierarchy( octree.getHierarchy() );
+			}
+		};
+		
+		template<>
+		struct OctreeTester< MediumPointOctree  >
+		{
+			static void testBoundaries( const MediumPointOctree& octree )
+			{
+				testMediumBoundaries( octree );
+			}
+			
+			static void testHierarchy( const MediumPointOctree& octree )
+			{
+				checkHierarchy( octree.getHierarchy() );
+			}
+		};
+		
+		template<>
+		struct OctreeTester< ShallowExtendedPointOctree  >
+		{
+			static void testBoundaries( const ShallowExtendedPointOctree& octree )
+			{
+				testShallowBoundaries( octree );
+			}
+			
+			static void testHierarchy( const ShallowExtendedPointOctree& octree )
+			{
+				checkHierarchy( octree.getHierarchy() );
+			}
+		};
+		
+		template<>
+		struct OctreeTester< MediumExtendedPointOctree  >
+		{
+			static void testBoundaries( const MediumExtendedPointOctree& octree )
+			{
+				testMediumBoundaries( octree );
+			}
+			
+			static void testHierarchy( const MediumExtendedPointOctree& octree )
+			{
+				checkHierarchy( octree.getHierarchy() );
+			}
+		};
+		
+		using testing::Types;
+		
+		typedef Types< ShallowPointOctree, ShallowExtendedPointOctree, MediumPointOctree, MediumExtendedPointOctree > Implementations;
+		TYPED_TEST_CASE( OctreeTest, Implementations );
+
+		/** Tests the calculated boundaries of the ShallowOctree. */
+		TYPED_TEST( OctreeTest, Boundaries )
+		{
+			OctreeTester< TypeParam >::testBoundaries( *this->m_octree );
+		}
+
+		
+		
+		/** Tests the ShallowOctree created hierarchy. */
+		TYPED_TEST( OctreeTest, Hierarchy )
+		{
+			OctreeTester< TypeParam >::testHierarchy( *this->m_octree );
+		}
+		
+		// TODO Make these tests viable again ( typed tests cannot receive value parameters right now ).
+		/** Tests the ShallowOctree created hierarchy, reading from .ply file. */
+		/**TYPED_TEST( OctreeTest, ShallowHierarchyFromFile )
+		{
+			//See ShallowHierarchy for details.
+			auto octree = make_shared< ShallowOctree< float, vec3, TypeParam > >(1, 10);
+			
+			cout << "ShallowHierarchyFromFile filename: " << *( this->m_plyFileName ) << endl;
+			
+			octree->build( *( this->m_plyFileName ), PlyPointReader<float, vec3, TypeParam>::SINGLE,
+						   Attributes::COLORS );
+			
+			checkShallowHierarchy( octree );
+		}*/
 	}
 }

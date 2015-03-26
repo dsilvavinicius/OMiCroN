@@ -32,7 +32,7 @@ namespace model
 	IndexedTucanoRenderer< Vec3, Float >::IndexedTucanoRenderer(
 		const vector< shared_ptr< Point > >& points, Trackball& camTrackball, Trackball& lightTrackball, Mesh& mesh,
 		const Attributes& attribs, const string& shaderPath, const Effect& effect = TucanoRenderingState::PHONG )
-	: TucanoRenderingState< Vec3, Float >( camTrackball, lightTrackball, mesh, attribs, shaderPath, effect )
+	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, effect )
 	{
 		MeshInitializer< Vec3, Float, Point >::initMesh( points, *this );
 	}
