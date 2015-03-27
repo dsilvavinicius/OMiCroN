@@ -14,7 +14,7 @@ namespace model
 		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = model::PointVector< Float, Vec3 >;
+		using PointVector = vector< PointPtr >;
 		using IndexVector = vector< unsigned int >;
 		using IndexVectorPtr = shared_ptr< IndexVector >;
 		using OctreeNode = model::OctreeNode< MortonPrecision, Float, Vec3 >;
@@ -177,7 +177,7 @@ namespace model
 	// ====================== Type Sugar ================================ /
 	
 	template< typename Float, typename Vec3, typename Point >
-	using ShallowIndexedOctree = RandomSampleOctree< unsigned int, Float, Vec3, Point >;
+	using ShallowIndexedOctree = IndexedOctree< unsigned int, Float, Vec3, Point >;
 }
 
 #endif

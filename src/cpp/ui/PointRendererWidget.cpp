@@ -227,9 +227,8 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( camera, light_trackball, mesh, vertAttribs,
-									 QApplication::applicationDirPath().toStdString() +
-									 "/shaders/tucano/" );
+	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ &camera, &light_trackball, &mesh, vertAttribs,
+									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	clock_t timing = clock();
 	m_octree->traverse( *m_renderer, m_projThresh );
 	timing = clock() - timing;

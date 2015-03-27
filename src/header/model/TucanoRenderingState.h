@@ -26,7 +26,7 @@ namespace model
 			JUMP_FLOODING
 		};
 		
-		TucanoRenderingState( Trackball& camTrackball, Trackball& lightTrackball , Mesh& mesh, const Attributes& attribs,
+		TucanoRenderingState( Trackball* camTrackball, Trackball* lightTrackball , Mesh* mesh, const Attributes& attribs,
 							  const string& shaderPath, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
@@ -52,7 +52,7 @@ namespace model
 		/** Changes the effect used to render the points. */
 		void selectEffect( const Effect& effect ) { m_effect = effect; }
 		
-	private:
+	protected:
 		/** Acquires current traball's view-projection matrix. */
 		Matrix4f getViewProjection() const;
 		
@@ -61,12 +61,12 @@ namespace model
 		const;
 		
 		Frustum* m_frustum;
-		Trackball& m_camTrackball;
-		Trackball& m_lightTrackball;
+		Trackball* m_camTrackball;
+		Trackball* m_lightTrackball;
 		
 		Matrix4f m_viewProj;
 		
-		Mesh& m_mesh;
+		Mesh* m_mesh;
 		Phong* m_phong;
 		ImgSpacePBR *m_jfpbr;
 		
@@ -74,9 +74,9 @@ namespace model
 	};
 	
 	template< typename Vec3, typename Float >
-	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball&  camTrackball, Trackball& lightTrackball, Mesh& mesh,
-															   const Attributes& attribs, const string& shaderPath,
-															   const Effect& effect )
+	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball*  camTrackball, Trackball* lightTrackball,
+															   Mesh* mesh, const Attributes& attribs,
+															const string& shaderPath, const Effect& effect )
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
 	m_lightTrackball( lightTrackball ),
@@ -89,7 +89,7 @@ namespace model
 		m_phong->setShadersDir( shaderPath );
 		m_phong->initialize();
 		
-		Vector2i viewportSize = m_camTrackball.getViewportSize();
+		Vector2i viewportSize = m_camTrackball->getViewportSize();
 		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
 		m_jfpbr->setShadersDir( shaderPath );
 		m_jfpbr->initialize();
@@ -128,8 +128,8 @@ namespace model
 			vertData[ i ] = Vector4f( pos.x, pos.y, pos.z, 1.f );
 			indices[ i ] = i;
 		}
-		m_mesh.loadVertices( vertData );
-		m_mesh.loadIndices( indices );
+		m_mesh->loadVertices( vertData );
+		m_mesh->loadIndices( indices );
 		
 		if( RenderingState::m_attribs & Attributes::COLORS  )
 		{
@@ -138,7 +138,7 @@ namespace model
 				Vec3 color = RenderingState::m_colors[ i ];
 				vertData[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
 			}
-			m_mesh.loadColors( vertData );
+			m_mesh->loadColors( vertData );
 		}
 		
 		if( RenderingState::m_attribs & Attributes::NORMALS )
@@ -149,13 +149,13 @@ namespace model
 				Vec3 normal = RenderingState::m_normals[ i ];
 				normalData[ i ] = Vector3f( normal.x, normal.y, normal.z );
 			}
-			m_mesh.loadNormals( normalData );
+			m_mesh->loadNormals( normalData );
 		}
 		
 		switch( m_effect )
 		{
-			case PHONG: m_phong->render( m_mesh, m_camTrackball, m_lightTrackball ); break;
-			case JUMP_FLOODING: m_jfpbr->render( &m_mesh, &m_camTrackball, &m_lightTrackball, true ); break;
+			case PHONG: m_phong->render( *m_mesh, *m_camTrackball, *m_lightTrackball ); break;
+			case JUMP_FLOODING: m_jfpbr->render( m_mesh, m_camTrackball, m_lightTrackball, true ); break;
 		}
 		
 		return RenderingState::m_positions.size();
@@ -180,7 +180,7 @@ namespace model
 		Vector4f min( rawMin.x, rawMin.y, rawMin.z, 1 );
 		Vector4f max( rawMax.x, rawMax.y, rawMax.z, 1 );
 		
-		Vector2i viewportSize = m_camTrackball.getViewportSize();
+		Vector2i viewportSize = m_camTrackball->getViewportSize();
 		
 		Vector2f proj0 = projToWindowCoords( min, m_viewProj, viewportSize );
 		Vector2f proj1 = projToWindowCoords( max, m_viewProj, viewportSize );
@@ -203,8 +203,8 @@ namespace model
 	template< typename Vec3, typename Float >
 	inline Matrix4f TucanoRenderingState< Vec3, Float >::getViewProjection() const
 	{
-		Matrix4f view = m_camTrackball.getViewMatrix().matrix();
-		Matrix4f proj = m_camTrackball.getProjectionMatrix();
+		Matrix4f view = m_camTrackball->getViewMatrix().matrix();
+		Matrix4f proj = m_camTrackball->getProjectionMatrix();
 		
 		//cout << "Projection to renderer: " << endl << proj << endl << endl;
 		

@@ -10,46 +10,48 @@ namespace model
 	
 	/** Tucano renderer that sends all points to device at initialization time. After that, just sends indices to indicate
 	 * 	which points should be rendered. */
-	template< typename Vec3, typename Float >
+	template< typename Vec3, typename Float, typename Point >
 	class IndexedTucanoRenderer
 	: public TucanoRenderingState< Vec3, Float >
 	{
+		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr >;
 		using TucanoRenderingState = model::TucanoRenderingState< Vec3, Float >;
 		using MeshInitializer = model::MeshInitializer< Vec3, Float, Point >;
 		
 	public:
 		/** This ctor sends all points to the device. */
-		template< typename Point >
-		IndexedTucanoRenderer( const vector< shared_ptr< Point > >& points, Trackball& camTrackball,
-							   Trackball& lightTrackball, Mesh& mesh, const Attributes& attribs, const string& shaderPath,
-						const Effect& effect = TucanoRenderingState::PHONG );
+		IndexedTucanoRenderer( const PointVector& points, Trackball* camTrackball, Trackball* lightTrackball, Mesh* mesh,
+							   const Attributes& attribs, const string& shaderPath,
+						 const typename TucanoRenderingState::Effect& effect = TucanoRenderingState::PHONG );
 		
 		unsigned int render();
 		
 		friend MeshInitializer;
 	};
 	
-	template< typename Vec3, typename Float >
-	template< typename Point >
-	IndexedTucanoRenderer< Vec3, Float >::IndexedTucanoRenderer(
-		const vector< shared_ptr< Point > >& points, Trackball& camTrackball, Trackball& lightTrackball, Mesh& mesh,
-		const Attributes& attribs, const string& shaderPath, const Effect& effect = TucanoRenderingState::PHONG )
+	template< typename Vec3, typename Float, typename Point >
+	IndexedTucanoRenderer< Vec3, Float, Point >::IndexedTucanoRenderer(
+		const PointVector& points, Trackball* camTrackball, Trackball* lightTrackball, Mesh* mesh,
+		const Attributes& attribs, const string& shaderPath, const typename TucanoRenderingState::Effect& effect )
 	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, effect )
 	{
+		cout << "points passed to indexed renderer: " << points.size() << endl << endl;  
+		
 		MeshInitializer::initMesh( points, *this );
 	}
 	
-	template< typename Vec3, typename Float >
+	template< typename Vec3, typename Float, typename Point >
 	inline unsigned int IndexedTucanoRenderer< Vec3, Float, Point >::render()
 	{
-		TucanoRenderingState::m_mesh.loadIndices( TucanoRenderingState::m_indices );
+		TucanoRenderingState::m_mesh->loadIndices( TucanoRenderingState::m_indices );
 		
 		switch( TucanoRenderingState::m_effect )
 		{
-			case PHONG: TucanoRenderingState::m_phong->render( TucanoRenderingState::m_mesh,
-				TucanoRenderingState::m_camTrackball, TucanoRenderingState::m_lightTrackball ); break;
-			case JUMP_FLOODING: TucanoRenderingState::m_jfpbr->render( &TucanoRenderingState::m_mesh,
-				&TucanoRenderingState::m_camTrackball, &TucanoRenderingState::m_lightTrackball, true ); break;
+			case TucanoRenderingState::PHONG: TucanoRenderingState::m_phong->render( *TucanoRenderingState::m_mesh,
+				*TucanoRenderingState::m_camTrackball, *TucanoRenderingState::m_lightTrackball ); break;
+			case TucanoRenderingState::JUMP_FLOODING: TucanoRenderingState::m_jfpbr->render( TucanoRenderingState::m_mesh,
+				TucanoRenderingState::m_camTrackball, TucanoRenderingState::m_lightTrackball, true ); break;
 		}
 		
 		return TucanoRenderingState::m_positions.size();
@@ -66,6 +68,7 @@ namespace model
 		using Point = model::Point< Float, Vec3 >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
+		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Vec3, Float, Point >;
 		
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )
@@ -110,14 +113,14 @@ namespace model
 				}
 			}
 			
-			renderer.m_mesh.loadVertices( positions );
+			renderer.m_mesh->loadVertices( positions );
 			if( hasColors )
 			{
-				renderer.m_mesh.loadColors( colors );
+				renderer.m_mesh->loadColors( colors );
 			}
 			else
 			{
-				renderer.m_mesh.loadNormals( normals );
+				renderer.m_mesh->loadNormals( normals );
 			}
 		}
 	};
@@ -126,13 +129,16 @@ namespace model
 	template< typename Vec3, typename Float >
 	struct MeshInitializer< Vec3, Float, ExtendedPoint< Float, Vec3 > >
 	{
-		using Point = ExtendedPoints< Float, Vec3 >;
+		using Point = model::ExtendedPoint< Float, Vec3 >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
+		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Vec3, Float, Point >;
 		
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )
 		{
+			cout << "Init ExtendedPoints." << endl << endl;
+			
 			int nPoints = renderer.m_positions.size();
 			vector< Vector4f > positions( nPoints );
 			vector< Vector4f > colors;
@@ -169,14 +175,14 @@ namespace model
 				}
 			}
 			
-			renderer.m_mesh.loadVertices( positions );
+			renderer.m_mesh->loadVertices( positions );
 			if( hasColors )
 			{
-				renderer.m_mesh.loadColors( colors );
+				renderer.m_mesh->loadColors( colors );
 			}
 			if( hasNormals )
 			{
-				renderer.m_mesh.loadNormals( normals );
+				renderer.m_mesh->loadNormals( normals );
 			}
 		}
 	};

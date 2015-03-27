@@ -4,7 +4,8 @@
 #include <unordered_set>
 
 #include "FrontBehavior.h"
-#include "RandomSampleOctree.h"
+//#include "RandomSampleOctree.h"
+#include "IndexedOctree.h"
 
 namespace model
 {
@@ -15,11 +16,11 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
 	class FrontOctree
-	: public RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
+	: public IndexedOctree< MortonPrecision, Float, Vec3, Point >
 	{
 		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
-		using RandomSampleOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
+		using ParentOctree = model::IndexedOctree< MortonPrecision, Float, Vec3, Point >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using TransientRenderingState = model::TransientRenderingState< Vec3, Float >;
 		using MortonPtrVector = vector< MortonCodePtr >;
@@ -36,7 +37,7 @@ namespace model
 		~FrontOctree();
 		
 		/** Tracks the hierarchy front, by prunning or branching nodes ( one level only ). This method should be called
-		 * after RandomSampleOctree::traverse( RenderingState& renderer, const Float& projThresh ),
+		 * after ParentOctree::traverse( RenderingState& renderer, const Float& projThresh ),
 		 * so the front can be init in a traversal from root. */
 		FrontOctreeStats trackFront( RenderingState& renderer, const Float& projThresh );
 	
@@ -73,7 +74,7 @@ namespace model
 		
 		/** Rendering setup method that leaves the front insertion responsibility to the caller. Can be also used in cases
 		 *	that insertion the node into front is not necessary. */
-		virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
+		//virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
 		
 		/** Object with data related behavior of the front. */
 		FrontBehavior* m_frontBehavior;
@@ -83,7 +84,7 @@ namespace model
 			  typename FrontInsertionContainer >
 	FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::FrontOctree(
 		const int& maxPointsPerNode, const int& maxLevel )
-	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
+	: ParentOctree::IndexedOctree( maxPointsPerNode, maxLevel )
 	{
 		m_frontBehavior = new FrontBehavior( *this );
 	}
@@ -148,8 +149,8 @@ namespace model
 			prune( code );
 			code = code->traverseUp();
 			
-			auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
-			assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
+			auto nodeIt = ParentOctree::m_hierarchy->find( code );
+			assert( nodeIt != ParentOctree::m_hierarchy->end() );
 			OctreeNodePtr node = nodeIt->second;
 			setupNodeRendering( node, code, renderingState );
 		}
@@ -162,31 +163,31 @@ namespace model
 			
 			for( MortonCodePtr child : children  )
 			{
-				auto nodeIt = RandomSampleOctree::m_hierarchy->find( child );
+				auto nodeIt = ParentOctree::m_hierarchy->find( child );
 				
-				if( nodeIt != RandomSampleOctree::m_hierarchy->end() )
+				if( nodeIt != ParentOctree::m_hierarchy->end() )
 				{
 					eraseNode = true;
 					//cout << "Inserted in front: " << hex << child->getBits() << dec << endl;
 					m_frontBehavior->insert( *child );
 					
-					pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( child );
+					pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( child );
 					if( !renderingState.isCullable( box ) )
 					{
 						//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
 						OctreeNodePtr node = nodeIt->second;
-						setupNodeRendering( node, renderingState );
+						ParentOctree::setupNodeRendering( node, renderingState );
 					}
 				}
 			}
 			
 			if( !eraseNode )
 			{
-				auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
-				assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
+				auto nodeIt = ParentOctree::m_hierarchy->find( code );
+				assert( nodeIt != ParentOctree::m_hierarchy->end() );
 				
 				OctreeNodePtr node = nodeIt->second;
-				setupNodeRendering( node, renderingState );
+				ParentOctree::setupNodeRendering( node, renderingState );
 			}
 		}
 		else
@@ -195,11 +196,11 @@ namespace model
 			if( !isCullable )
 			{
 				// No prunning or branching done. Just send the current front node for rendering.
-				auto nodeIt = RandomSampleOctree::m_hierarchy->find( code );
-				assert( nodeIt != RandomSampleOctree::m_hierarchy->end() );
+				auto nodeIt = ParentOctree::m_hierarchy->find( code );
+				assert( nodeIt != ParentOctree::m_hierarchy->end() );
 				
 				OctreeNodePtr node = nodeIt->second;
-				setupNodeRendering( node, renderingState );
+				ParentOctree::setupNodeRendering( node, renderingState );
 			}
 		}
 		
@@ -226,7 +227,7 @@ namespace model
 		}
 		
 		MortonCodePtr parent = code->traverseUp();
-		pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( parent );
+		pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( parent );
 		bool parentIsCullable = renderingState.isCullable( box );
 		
 		if( parentIsCullable )
@@ -249,7 +250,7 @@ namespace model
 		RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh, bool& out_isCullable )
 		const
 	{
-		pair< Vec3, Vec3 > box = RandomSampleOctree::getBoundaries( code );
+		pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( code );
 		out_isCullable = renderingState.isCullable( box );
 		
 		return !renderingState.isRenderable( box, projThresh ) && !out_isCullable;
@@ -283,17 +284,17 @@ namespace model
 		//cout << "Inserted draw: " << hex << code->getBits() << dec << endl;
 		m_frontBehavior->insert( *code );
 		
-		setupNodeRendering( node, renderingState );
+		ParentOctree::setupNodeRendering( node, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+	/*template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
 	inline void FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, RenderingState& renderingState )
 	{
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
-	}
+	}*/
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
