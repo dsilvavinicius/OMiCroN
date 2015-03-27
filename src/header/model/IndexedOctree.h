@@ -13,13 +13,16 @@ namespace model
 	{
 		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
+		using PointPtr = shared_ptr< Point >;
 		using PointVector = model::PointVector< Float, Vec3 >;
 		using IndexVector = vector< unsigned int >;
 		using IndexVectorPtr = shared_ptr< IndexVector >;
 		using OctreeNode = model::OctreeNode< MortonPrecision, Float, Vec3 >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
+		using LeafNode = model::LeafNode< MortonPrecision, Float, Vec3, IndexVector >;
 		using OctreeMap = model::OctreeMap< MortonPrecision, Float, Vec3 >;
 		using RandomSampleOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
+		using RenderingState = model::RenderingState< Vec3, Float >;
 		
 	public:
 		IndexedOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -58,7 +61,7 @@ namespace model
 		unsigned int index = m_points.size();
 		m_points.push_back( point );
 		
-		if( genericLeafIt == m_hierarchy->end() )
+		if( genericLeafIt == RandomSampleOctree::m_hierarchy->end() )
 		{
 			// Creates leaf node.
 			IndexVector indices;
@@ -109,7 +112,7 @@ namespace model
 			auto mergedNode = make_shared< LeafNode >();
 			mergedNode->setContents( childrenPoints );
 			
-			( *m_hierarchy )[ parentCode ] = mergedNode;
+			( *RandomSampleOctree::m_hierarchy )[ parentCode ] = mergedNode;
 		}
 		else
 		{
@@ -117,7 +120,7 @@ namespace model
 			// No merge or absorption is needed. Just does LOD.
 			advance( firstChildIt, numChildren );
 			
-			( *m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
+			( *RandomSampleOctree::m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
 		}
 	}
 	

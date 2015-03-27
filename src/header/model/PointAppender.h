@@ -13,6 +13,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
+		using IndexVector = vector< unsigned int >;
 		
 	public:
 		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
@@ -31,6 +32,11 @@ namespace model
 				vec.push_back( LODPoint );
 			}
 		}
+		
+		/** API for appending points as indices for a point array. */
+		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, IndexVector& vec, int& numChildren,
+								   int& numLeaves ) const {}
+		
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

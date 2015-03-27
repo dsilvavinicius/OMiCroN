@@ -15,6 +15,8 @@ namespace model
 	: public TucanoRenderingState< Vec3, Float >
 	{
 		using TucanoRenderingState = model::TucanoRenderingState< Vec3, Float >;
+		using MeshInitializer = model::MeshInitializer< Vec3, Float, Point >;
+		
 	public:
 		/** This ctor sends all points to the device. */
 		template< typename Point >
@@ -34,12 +36,23 @@ namespace model
 		const Attributes& attribs, const string& shaderPath, const Effect& effect = TucanoRenderingState::PHONG )
 	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, effect )
 	{
-		MeshInitializer< Vec3, Float, Point >::initMesh( points, *this );
+		MeshInitializer::initMesh( points, *this );
 	}
 	
 	template< typename Vec3, typename Float >
 	inline unsigned int IndexedTucanoRenderer< Vec3, Float, Point >::render()
 	{
+		TucanoRenderingState::m_mesh.loadIndices( TucanoRenderingState::m_indices );
+		
+		switch( TucanoRenderingState::m_effect )
+		{
+			case PHONG: TucanoRenderingState::m_phong->render( TucanoRenderingState::m_mesh,
+				TucanoRenderingState::m_camTrackball, TucanoRenderingState::m_lightTrackball ); break;
+			case JUMP_FLOODING: TucanoRenderingState::m_jfpbr->render( &TucanoRenderingState::m_mesh,
+				&TucanoRenderingState::m_camTrackball, &TucanoRenderingState::m_lightTrackball, true ); break;
+		}
+		
+		return TucanoRenderingState::m_positions.size();
 	}
 	
 	/** Initializes the mesh in IndexedTucanoRenderer. */

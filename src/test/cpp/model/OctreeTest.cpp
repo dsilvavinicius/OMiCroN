@@ -2,6 +2,7 @@
 #include <QApplication>
 
 #include "Octree.h"
+#include <IndexedOctree.h>
 #include "Stream.h"
 
 extern "C" int g_argc;
@@ -159,6 +160,7 @@ namespace model
 		using MediumPointOctree = model::Octree< unsigned long, float, vec3, Point< float, vec3> >;
 		using ShallowExtendedPointOctree = model::Octree< unsigned int, float, vec3, ExtendedPoint< float, vec3> >;
 		using MediumExtendedPointOctree = model::Octree< unsigned long, float, vec3, ExtendedPoint< float, vec3> >;
+		using ShallowExtendedIndexedOctree = model::IndexedOctree< unsigned int, float, vec3, ExtendedPoint< float, vec3 > >;
 		
 		template<>
 		class OctreeTest< ShallowPointOctree >
@@ -256,6 +258,32 @@ namespace model
 			{
 				PointVector points = OctreeInitializer::generatePoints();
 				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree->build( points );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
+		template<>
+		class OctreeTest< ShallowExtendedIndexedOctree >
+		: public ExtendedPointTest
+		{
+			using Point = ExtendedPoint< float, vec3 >;
+			using PointVector = vector< shared_ptr< Point > >;
+			using Octree = ShallowExtendedIndexedOctree;
+			using OctreePtr = shared_ptr< Octree >;
+			using Test = model::test::OctreeTest< Octree >;
+			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+		
+		public:
+			friend OctreeInitializer;
+			
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				PointVector points = OctreeInitializer::generatePoints();
+				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
 			
@@ -453,9 +481,24 @@ namespace model
 			}
 		};
 		
+		template<>
+		struct OctreeTester< ShallowExtendedIndexedOctree  >
+		{
+			static void testBoundaries( const ShallowExtendedIndexedOctree& octree )
+			{
+				testShallowBoundaries( octree );
+			}
+			
+			static void testHierarchy( const ShallowExtendedIndexedOctree& octree )
+			{
+				checkHierarchy( octree.getHierarchy() );
+			}
+		};
+		
 		using testing::Types;
 		
-		typedef Types< ShallowPointOctree, ShallowExtendedPointOctree, MediumPointOctree, MediumExtendedPointOctree > Implementations;
+		typedef Types< ShallowPointOctree, ShallowExtendedPointOctree, MediumPointOctree, MediumExtendedPointOctree,
+					   ShallowExtendedIndexedOctree > Implementations;
 		TYPED_TEST_CASE( OctreeTest, Implementations );
 
 		/** Tests the calculated boundaries of the ShallowOctree. */

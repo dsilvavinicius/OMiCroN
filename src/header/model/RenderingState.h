@@ -49,10 +49,10 @@ namespace model
 		template< typename NodeContents >
 		void handleNodeRendering( const NodeContents& contents );
 		
-		vector< Vec3 >& getPositions() { return m_positions; };
-		vector< Vec3 >& getColors() { return m_colors; };
-		vector< Vec3 >& getNormals() { return m_normals; };
-		vector< unsigned int >& getIndices() { return m_indices; };
+		vector< Vec3 >& getPositions() { return m_positions; }
+		vector< Vec3 >& getColors() { return m_colors; }
+		vector< Vec3 >& getNormals() { return m_normals; }
+		vector< unsigned int >& getIndices() { return m_indices; }
 	
 		/** Clear all attrib vectors. */
 		void clearAttribs();
