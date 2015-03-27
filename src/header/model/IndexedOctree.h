@@ -173,6 +173,11 @@ namespace model
 		IndexVectorPtr points = node-> template getContents< IndexVector >();
 		renderingState.handleNodeRendering( points );
 	}
+	
+	// ====================== Type Sugar ================================ /
+	
+	template< typename Float, typename Vec3, typename Point >
+	using ShallowIndexedOctree = RandomSampleOctree< unsigned int, Float, Vec3, Point >;
 }
 
 #endif

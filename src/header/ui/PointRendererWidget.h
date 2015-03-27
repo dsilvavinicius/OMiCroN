@@ -7,7 +7,7 @@
 #include <utils/qttrackballwidget.hpp>
 #include <point_model.hpp>
 #include "TucanoRenderingState.h"
-#include <ParallelOctree.h>
+#include <IndexedOctree.h>
 #include <QApplication>
 
 using namespace std;
@@ -21,7 +21,7 @@ class PointRendererWidget
 	using MortonCode = model::ShallowMortonCode;
 	using Point = model::ExtendedPoint< float, vec3 >;
 	using PointReader = ExtendedPointReader;
-	using Octree = model::ShallowFrontOctree< float, vec3, Point >;
+	using Octree = model::ShallowIndexedOctree< float, vec3, Point >;
 	//using Octree = model::ShallowRandomSampleOctree< float, vec3, Point >;
 	using RenderingState = model::TucanoRenderingState< vec3, float >;
 	
