@@ -28,7 +28,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate )
 	
 	setFrameRate( frameRate );
 	
-	openMesh( "../../src/data/real/prova10M.ply" );
+	openMesh( "../../src/data/real/staypuff.ply" );
+	//openMesh( "../../src/data/real/prova10M.ply" );
 
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );

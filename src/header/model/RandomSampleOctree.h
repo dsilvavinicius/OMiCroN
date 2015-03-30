@@ -47,6 +47,7 @@ namespace model
 																				   const int& maxLevel )
 	: Octree::Octree( maxPointsPerNode, maxLevel )
 	{
+		delete Octree::m_pointAppender;
 		Octree::m_pointAppender = new RandomPointAppender();
 		srand( 1 );
 	}
