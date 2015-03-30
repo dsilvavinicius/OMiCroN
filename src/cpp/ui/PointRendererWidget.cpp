@@ -28,7 +28,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate )
 	
 	setFrameRate( frameRate );
 	
-	openMesh( "../../src/data/real/staypuff.ply" );
+	openMesh( "../../src/data/real/prova10M.ply" );
 
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -39,7 +39,7 @@ void PointRendererWidget::resizeGL( int width, int height )
 {
 	camera.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 	camera.setPerspectiveMatrix( camera.getFovy(), width / height, 0.1f,
-											1000.0f );
+											10000.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )
@@ -73,14 +73,15 @@ void PointRendererWidget::paintGL (void)
 	
 	adaptProjThresh( m_desiredRenderTime );
 	
-	mesh.reset();
-	m_renderer->clearAttribs();
+	//mesh.reset();
+	//m_renderer->clearAttribs();
+	m_renderer->clearIndices();
 	m_renderer->updateFrustum();
 	
 	// Render the scene.
 	clock_t timing = clock();
-	OctreeStats stats = m_octree->traverse( *m_renderer, m_projThresh );
-	//FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
+	//OctreeStats stats = m_octree->traverse( *m_renderer, m_projThresh );
+	FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
 	timing = clock() - timing;
 	
 	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
@@ -139,7 +140,7 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 	
 	Trackball tempCamera;
 	tempCamera.setViewport( auxViewportSize );
-	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 1000.0f );
+	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 10000.0f );
 	tempCamera.resetViewMatrix();
 	
 	switch( viewport )
@@ -227,7 +228,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ &camera, &light_trackball, &mesh, vertAttribs,
+	m_renderer = new RenderingState( m_octree->getPoints(), &camera, &light_trackball, &mesh, vertAttribs,
 									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	clock_t timing = clock();
 	m_octree->traverse( *m_renderer, m_projThresh );

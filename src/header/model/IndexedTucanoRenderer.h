@@ -36,8 +36,6 @@ namespace model
 		const Attributes& attribs, const string& shaderPath, const typename TucanoRenderingState::Effect& effect )
 	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, effect )
 	{
-		cout << "points passed to indexed renderer: " << points.size() << endl << endl;  
-		
 		MeshInitializer::initMesh( points, *this );
 	}
 	
@@ -54,7 +52,7 @@ namespace model
 				TucanoRenderingState::m_camTrackball, TucanoRenderingState::m_lightTrackball, true ); break;
 		}
 		
-		return TucanoRenderingState::m_positions.size();
+		return TucanoRenderingState::m_indices.size();
 	}
 	
 	/** Initializes the mesh in IndexedTucanoRenderer. */
@@ -137,9 +135,8 @@ namespace model
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )
 		{
-			cout << "Init ExtendedPoints." << endl << endl;
+			int nPoints = points.size();
 			
-			int nPoints = renderer.m_positions.size();
 			vector< Vector4f > positions( nPoints );
 			vector< Vector4f > colors;
 			vector< Vector3f > normals;

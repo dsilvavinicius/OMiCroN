@@ -54,8 +54,11 @@ namespace model
 		vector< Vec3 >& getNormals() { return m_normals; }
 		vector< unsigned int >& getIndices() { return m_indices; }
 	
-		/** Clear all attrib vectors. */
+		/** Clears all attrib vectors. */
 		void clearAttribs();
+		
+		/** Clears indices. */
+		void clearIndices();
 		
 	protected:
 		vector< Vec3 > m_positions;
@@ -75,6 +78,12 @@ namespace model
 		m_positions.clear();
 		m_colors.clear();
 		m_normals.clear();
+		m_indices.clear();
+	}
+	
+	template< typename Vec3, typename Float >
+	void RenderingState< Vec3, Float >::clearIndices()
+	{
 		m_indices.clear();
 	}
 	
