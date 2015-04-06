@@ -38,26 +38,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QCheckBox" name="check_trackball">
-        <property name="text">
-         <string>Draw trackball</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="bt_write_frames">
-        <property name="text">
-         <string>Draw frames</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QLabel" name="lb_effects">
         <property name="text">
-         <string>Chosen effect</string>
+         <string>Effect</string>
         </property>
        </widget>
       </item>
@@ -118,6 +101,35 @@
        </widget>
       </item>
       <item>
+       <widget class="QLabel" name="lb_frameskip">
+        <property name="text">
+         <string>JF-PBR frameskip</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSlider" name="sld_frameskip">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>5</number>
+        </property>
+        <property name="value">
+         <number>1</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QLabel" name="lb_frame_rate">
         <property name="text">
          <string>Desired frame rate</string>
@@ -146,6 +158,49 @@
         </property>
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="lb_frame_tolerance">
+        <property name="text">
+         <string>Rendering time tolerance</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSlider" name="sld_frame_tolerance">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximum">
+         <number>50</number>
+        </property>
+        <property name="value">
+         <number>5</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="check_trackball">
+        <property name="text">
+         <string>Draw trackball</string>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="bt_write_frames">
+        <property name="text">
+         <string>Draw frames</string>
         </property>
        </widget>
       </item>

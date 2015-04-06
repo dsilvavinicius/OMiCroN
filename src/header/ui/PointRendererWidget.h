@@ -31,7 +31,7 @@ public:
 	explicit PointRendererWidget( QWidget *parent );
 	~PointRendererWidget();
 	
-	void initialize( const unsigned int& frameRate );
+	void initialize( const unsigned int& frameRate, const int& renderingTimeTolerance );
 
 	/**
 	* Repaints screen buffer.
@@ -69,6 +69,12 @@ public slots:
 	
 	/** Opens a new point cloud. */
 	virtual void openMesh( const string& filename );
+	
+	/** Sets the jump flooding effect frameskip. */
+	void setJfpbrFrameskip( const int& value );
+	
+	/** Sets the rendering time tolerance in order to verify if projection threshold adaptation is needed. In ms. */
+	void setRenderingTimeTolerance( const int& tolerance );
 
 signals:
 	/** Signals that the per-frame debug info is generated and should be presented. */
@@ -108,6 +114,9 @@ private:
 	
 	/** Desired render time. Used to adapt the projection threshold. In ms. */
 	float m_desiredRenderTime;
+	
+	/** Rendering time tolerance used to verify if projection threshold adaptation is needed. In ms. */
+	float m_renderingTimeTolerance;
 	
 	/** Time when a frame is finished. Used to measure performance only. In ms. */
 	clock_t m_endOfFrameTime;

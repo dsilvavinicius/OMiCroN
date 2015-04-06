@@ -16,7 +16,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialize()
 {
-    ui->pointRendererWidget->initialize( ui->sld_frame_rate->value() );
+    ui->pointRendererWidget->initialize( ui->sld_frame_rate->value(), ui->sld_frame_tolerance->value() );
 
     ui->group_effects->setId( ui->radio_phong, TucanoRenderingState< vec3, float >::PHONG );
     ui->group_effects->setId( ui->radio_jfpbr, TucanoRenderingState< vec3, float >::JUMP_FLOODING );
@@ -28,6 +28,11 @@ void MainWindow::initialize()
 			 &PointRendererWidget::reloadShaders );
     
 	connect( ui->sld_frame_rate, &QSlider::valueChanged, ui->pointRendererWidget, &PointRendererWidget::setFrameRate );
+	
+	connect( ui->sld_frameskip, &QSlider::valueChanged, ui->pointRendererWidget, &PointRendererWidget::setJfpbrFrameskip );
+	
+	connect( ui->sld_frame_tolerance, &QSlider::valueChanged, ui->pointRendererWidget,
+			 &PointRendererWidget::setRenderingTimeTolerance );
 	
 	connect( ui->spinbox_first_max_distance,
 			 static_cast< void ( QDoubleSpinBox::* )( double )>( &QDoubleSpinBox::valueChanged ), ui->pointRendererWidget,

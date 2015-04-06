@@ -22,11 +22,12 @@ PointRendererWidget::~PointRendererWidget()
 	delete m_timer;
 }
 
-void PointRendererWidget::initialize( const unsigned int& frameRate )
+void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
 	Tucano::QtTrackballWidget::initialize();
 	
 	setFrameRate( frameRate );
+	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	//openMesh( "../../src/data/real/staypuff.ply" );
 	openMesh( "../../src/data/real/prova10M.ply" );
@@ -55,9 +56,12 @@ void PointRendererWidget::resizeGL( int width, int height )
 void PointRendererWidget::adaptProjThresh( float desiredRenderTime )
 {
 	float renderTimeDiff = m_renderTime - desiredRenderTime;
-	m_projThresh += renderTimeDiff * 1.0e-6f;
-	m_projThresh = std::max( m_projThresh, 1.0e-15f );
-	m_projThresh = std::min( m_projThresh, 1.f );
+	if( abs( renderTimeDiff ) > m_renderingTimeTolerance )
+	{
+		m_projThresh += renderTimeDiff * 1.0e-6f;
+		m_projThresh = std::max( m_projThresh, 1.0e-15f );
+		m_projThresh = std::min( m_projThresh, 1.f );
+	}
 }
 
 void PointRendererWidget::paintGL (void)
@@ -97,6 +101,7 @@ void PointRendererWidget::paintGL (void)
 			"ms" << endl
 			<< stats
 			<< "Desired render time: " << m_desiredRenderTime << "ms" << endl << endl
+			<< "Rendering time tolerance: " << m_renderingTimeTolerance << "ms" << endl << endl
 			<< "Projection threshold: " << m_projThresh << endl << endl;
 			
 	//cout << debugSS.str() << endl << endl;
@@ -209,6 +214,16 @@ void PointRendererWidget::toggleDrawAuxViewports( void )
 {
 	m_drawAuxViewports = !m_drawAuxViewports;
 	updateGL();
+}
+
+void PointRendererWidget::setJfpbrFrameskip( const int& value )
+{
+	m_renderer->setJfpbrFrameskip( value );
+}
+	
+void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
+{
+	m_renderingTimeTolerance = tolerance;
 }
 
 void PointRendererWidget::openMesh( const string& filename )

@@ -27,7 +27,7 @@ namespace model
 		};
 		
 		TucanoRenderingState( Trackball* camTrackball, Trackball* lightTrackball , Mesh* mesh, const Attributes& attribs,
-							  const string& shaderPath, const Effect& effect = PHONG );
+							  const string& shaderPath, const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
 		
@@ -52,6 +52,8 @@ namespace model
 		/** Changes the effect used to render the points. */
 		void selectEffect( const Effect& effect ) { m_effect = effect; }
 		
+		void setJfpbrFrameskip( const int& value ) { m_jfpbrFrameskip = value; }
+		
 	protected:
 		/** Acquires current traball's view-projection matrix. */
 		Matrix4f getViewProjection() const;
@@ -70,18 +72,28 @@ namespace model
 		Phong* m_phong;
 		ImgSpacePBR *m_jfpbr;
 		
-		Effect m_effect; 
+		Effect m_effect;
+		
+		/** Frameskip for the Jump Flooding effect. */
+		int m_jfpbrFrameskip;
+		
+		/** Frame counter. Used in order to skip frames properly. */
+		unsigned int m_nFrames;
 	};
 	
 	template< typename Vec3, typename Float >
 	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball*  camTrackball, Trackball* lightTrackball,
 															   Mesh* mesh, const Attributes& attribs,
-															const string& shaderPath, const Effect& effect )
+															const string& shaderPath, const int& jfpbrFrameskip, 
+															const Effect& effect )
 	: RenderingState( attribs ),
 	m_camTrackball( camTrackball ),
 	m_lightTrackball( lightTrackball ),
 	m_mesh( mesh ),
-	m_viewProj( getViewProjection() )
+	m_viewProj( getViewProjection() ),
+	m_jfpbrFrameskip( jfpbrFrameskip ),
+	m_effect( effect ),
+	m_nFrames( 0 )
 	{
 		m_frustum = new Frustum( m_viewProj );
 		
@@ -118,6 +130,8 @@ namespace model
 	{
 		// TODO: This code is inefficient with all these copies among vectors. Need to fix that.
 		// Also, it could be better to use indices for rendering. That would need some redesign of the octree classes.
+		++m_nFrames;
+		
 		int nPoints = RenderingState::m_positions.size();
 		vector< Vector4f > vertData( nPoints );
 		vector< GLuint > indices( nPoints );
@@ -155,7 +169,13 @@ namespace model
 		switch( m_effect )
 		{
 			case PHONG: m_phong->render( *m_mesh, *m_camTrackball, *m_lightTrackball ); break;
-			case JUMP_FLOODING: m_jfpbr->render( m_mesh, m_camTrackball, m_lightTrackball, true ); break;
+			case JUMP_FLOODING:
+			{
+				bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
+				m_jfpbr->render( m_mesh, m_camTrackball, m_lightTrackball, newFrame );
+				
+				break;
+			}
 		}
 		
 		return RenderingState::m_positions.size();

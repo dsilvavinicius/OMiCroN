@@ -22,7 +22,7 @@ namespace model
 	public:
 		/** This ctor sends all points to the device. */
 		IndexedTucanoRenderer( const PointVector& points, Trackball* camTrackball, Trackball* lightTrackball, Mesh* mesh,
-							   const Attributes& attribs, const string& shaderPath,
+							   const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip = 1,
 						 const typename TucanoRenderingState::Effect& effect = TucanoRenderingState::PHONG );
 		
 		unsigned int render();
@@ -33,8 +33,9 @@ namespace model
 	template< typename Vec3, typename Float, typename Point >
 	IndexedTucanoRenderer< Vec3, Float, Point >::IndexedTucanoRenderer(
 		const PointVector& points, Trackball* camTrackball, Trackball* lightTrackball, Mesh* mesh,
-		const Attributes& attribs, const string& shaderPath, const typename TucanoRenderingState::Effect& effect )
-	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, effect )
+		const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip,
+		const typename TucanoRenderingState::Effect& effect )
+	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, jfpbrFrameskip, effect )
 	{
 		MeshInitializer::initMesh( points, *this );
 	}
@@ -42,14 +43,21 @@ namespace model
 	template< typename Vec3, typename Float, typename Point >
 	inline unsigned int IndexedTucanoRenderer< Vec3, Float, Point >::render()
 	{
+		++TucanoRenderingState::m_nFrames;
+		
 		TucanoRenderingState::m_mesh->loadIndices( TucanoRenderingState::m_indices );
 		
 		switch( TucanoRenderingState::m_effect )
 		{
 			case TucanoRenderingState::PHONG: TucanoRenderingState::m_phong->render( *TucanoRenderingState::m_mesh,
 				*TucanoRenderingState::m_camTrackball, *TucanoRenderingState::m_lightTrackball ); break;
-			case TucanoRenderingState::JUMP_FLOODING: TucanoRenderingState::m_jfpbr->render( TucanoRenderingState::m_mesh,
-				TucanoRenderingState::m_camTrackball, TucanoRenderingState::m_lightTrackball, true ); break;
+			case TucanoRenderingState::JUMP_FLOODING:
+			{
+				bool newFrame = TucanoRenderingState::m_nFrames % TucanoRenderingState::m_jfpbrFrameskip == 0;
+				TucanoRenderingState::m_jfpbr->render( TucanoRenderingState::m_mesh, TucanoRenderingState::m_camTrackball,
+													   TucanoRenderingState::m_lightTrackball, newFrame );
+				break;
+			}
 		}
 		
 		return TucanoRenderingState::m_indices.size();
