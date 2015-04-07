@@ -174,6 +174,22 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 	phong.render( mesh, tempCamera, light_trackball );
 }
 
+/*void PointRendererWidget::wheelEvent( QWheelEvent * event )
+{
+	const int WHEEL_STEP = 10;
+
+	float pos = event->delta () / float (WHEEL_STEP);
+
+	Vector4f negZAxis( 0.f, 0.f, -1.f, 1.f );
+	Vector4f lookAt = camera.getViewMatrix().matrix() * negZAxis;
+	lookAt /= lookAt[ 3 ];
+	lookAt *= pos;
+	
+	camera.translate( Vector3f( lookAt[ 0 ], lookAt[ 1 ], lookAt[ 2 ] ) );
+	
+	updateGL();
+}*/
+
 void PointRendererWidget::toggleWriteFrames()
 {
 	m_renderer->getJumpFlooding().toggleWriteFrames();	

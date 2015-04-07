@@ -43,6 +43,15 @@ public:
 	*/
 	virtual void resizeGL( int width, int height );
 
+protected:
+	/**
+     * @brief Callback for mouse wheel event.
+     *
+     * Changes the camera position in order to zoom.
+     * @param event The mouse event that triggered the callback.
+     */
+    //void wheelEvent( QWheelEvent * event );
+	
 signals:
 public slots:
 	/** @brief Toggle write output to image */
