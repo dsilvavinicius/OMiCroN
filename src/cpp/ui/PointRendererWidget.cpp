@@ -78,9 +78,8 @@ void PointRendererWidget::paintGL (void)
 	
 	adaptProjThresh( m_desiredRenderTime );
 	
-	//mesh.reset();
-	//m_renderer->clearAttribs();
-	m_renderer->clearIndices();
+	m_renderer->clearAttribs();
+	//m_renderer->clearIndices();
 	m_renderer->updateFrustum();
 	
 	// Render the scene.
@@ -262,7 +261,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( m_octree->getPoints(), &camera, &light_trackball, &mesh, vertAttribs,
+	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ &camera, &light_trackball, &mesh, vertAttribs,
 									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;

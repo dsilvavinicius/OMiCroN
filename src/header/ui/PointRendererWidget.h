@@ -20,12 +20,14 @@ class PointRendererWidget
 	
 	using MortonCode = model::ShallowMortonCode;
 	using Point = model::Point< float, vec3 >;
+	//using Point = model::ExtendedPoint< float, vec3 >;
 	using PointReader = SimplePointReader;
+	//using PointReader = ExtendedPointReader;
 	//using Octree = model::ShallowIndexedOctree< float, vec3, Point >;
 	//using Octree = model::ShallowRandomSampleOctree< float, vec3, Point >;
 	using Octree = model::ShallowFrontOctree< float, vec3, Point >;
-	using RenderingState = model::IndexedTucanoRenderer< vec3, float, Point >;
-	//using RenderingState = model::TucanoRenderingState< vec3, float >;
+	//using RenderingState = model::IndexedTucanoRenderer< vec3, float, Point >;
+	using RenderingState = model::TucanoRenderingState< vec3, float >;
 	
 public:
 	explicit PointRendererWidget( QWidget *parent );

@@ -54,6 +54,12 @@ namespace model
 		
 		void setJfpbrFrameskip( const int& value ) { m_jfpbrFrameskip = value; }
 		
+		void clearAttribs()
+		{
+			RenderingState::clearAttribs();
+			m_mesh->reset();
+		}
+		
 	protected:
 		/** Acquires current traball's view-projection matrix. */
 		Matrix4f getViewProjection() const;

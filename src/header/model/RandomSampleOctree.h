@@ -35,7 +35,9 @@ namespace model
 							   const vector< OctreeNodePtr >& children );
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
-		void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		virtual void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		
+		virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
 		
 	private:
 		/** Creates a new inner node by randomly sampling the points of the child nodes. */
@@ -125,7 +127,14 @@ namespace model
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
-		PointVectorPtr points = innerNode-> template getContents< PointVector >();
+		setupNodeRendering( innerNode, renderingState );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupNodeRendering(
+		OctreeNodePtr node, RenderingState& renderingState )
+	{
+		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	

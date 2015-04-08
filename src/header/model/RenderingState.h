@@ -53,6 +53,7 @@ namespace model
 		vector< Vec3 >& getColors() { return m_colors; }
 		vector< Vec3 >& getNormals() { return m_normals; }
 		vector< unsigned int >& getIndices() { return m_indices; }
+		Attributes getAttribs() { return m_attribs; }
 	
 		/** Clears all attrib vectors. */
 		void clearAttribs();
@@ -97,7 +98,14 @@ namespace model
 																	const PointPtr< float, vec3 >& point )
 		{
 			state.getPositions().push_back( *point->getPos() );
-			state.getColors().push_back( *point->getColor() );
+			if( state.getAttribs() == COLORS )
+			{
+				state.getColors().push_back( *point->getColor() );
+			}
+			else
+			{
+				state.getNormals().push_back( *point->getColor() );
+			}
 		}
 	
 		template<>
@@ -106,8 +114,7 @@ namespace model
 		{
 			for( PointPtr< float, vec3 > point : *points )
 			{
-				state.getPositions().push_back( *point->getPos() );
-				state.getColors().push_back( *point->getColor() );
+				handle( state, point );
 			}
 		}
 	
@@ -126,9 +133,7 @@ namespace model
 		{
 			for( ExtendedPointPtr< float, vec3 > point : *points )
 			{
-				state.getPositions().push_back( *point->getPos() );
-				state.getColors().push_back( *point->getColor() );
-				state.getNormals().push_back( *point->getNormal() );
+				handle( state, point );
 			}
 		}
 		
