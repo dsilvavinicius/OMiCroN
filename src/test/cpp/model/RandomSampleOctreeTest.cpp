@@ -82,8 +82,10 @@ namespace model
 			generatePointsInInterval( pointsPerOctant, vec2( 0.f, 15.f ), vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), points );
 			generatePointsInInterval( pointsPerOctant, vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), points );
 			
+			PointVector tmpPts = points;
+			
 			ShallowRandomSampleOctree< float, vec3, Point > octree( 1, 1 );
-			octree.build( points );
+			octree.build( tmpPts );
 			
 			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree.getHierarchy();
 			ShallowMortonCodePtr rootCode = make_shared< ShallowMortonCode >();

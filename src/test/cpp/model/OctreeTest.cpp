@@ -507,8 +507,6 @@ namespace model
 			OctreeTester< TypeParam >::testBoundaries( *this->m_octree );
 		}
 
-		
-		
 		/** Tests the ShallowOctree created hierarchy. */
 		TYPED_TEST( OctreeTest, Hierarchy )
 		{

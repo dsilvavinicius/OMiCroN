@@ -53,6 +53,7 @@ namespace model
 		using TransientRenderingState = model::TransientRenderingState< Vec3, Float >;
 		using Precision = typename PlyPointReader< Float, Vec3, Point >::Precision;
 		using PointAppender = model::PointAppender< MortonPrecision, Float, Vec3, Point >;
+		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
 		
 	public:
 		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum level
@@ -64,10 +65,11 @@ namespace model
 		/** Builds the octree for a given point cloud file. The points are expected to be in world coordinates.
 		 * @param precision tells the floating precision in which coordinates will be interpreted.
 		 * @param attribs tells which point attributes will be loaded from the file. */
-		virtual void build( const string& plyFileName, const Precision& precision, const Attributes& attribs );
+		virtual void buildFromFile( const string& plyFileName, const Precision& precision, const Attributes& attribs );
 		
-		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. */
-		virtual void build( const PointVector& points );
+		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. In any moment
+		 * of the building, points can be cleared in order to save memory. */
+		virtual void build( PointVector& points );
 		
 		/** Traverses the octree, rendering all necessary points.
 		 * @returns the number of rendered points. */
@@ -104,8 +106,8 @@ namespace model
 		/** Calculates octree's boundaries. */
 		virtual void buildBoundaries( const PointVector& points );
 		
-		/** Creates all nodes bottom-up. */
-		virtual void buildNodes( const PointVector& points );
+		/** Creates all nodes bottom-up. In any moment of the building, points can be cleared in order to save memory.*/
+		virtual void buildNodes( PointVector& points );
 		
 		/** Creates all leaf nodes and put points inside them. */
 		virtual void buildLeaves( const PointVector& points );
@@ -186,21 +188,23 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void OctreeBase< MortonPrecision, Float, Vec3, Point >::build( const PointVector& points )
+	void OctreeBase< MortonPrecision, Float, Vec3, Point >::build( PointVector& points )
 	{
 		buildBoundaries( points );
 		buildNodes( points );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void OctreeBase< MortonPrecision, Float, Vec3, Point >::build( const string& plyFileName,
-																   const Precision& precision, const Attributes& attribs )
+	void OctreeBase< MortonPrecision, Float, Vec3, Point >::buildFromFile( const string& plyFileName,
+																		   const Precision& precision,
+																		const Attributes& attribs )
 	{
-		PlyPointReader< Float, Vec3, Point > reader( plyFileName, precision, attribs );
+		
+		PlyPointReader *reader = new PlyPointReader( plyFileName, precision, attribs );
 		
 		cout << "After reading points" << endl << endl;
 		
-		PointVector points = reader.getPoints();
+		PointVector points = reader->getPoints();
 		
 		//
 		/*cout << "Read points" << endl << endl;
@@ -210,9 +214,12 @@ namespace model
 		}*/
 		//
 		
-		cout << "Attributes:" << reader.getAttributes() << endl << endl;
+		cout << "Attributes:" << reader->getAttributes() << endl << endl;
 		
 		//cout << "Read points: " << endl << points << endl; 
+		
+		// From now on the reader is not necessary. Delete it in order to save memory.
+		delete reader;
 		
 		build( points );
 	}
@@ -242,11 +249,15 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void OctreeBase< MortonPrecision, Float, Vec3, Point >::buildNodes( const PointVector& points )
+	void OctreeBase< MortonPrecision, Float, Vec3, Point >::buildNodes( PointVector& points )
 	{
 		cout << "Before leaf nodes build." << endl << endl;
 		buildLeaves(points);
 		cout << "After leaf nodes build." << endl << endl;
+		
+		// From now on the point vector is not necessary. Clear it to save memory.
+		points.clear();
+		
 		buildInners();
 		cout << "After inner nodes build." << endl << endl;
 	}

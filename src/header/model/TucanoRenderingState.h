@@ -132,11 +132,11 @@ namespace model
 		// Also, it could be better to use indices for rendering. That would need some redesign of the octree classes.
 		++m_nFrames;
 		
-		int nPoints = RenderingState::m_positions.size();
+		unsigned long nPoints = RenderingState::m_positions.size();
 		vector< Vector4f > vertData( nPoints );
 		vector< GLuint > indices( nPoints );
 		
-		for( int i = 0; i < nPoints; ++i )
+		for( unsigned long int i = 0; i < nPoints; ++i )
 		{
 			Vec3 pos = RenderingState::m_positions[ i ];
 			vertData[ i ] = Vector4f( pos.x, pos.y, pos.z, 1.f );

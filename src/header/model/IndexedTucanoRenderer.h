@@ -79,7 +79,10 @@ namespace model
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )
 		{
-			int nPoints = renderer.m_positions.size();
+			unsigned long nPoints = points.size();
+			
+			cout << "Initializing renderer with " << nPoints << " points." << endl;
+			
 			vector< Vector4f > positions( nPoints );
 			vector< Vector4f > colors;
 			vector< Vector3f > normals;
@@ -100,7 +103,7 @@ namespace model
 				normals.resize( nPoints );
 			}
 			
-			for( int i = 0; i < nPoints; ++i )
+			for( unsigned long i = 0; i < nPoints; ++i )
 			{
 				PointPtr point = points[ i ];
 				
@@ -114,7 +117,7 @@ namespace model
 				}
 				else
 				{
-					Vec3 normal = *point->getNormal();
+					Vec3 normal = *point->getColor();
 					normals[ i ] = Vector3f( normal.x, normal.y, normal.z );
 				}
 			}
@@ -143,7 +146,8 @@ namespace model
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )
 		{
-			int nPoints = points.size();
+			unsigned long nPoints = points.size();
+			cout << "Initializing renderer with " << nPoints << " points." << endl;
 			
 			vector< Vector4f > positions( nPoints );
 			vector< Vector4f > colors;
@@ -151,6 +155,8 @@ namespace model
 			
 			bool hasColors = renderer.m_attribs & Attributes::COLORS;
 			bool hasNormals = renderer.m_attribs & Attributes::NORMALS;
+			
+			cout << "Has colors: " << hasColors << " has normals: " << hasNormals << endl;
 			
 			if( hasColors )
 			{
@@ -161,7 +167,9 @@ namespace model
 				normals.resize( nPoints );
 			}
 			
-			for( int i = 0; i < nPoints; ++i )
+			cout << "Renderer position, color and normal vectors instantiated." << endl;
+			
+			for( unsigned long i = 0; i < nPoints; ++i )
 			{
 				PointPtr point = points[ i ];
 				
@@ -179,6 +187,8 @@ namespace model
 					normals[ i ] = Vector3f( normal.x, normal.y, normal.z );
 				}
 			}
+			
+			cout << "Renderer position, color and normal vectors populated." << endl;
 			
 			renderer.m_mesh->loadVertices( positions );
 			if( hasColors )

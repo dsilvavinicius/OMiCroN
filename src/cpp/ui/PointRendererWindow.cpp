@@ -20,7 +20,7 @@ namespace ui
 		m_renderTime( 0.f )
 	{
 		m_octree = new Octree( 1, 10 );
-		m_octree->build( "../../src/data/real/prova5M.ply", SimplePointReader::SINGLE, COLORS );
+		m_octree->buildFromFile( "../../src/data/real/prova5M.ply", SimplePointReader::SINGLE, COLORS );
 	}
 	
 	PointRendererWindow::~PointRendererWindow()

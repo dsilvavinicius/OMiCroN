@@ -27,30 +27,59 @@ namespace model
 	public:
 		IndexedOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
+		virtual void build( PointVector& points );
+		
 		PointVector& getPoints(){ return m_points; } 
 		
 	protected:
-		void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
+		virtual void buildNodes( PointVector& points );
 		
-		void buildInnerNode( typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
-							 const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children );
+		virtual void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
 		
-		void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		virtual void buildInnerNode( typename OctreeMap::iterator& firstChildIt,
+									 const typename OctreeMap::iterator& currentChildIt, const MortonCodePtr& parentCode,
+							   const vector< OctreeNodePtr >& children );
 		
-		void setupLeafNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		virtual void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
 		
-		void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
+		virtual void setupLeafNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		
+		virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
 		
 	private:
 		OctreeNodePtr buildInnerNode( const IndexVector& childrenPoints ) const;
 		
 		/** Point vector which will be indexed in the actual hierarchy. */
 		PointVector m_points;
+		
+		/** Current number of points in octree. */
+		unsigned long m_nPoints;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	IndexedOctree< MortonPrecision, Float, Vec3, Point >::IndexedOctree( const int& maxPointsPerNode, const int& maxLevel )
-	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel ) {}
+	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel ),
+	m_nPoints( 0 ) {}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	void IndexedOctree< MortonPrecision, Float, Vec3, Point >::build( PointVector& points )
+	{
+		m_points = points;
+		points.clear();
+		
+		RandomSampleOctree::buildBoundaries( m_points );
+		buildNodes( m_points );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	void IndexedOctree< MortonPrecision, Float, Vec3, Point >::buildNodes( PointVector& points )
+	{
+		cout << "Before leaf nodes build." << endl << endl;
+		RandomSampleOctree::buildLeaves(points);
+		cout << "After leaf nodes build." << endl << endl;
+		RandomSampleOctree::buildInners();
+		cout << "After inner nodes build." << endl << endl;
+	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
 	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::insertPointInLeaf( const PointPtr& point,
@@ -58,8 +87,7 @@ namespace model
 	{
 		typename OctreeMap::iterator genericLeafIt = RandomSampleOctree::m_hierarchy->find( code );
 		
-		unsigned int index = m_points.size();
-		m_points.push_back( point );
+		unsigned long index = m_nPoints++;
 		
 		if( genericLeafIt == RandomSampleOctree::m_hierarchy->end() )
 		{

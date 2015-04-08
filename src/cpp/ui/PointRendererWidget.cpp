@@ -30,7 +30,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	//openMesh( "../../src/data/real/staypuff.ply" );
-	openMesh( "../../src/data/real/prova10M.ply" );
+	//openMesh( "../../src/data/real/prova10M.ply" );
+	openMesh( "../../src/data/real/tempietto_all.ply" );
 
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -40,8 +41,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 void PointRendererWidget::resizeGL( int width, int height )
 {
 	camera.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera.setPerspectiveMatrix( camera.getFovy(), width / height, 0.1f,
-											10000.0f );
+	camera.setPerspectiveMatrix( camera.getFovy(), width / height, 0.1f, 10000.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )
@@ -244,14 +244,16 @@ void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
 
 void PointRendererWidget::openMesh( const string& filename )
 {
-	Attributes vertAttribs = COLORS_AND_NORMALS;
+	Attributes vertAttribs = NORMALS;
 	
 	if( m_octree )
 	{
 		delete m_octree;
 	}
 	m_octree = new Octree( 1, 10 );
-	m_octree->build( filename, PointReader::SINGLE, vertAttribs );
+	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
+	
+	cout << "Octree built." << endl;
 	
 	mesh.reset();
 	if( m_renderer )
@@ -262,8 +264,13 @@ void PointRendererWidget::openMesh( const string& filename )
 	// threshold adaptations.
 	m_renderer = new RenderingState( m_octree->getPoints(), &camera, &light_trackball, &mesh, vertAttribs,
 									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+	
+	cout << "Renderer built." << endl;
+	
 	clock_t timing = clock();
 	m_octree->traverse( *m_renderer, m_projThresh );
 	timing = clock() - timing;
 	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+	
+	updateGL();
 }

@@ -19,8 +19,8 @@ class PointRendererWidget
 	Q_OBJECT
 	
 	using MortonCode = model::ShallowMortonCode;
-	using Point = model::ExtendedPoint< float, vec3 >;
-	using PointReader = ExtendedPointReader;
+	using Point = model::Point< float, vec3 >;
+	using PointReader = SimplePointReader;
 	//using Octree = model::ShallowIndexedOctree< float, vec3, Point >;
 	//using Octree = model::ShallowRandomSampleOctree< float, vec3, Point >;
 	using Octree = model::ShallowFrontOctree< float, vec3, Point >;
