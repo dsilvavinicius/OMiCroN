@@ -16,11 +16,11 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
 	class FrontOctree
-	: public RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
+	: public IndexedOctree< MortonPrecision, Float, Vec3, Point >
 	{
 		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
-		using ParentOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
+		using ParentOctree = model::IndexedOctree< MortonPrecision, Float, Vec3, Point >;
 		using RenderingState = model::RenderingState< Vec3, Float >;
 		using TransientRenderingState = model::TransientRenderingState< Vec3, Float >;
 		using MortonPtrVector = vector< MortonCodePtr >;
@@ -84,7 +84,7 @@ namespace model
 			  typename FrontInsertionContainer >
 	FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::FrontOctree(
 		const int& maxPointsPerNode, const int& maxLevel )
-	: ParentOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
+	: ParentOctree::IndexedOctree( maxPointsPerNode, maxLevel )
 	{
 		m_frontBehavior = new FrontBehavior( *this );
 	}

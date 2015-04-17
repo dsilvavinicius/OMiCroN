@@ -150,6 +150,11 @@ add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/jf-pbr/shaders
 	${Renderer_Dir}/shaders/tucano )
 
+# Example point cloud.
+add_custom_command( TARGET Copy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/data/example/staypuff.ply
+	${Renderer_Dir}/data/example/staypuff.ply )
+	
 add_dependencies( Point_Based_Renderer Copy )
 
 # Tests directory.

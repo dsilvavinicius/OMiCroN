@@ -29,9 +29,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
-	//openMesh( "../../src/data/real/staypuff.ply" );
-	//openMesh( "../../src/data/real/prova10M.ply" );
-	openMesh( "../../src/data/real/tempietto_all.ply" );
+	openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
 
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -78,8 +76,8 @@ void PointRendererWidget::paintGL (void)
 	
 	adaptProjThresh( m_desiredRenderTime );
 	
-	m_renderer->clearAttribs();
-	//m_renderer->clearIndices();
+	//m_renderer->clearAttribs();
+	m_renderer->clearIndices();
 	m_renderer->updateFrustum();
 	
 	// Render the scene.
@@ -175,16 +173,25 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 
 /*void PointRendererWidget::wheelEvent( QWheelEvent * event )
 {
-	const int WHEEL_STEP = 10;
-
-	float pos = event->delta () / float (WHEEL_STEP);
-
-	Vector4f negZAxis( 0.f, 0.f, -1.f, 1.f );
-	Vector4f lookAt = camera.getViewMatrix().matrix() * negZAxis;
-	lookAt /= lookAt[ 3 ];
-	lookAt *= pos;
+	const float WHEEL_STEP = 0.01f;
 	
-	camera.translate( Vector3f( lookAt[ 0 ], lookAt[ 1 ], lookAt[ 2 ] ) );
+	float pos = float( event->delta () ) * WHEEL_STEP;
+	
+	cout << "pos: " << pos << endl;
+	
+	Matrix4f view = camera.getViewMatrix().matrix();
+	Vector4f cameraPosHomo = view * Vector4f( 0.f, 0.f, 0.f, 1.f );
+	Vector3f cameraPos( cameraPosHomo[ 0 ], cameraPosHomo[ 1 ], cameraPosHomo[ 2 ] );
+	Vector3f moveVec = camera.getCenter() - cameraPos;
+	moveVec.normalize();
+
+	cout << "moveVec: " << moveVec << endl;
+	
+	moveVec *= pos;
+	
+	cout << "scaled move vec: " << moveVec << endl << endl;
+	
+	camera.translate( moveVec );
 	
 	updateGL();
 }*/
@@ -243,7 +250,7 @@ void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
 
 void PointRendererWidget::openMesh( const string& filename )
 {
-	Attributes vertAttribs = NORMALS;
+	Attributes vertAttribs = model::COLORS_AND_NORMALS;
 	
 	if( m_octree )
 	{
@@ -261,7 +268,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ &camera, &light_trackball, &mesh, vertAttribs,
+	m_renderer = new RenderingState( m_octree->getPoints(), &camera, &light_trackball, &mesh, vertAttribs,
 									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;
