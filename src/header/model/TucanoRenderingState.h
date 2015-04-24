@@ -26,7 +26,7 @@ namespace model
 			JUMP_FLOODING
 		};
 		
-		TucanoRenderingState( Trackball* camTrackball, Trackball* lightTrackball , Mesh* mesh, const Attributes& attribs,
+		TucanoRenderingState( Camera* camera, Trackball* lightTrackball , Mesh* mesh, const Attributes& attribs,
 							  const string& shaderPath, const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
@@ -69,7 +69,7 @@ namespace model
 		const;
 		
 		Frustum* m_frustum;
-		Trackball* m_camTrackball;
+		Camera* m_camera;
 		Trackball* m_lightTrackball;
 		
 		Matrix4f m_viewProj;
@@ -88,12 +88,12 @@ namespace model
 	};
 	
 	template< typename Vec3, typename Float >
-	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Trackball*  camTrackball, Trackball* lightTrackball,
+	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Camera* camera, Trackball* lightTrackball,
 															   Mesh* mesh, const Attributes& attribs,
 															const string& shaderPath, const int& jfpbrFrameskip, 
 															const Effect& effect )
 	: RenderingState( attribs ),
-	m_camTrackball( camTrackball ),
+	m_camera( camera ),
 	m_lightTrackball( lightTrackball ),
 	m_mesh( mesh ),
 	m_viewProj( getViewProjection() ),
@@ -107,10 +107,16 @@ namespace model
 		m_phong->setShadersDir( shaderPath );
 		m_phong->initialize();
 		
-		Vector2i viewportSize = m_camTrackball->getViewportSize();
+		// This color should be used when there is no color vertex attribute being used.
+		glVertexAttrib4f( 2, 0.7f, 0.7f, 0.7f, 1.f );
+		
+		Vector2i viewportSize = m_camera->getViewportSize();
 		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
 		m_jfpbr->setShadersDir( shaderPath );
 		m_jfpbr->initialize();
+		
+		glCullFace( GL_BACK );
+		glEnable( GL_CULL_FACE );
 	}
 	
 	template< typename Vec3, typename Float >
@@ -174,11 +180,11 @@ namespace model
 		
 		switch( m_effect )
 		{
-			case PHONG: m_phong->render( *m_mesh, *m_camTrackball, *m_lightTrackball ); break;
+			case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightTrackball ); break;
 			case JUMP_FLOODING:
 			{
 				bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
-				m_jfpbr->render( m_mesh, m_camTrackball, m_lightTrackball, newFrame );
+				m_jfpbr->render( m_mesh, m_camera, m_lightTrackball, newFrame );
 				
 				break;
 			}
@@ -206,7 +212,7 @@ namespace model
 		Vector4f min( rawMin.x, rawMin.y, rawMin.z, 1 );
 		Vector4f max( rawMax.x, rawMax.y, rawMax.z, 1 );
 		
-		Vector2i viewportSize = m_camTrackball->getViewportSize();
+		Vector2i viewportSize = m_camera->getViewportSize();
 		
 		Vector2f proj0 = projToWindowCoords( min, m_viewProj, viewportSize );
 		Vector2f proj1 = projToWindowCoords( max, m_viewProj, viewportSize );
@@ -229,8 +235,8 @@ namespace model
 	template< typename Vec3, typename Float >
 	inline Matrix4f TucanoRenderingState< Vec3, Float >::getViewProjection() const
 	{
-		Matrix4f view = m_camTrackball->getViewMatrix().matrix();
-		Matrix4f proj = m_camTrackball->getProjectionMatrix();
+		Matrix4f view = m_camera->getViewMatrix().matrix();
+		Matrix4f proj = m_camera->getProjectionMatrix();
 		
 		//cout << "Projection to renderer: " << endl << proj << endl << endl;
 		

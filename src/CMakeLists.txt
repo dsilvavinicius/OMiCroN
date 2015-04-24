@@ -106,7 +106,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h			${CPP_DIR}/${UTIL_DIR}/Stream.cpp
 	
 	# Tucano related code
-	include/tucano/src/utils/qttrackballwidget.hpp #ugly hack to use qmake in this file.
+	include/tucano/src/utils/qtflycamerawidget.hpp #ugly hack to use qmake in this file.
 	
 	# Jump-flooding related code.
 	${JUMP_FLOODING_DIR}/imgSpacePBR.hpp	${JUMP_FLOODING_DIR}/imgSpacePBR.cpp

@@ -4,7 +4,7 @@
 //#include <GL/glew.h>
 //#include <phongshader.hpp>
 //#include <imgSpacePBR.hpp>
-#include <utils/qttrackballwidget.hpp>
+#include <utils/qtflycamerawidget.hpp>
 #include <point_model.hpp>
 #include "IndexedTucanoRenderer.h"
 #include "FrontOctree.h"
@@ -14,20 +14,20 @@ using namespace std;
 using namespace model;
 
 class PointRendererWidget
-: public Tucano::QtTrackballWidget
+: public Tucano::QtFlycameraWidget
 {
 	Q_OBJECT
 	
 	using MortonCode = model::ShallowMortonCode;
-	//using Point = model::Point< float, vec3 >;
-	using Point = model::ExtendedPoint< float, vec3 >;
-	//using PointReader = SimplePointReader;
-	using PointReader = ExtendedPointReader;
+	using Point = model::Point< float, vec3 >;
+	//using Point = model::ExtendedPoint< float, vec3 >;
+	using PointReader = SimplePointReader;
+	//using PointReader = ExtendedPointReader;
 	//using Octree = model::ShallowIndexedOctree< float, vec3, Point >;
 	//using Octree = model::ShallowRandomSampleOctree< float, vec3, Point >;
 	using Octree = model::ShallowFrontOctree< float, vec3, Point >;
-	using RenderingState = model::IndexedTucanoRenderer< vec3, float, Point >;
-	//using RenderingState = model::TucanoRenderingState< vec3, float >;
+	//using RenderingState = model::IndexedTucanoRenderer< vec3, float, Point >;
+	using RenderingState = model::TucanoRenderingState< vec3, float >;
 	
 public:
 	explicit PointRendererWidget( QWidget *parent );
@@ -46,13 +46,6 @@ public:
 	virtual void resizeGL( int width, int height );
 
 protected:
-	/**
-     * @brief Callback for mouse wheel event.
-     *
-     * Changes the camera position in order to zoom.
-     * @param event The mouse event that triggered the callback.
-     */
-    //void wheelEvent( QWheelEvent * event );
 	
 signals:
 public slots:

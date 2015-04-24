@@ -3,7 +3,7 @@
 #include <QTimer>
 
 PointRendererWidget::PointRendererWidget( QWidget *parent )
-: Tucano::QtTrackballWidget(parent),
+: Tucano::QtFlycameraWidget( parent ),
 m_projThresh( 0.001f ),
 m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
@@ -13,6 +13,7 @@ m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
+	camera.setSpeed( 3.f );
 }
 
 PointRendererWidget::~PointRendererWidget()
@@ -24,13 +25,13 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	Tucano::QtTrackballWidget::initialize();
+	Tucano::QtFlycameraWidget::initialize();
 	
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
-
+	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
 	m_timer->start( 16.666f ); // Update 60 fps.
@@ -76,8 +77,8 @@ void PointRendererWidget::paintGL (void)
 	
 	adaptProjThresh( m_desiredRenderTime );
 	
-	//m_renderer->clearAttribs();
-	m_renderer->clearIndices();
+	m_renderer->clearAttribs();
+	//m_renderer->clearIndices();
 	m_renderer->updateFrustum();
 	
 	// Render the scene.
@@ -111,7 +112,7 @@ void PointRendererWidget::paintGL (void)
 	glEnable(GL_DEPTH_TEST);
 	if( draw_trackball )
 	{
-		camera.render();
+		camera.renderAtCorner();
 	}
 	
 	m_endOfFrameTime = clock();
@@ -171,31 +172,6 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 	phong.render( mesh, tempCamera, light_trackball );
 }
 
-/*void PointRendererWidget::wheelEvent( QWheelEvent * event )
-{
-	const float WHEEL_STEP = 0.01f;
-	
-	float pos = float( event->delta () ) * WHEEL_STEP;
-	
-	cout << "pos: " << pos << endl;
-	
-	Matrix4f view = camera.getViewMatrix().matrix();
-	Vector4f cameraPosHomo = view * Vector4f( 0.f, 0.f, 0.f, 1.f );
-	Vector3f cameraPos( cameraPosHomo[ 0 ], cameraPosHomo[ 1 ], cameraPosHomo[ 2 ] );
-	Vector3f moveVec = camera.getCenter() - cameraPos;
-	moveVec.normalize();
-
-	cout << "moveVec: " << moveVec << endl;
-	
-	moveVec *= pos;
-	
-	cout << "scaled move vec: " << moveVec << endl << endl;
-	
-	camera.translate( moveVec );
-	
-	updateGL();
-}*/
-
 void PointRendererWidget::toggleWriteFrames()
 {
 	m_renderer->getJumpFlooding().toggleWriteFrames();	
@@ -250,7 +226,7 @@ void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
 
 void PointRendererWidget::openMesh( const string& filename )
 {
-	Attributes vertAttribs = model::COLORS_AND_NORMALS;
+	Attributes vertAttribs = model::NORMALS;
 	
 	if( m_octree )
 	{
@@ -266,9 +242,10 @@ void PointRendererWidget::openMesh( const string& filename )
 	{
 		delete m_renderer;
 	}
+	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( m_octree->getPoints(), &camera, &light_trackball, &mesh, vertAttribs,
+	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ &camera, &light_trackball, &mesh, vertAttribs,
 									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;
