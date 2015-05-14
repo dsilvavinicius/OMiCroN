@@ -2,7 +2,13 @@
 #define OUT_OF_CORE_OCTREE_H
 
 #include <sqlite3.h>
+#include <stdexcept>
+#include <functional>
 #include "IndexedOctree.h"
+#include "SQLiteHelper.h"
+
+using namespace std;
+using namespace util;
 
 namespace model
 {
@@ -15,13 +21,16 @@ namespace model
 		using ParentOctree = model::IndexedOctree< MortonPrecision, Float, Vec3, Point >;
 		
 	public:
-		OutOfCoreOctree();
+		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
 		~OutOfCoreOctree();
 		
 	private:
+		
 		sqlite3* m_db;
-		sqlite3_stmt m_pointQuery;
-		sqlite3_stmt m_nodeQuery;
+		sqlite3_stmt* m_nodeInsertion;
+		sqlite3_stmt* m_pointQuery;
+		sqlite3_stmt* m_nodeQuery;
+		sqlite3_stmt* m_nodeIntervalQuery;
 	};
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point  >
@@ -29,18 +38,60 @@ namespace model
 																			 const int& maxLevel )
 	: ParentOctree( maxPointsPerNode, maxLevel )
 	{
-		sqlite3_open_v2( "Octree", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL );
+		// Creating database, hierarchy and point tables.
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_open_v2( "Octree", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
+										NULL );
+				
+			}
+		);
 		
 		sqlite3_stmt* creationStmt;
-		sqlite3_prepare_v2( m_db, 	"CREATE TABLE Octree.Hierarchy ("
-										"Morton INT,"
-										"Node BLOB,"
-										"PRIMARY KEY ( Morton )"
-									").\0", -1, creationStmt, NULL );
-		sqlite3_finalize( creationStmt );
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+			return sqlite3_prepare_v2( m_db,
+										"CREATE TABLE Nodes ("
+											"Morton INT NOT NULL PRIMARY KEY,"
+											"Node BLOB"
+										");\0",
+										-1, &creationStmt, NULL
+									);
+			}
+		);
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_step( creationStmt ); } );
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
 		
-		sqlite3_prepare_v2( m_db, "\0", -1, m_pointQuery, NULL );
-		sqlite3_prepare_v2( m_db, "\0", -1, m_nodeQuery, NULL );
+		// Creating insertion statements.
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_prepare_v2( m_db, "INSERT INTO Nodes VALUES ( ?, ? )\0", -1, &m_nodeInsertion, NULL );
+			}
+		);
+		
+		// Creating queries.
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_prepare_v2( m_db, "SELECT Point FROM Points WHERE Id = ?\0", -1, &m_pointQuery, NULL );
+			}
+		);
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_prepare_v2( m_db, "SELECT Node FROM Nodes WHERE Morton = ?\0", -1, &m_nodeQuery, NULL );
+			}
+		);
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_prepare_v2( m_db, "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?\0", -1,
+										   &m_nodeIntervalQuery, NULL );
+			}
+		);
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point  >
@@ -48,8 +99,14 @@ namespace model
 	{
 		sqlite3_finalize( m_pointQuery );
 		sqlite3_finalize( m_nodeQuery );
+		sqlite3_finalize( m_nodeIntervalQuery );
 		sqlite3_close( m_db );
 	}
+	
+	// ====================== Type Sugar ================================ /
+	
+	template< typename Float, typename Vec3, typename Point >
+	using ShallowOutOfCoreOctree = IndexedOctree< unsigned int, Float, Vec3, Point >;
 }
 
 #endif

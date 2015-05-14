@@ -26,7 +26,7 @@ namespace model
 {	
 	/** Base Octree implemented as a hash-map using morton code as explained here:
 	 * http://www.sbgames.org/papers/sbgames09/computing/short/cts19_09.pdf. All parts of construction and
-	 * traversal are free for reimplementation of derived classes.
+	 * traversal are free for reimplementation on derived classes.
 	 * 
 	 * @param MortonPrecision is the precision of the morton code for nodes.
 	 * @param Float is the glm type specifying the floating point type / precision.

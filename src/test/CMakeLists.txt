@@ -18,6 +18,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
 	${CPP_DIR}/${MODEL_DIR}/ScanTest.cpp

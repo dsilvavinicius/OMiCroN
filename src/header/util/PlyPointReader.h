@@ -44,12 +44,13 @@ namespace util
 		
 		PointVector getPoints(){ return m_points; }
 		Attributes getAttributes(){ return m_attribs; }
-	private:
+	protected:
 		/** Sets the RPly callback for vertex data, given a property index and a precision flag. */
-		void setVertexCB( p_ply ply, string propName, const unsigned int propIndex, Precision precision );
+		virtual void setVertexCB( p_ply ply, string propName, const unsigned int propIndex, Precision precision );
 		
-		PointVector m_points;
 		Attributes m_attribs;
+	private:
+		PointVector m_points;
 	};
 	
 	template< typename Float, typename Vec3, typename Point >
@@ -244,6 +245,8 @@ namespace util
 		
 		return 1;
 	}
+	
+	// ====================== Type Sugar ================================ /
 	
 	/** Reader for points with position and color or normal. */
 	using SimplePointReader = PlyPointReader< float, vec3, Point< float, vec3 > >;
