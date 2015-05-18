@@ -7,18 +7,15 @@ namespace util
 	class SQLiteHelper
 	{
 		/** Calls a SQLite function, checking the return code and throwing an runtime_error whenever appropriate. */
-		static void safeCall( function< int()  > sqliteFunc );
-	};
-	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point  >
-	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point >::safeCall( function< int()  > sqliteFunc )
-	{
-		int returnCode = sqliteFunc();
-		if( returnCode )
+		static void safeCall( function< int() > sqliteFunc )
 		{
-			throw runtime_error( sqlite3_errmsg( m_db ) );
+			int returnCode = sqliteFunc();
+			if( returnCode )
+			{
+				throw runtime_error( sqlite3_errstr( returnCode ) );
+			}
 		}
-	}
+	};
 }
 
 #endif

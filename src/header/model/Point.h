@@ -18,6 +18,8 @@ namespace model
 	{
 	public:
 		Point();
+		//Point( const Point& other );
+		//Point& operator=( const Point& other );
 		Point( const Vec3& color, const Vec3& pos );
 		
 		shared_ptr< Vec3 > getColor();
@@ -55,6 +57,20 @@ namespace model
 		m_color = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 		m_pos = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 	}
+	
+	/*template <typename Float, typename Vec3>
+	Point< Float, Vec3 >::Point( const Point& other )
+	: Point( *other.m_color, *other.m_pos )
+	{}
+	
+	template <typename Float, typename Vec3>
+	Point< Float, Vec3 >& Point< Float, Vec3 >::operator=( const Point& other )
+	{
+		*m_pos = *other.m_pos;
+		*m_color = *other.m_color;
+		
+		return *this;
+	}*/
 	
 	template <typename Float, typename Vec3>
 	Point< Float, Vec3 >::Point( const Vec3& color, const Vec3& pos )

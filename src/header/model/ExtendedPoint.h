@@ -17,6 +17,8 @@ namespace model
 	{
 	public:
 		ExtendedPoint();
+		//ExtendedPoint( const ExtendedPoint& other );
+		//ExtendedPoint& operator=( const ExtendedPoint& other );
 		ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos );
 		
 		shared_ptr< Vec3 > getNormal();
@@ -52,6 +54,21 @@ namespace model
 	{
 		m_normal = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 	}
+	
+	/*template< typename Float, typename Vec3 >
+	ExtendedPoint< Float, Vec3 >::ExtendedPoint( const ExtendedPoint& other )
+	: ExtendedPoint( *other.m_color, *other.m_normal, *other.m_pos )
+	{}
+	
+	template <typename Float, typename Vec3>
+	ExtendedPoint< Float, Vec3 >& ExtendedPoint< Float, Vec3 >::operator=( const ExtendedPoint& other )
+	{
+		*Point< Float, Vec3 >::m_pos = *other.m_pos;
+		*Point< Float, Vec3 >::m_color = *other.m_color;
+		*m_normal = *other.m_normal;
+		
+		return *this;
+	}*/
 	
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 >::ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos )

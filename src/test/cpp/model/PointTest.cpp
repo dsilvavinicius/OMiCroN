@@ -51,5 +51,21 @@ namespace model
 			float epsilon = 1.e-15;
 			ASSERT_TRUE( calc.equal( expected, epsilon ) );
 		}
+		
+		/*TEST_F( PointTest, CopyConstructorAndAssignmentOp )
+		{
+			Point< float, vec3 > p0( vec3( 1.f, 2.f, 3.f ), vec3( 1.f, 2.f, 3.f ) );
+			Point< float, vec3 > p1( p0 );
+			p0 = p0 + p1;
+			
+			float epsilon = 1.e-15;
+			ASSERT_TRUE( p1.equal( Point< float, vec3 >( vec3( 1.f, 2.f, 3.f ), vec3( 1.f, 2.f, 3.f ) ), epsilon ) );
+			ASSERT_TRUE( p0.equal( Point< float, vec3 >( vec3( 2.f, 4.f, 6.f ), vec3( 2.f, 4.f, 6.f ) ), epsilon ) );
+			
+			p0 = p1;
+			p1 = p0 + p1;
+			ASSERT_TRUE( p0.equal( Point< float, vec3 >( vec3( 1.f, 2.f, 3.f ), vec3( 1.f, 2.f, 3.f ) ), epsilon ) );
+			ASSERT_TRUE( p1.equal( Point< float, vec3 >( vec3( 2.f, 4.f, 6.f ), vec3( 2.f, 4.f, 6.f ) ), epsilon ) );
+		}*/
 	}
 }

@@ -26,8 +26,10 @@ namespace util
 	private:
 		/** Temp point used to hold intermediary incomplete data before sending it to database. */
 		Point m_tempPoint;
+		
 		/** Point insertion statement. */
 		sqlite3_stmt* m_pointInsertion;
+		
 		/** Data needed while reading points, in order to fill the database. */
 		pair< Point*, sqlite3_stmt* > m_readingNeededData;
 	};
@@ -102,8 +104,6 @@ namespace util
 					( *point->getColor() )[ index % 3 ] = ( float ) value / 255;
 					
 					sqlite3_stmt* insertionStmt = neededData->second;
-					
-					// START HERE ON NEXT DAY! //
 					void* blob = point;
 					sqlite3_bind_blob( insertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC );
 					sqlite3_step( insertionStmt );

@@ -199,8 +199,8 @@ namespace model
 																		   const Precision& precision,
 																		const Attributes& attribs )
 	{
-		
-		PlyPointReader *reader = new PlyPointReader( plyFileName, precision, attribs );
+		PlyPointReader *reader = new PlyPointReader();
+		reader->read( plyFileName, precision, attribs );
 		
 		cout << "After reading points" << endl << endl;
 		

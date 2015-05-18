@@ -22,8 +22,7 @@ namespace util
 	template< typename Float, typename Vec3, typename Point >
 	int vertexCB( p_ply_argument argument );
 	
-	/** Reader for a point .ply file. To access the read points, use getPoints(). To verify if the model vertices have
-	 * normals or just float colors, use hasNormals(). */
+	/** Reader for a point .ply file. To access the read points, use getPoints(). */
 	template< typename Float, typename Vec3, typename Point >
 	class PlyPointReader 
 	{
@@ -40,29 +39,29 @@ namespace util
 		/** Reads a .ply file. . 
 		 * @param precision specifies the desired precision for read points. It must be agreed with the template
 		 * parameters of this method. */
-		PlyPointReader( const string& fileName, Precision precision, Attributes attribs );
+		void read( const string& fileName, Precision precision, Attributes attribs );
 		
 		PointVector getPoints(){ return m_points; }
+		
 		Attributes getAttributes(){ return m_attribs; }
+	
 	protected:
-		/** Sets the RPly callback for vertex data, given a property index and a precision flag. */
-		virtual void setVertexCB( p_ply ply, string propName, const unsigned int propIndex, Precision precision );
+		/** Internal customizable reading method. Should setup reading needed data, callbacks, do the reading itself and free reading
+		 * needed data.
+		 * @returns ply_read() return code. */
+		virtual int doRead( p_ply& ply, const Precision& precision, const bool& colorsNeeded, const bool& normalsNeeded );
+		
+		/** Internal method that calculates the property flag for each invocation of the reading vertex callback. */
+		static unsigned int getPropFlag( const unsigned int& propIndex, const Precision& precision );
 		
 		Attributes m_attribs;
+		
 	private:
 		PointVector m_points;
 	};
 	
 	template< typename Float, typename Vec3, typename Point >
-	void PlyPointReader< Float, Vec3, Point >::setVertexCB( p_ply ply, string propName, const unsigned int propIndex,
-													 Precision precision )
-	{
-		unsigned int propFlag = propIndex | ( precision << 4 );
-		ply_set_read_cb( ply, "vertex", propName.c_str(), vertexCB< Float, Vec3, Point >, &m_points, propFlag );
-	}
-	
-	template< typename Float, typename Vec3, typename Point >
-	PlyPointReader< Float, Vec3, Point >::PlyPointReader( const string& fileName, Precision precision, Attributes attribs )
+	void PlyPointReader< Float, Vec3, Point >::read( const string& fileName, Precision precision, Attributes attribs )
 	{
 		/* Save application locale */
 		const char *old_locale = setlocale( LC_NUMERIC, NULL );
@@ -112,26 +111,9 @@ namespace util
 		}
 		cout << endl;
 		
-		// Set callbacks for reading.
-		setVertexCB( ply, "x", 0, precision );
-		setVertexCB( ply, "y", 1, precision );
-		setVertexCB( ply, "z", 2, precision );
+		int resultCode = doRead( ply, precision, colorsNeeded, normalsNeeded );
 		
-		if( colorsNeeded )
-		{
-			setVertexCB( ply, "red", 3, precision );
-			setVertexCB( ply, "green", 4, precision );
-			setVertexCB( ply, "blue", 5, precision );
-		}
-		
-		if( normalsNeeded )
-		{
-			setVertexCB( ply, "nx", 6, precision );
-			setVertexCB( ply, "ny", 7, precision );
-			setVertexCB( ply, "nz", 8, precision );
-		}
-		
-		if( !ply_read( ply ) )
+		if( !resultCode )
 		{
 			ply_close( ply );
 			setlocale( LC_NUMERIC, old_locale );
@@ -145,44 +127,92 @@ namespace util
 	}
 	
 	template< typename Float, typename Vec3, typename Point >
+	int PlyPointReader< Float, Vec3, Point >::doRead( p_ply& ply, const Precision& precision, const bool& colorsNeeded,
+													   const bool& normalsNeeded )
+	{
+		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
+		Point tempPoint;
+		pair< Point*, PointVector* > readingNeededData( &tempPoint, &m_points );
+		
+		ply_set_read_cb( ply, "vertex", "x", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 0, precision ) );
+		ply_set_read_cb( ply, "vertex", "y", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 1, precision ) );
+		ply_set_read_cb( ply, "vertex", "z", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 2, precision ) );
+		
+		if( colorsNeeded )
+		{
+			ply_set_read_cb( ply, "vertex", "red", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 3, precision ) );
+			ply_set_read_cb( ply, "vertex", "green", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 4, precision ) );
+			ply_set_read_cb( ply, "vertex", "blue", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 5, precision ) );
+		}
+		
+		if( normalsNeeded )
+		{
+			ply_set_read_cb( ply, "vertex", "nx", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 6, precision ) );
+			ply_set_read_cb( ply, "vertex", "ny", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 7, precision ) );
+			ply_set_read_cb( ply, "vertex", "nz", vertexCB< Float, Vec3, Point >, &readingNeededData, getPropFlag( 8, precision ) );
+		}
+		
+		return ply_read( ply );
+	}
+	
+	template< typename Float, typename Vec3, typename Point >
+	inline unsigned int PlyPointReader< Float, Vec3, Point >::getPropFlag( const unsigned int& propIndex,
+																		   const Precision& precision )
+	{
+		return propIndex | ( precision << 4 );
+	}
+	
+	
+	/** Handler for the reading callback data. */
+	template< typename Float, typename Vec3, typename Point >
 	struct CBDataHandler
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		void operator()( const unsigned int& index, const float& value, PointVector* points )
+		void operator()( const unsigned int& index, const float& value, pair< Point*, PointVector* >* readingData )
 		{
+			Point* tempPoint = readingData->first;
+			
 			switch( index )
 			{
-				case 0:
+				case 0: case 1: case 2:
 				{
-					auto point = make_shared< Point >( vec3( 1.f, 1.f, 1.f ), vec3( value, 0.f, 0.f ) );
-					points->push_back( point );
+					( *tempPoint->getPos() )[ index ] = value;
 					break;
 				}
-				case 1: case 2:
-				{
-					shared_ptr< Point > point = points->back();
-					( *point->getPos() )[ index ] = value;
-					break;
-				}
-				case 3: case 4: case 5:
+				case 3: case 4:
 				{
 					// Flat color case.
-					shared_ptr< Point > point = points->back();
-					( *point->getColor() )[ index % 3 ] = ( float ) value / 255;
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
-				case 6: case 7: case 8:
+				case 5:
+				{
+					// Last point component. Send complete point to vector.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
+					PointVector* points = readingData->second;
+					points->push_back( make_shared< Point >( *tempPoint->getColor(), *tempPoint->getPos() ) );
+					break;
+				}
+				case 6: case 7:
 				{
 					// Normal case.
-					shared_ptr< Point > point = points->back();
-					( *point->getColor() )[ index % 3 ] = value;
+					( *tempPoint->getColor() )[ index % 3 ] = value;
+					break;
+				}
+				case 8:
+				{
+					// Last point component. Send complete point to vector.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value;
+					PointVector* points = readingData->second;
+					points->push_back( make_shared< Point >( *tempPoint->getColor(), *tempPoint->getPos() ) );
 					break;
 				}
 			}
 		}
 	};
 	
+	/** */
 	template< typename Float, typename Vec3 >
 	struct CBDataHandler< Float, Vec3, ExtendedPoint< Float,Vec3 > >
 	{
@@ -190,34 +220,35 @@ namespace util
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		
-		void operator()( const unsigned int& index, const float& value, PointVector* points )
+		void operator()( const unsigned int& index, const float& value, pair< Point*, PointVector* >* readingData )
 		{
+			Point* tempPoint = readingData->first;
+			
 			switch( index )
 			{
-				case 0:
+				case 0: case 1: case 2:
 				{
-					auto point = make_shared< Point >( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ), vec3( value, 0.f, 0.f ) );
-					points->push_back( point );
-					break;
-				}
-				case 1: case 2:
-				{
-					shared_ptr< Point > point = points->back();
-					( *point->getPos() )[ index ] = value;
+					( *tempPoint->getPos() )[ index ] = value;
 					break;
 				}
 				case 3: case 4: case 5:
 				{
-					// Flat color.
-					shared_ptr< Point > point = points->back();
-					( *point->getColor() )[ index % 3 ] = ( float ) value / 255;
+					// Flat color case.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
-				case 6: case 7: case 8:
+				case 6: case 7:
 				{
-					// Normal.
-					shared_ptr< Point > point = points->back();
-					( *point->getNormal() )[ index % 3 ] = value;
+					// Normal case.
+					( *tempPoint->getNormal() )[ index % 3 ] = value;
+					break;
+				}
+				case 8:
+				{
+					// Last point component. Send complete point to vector.
+					( *tempPoint->getNormal() )[ index % 3 ] = ( float ) value;
+					PointVector* points = readingData->second;
+					points->push_back( make_shared< Point >( *tempPoint->getColor(), *tempPoint->getNormal(), *tempPoint->getPos() ) );
 					break;
 				}
 			}
@@ -232,16 +263,17 @@ namespace util
 		using PointVector = vector< PointPtr >;
 		
 		long propFlag;
-		void *rawPoints;
-		ply_get_argument_user_data( argument, &rawPoints, &propFlag );
-		PointVector* points = ( PointVector* ) rawPoints;
+		void *rawReadingData;
+		ply_get_argument_user_data( argument, &rawReadingData, &propFlag );
+		
+		auto readingData = ( pair< Point*, PointVector* >* ) rawReadingData;
 		
 		float value = ply_get_argument_value( argument );
 		
 		unsigned int index = propFlag & 0xF;
 		
 		CBDataHandler< Float, Vec3, Point > dataHandler;
-		dataHandler( index, value, points );
+		dataHandler( index, value, readingData );
 		
 		return 1;
 	}
