@@ -18,7 +18,7 @@ namespace util
 		TEST_F( PlyPointReaderTest, Read )
 		{
 			SimplePointReader reader;
-			reader.read( g_appPath + "/../../../src/data/tests/test.ply", SimplePointReader::SINGLE, COLORS );
+			reader.read( g_appPath + "/data/test.ply", SimplePointReader::SINGLE, COLORS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
 			Point< float, vec3 > expectedPoint0( vec3( ( float )81 / 255, ( float )63 / 255, ( float )39 / 255 ),
@@ -39,7 +39,7 @@ namespace util
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
 			SimplePointReader reader;
-			reader.read( g_appPath + "/../../../src/data/tests/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
+			reader.read( g_appPath + "/data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 			PointVector< float, vec3 > points = reader.getPoints();
 			
 			Point< float, vec3 > expectedPoint0( vec3( 11.321565, 4.658535, 7.163479 ),
@@ -60,7 +60,7 @@ namespace util
 		TEST_F( PlyPointReaderTest, ReadExtendedPoints )
 		{
 			ExtendedPointReader reader;
-			reader.read( g_appPath + "/../../../src/data/tests/test_extended_points.ply",
+			reader.read( g_appPath + "/data/test_extended_points.ply",
 						 ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 			ExtendedPointVector< float, vec3 > points = reader.getPoints();
 			

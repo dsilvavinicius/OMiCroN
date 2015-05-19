@@ -35,3 +35,17 @@ target_link_libraries (Tests Point_Based_Renderer_Lib
 	gtest
 	gtest_main
 	pthread)
+
+# .ply files copy target.
+add_custom_target( TestsCopy )
+get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
+get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
+
+message( "${Renderer_Location}" )
+message( "${CMAKE_CURRENT_SOURCE_DIR}" )
+
+add_custom_command( TARGET TestsCopy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data
+	${Renderer_Dir}/test/data )
+	
+add_dependencies( Tests TestsCopy )

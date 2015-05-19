@@ -2,6 +2,8 @@
 
 #include "OutOfCoreOctree.h"
 
+extern "C" string g_appPath;
+
 namespace model
 {
 	namespace test
@@ -16,6 +18,7 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, Hierarchy )
 		{
 			ShallowOutOfCoreOctree< float, vec3, Point< float, vec3 > > octree( 1, 10 );
+			octree.buildFromFile( g_appPath + "/data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 		}
 	}
 }

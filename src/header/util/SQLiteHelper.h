@@ -4,7 +4,7 @@
 namespace util
 {
 	/** Class with methods to ease SQLite usage. */
-	class SQLiteHelper
+	struct SQLiteHelper
 	{
 		/** Calls a SQLite function, checking the return code and throwing an runtime_error whenever appropriate. */
 		static void safeCall( function< int() > sqliteFunc )

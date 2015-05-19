@@ -7,10 +7,6 @@
 
 namespace util
 {
-	/** RPly vertex callback. */
-	template< typename Float, typename Vec3, typename Point >
-	int vertexOutOfCoreCB( p_ply_argument argument );
-	
 	template< typename Float, typename Vec3, typename Point >
 	class OutOfCorePlyPointReader
 	: public PlyPointReader< Float, Vec3, Point >
@@ -18,26 +14,21 @@ namespace util
 		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
 	public:
 		/** @param database is the SQLite database where the points table will be created and the points will be added. */
-		OutOfCorePlyPointReader( const string& fileName, Precision precision, Attributes attribs, sqlite3* database );
+		OutOfCorePlyPointReader( sqlite3* database );
+		~OutOfCorePlyPointReader();
 	
 	protected:
-		void setVertexCB( p_ply ply, string propName, const unsigned int propIndex, Precision precision ) override;
+		int doRead( p_ply& ply, const typename PlyPointReader::Precision& precision, const bool& colorsNeeded,
+					const bool& normalsNeeded ) override;
 		
-	private:
-		/** Temp point used to hold intermediary incomplete data before sending it to database. */
-		Point m_tempPoint;
+		static int vertexCB( p_ply_argument argument );
 		
-		/** Point insertion statement. */
-		sqlite3_stmt* m_pointInsertion;
-		
-		/** Data needed while reading points, in order to fill the database. */
-		pair< Point*, sqlite3_stmt* > m_readingNeededData;
+		sqlite3_stmt* m_pointInsertionStmt;
 	};
 	
 	template< typename Float, typename Vec3, typename Point >
-	OutOfCorePlyPointReader::OutOfCorePlyPointReader( const string& fileName, Precision precision, Attributes attribs,
-													  sqlite3* database )
-	: PlyPointReader( fileName, precision, attribs )
+	OutOfCorePlyPointReader< Float, Vec3, Point >::OutOfCorePlyPointReader( sqlite3* database )
+	: PlyPointReader()
 	{
 		sqlite3_stmt* creationStmt;
 		SQLiteHelper::safeCall(
@@ -58,72 +49,112 @@ namespace util
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-				return sqlite3_prepare_v2( database, "INSERT INTO Points( Point ) VALUES ( ? )\0", -1, &m_pointInsertion,
-										   NULL );
+				return sqlite3_prepare_v2( database, "INSERT INTO Points( Point ) VALUES ( ? )\0", -1,
+										   &m_pointInsertionStmt, NULL );
 			}
 		);
-		
-		m_readingNeededData.first = &m_tempPoint;
-		m_readingNeededData.second = m_pointInsertion;
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
 	}
 	
 	template< typename Float, typename Vec3, typename Point >
-	void OutOfCorePlyPointReader::setVertexCB( p_ply ply, string propName, const unsigned int propIndex,
-											   Precision precision )
+	OutOfCorePlyPointReader< Float, Vec3, Point >::~OutOfCorePlyPointReader()
 	{
-		unsigned int propFlag = propIndex | ( precision << 4 );
-		pair< Point*, sqlite3_stmt* > readingNeededData( m_tempPoint, m_pointInsertion );
-		ply_set_read_cb( ply, "vertex", propName.c_str(), vertexOutOfCoreCB< Float, Vec3, Point >, &m_readingNeededData,
-						 propFlag );
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( m_pointInsertionStmt ); } );
 	}
+	
+	template< typename Float, typename Vec3, typename Point >
+	int OutOfCorePlyPointReader< Float, Vec3, Point >::doRead( p_ply& ply, const typename PlyPointReader::Precision& precision,
+															   const bool& colorsNeeded, const bool& normalsNeeded )
+	{
+		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
+		Point tempPoint;
+		pair< Point*, sqlite3_stmt* > cbNeededData( &tempPoint, m_pointInsertionStmt );
+		
+		ply_set_read_cb( ply, "vertex", "x", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 0, precision ) );
+		ply_set_read_cb( ply, "vertex", "y", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 1, precision ) );
+		ply_set_read_cb( ply, "vertex", "z", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 2, precision ) );
+		
+		if( colorsNeeded )
+		{
+			ply_set_read_cb( ply, "vertex", "red", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 3, precision ) );
+			ply_set_read_cb( ply, "vertex", "green", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 4, precision ) );
+			ply_set_read_cb( ply, "vertex", "blue", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 5, precision ) );
+		}
+		
+		if( normalsNeeded )
+		{
+			ply_set_read_cb( ply, "vertex", "nx", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 6, precision ) );
+			ply_set_read_cb( ply, "vertex", "ny", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 7, precision ) );
+			ply_set_read_cb( ply, "vertex", "nz", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 8, precision ) );
+		}
+		
+		return ply_read( ply );
+	}
+	
+	/** Base to structs that handle callback data. Defines final destination in a database. */
+	template< typename Float, typename Vec3, typename Point >
+	struct OutOfCoreCBDataHandlerBase
+	{
+		/** Inserts the point into its final destination. */
+		void insertPoint( sqlite3_stmt* insertionStmt, const Point& point )
+		{
+			const void* blob = &point;
+			SQLiteHelper::safeCall(
+				[ & ]
+				{
+					return sqlite3_bind_blob( insertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC );
+				}
+			);
+			SQLiteHelper::safeCall(
+				[ & ]
+				{	
+					return sqlite3_step( insertionStmt );
+				}
+			);
+		}
+	};
 	
 	template< typename Float, typename Vec3, typename Point >
 	struct OutOfCoreCBDataHandler
+	: public OutOfCoreCBDataHandlerBase< Float, Vec3, Point >
 	{
+		using CBDataHandlerBase = util::OutOfCoreCBDataHandlerBase< Float, Vec3, Point >;
+		
 		void operator()( const unsigned int& index, const float& value, pair< Point*, sqlite3_stmt* >* neededData )
 		{
+			Point* tempPoint = neededData->first;
+			
 			switch( index )
 			{
 				case 0: case 1: case 2:
 				{
-					Point* point = neededData->first;
-					( *point->getPos()[ index ] ) = value;
+					( *tempPoint->getPos() )[ index ] = value;
 					break;
 				}
 				case 3: case 4:
 				{
 					// Flat color case.
-					Point* point = neededData->first;
-					( *point->getColor() )[ index % 3 ] = ( float ) value / 255;
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
 				case 5:
 				{
 					// Last point component. Send complete point to database.
-					Point* point = neededData->first;
-					( *point->getColor() )[ index % 3 ] = ( float ) value / 255;
-					
-					sqlite3_stmt* insertionStmt = neededData->second;
-					void* blob = point;
-					sqlite3_bind_blob( insertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC );
-					sqlite3_step( insertionStmt );
-					
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
+					CBDataHandlerBase::insertPoint( neededData->second, *tempPoint );
 					break;
 				}
 				case 6: case 7:
 				{
 					// Normal case.
-					Point* point = neededData->first;
-					( *point->getColor() )[ index % 3 ] = value;
+					( *tempPoint->getColor() )[ index % 3 ] = value;
 					break;
 				}
 				case 8:
 				{
 					// Last point component. Send complete point to database.
-					Point* point = neededData->first;
-					( *point->getColor() )[ index % 3 ] = value;
-					
-					
+					( *tempPoint->getColor() )[ index % 3 ] = value;
+					CBDataHandlerBase::insertPoint( neededData->second, *tempPoint );
 					break;
 				}
 			}
@@ -133,34 +164,37 @@ namespace util
 	template< typename Float, typename Vec3 >
 	struct OutOfCoreCBDataHandler< Float, Vec3, ExtendedPoint< Float,Vec3 > >
 	{
+		using Point = ExtendedPoint< Float, Vec3 >;
+		using CBDataHandlerBase = util::OutOfCoreCBDataHandlerBase< Float, Vec3, Point >;
+		
 		void operator()( const unsigned int& index, const float& value, pair< Point*, sqlite3_stmt* >* neededData )
 		{
+			Point* tempPoint = neededData->first;
+			
 			switch( index )
 			{
-				case 0:
+				case 0: case 1: case 2:
 				{
-					auto point = make_shared< Point >( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ), vec3( value, 0.f, 0.f ) );
-					points->push_back( point );
-					break;
-				}
-				case 1: case 2:
-				{
-					shared_ptr< Point > point = points->back();
-					( *point->getPos() )[ index ] = value;
+					( *tempPoint->getPos() )[ index ] = value;
 					break;
 				}
 				case 3: case 4: case 5:
 				{
-					// Flat color.
-					shared_ptr< Point > point = points->back();
-					( *point->getColor() )[ index % 3 ] = ( float ) value / 255;
+					// Flat color case.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
-				case 6: case 7: case 8:
+				case 6: case 7:
 				{
-					// Normal.
-					shared_ptr< Point > point = points->back();
-					( *point->getNormal() )[ index % 3 ] = value;
+					// Normal case.
+					( *tempPoint->getNormal() )[ index % 3 ] = value;
+					break;
+				}
+				case 8:
+				{
+					// Last point component. Send complete point to vector.
+					( *tempPoint->getNormal() )[ index % 3 ] = ( float ) value;
+					CBDataHandlerBase::insertPoint( neededData->second, *tempPoint );
 					break;
 				}
 			}
@@ -169,7 +203,7 @@ namespace util
 	
 	/** RPly vertex callback. */
 	template< typename Float, typename Vec3, typename Point >
-	int vertexOutOfCoreCB( p_ply_argument argument )
+	int OutOfCorePlyPointReader< Float, Vec3, Point >::vertexCB( p_ply_argument argument )
 	{
 		long propFlag;
 		void *rawNeededData;
