@@ -30,30 +30,16 @@ namespace util
 	OutOfCorePlyPointReader< Float, Vec3, Point >::OutOfCorePlyPointReader( sqlite3* database )
 	: PlyPointReader()
 	{
-		sqlite3_stmt* creationStmt;
+		cout << "Before creating point insertion stmt." << endl;
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-			return sqlite3_prepare_v2( 	database,
-										"CREATE TABLE Points ("
-											"Id INT NOT NULL PRIMARY KEY AUTOINCREMENT,"
-											"Point BLOB"
-										");\0",
-										-1, &creationStmt, NULL
-									);
-			}
-		);
-		SQLiteHelper::safeCall( [ & ] () { return sqlite3_step( creationStmt ); } );
-		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
-										
-		SQLiteHelper::safeCall(
-			[ & ] ()
-			{
-				return sqlite3_prepare_v2( database, "INSERT INTO Points( Point ) VALUES ( ? )\0", -1,
+				return sqlite3_prepare_v2( database, "INSERT INTO Points( Point ) VALUES ( ? );", -1,
 										   &m_pointInsertionStmt, NULL );
 			}
 		);
-		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
+		
+		cout << "After creating point insertion stmt." << endl;
 	}
 	
 	template< typename Float, typename Vec3, typename Point >
@@ -105,12 +91,7 @@ namespace util
 					return sqlite3_bind_blob( insertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC );
 				}
 			);
-			SQLiteHelper::safeCall(
-				[ & ]
-				{	
-					return sqlite3_step( insertionStmt );
-				}
-			);
+			SQLiteHelper::safeStep( [ & ] { return sqlite3_step( insertionStmt ); } );
 		}
 	};
 	

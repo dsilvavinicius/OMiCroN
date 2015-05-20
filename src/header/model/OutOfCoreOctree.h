@@ -43,57 +43,104 @@ namespace model
 	OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel )
 	: ParentOctree( maxPointsPerNode, maxLevel )
 	{
+		cout << "Before creating db." << endl;
+		
 		// Creating database, hierarchy and point tables.
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-				return sqlite3_open_v2( "Octree", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
+				return sqlite3_open_v2( "Octree.db", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
 										NULL );
 				
 			}
 		);
 		
 		sqlite3_stmt* creationStmt;
+		
+		cout << "Before dropping point table" << endl;
+		
+		SQLiteHelper::safeCall(
+			[ & ] () { return sqlite3_prepare_v2( m_db, "DROP TABLE IF EXISTS Points;", -1, &creationStmt, NULL ); }
+		);
+		SQLiteHelper::safeStep( [ & ] () { return sqlite3_step( creationStmt ); } );
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
+		
+		cout << "Before creating point table" << endl;
+		
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-			return sqlite3_prepare_v2( m_db,
-										"CREATE TABLE Nodes ("
-											"Morton INT NOT NULL PRIMARY KEY,"
-											"Node BLOB"
-										");\0",
+			return sqlite3_prepare_v2( 	m_db,
+										"CREATE TABLE IF NOT EXISTS Points ("
+											"Id INTEGER PRIMARY KEY AUTOINCREMENT,"
+											"Point BLOB"
+										");",
 										-1, &creationStmt, NULL
 									);
 			}
 		);
-		SQLiteHelper::safeCall( [ & ] () { return sqlite3_step( creationStmt ); } );
+		SQLiteHelper::safeStep( [ & ] () { return sqlite3_step( creationStmt ); } );
 		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
+		
+		cout << "Before dropping node table" << endl;
+		
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_prepare_v2( m_db, "DROP TABLE IF EXISTS Nodes;", -1, &creationStmt, NULL);
+			}
+		);
+		SQLiteHelper::safeStep( [ & ] () { return sqlite3_step( creationStmt ); } );
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
+		
+		cout << "Before creating node table." << endl;
+		
+		SQLiteHelper::safeCall(
+			[ & ] ()
+			{
+				return sqlite3_prepare_v2( m_db,
+										   "CREATE TABLE IF NOT EXISTS Nodes(Morton INTEGER PRIMARY KEY, Node BLOLB);", -1,
+										   &creationStmt, NULL);
+			}
+		);
+		SQLiteHelper::safeStep( [ & ] () { return sqlite3_step( creationStmt ); } );
+		SQLiteHelper::safeCall( [ & ] () { return sqlite3_finalize( creationStmt ); } );
+		
+		cout << "Before creating insert stmt0." << endl;
 		
 		// Creating insertion statements.
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-				return sqlite3_prepare_v2( m_db, "INSERT INTO Nodes VALUES ( ?, ? )\0", -1, &m_nodeInsertion, NULL );
+				return sqlite3_prepare_v2( m_db, "INSERT INTO Nodes VALUES ( ?, ? );", -1, &m_nodeInsertion, NULL );
 			}
 		);
+		
+		cout << "Before creating insert stmt1." << endl;
 		
 		// Creating queries.
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-				return sqlite3_prepare_v2( m_db, "SELECT Point FROM Points WHERE Id = ?\0", -1, &m_pointQuery, NULL );
+				return sqlite3_prepare_v2( m_db, "SELECT Point FROM Points WHERE Id = ?;", -1, &m_pointQuery, NULL );
 			}
 		);
+		
+		cout << "Before creating selection stmt0." << endl;
+		
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-				return sqlite3_prepare_v2( m_db, "SELECT Node FROM Nodes WHERE Morton = ?\0", -1, &m_nodeQuery, NULL );
+				return sqlite3_prepare_v2( m_db, "SELECT Node FROM Nodes WHERE Morton = ?;", -1, &m_nodeQuery, NULL );
 			}
 		);
+		
+		cout << "Before creating selection stmt1." << endl;
+		
 		SQLiteHelper::safeCall(
 			[ & ] ()
 			{
-				return sqlite3_prepare_v2( m_db, "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?\0", -1,
+				return sqlite3_prepare_v2( m_db, "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", -1,
 										   &m_nodeIntervalQuery, NULL );
 			}
 		);
