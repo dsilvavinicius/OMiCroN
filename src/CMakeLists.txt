@@ -9,13 +9,16 @@ project (Point_Based_Renderer)
 # Setups the given package, trying to find it and sets includes and linking directories.
 macro (setup_package package)
 	find_package (${package} REQUIRED)
-	include_directories (${${package}_INCLUDE_DIRS})
-	link_directories(${${package}_LIBRARY_DIRS})
-	add_definitions(${${package}_DEFINITIONS})
 	
-	if(NOT ${package}_FOUND)
-		message(Error "${package} not found")
-	endif(NOT ${package}_FOUND)
+	string(TOUPPER "${package}" up_package)
+	
+	include_directories (${${up_package}_INCLUDE_DIRS})
+	link_directories(${${up_package}_LIBRARY_DIRS})
+	add_definitions(${${up_package}_DEFINITIONS})
+	
+	if(NOT ${up_package}_FOUND)
+		message(WARNING "${up_package} not found")
+	endif(NOT ${up_package}_FOUND)
 endmacro (setup_package)
 
 # Creates the same source groups for library and tests.
@@ -53,6 +56,8 @@ create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 setup_package(OpenGL)
 setup_package(GLM)
 setup_package(GLEW)
+setup_package(Eigen3)
+setup_package(SQLite3)
 
 # Set Qt dirs.
 find_package (Qt5Core REQUIRED)
@@ -60,7 +65,6 @@ find_package (Qt5Gui REQUIRED)
 find_package (Qt5Widgets REQUIRED)
 find_package (Qt53D REQUIRED)
 find_package (Qt5Sql REQUIRED)
-find_package (Eigen3 REQUIRED)
 
 set (RPLY_DIR "lib/rply")
 set (JUMP_FLOODING_DIR "lib/jf-pbr")
@@ -113,14 +117,15 @@ add_library (Point_Based_Renderer_Lib
     ${JUMP_FLOODING_DIR}/point_model.hpp	${JUMP_FLOODING_DIR}/point_model.cpp 
     ${JUMP_FLOODING_DIR}/bin.cpp )
 
-# Qt 5 modules.
-target_link_libraries (Point_Based_Renderer_Lib Qt5::Core
+# Link all necessary libs.
+target_link_libraries (Point_Based_Renderer_Lib
+	Qt5::Core
 	Qt5::Gui
 	Qt5::Widgets
 	Qt5::3D
 	Qt5::Sql
+	${SQLITE3_LIBRARIES}
 	${OPENGL_LIBRARIES}
-	${GLML_LIBRARIES}
 	${GLEW_LIBRARIES}
 	RPly)
 
