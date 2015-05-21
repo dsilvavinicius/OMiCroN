@@ -44,7 +44,7 @@ namespace model
 		friend Point< F, V > operator+( Point< F, V >&& left, Point< F, V >&& right );
 		
 		template < typename F, typename V >
-		friend ostream& operator<< ( ostream &out, Point< F, V > &point );
+		friend ostream& operator<< ( ostream &out, const Point< F, V >& point );
 		
 	protected:
 		shared_ptr< Vec3 > m_color;
@@ -122,7 +122,7 @@ namespace model
 	}
 	
 	template < typename Float, typename Vec3 >
-	ostream& operator<< ( ostream &out, Point< Float, Vec3 > &point )
+	ostream& operator<< ( ostream &out, const Point< Float, Vec3 > &point )
 	{
 		Vec3 pos = *point.m_pos;
 		Vec3 color = *point.m_color;
