@@ -17,8 +17,14 @@ namespace model
 		
 		TEST_F( OutOfCoreOctreeTest, Creation )
 		{
-			ShallowOutOfCoreOctree< float, vec3, Point< float, vec3 > > octree( 1, 10 );
+			using Point = Point< float, vec3 >;
+			
+			ShallowOutOfCoreOctree< float, vec3, Point>  octree( 1, 10 );
 			octree.buildFromFile( g_appPath + "/data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
+			
+			SQLiteManager< Point >& sqLite = octree.getSQLiteManager();
+			Point p = sqLite.getPoint( 1 );
+			cout << "Point at 0: " << p << endl;
 		}
 	}
 }

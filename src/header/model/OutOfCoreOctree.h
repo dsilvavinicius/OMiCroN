@@ -26,6 +26,7 @@ namespace model
 		
 		void buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision, const Attributes& attribs ) override;
 		
+		SQLiteManager& getSQLiteManager() { return m_sqLite; }
 	private:
 		SQLiteManager m_sqLite;
 	};

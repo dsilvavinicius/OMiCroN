@@ -19,6 +19,7 @@ namespace util
 		~SQLiteManager();
 		
 		void insertPoint( const Point& point );
+		Point getPoint( const sqlite3_uint64& index );
 		
 	private:
 		/** Release all acquired resources. */
@@ -42,8 +43,9 @@ namespace util
 		/** Calls sqlite3_prepare_v2 unsafely. */
 		void unsafePrepare( const char* stringStmt, sqlite3_stmt** stmt );
 		
-		/** Calls sqlite3_step function safely. */
-		void safeStep( sqlite3_stmt* statement );
+		/** Calls sqlite3_step function safely.
+		 *  @returns true if a row was found, false otherwise.*/
+		bool safeStep( sqlite3_stmt* statement );
 		
 		/** Calls sqlite3_step function unsafely. */
 		void unsafeStep( sqlite3_stmt* statement );
@@ -53,6 +55,9 @@ namespace util
 		
 		/** Safe finalizes an sqlite3_stmt. */
 		void unsafeFinalize( sqlite3_stmt* statement );
+		
+		/** Resets a prepared sqlite3_stmt. */
+		void safeReset( sqlite3_stmt* statement );
 		
 		sqlite3* m_db;
 		
@@ -73,8 +78,6 @@ namespace util
 	m_nodeQuery( nullptr ),
 	m_nodeIntervalQuery( nullptr )
 	{
-		cout << "Before creating db." << endl;
-		
 		checkReturnCode(
 			sqlite3_open_v2( "Octree.db", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL ),
 			SQLITE_OK
@@ -93,20 +96,30 @@ namespace util
 	template< typename Point >
 	void SQLiteManager< Point >::insertPoint( const Point& point )
 	{
-		cout << "Inserting " << point << endl;
-			
 		const void* blob = &point;
-		checkReturnCode( sqlite3_bind_blob( m_pointInsertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC ),
-							SQLITE_OK );
+		checkReturnCode( sqlite3_bind_blob( m_pointInsertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC ), SQLITE_OK );
 		safeStep( m_pointInsertionStmt );
+		safeReset( m_pointInsertionStmt );
+	}
+	
+	template< typename Point >
+	Point SQLiteManager< Point >::getPoint( const sqlite3_uint64& index )
+	{
+		cout << "Reading point from db." << endl;
+		checkReturnCode( sqlite3_bind_int64( m_pointQuery, 1, index ), SQLITE_OK );
+		cout << "Found it? " << safeStep( m_pointQuery ) << endl;
+		const void* blob = sqlite3_column_blob( m_pointQuery, 0 );
+		Point* point = ( Point* ) blob;
+		cout << *point << endl;
+		safeReset( m_pointQuery );
+		cout << "Casting blob to Point." << endl;
+		return *point;
 	}
 	
 	template< typename Point >
 	void SQLiteManager< Point >::createTables()
 	{
 		sqlite3_stmt* creationStmt;
-		
-		cout << "Before creating point table" << endl;
 		
 		safePrepare(
 			"CREATE TABLE IF NOT EXISTS Points ("
@@ -126,8 +139,6 @@ namespace util
 	template< typename Point >
 	void SQLiteManager< Point >::dropTables()
 	{
-		cout << "Before dropping tables" << endl;
-		
 		sqlite3_stmt* dropStmt;
 		
 		unsafePrepare( "DROP TABLE IF EXISTS Points; DROP TABLE IF EXISTS Nodes;", &dropStmt );
@@ -138,32 +149,16 @@ namespace util
 	template< typename Point >
 	void SQLiteManager< Point >::createStmts()
 	{
-		cout << "Before creating point insertion stmt." << endl;
-		
 		safePrepare( "INSERT INTO Points( Point ) VALUES ( ? );", &m_pointInsertionStmt);
-		
-		cout << "Before creating node insertion stmt." << endl;
-		
 		safePrepare( "INSERT INTO Nodes VALUES ( ?, ? );", &m_nodeInsertion );
-		
-		cout << "Before creating point selection stmt." << endl;
-		
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
-		
-		cout << "Before creating node selection stmt." << endl;
-		
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
-		
-		cout << "Before creating node interval selection stmt." << endl;
-		
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
 	}
 	
 	template< typename Point >
 	void SQLiteManager< Point >::release()
 	{
-		cout << "Releasing SQLite resources." << endl;
-		
 		dropTables();
 		
 		unsafeFinalize( m_pointQuery );
@@ -199,9 +194,15 @@ namespace util
 	}
 	
 	template< typename Point >
-	inline void SQLiteManager< Point >::safeStep( sqlite3_stmt* statement )
+	inline bool SQLiteManager< Point >::safeStep( sqlite3_stmt* statement )
 	{
-		checkReturnCode( sqlite3_step( statement ), SQLITE_DONE );
+		int returnCode = sqlite3_step( statement );
+		switch( returnCode )
+		{
+			case SQLITE_ROW: return true;
+			case SQLITE_DONE: return false;
+			default: throw runtime_error( sqlite3_errstr( returnCode ) );
+		}
 	}
 	
 	template< typename Point >
@@ -226,6 +227,12 @@ namespace util
 		{
 			sqlite3_finalize( statement );
 		}
+	}
+	
+	template< typename Point >
+	inline void SQLiteManager< Point >::safeReset( sqlite3_stmt* statement )
+	{
+		checkReturnCode( sqlite3_reset( statement ), SQLITE_OK );
 	}
 }
 
