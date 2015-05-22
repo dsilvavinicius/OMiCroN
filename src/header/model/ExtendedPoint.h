@@ -18,9 +18,11 @@ namespace model
 		using Point = model::Point< Float, Vec3 >;
 	public:
 		ExtendedPoint();
-		//ExtendedPoint( const ExtendedPoint& other );
-		//ExtendedPoint& operator=( const ExtendedPoint& other );
+		ExtendedPoint( const ExtendedPoint& other );
+		ExtendedPoint& operator=( const ExtendedPoint& other );
 		ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos );
+		ExtendedPoint( ExtendedPoint&& other );
+		ExtendedPoint& operator=( ExtendedPoint&& other);
 		ExtendedPoint( byte* serialization );
 		
 		shared_ptr< Vec3 > getNormal();
@@ -59,7 +61,7 @@ namespace model
 		m_normal = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 	}
 	
-	/*template< typename Float, typename Vec3 >
+	template< typename Float, typename Vec3 >
 	ExtendedPoint< Float, Vec3 >::ExtendedPoint( const ExtendedPoint& other )
 	: ExtendedPoint( *other.m_color, *other.m_normal, *other.m_pos )
 	{}
@@ -67,18 +69,38 @@ namespace model
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 >& ExtendedPoint< Float, Vec3 >::operator=( const ExtendedPoint& other )
 	{
-		*Point< Float, Vec3 >::m_pos = *other.m_pos;
-		*Point< Float, Vec3 >::m_color = *other.m_color;
+		Point::operator=( other )
 		*m_normal = *other.m_normal;
 		
 		return *this;
-	}*/
+	}
 	
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 >::ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos )
-	: Point::Point( color, pos )
+	: Point( color, pos )
 	{
 		m_normal = make_shared< Vec3 >( normal );
+	}
+	
+	template <typename Float, typename Vec3>
+	ExtendedPoint< Float, Vec3 >::ExtendedPoint( ExtendedPoint&& other )
+	: Point( other )
+	{
+		m_normal = other.m_normal;
+		other.m_normal = nullptr;
+	}
+	
+	template <typename Float, typename Vec3>
+	ExtendedPoint< Float, Vec3 >& ExtendedPoint< Float, Vec3 >::operator=( ExtendedPoint&& other )
+	{
+		Point::operator=( other );
+		if (this!=&other)
+		{
+			m_normal = other.m_normal;
+			other.m_normal = nullptr;
+		}
+		
+		return *this;
 	}
 	
 	template <typename Float, typename Vec3>
