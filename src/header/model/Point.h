@@ -22,11 +22,15 @@ namespace model
 		//Point& operator=( const Point& other );
 		Point( const Vec3& color, const Vec3& pos );
 		
+		/** Deserialization constructor.
+		 *	@param serialization must be acquired by the serialize() method.*/
+		Point( byte* serialization );
+		
 		shared_ptr< Vec3 > getColor();
 		shared_ptr< Vec3 > getPos();
 		
 		// Comparison operators.
-		bool equal( const Point< Float, Vec3 >& other, const float& epsilon );
+		bool equal( const Point< Float, Vec3 >& other, const float& epsilon ) const;
 		
 		// Arithmetic operators.
 		Point< Float, Vec3 > multiply( const Float& multiplier ) const;
@@ -45,6 +49,11 @@ namespace model
 		
 		template < typename F, typename V >
 		friend ostream& operator<< ( ostream &out, const Point< F, V >& point );
+		
+		/** Serializes the point. The caller is responsible to delete the memory.
+		 *  @param serialization is a pointer that will have the byte array at method return.
+		 *  @returns the size of the byte array. */
+		size_t serialize( byte** serialization ) const;
 		
 	protected:
 		shared_ptr< Vec3 > m_color;
@@ -80,13 +89,26 @@ namespace model
 	}
 	
 	template <typename Float, typename Vec3>
+	Point< Float, Vec3 >::Point( byte* serialization )
+	{
+		size_t sizeOfVec3 = sizeof( Vec3 );
+		Vec3 color;
+		memcpy( &color, serialization, sizeOfVec3 );
+		Vec3 pos;
+		memcpy( &pos, serialization + sizeOfVec3, sizeOfVec3 );
+		
+		m_color = make_shared< Vec3 >( color );
+		m_pos = make_shared< Vec3 >( pos );
+	}
+	
+	template <typename Float, typename Vec3>
 	shared_ptr< Vec3 > Point< Float, Vec3 >::getColor() { return m_color; }
 	
 	template <typename Float, typename Vec3>
 	shared_ptr< Vec3 > Point< Float, Vec3 >::getPos() { return m_pos; }
 	
 	template <typename Float, typename Vec3>
-	bool Point< Float, Vec3 >::equal( const Point< Float, Vec3 >& other, const float& epsilon )
+	bool Point< Float, Vec3 >::equal( const Point< Float, Vec3 >& other, const float& epsilon ) const
 	{
 		return 	glm::distance2( *m_color, *other.m_color ) < epsilon && glm::distance2( *m_pos, *other.m_pos ) < epsilon;
 	}
@@ -132,6 +154,19 @@ namespace model
 			<< "pos = " << glm::to_string( pos ) << endl;
 			
 		return out;
+	}
+	
+	template < typename Float, typename Vec3 >
+	size_t Point< Float, Vec3 >::serialize( byte** serialization ) const
+	{
+		size_t sizeOfVec3 = sizeof( Vec3 );
+		size_t sizeOfPoint = 2 * sizeOfVec3;
+		
+		*serialization = new byte[ sizeOfPoint ];
+		memcpy( *serialization, &( *m_color ) ,sizeOfVec3 );
+		memcpy( *serialization + sizeOfVec3, &( *m_pos ), sizeOfVec3 );
+		
+		return sizeOfPoint;
 	}
 	
 	//===========

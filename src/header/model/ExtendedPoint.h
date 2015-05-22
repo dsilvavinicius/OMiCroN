@@ -15,16 +15,18 @@ namespace model
 	template< typename Float, typename Vec3 >
 	class ExtendedPoint : public Point< Float, Vec3 >
 	{
+		using Point = model::Point< Float, Vec3 >;
 	public:
 		ExtendedPoint();
 		//ExtendedPoint( const ExtendedPoint& other );
 		//ExtendedPoint& operator=( const ExtendedPoint& other );
 		ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos );
+		ExtendedPoint( byte* serialization );
 		
 		shared_ptr< Vec3 > getNormal();
 		
 		// Comparison operators.
-		bool equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon );
+		bool equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon ) const;
 		
 		// Arithmetic operators.
 		ExtendedPoint< Float, Vec3 > multiply( const Float& multiplier ) const;
@@ -44,13 +46,15 @@ namespace model
 		template< typename F, typename V >
 		friend ostream& operator<<( ostream &out, const ExtendedPoint< F, V >& point );
 		
+		size_t serialize( byte** serialization ) const;
+		
 	protected:
 		shared_ptr< Vec3 > m_normal;
 	};
 	
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 >::ExtendedPoint()
-	: Point< Float, Vec3 >::Point()
+	: Point::Point()
 	{
 		m_normal = make_shared< Vec3 >( Vec3( 0, 0, 0 ) );
 	}
@@ -72,8 +76,19 @@ namespace model
 	
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 >::ExtendedPoint( const Vec3& color, const Vec3& normal, const Vec3& pos )
-	: Point< Float, Vec3 >::Point( color, pos )
+	: Point::Point( color, pos )
 	{
+		m_normal = make_shared< Vec3 >( normal );
+	}
+	
+	template <typename Float, typename Vec3>
+	ExtendedPoint< Float, Vec3 >::ExtendedPoint( byte* serialization )
+	: Point::Point( serialization )
+	{
+		size_t sizeOfVec3 = sizeof( Vec3 );
+		Vec3 normal;
+		memcpy( &normal, serialization + 2 * sizeOfVec3, sizeOfVec3 );
+		
 		m_normal = make_shared< Vec3 >( normal );
 	}
 	
@@ -81,16 +96,16 @@ namespace model
 	shared_ptr< Vec3 > ExtendedPoint< Float, Vec3 >::getNormal() { return m_normal; }
 	
 	template <typename Float, typename Vec3>
-	bool ExtendedPoint< Float, Vec3 >::equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon )
+	bool ExtendedPoint< Float, Vec3 >::equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon ) const
 	{
-		return Point< Float, Vec3 >::equal( other, epsilon ) && glm::distance2( *m_normal, *other.m_normal ) < epsilon;
+		return Point::equal( other, epsilon ) && glm::distance2( *m_normal, *other.m_normal ) < epsilon;
 	}
 	
 	template <typename Float, typename Vec3>
 	ExtendedPoint< Float, Vec3 > ExtendedPoint< Float, Vec3 >::multiply( const Float& multiplier ) const
 	{
-		return ExtendedPoint< Float, Vec3 >( *Point< Float, Vec3 >::m_color * multiplier, *m_normal * multiplier,
-											 *Point< Float, Vec3 >::m_pos * multiplier );
+		return ExtendedPoint< Float, Vec3 >( *Point::m_color * multiplier, *m_normal * multiplier,
+											 *Point::m_pos * multiplier );
 	}
 	
 	template < typename Float, typename Vec3 >
@@ -135,6 +150,20 @@ namespace model
 			<< "normal = " << glm::to_string( normal ) << endl;
 			
 		return out;
+	}
+	
+	template < typename Float, typename Vec3 >
+	size_t ExtendedPoint< Float, Vec3 >::serialize( byte** serialization ) const
+	{
+		size_t sizeOfVec3 = sizeof( Vec3 );
+		size_t sizeOfPoint = 3 * sizeOfVec3;
+		
+		*serialization = new byte[ sizeOfPoint ];
+		memcpy( *serialization, &( *Point::m_color ) ,sizeOfVec3 );
+		memcpy( *serialization + sizeOfVec3, &( *Point::m_pos ), sizeOfVec3 );
+		memcpy( *serialization + 2 * sizeOfVec3, &( *m_normal ), sizeOfVec3 );
+		
+		return sizeOfPoint;
 	}
 	
 	//===========

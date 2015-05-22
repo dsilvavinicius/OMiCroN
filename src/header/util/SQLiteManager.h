@@ -96,24 +96,27 @@ namespace util
 	template< typename Point >
 	void SQLiteManager< Point >::insertPoint( const Point& point )
 	{
-		const void* blob = &point;
-		checkReturnCode( sqlite3_bind_blob( m_pointInsertionStmt, 1, blob, sizeof( Point ), SQLITE_STATIC ), SQLITE_OK );
+		byte* serialization;
+		size_t blobSize = point.serialize( &serialization );
+		
+		checkReturnCode( sqlite3_bind_blob( m_pointInsertionStmt, 1, serialization, blobSize, SQLITE_STATIC ), SQLITE_OK );
 		safeStep( m_pointInsertionStmt );
 		safeReset( m_pointInsertionStmt );
+		
+		delete[] serialization;
 	}
 	
 	template< typename Point >
 	Point SQLiteManager< Point >::getPoint( const sqlite3_uint64& index )
 	{
-		cout << "Reading point from db." << endl;
 		checkReturnCode( sqlite3_bind_int64( m_pointQuery, 1, index ), SQLITE_OK );
-		cout << "Found it? " << safeStep( m_pointQuery ) << endl;
-		const void* blob = sqlite3_column_blob( m_pointQuery, 0 );
-		Point* point = ( Point* ) blob;
-		cout << *point << endl;
+		safeStep( m_pointQuery );
+		
+		byte* blob = ( byte* ) sqlite3_column_blob( m_pointQuery, 0 );
+		Point point( blob );
 		safeReset( m_pointQuery );
-		cout << "Casting blob to Point." << endl;
-		return *point;
+		
+		return point;
 	}
 	
 	template< typename Point >
