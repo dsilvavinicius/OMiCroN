@@ -96,7 +96,6 @@ namespace util
 	template< typename Point >
 	void SQLiteManager< Point >::insertPoint( const Point& point )
 	{
-		cout << "Inserting point." << endl;
 		byte* serialization;
 		size_t blobSize = point.serialize( &serialization );
 		
@@ -105,14 +104,11 @@ namespace util
 		safeReset( m_pointInsertionStmt );
 		
 		delete[] serialization;
-		
-		cout << "Ending point insertion." << endl;
 	}
 	
 	template< typename Point >
 	Point SQLiteManager< Point >::getPoint( const sqlite3_uint64& index )
 	{
-		cout << "Getting point." << endl;
 		checkReturnCode( sqlite3_bind_int64( m_pointQuery, 1, index ), SQLITE_OK );
 		safeStep( m_pointQuery );
 		
@@ -120,14 +116,12 @@ namespace util
 		Point point( blob );
 		safeReset( m_pointQuery );
 		
-		cout << "Returning point." << endl;
 		return point;
 	}
 	
 	template< typename Point >
 	void SQLiteManager< Point >::createTables()
 	{
-		cout << "Creating tables." << endl;
 		sqlite3_stmt* creationStmt;
 		
 		safePrepare(
@@ -149,8 +143,6 @@ namespace util
 		);
 		safeStep( creationStmt );
 		safeFinalize( creationStmt );
-		
-		cout << "Ending table creation." << endl;
 	}
 	
 	template< typename Point >
@@ -170,18 +162,11 @@ namespace util
 	template< typename Point >
 	void SQLiteManager< Point >::createStmts()
 	{
-		cout << "Creating statements" << endl;
-		cout << "Point insertion" << endl;
 		safePrepare( "INSERT INTO Points( Point ) VALUES ( ? );", &m_pointInsertionStmt);
-		cout << "Node insertion" << endl;
 		safePrepare( "INSERT INTO Nodes VALUES ( ?, ? );", &m_nodeInsertion );
-		cout << "Point selection" << endl;
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
-		cout << "Node selection" << endl;
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
-		cout << "Node interval selection" << endl;
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
-		cout << "Ending statement creation." << endl;
 	}
 	
 	template< typename Point >

@@ -17,6 +17,8 @@ namespace model
 	class OutOfCoreOctree
 	: public FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
 	{
+		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr >;
 		using PlyPointReader = OutOfCorePlyPointReader< Float, Vec3, Point >;
 		using SQLiteManager = util::SQLiteManager< Point >;
 		using ParentOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >;
@@ -24,10 +26,26 @@ namespace model
 	public:
 		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
-		void buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision, const Attributes& attribs ) override;
+		virtual void build( PointVector& points ) override;
+		
+		/** Builds octree using the database. */
+		virtual void build();
+		
+		virtual void buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
+									const Attributes& attribs ) override;
 		
 		SQLiteManager& getSQLiteManager() { return m_sqLite; }
-	private:
+	
+	protected:
+		virtual void buildBoundaries( const PointVector& points ) override;
+		
+		/** Build boundaries using the database. */
+		virtual void buildBoundaries();
+		
+		virtual void buildNodes( PointVector& points ) override;
+		
+		virtual void buildLeaves( const PointVector& points ) override;
+		
 		SQLiteManager m_sqLite;
 	};
 	
@@ -41,9 +59,33 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision, const Attributes& attribs )
+	::build( PointVector& points )
 	{
-		auto *reader = new PlyPointReader( m_sqLite );
+		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile or another non out of core octree"
+							"implementation" );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::build()
+	{
+		buildBoundaries();
+		//buildNodes();
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
+					 const Attributes& attribs )
+	{
+		auto *reader = new PlyPointReader(
+			[ & ]( const Point& point )
+			{
+				m_sqLite.insertPoint( point );
+			}
+		);
 		reader->read( plyFileName, precision, attribs );
 		
 		cout << "After reading points" << endl << endl;
@@ -52,7 +94,42 @@ namespace model
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
 		
-		//build( points );
+		//build();
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::buildBoundaries( const PointVector& points )
+	{
+		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. Use buildBoundaries() to take into consideration"
+							" the database or another non out of core octree implementation" );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::buildBoundaries()
+	{
+		
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::buildNodes( PointVector& points )
+	{
+		throw logic_error(  "buildNodes( PointVector& ) is unsuported. Use ***() to take into consideration"
+							" the database or another non out of core octree implementation" );
+	}
+		
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::buildLeaves( const PointVector& points )
+	{
+		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. Use ***() to take into consideration"
+							" the database or another non out of core octree implementation" );
 	}
 	
 	// ====================== Type Sugar ================================ /

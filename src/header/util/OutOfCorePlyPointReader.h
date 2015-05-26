@@ -15,7 +15,7 @@ namespace util
 		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
 		using SQLiteManager = util::SQLiteManager< Point >;
 	public:
-		OutOfCorePlyPointReader( SQLiteManager& sqLite );
+		OutOfCorePlyPointReader( const function< void( const Point& ) >& onPointDone );
 	
 	protected:
 		int doRead( p_ply& ply, const typename PlyPointReader::Precision& precision, const bool& colorsNeeded,
@@ -24,13 +24,14 @@ namespace util
 		static int vertexCB( p_ply_argument argument );
 	
 	private:
-		SQLiteManager& m_sqLite;
+		function< void( const Point& ) > m_onPointDone;
 	};
 	
 	template< typename Float, typename Vec3, typename Point >
-	OutOfCorePlyPointReader< Float, Vec3, Point >::OutOfCorePlyPointReader( SQLiteManager& sqLite )
+	OutOfCorePlyPointReader< Float, Vec3, Point >
+	::OutOfCorePlyPointReader( const function< void( const Point& ) >& onPointDone )
 	: PlyPointReader(),
-	m_sqLite( sqLite )
+	m_onPointDone( onPointDone )
 	{}
 	
 	template< typename Float, typename Vec3, typename Point >
@@ -39,7 +40,7 @@ namespace util
 	{
 		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
 		Point tempPoint;
-		pair< Point*, SQLiteManager* > cbNeededData( &tempPoint, &m_sqLite );
+		pair< Point*, function< void( const Point& ) >* > cbNeededData( &tempPoint, &m_onPointDone );
 		
 		ply_set_read_cb( ply, "vertex", "x", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 0, precision ) );
 		ply_set_read_cb( ply, "vertex", "y", OutOfCorePlyPointReader::vertexCB, &cbNeededData, PlyPointReader::getPropFlag( 1, precision ) );
@@ -67,7 +68,8 @@ namespace util
 	{
 		using SQLiteManager = util::SQLiteManager< Point >;
 		
-		void operator()( const unsigned int& index, const float& value, pair< Point*, SQLiteManager* >* neededData )
+		void operator()( const unsigned int& index, const float& value,
+						 pair< Point*, function< void( const Point& ) >* >* neededData )
 		{
 			Point* tempPoint = neededData->first;
 			
@@ -88,7 +90,7 @@ namespace util
 				{
 					// Last point component. Send complete point to database.
 					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
-					neededData->second->insertPoint( *tempPoint );
+					( *neededData->second )( *tempPoint );
 					break;
 				}
 				case 6: case 7:
@@ -101,7 +103,7 @@ namespace util
 				{
 					// Last point component. Send complete point to database.
 					( *tempPoint->getColor() )[ index % 3 ] = value;
-					neededData->second->insertPoint( *tempPoint );
+					( *neededData->second )( *tempPoint );
 					break;
 				}
 			}
@@ -114,7 +116,8 @@ namespace util
 		using Point = ExtendedPoint< Float, Vec3 >;
 		using SQLiteManager = util::SQLiteManager< Point >;
 		
-		void operator()( const unsigned int& index, const float& value, pair< Point*, SQLiteManager* >* neededData )
+		void operator()( const unsigned int& index, const float& value,
+						 pair< Point*, function< void( const Point& ) >* >* neededData )
 		{
 			Point* tempPoint = neededData->first;
 			
@@ -141,7 +144,7 @@ namespace util
 				{
 					// Last point component. Send complete point to vector.
 					( *tempPoint->getNormal() )[ index % 3 ] = ( float ) value;
-					neededData->second->insertPoint( *tempPoint );
+					( *neededData->second )( *tempPoint );
 					break;
 				}
 			}
@@ -155,7 +158,7 @@ namespace util
 		long propFlag;
 		void *rawNeededData;
 		ply_get_argument_user_data( argument, &rawNeededData, &propFlag );
-		auto readingNeededData = ( pair< Point*, SQLiteManager* >* ) rawNeededData;
+		auto readingNeededData = ( pair< Point*, function< void( const Point& ) >* >* ) rawNeededData;
 		
 		float value = ply_get_argument_value( argument );
 		
