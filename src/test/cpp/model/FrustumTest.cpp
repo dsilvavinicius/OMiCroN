@@ -1,6 +1,8 @@
-#include <Frustum.h>
+#include <utils/frustum.hpp>
 
 #include <gtest/gtest.h>
+
+using namespace Tucano;
 
 namespace model
 {

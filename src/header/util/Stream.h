@@ -129,22 +129,6 @@ namespace model
 		return out;
 	}
 	
-	template< typename Scalar, int Dim >
-	ostream& operator<<( ostream& out, const Hyperplane< Scalar, Dim >& plane )
-	{
-		out << "normal:" << plane.normal() << endl << ", offset: " << plane.offset();
-		
-		return out;
-	}
-	
-	template< typename Scalar, int Dim >
-	ostream& operator<<( ostream& out, const AlignedBox< Scalar, Dim >& box )
-	{
-		out << "min:" << box.min() << endl << ", max: " << box.max() << endl << ", size: " << box.sizes();
-		
-		return out;
-	}
-	
 	template<>
 	ostream& operator<<( ostream& out, const vector< vec3 >& v );
 	

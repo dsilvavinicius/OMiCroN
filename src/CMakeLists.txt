@@ -103,11 +103,11 @@ add_library (Point_Based_Renderer_Lib
 	${UI_HDRS}
 	
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h				${CPP_DIR}/${MODEL_DIR}/Scan.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Frustum.h			${CPP_DIR}/${MODEL_DIR}/Frustum.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Frustum.h
 	
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h				${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h			${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
-	${HEADER_DIR}/${UTIL_DIR}/Stream.h			${CPP_DIR}/${UTIL_DIR}/Stream.cpp
+	${HEADER_DIR}/${UTIL_DIR}/Stream.h				${CPP_DIR}/${UTIL_DIR}/Stream.cpp
 	
 	# Tucano related code
 	include/tucano/src/utils/qtflycamerawidget.hpp #ugly hack to use qmake in this file.

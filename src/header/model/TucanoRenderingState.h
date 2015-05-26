@@ -5,7 +5,7 @@
 #include <phongshader.hpp>
 #include <imgSpacePBR.hpp>
 #include "RenderingState.h"
-#include "Frustum.h"
+#include <utils/frustum.hpp>
 
 using namespace Tucano;
 using namespace Effects;
