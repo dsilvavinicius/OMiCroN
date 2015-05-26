@@ -199,12 +199,16 @@ namespace model
 																		   const Precision& precision,
 																		const Attributes& attribs )
 	{
-		PlyPointReader *reader = new PlyPointReader();
+		PointVector points;
+		PlyPointReader *reader = new PlyPointReader(
+			[ & ]( const Point& point )
+			{
+				points.push_back( make_shared< Point >( point ) );
+			}
+		);
 		reader->read( plyFileName, precision, attribs );
 		
 		cout << "After reading points" << endl << endl;
-		
-		PointVector points = reader->getPoints();
 		
 		//
 		/*cout << "Read points" << endl << endl;

@@ -2,7 +2,7 @@
 #define OUT_OF_CORE_OCTREE_H
 
 #include "FrontOctree.h"
-#include "OutOfCorePlyPointReader.h"
+#include "PlyPointReader.h"
 #include "SQLiteManager.h"
 
 using namespace std;
@@ -19,7 +19,7 @@ namespace model
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using PlyPointReader = OutOfCorePlyPointReader< Float, Vec3, Point >;
+		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
 		using SQLiteManager = util::SQLiteManager< Point >;
 		using ParentOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >;
 		

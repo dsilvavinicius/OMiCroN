@@ -26,12 +26,13 @@ namespace util
 			DOUBLE = 0x2
 		};
 		
+		/** @param onPointDone is a function that process a read point. */
+		PlyPointReader( const function< void( const Point& ) >& onPointDone );
+		
 		/** Reads a .ply file. . 
 		 * @param precision specifies the desired precision for read points. It must agree with the template
 		 * parameters of this method. */
 		void read( const string& fileName, Precision precision, Attributes attribs );
-		
-		PointVector getPoints(){ return m_points; }
 		
 		Attributes getAttributes(){ return m_attribs; }
 	
@@ -49,9 +50,13 @@ namespace util
 		
 		Attributes m_attribs;
 		
-	private:
-		PointVector m_points;
+		function< void( const Point& ) > m_onPointDone;
 	};
+	
+	template< typename Float, typename Vec3, typename Point >
+	PlyPointReader< Float, Vec3, Point >::PlyPointReader( const function< void( const Point& ) >& onPointDone )
+	: m_onPointDone( onPointDone )
+	{}
 	
 	template< typename Float, typename Vec3, typename Point >
 	void PlyPointReader< Float, Vec3, Point >::read( const string& fileName, Precision precision, Attributes attribs )
@@ -125,7 +130,7 @@ namespace util
 	{
 		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
 		Point tempPoint;
-		pair< Point*, PointVector* > cbNeededData( &tempPoint, &m_points );
+		pair< Point*, function< void( const Point& ) >* > cbNeededData( &tempPoint, &m_onPointDone );
 		
 		ply_set_read_cb( ply, "vertex", "x", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 0, precision ) );
 		ply_set_read_cb( ply, "vertex", "y", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 1, precision ) );
@@ -155,30 +160,15 @@ namespace util
 		return propIndex | ( precision << 4 );
 	}
 	
-	/** Base to structs that handle callback data. Defines final destination in a vector. */
-	template< typename Float, typename Vec3, typename Point >
-	struct CBDataHandlerBase
-	{
-		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
-		
-		/** Inserts the point into its final destination. */
-		void insertPoint( PointVector* points, const Point& point )
-		{
-			points->push_back( make_shared< Point >( point ) );
-		}
-	};
-	
 	/** Struct to handle callback data. Agnostic to point type. */
 	template< typename Float, typename Vec3, typename Point >
 	struct CBDataHandler
-	: public CBDataHandlerBase< Float, Vec3, Point >
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using CBDataHandlerBase = util::CBDataHandlerBase< Float, Vec3, Point >;
 		
-		void operator()( const unsigned int& index, const float& value, pair< Point*, PointVector* >* readingData )
+		void operator()( const unsigned int& index, const float& value,
+						 pair< Point*, function< void( const Point& ) >* >* readingData )
 		{
 			Point* tempPoint = readingData->first;
 			
@@ -199,8 +189,7 @@ namespace util
 				{
 					// Last point component. Send complete point to vector.
 					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
-					PointVector* points = readingData->second;
-					CBDataHandlerBase::insertPoint( points, Point( *tempPoint->getColor(), *tempPoint->getPos() ) );
+					( *readingData->second )( Point( *tempPoint->getColor(), *tempPoint->getPos() ) );
 					break;
 				}
 				case 6: case 7:
@@ -213,8 +202,7 @@ namespace util
 				{
 					// Last point component. Send complete point to vector.
 					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value;
-					PointVector* points = readingData->second;
-					CBDataHandlerBase::insertPoint( points, Point( *tempPoint->getColor(), *tempPoint->getPos() ) );
+					( *readingData->second )( Point( *tempPoint->getColor(), *tempPoint->getPos() ) );
 					break;
 				}
 			}
@@ -224,14 +212,13 @@ namespace util
 	/** Struct to handle callback data. Specialization for points with both colors and normals. */
 	template< typename Float, typename Vec3 >
 	struct CBDataHandler< Float, Vec3, ExtendedPoint< Float,Vec3 > >
-	: public CBDataHandlerBase< Float, Vec3, ExtendedPoint< Float,Vec3 > >
 	{
 		using Point = ExtendedPoint< Float, Vec3 >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using CBDataHandlerBase = util::CBDataHandlerBase< Float, Vec3, Point >;
 		
-		void operator()( const unsigned int& index, const float& value, pair< Point*, PointVector* >* readingData )
+		void operator()( const unsigned int& index, const float& value,
+						 pair< Point*, function< void( const Point& ) >* >* readingData )
 		{
 			Point* tempPoint = readingData->first;
 			
@@ -258,8 +245,7 @@ namespace util
 				{
 					// Last point component. Send complete point to vector.
 					( *tempPoint->getNormal() )[ index % 3 ] = ( float ) value;
-					PointVector* points = readingData->second;
-					CBDataHandlerBase::insertPoint( points, Point( *tempPoint->getColor(), *tempPoint->getNormal(), *tempPoint->getPos() ) );
+					( *readingData->second )( Point( *tempPoint->getColor(), *tempPoint->getNormal(), *tempPoint->getPos() ) );
 					break;
 				}
 			}
@@ -276,7 +262,7 @@ namespace util
 		void *rawReadingData;
 		ply_get_argument_user_data( argument, &rawReadingData, &propFlag );
 		
-		auto readingData = ( pair< Point*, PointVector* >* ) rawReadingData;
+		auto readingData = ( pair< Point*, function< void( const Point& ) >* >* ) rawReadingData;
 		
 		float value = ply_get_argument_value( argument );
 		
