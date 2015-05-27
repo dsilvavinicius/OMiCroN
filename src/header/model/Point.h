@@ -13,7 +13,7 @@ using namespace glm;
 namespace model
 {
 	/** Point representation. Float is used as the scalar type and glm Vec3 type is used as the 3-dimension vector. */
-	template < typename Float, typename Vec3 >
+	template< typename Float, typename Vec3 >
 	class Point
 	{
 	public:
@@ -30,6 +30,9 @@ namespace model
 		
 		shared_ptr< Vec3 > getColor();
 		shared_ptr< Vec3 > getPos();
+		
+		const shared_ptr< const Vec3 > getColor() const;
+		const shared_ptr< const Vec3 > getPos() const;
 		
 		// Comparison operators.
 		bool equal( const Point< Float, Vec3 >& other, const float& epsilon ) const;
@@ -132,7 +135,13 @@ namespace model
 	shared_ptr< Vec3 > Point< Float, Vec3 >::getColor() { return m_color; }
 	
 	template <typename Float, typename Vec3>
+	const shared_ptr< const Vec3 > Point< Float, Vec3 >::getColor() const { return m_color; }
+	
+	template <typename Float, typename Vec3>
 	shared_ptr< Vec3 > Point< Float, Vec3 >::getPos() { return m_pos; }
+	
+	template <typename Float, typename Vec3>
+	const shared_ptr< const Vec3 > Point< Float, Vec3 >::getPos() const { return m_pos; }
 	
 	template <typename Float, typename Vec3>
 	bool Point< Float, Vec3 >::equal( const Point< Float, Vec3 >& other, const float& epsilon ) const

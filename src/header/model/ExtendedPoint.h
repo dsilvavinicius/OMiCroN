@@ -27,6 +27,8 @@ namespace model
 		
 		shared_ptr< Vec3 > getNormal();
 		
+		const shared_ptr< const Vec3 > getNormal() const;
+		
 		// Comparison operators.
 		bool equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon ) const;
 		
@@ -116,6 +118,9 @@ namespace model
 	
 	template <typename Float, typename Vec3>
 	shared_ptr< Vec3 > ExtendedPoint< Float, Vec3 >::getNormal() { return m_normal; }
+	
+	template <typename Float, typename Vec3>
+	const shared_ptr< const Vec3 > ExtendedPoint< Float, Vec3 >::getNormal() const { return m_normal; }
 	
 	template <typename Float, typename Vec3>
 	bool ExtendedPoint< Float, Vec3 >::equal( const ExtendedPoint< Float, Vec3 >& other, const float& epsilon ) const

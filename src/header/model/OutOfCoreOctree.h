@@ -17,10 +17,13 @@ namespace model
 	class OutOfCoreOctree
 	: public FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
 	{
+		using MortonCode = model::MortonCode< MortonPrecision >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
+		using OctreeNode = model::OctreeNode< MortonPrecision, Float, Vec3 >;
 		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
-		using SQLiteManager = util::SQLiteManager< Point >;
+		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 		using ParentOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >;
 		
 	public:
@@ -45,6 +48,8 @@ namespace model
 		virtual void buildNodes( PointVector& points ) override;
 		
 		virtual void buildLeaves( const PointVector& points ) override;
+		
+		virtual void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
 		
 		SQLiteManager m_sqLite;
 	};
@@ -80,16 +85,37 @@ namespace model
 	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
 					 const Attributes& attribs )
 	{
+		// Octree boundary variables.
+		Float negInf = -numeric_limits< Float >::max();
+		Float posInf = numeric_limits< Float >::max();
+		Vec3 minCoords( posInf, posInf, posInf );
+		Vec3 maxCoords( negInf, negInf, negInf );
+		
+		// Whenever a point is read, update the boundary variables, and insert it into a leaf node.
 		auto *reader = new PlyPointReader(
 			[ & ]( const Point& point )
 			{
-				m_sqLite.insertPoint( point );
+				const shared_ptr< const Vec3 > pos = point.getPos();
+				
+				for( int i = 0; i < 3; ++i )
+				{
+					minCoords[ i ] = glm::min( minCoords[ i ], ( *pos )[ i ] );
+					maxCoords[ i ] = glm::max( maxCoords[ i ], ( *pos )[ i ] );
+				}
+				
+				sqlite_int64 index = m_sqLite.insertPoint( point );
 			}
 		);
 		reader->read( plyFileName, precision, attribs );
 		
 		cout << "After reading points" << endl << endl;
 		cout << "Attributes:" << reader->getAttributes() << endl << endl;
+		
+		// Save boundary info.
+		*ParentOctree::m_origin = minCoords;
+		*ParentOctree::m_size = maxCoords - minCoords;
+		*ParentOctree::m_leafSize = *ParentOctree::m_size *
+									( ( Float )1 / ( ( MortonPrecision )1 << ParentOctree::m_maxLevel ) );
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
@@ -130,6 +156,33 @@ namespace model
 	{
 		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. Use ***() to take into consideration"
 							" the database or another non out of core octree implementation" );
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code )
+	{
+		/*typename OctreeMap::iterator genericLeafIt = ParentOctree::m_hierarchy->find( code );
+		
+		unsigned long index = m_nPoints++;
+		
+		if( genericLeafIt == RandomSampleOctree::m_hierarchy->end() )
+		{
+			// Creates leaf node.
+			IndexVector indices;
+			indices.push_back( index );
+			auto leafNode = make_shared< LeafNode >();
+			leafNode->setContents( indices );
+			( *RandomSampleOctree::m_hierarchy )[ code ] = leafNode;
+		}
+		else
+		{
+			// Node already exists. Appends the point there.
+			OctreeNodePtr leafNode = genericLeafIt->second;
+			shared_ptr< IndexVector > indices = leafNode-> template getContents< IndexVector >();
+			indices->push_back( index );
+		}*/
 	}
 	
 	// ====================== Type Sugar ================================ /

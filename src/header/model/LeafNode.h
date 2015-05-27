@@ -9,7 +9,7 @@ namespace model
 	template< typename MortonPrecision, typename Float, typename Vec3 >
 	class OctreeNode;
 	
-	template < typename MortonPrecision, typename Float, typename Vec3,
+	template< typename MortonPrecision, typename Float, typename Vec3,
 		typename Contents >
 	class LeafNode : public OctreeNode< MortonPrecision, Float, Vec3 >
 	{
@@ -18,8 +18,8 @@ namespace model
 		void setContents( const Contents& contents );
 		shared_ptr< Contents > getContents() const;
 		
-		template <typename M, typename F, typename V, typename C >
-		friend ostream& operator<<(ostream& out, const LeafNode< M, F, V, C >& node);
+		template< typename M, typename F, typename V, typename C >
+		friend ostream& operator<<( ostream& out, const LeafNode< M, F, V, C >& node );
 	private:
 		shared_ptr< Contents > m_contents;
 	};
@@ -53,9 +53,15 @@ namespace model
 		return out;
 	}
 	
-	// TypeSugar
+	//===========
+	// Type sugar
+	//===========
+	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	using LeafNodePtr = shared_ptr< LeafNode< MortonPrecision, Float, Vec3, Contents > >;
+	
+	template< typename Float, typename Vec3, typename Contents >
+	using ShallowLeafNode = LeafNode< unsigned int, Float, Vec3, Contents >;
 }
 
 #endif

@@ -40,7 +40,7 @@ namespace model
 	{
 	public:
 		using MortonCode = model::MortonCode< MortonPrecision >;
-		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using RenderingState = model::RenderingState< Vec3, Float >;

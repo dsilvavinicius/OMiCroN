@@ -103,8 +103,6 @@ add_library (Point_Based_Renderer_Lib
 	${UI_HDRS}
 	
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h				${CPP_DIR}/${MODEL_DIR}/Scan.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Frustum.h
-	
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h				${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h			${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h				${CPP_DIR}/${UTIL_DIR}/Stream.cpp

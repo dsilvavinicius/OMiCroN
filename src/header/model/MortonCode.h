@@ -19,19 +19,7 @@ namespace model
 	// Forward declaration.
 	template <typename T> class MortonCode;
 	
-	//=================
-	// Type sugar.
-	//=================
-	
-	using ShallowMortonCode = MortonCode< unsigned int >;
-	using MediumMortonCode = MortonCode< unsigned long >;
-	using DeepMortonCode = MortonCode< unsigned long long >;
-	
-	using ShallowMortonCodePtr = shared_ptr<ShallowMortonCode>;
-	using MediumMortonCodePtr = shared_ptr<MediumMortonCode>;
-	using DeepMortonCodePtr = shared_ptr<DeepMortonCode>;
-	
-	template <typename T>
+	template< typename T >
 	using MortonCodePtr = shared_ptr< MortonCode<T> >;
 	
 	/** Morton code designed for use as an octree node index, represented by interleaving the bits of the node coordinate.
@@ -84,7 +72,7 @@ namespace model
 		friend ostream& operator<<( ostream& out, const MortonCode<Precision>& dt );
 		
 		template< typename Precision >
-		friend ostream& operator<<( ostream& out, const MortonCodePtr<Precision>& dt );
+		friend ostream& operator<<( ostream& out, const MortonCodePtr< Precision >& dt );
 		
 	private:
 		/** Spreads the bits to build Morton code. */
@@ -95,10 +83,6 @@ namespace model
 		
 		T m_bits;
 	};
-	
-	//===============
-	// Implementation
-	//===============
 	
 	template <typename T>
 	void MortonCode<T>::build(const T& x, const T& y, const T& z, const unsigned int& level)
@@ -340,6 +324,18 @@ namespace model
 		
 		return x;
 	}*/
+	
+	//=================
+	// Type sugar.
+	//=================
+	
+	using ShallowMortonCode = MortonCode< unsigned int >;
+	using MediumMortonCode = MortonCode< unsigned long >;
+	using DeepMortonCode = MortonCode< unsigned long long >;
+	
+	using ShallowMortonCodePtr = shared_ptr< ShallowMortonCode >;
+	using MediumMortonCodePtr = shared_ptr< MediumMortonCode >;
+	using DeepMortonCodePtr = shared_ptr< DeepMortonCode >;
 }
 
 namespace std

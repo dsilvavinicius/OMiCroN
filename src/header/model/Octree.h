@@ -112,6 +112,9 @@ namespace model
 		/** Creates all leaf nodes and put points inside them. */
 		virtual void buildLeaves( const PointVector& points );
 		
+		/** Calculates the MortonCode of a Point. */
+		MortonCode calcMorton( const Point& point ) const;
+		
 		/** Inserts a point into an octree leaf node identified by the given morton code. Creates the node in the process if
 		 *	necessary. */
 		virtual void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
@@ -238,7 +241,7 @@ namespace model
 		
 		for( PointPtr point : points )
 		{
-			shared_ptr< Vec3 > pos = point->getPos();
+			const shared_ptr< const Vec3 > pos = point->getPos();
 			
 			for( int i = 0; i < 3; ++i )
 			{
@@ -271,13 +274,21 @@ namespace model
 	{
 		for( PointPtr point : points )
 		{
-			shared_ptr< Vec3 > pos = point->getPos();
-			Vec3 index = ( ( *pos ) - ( *m_origin ) ) / ( *m_leafSize );
-			MortonCodePtr code = make_shared< MortonCode >();
-			code->build( ( MortonPrecision )index.x, ( MortonPrecision )index.y, ( MortonPrecision )index.z, m_maxLevel );
-			
-			insertPointInLeaf( point, code );
+			MortonCode code = calcMorton( *point );
+			insertPointInLeaf( point, make_shared< MortonCode >( code ) );
 		}
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	inline MortonCode< MortonPrecision > OctreeBase< MortonPrecision, Float, Vec3, Point >
+	::calcMorton( const Point& point ) const
+	{
+		const shared_ptr< const Vec3 > pos = point.getPos();
+		Vec3 index = ( ( *pos ) - ( *m_origin ) ) / ( *m_leafSize );
+		MortonCode code;
+		code.build( ( MortonPrecision )index.x, ( MortonPrecision )index.y, ( MortonPrecision )index.z, m_maxLevel );
+		
+		return code;
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >

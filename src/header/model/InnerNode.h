@@ -12,12 +12,6 @@ namespace model
 	class OctreeNode;
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	class InnerNode;
-	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	using InnerNodePtr = shared_ptr< InnerNode< MortonPrecision, Float, Vec3, Contents > >;
-	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
 	class InnerNode : public OctreeNode< MortonPrecision, Float, Vec3 >
 	{
 	public:
@@ -26,7 +20,7 @@ namespace model
 		shared_ptr< Contents > getContents() const;
 		
 		template< typename M, typename F, typename V, typename C >
-		friend ostream& operator<<( ostream& out, const InnerNodePtr< M, F, V, C >& node );
+		friend ostream& operator<<( ostream& out, const InnerNode< M, F, V, C >& node );
 		
 	private:
 		shared_ptr< Contents > m_contents;
@@ -58,6 +52,16 @@ namespace model
 		out << "Inner Node: " << endl << *node.getContents();
 		return out;
 	}
+	
+	//===========
+	// Type sugar
+	//===========
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
+	using InnerNodePtr = shared_ptr< InnerNode< MortonPrecision, Float, Vec3, Contents > >;
+	
+	template< typename Float, typename Vec3, typename Contents >
+	using ShallowInnerNode = InnerNode< unsigned int, Float, Vec3, Contents >;
 }
 	
 #endif
