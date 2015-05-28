@@ -29,14 +29,17 @@ namespace model
 			sqLite.insertPoint( p2 );
 			
 			float epsilon = 1.e-15;
-			Point p = sqLite.getPoint( 0 );
-			ASSERT_TRUE( p.equal( p0, epsilon ) );
+			Point* p = sqLite.getPoint( 0 );
+			ASSERT_TRUE( p->equal( p0, epsilon ) );
+			delete p;
 			
 			p = sqLite.getPoint( 1 );
-			ASSERT_TRUE( p.equal( p1, epsilon ) );
+			ASSERT_TRUE( p->equal( p1, epsilon ) );
+			delete p;
 			
 			p = sqLite.getPoint( 2 ); 
-			ASSERT_TRUE( p.equal( p2, epsilon ) );
+			ASSERT_TRUE( p->equal( p2, epsilon ) );
+			delete p;
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetNodes )
@@ -56,7 +59,6 @@ namespace model
 			leafNode.setContents( leafPoints );
 			
 			SQLiteManager sqLite;
-			cout << "Inserting first node." << endl;
 			sqLite.insertNode< Contents >( leafCode, leafNode );
 			
 			MortonCode innerCode;
@@ -65,15 +67,12 @@ namespace model
 			Contents innerPoints = { 4, 3, 2, 1 };
 			innerNode.setContents( innerPoints );
 			
-			cout << "Inserting second node." << endl;
 			sqLite.insertNode< Contents >( innerCode, innerNode );
 			
-			cout << "Quering first node." << endl;
 			OctreeNode* queriedNode = sqLite.getNode< Contents >( leafCode );
 			ASSERT_EQ( *queriedNode->getContents< Contents >(), leafPoints );
 			delete queriedNode;
 			
-			cout << "Quering second node." << endl;
 			queriedNode = sqLite.getNode< Contents >( innerCode );
 			ASSERT_EQ( *queriedNode->getContents< Contents >(), innerPoints );
 			delete queriedNode;

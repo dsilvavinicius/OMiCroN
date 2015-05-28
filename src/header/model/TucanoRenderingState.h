@@ -26,7 +26,7 @@ namespace model
 			JUMP_FLOODING
 		};
 		
-		TucanoRenderingState( Camera* camera, Trackball* lightTrackball , Mesh* mesh, const Attributes& attribs,
+		TucanoRenderingState( Camera* camera, Camera* lightCam , Mesh* mesh, const Attributes& attribs,
 							  const string& shaderPath, const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
@@ -70,7 +70,7 @@ namespace model
 		
 		Frustum* m_frustum;
 		Camera* m_camera;
-		Trackball* m_lightTrackball;
+		Camera* m_lightCamera;
 		
 		Matrix4f m_viewProj;
 		
@@ -88,13 +88,13 @@ namespace model
 	};
 	
 	template< typename Vec3, typename Float >
-	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Camera* camera, Trackball* lightTrackball,
+	TucanoRenderingState< Vec3, Float >::TucanoRenderingState( Camera* camera, Camera* lightCamera,
 															   Mesh* mesh, const Attributes& attribs,
 															const string& shaderPath, const int& jfpbrFrameskip, 
 															const Effect& effect )
 	: RenderingState( attribs ),
 	m_camera( camera ),
-	m_lightTrackball( lightTrackball ),
+	m_lightCamera( lightCamera ),
 	m_mesh( mesh ),
 	m_viewProj( getViewProjection() ),
 	m_jfpbrFrameskip( jfpbrFrameskip ),
@@ -180,11 +180,11 @@ namespace model
 		
 		switch( m_effect )
 		{
-			case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightTrackball ); break;
+			case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightCamera ); break;
 			case JUMP_FLOODING:
 			{
 				bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
-				m_jfpbr->render( m_mesh, m_camera, m_lightTrackball, newFrame );
+				m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
 				
 				break;
 			}

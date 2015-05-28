@@ -115,9 +115,8 @@ namespace model
 		/** Calculates the MortonCode of a Point. */
 		MortonCode calcMorton( const Point& point ) const;
 		
-		/** Inserts a point into an octree leaf node identified by the given morton code. Creates the node in the process if
-		 *	necessary. */
-		virtual void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
+		/** Inserts a point into the octree leaf it belongs. Creates the node in the process if necessary. */
+		virtual void insertPointInLeaf( const PointPtr& point );
 		
 		/** Creates all inner nodes, with LOD. Bottom-up. If a node has only leaf chilren and the accumulated number of
 		 * children points is less than a threshold, the children are merged into parent. */
@@ -274,8 +273,7 @@ namespace model
 	{
 		for( PointPtr point : points )
 		{
-			MortonCode code = calcMorton( *point );
-			insertPointInLeaf( point, make_shared< MortonCode >( code ) );
+			insertPointInLeaf( point );
 		}
 	}
 	
@@ -292,9 +290,9 @@ namespace model
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::insertPointInLeaf( const PointPtr& point,
-																					  const MortonCodePtr& code )
+	inline void OctreeBase< MortonPrecision, Float, Vec3, Point >::insertPointInLeaf( const PointPtr& point )
 	{
+		MortonCodePtr code = make_shared< MortonCode >( calcMorton( *point ) );
 		typename OctreeMap::iterator genericLeafIt = m_hierarchy->find( code );
 		
 		if( genericLeafIt == m_hierarchy->end() )

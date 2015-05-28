@@ -21,7 +21,7 @@ namespace model
 		
 	public:
 		/** This ctor sends all points to the device. */
-		IndexedTucanoRenderer( const PointVector& points, Trackball* camTrackball, Trackball* lightTrackball, Mesh* mesh,
+		IndexedTucanoRenderer( const PointVector& points, Camera* camera, Camera* lightCamera, Mesh* mesh,
 							   const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip = 1,
 						 const typename TucanoRenderingState::Effect& effect = TucanoRenderingState::PHONG );
 		
@@ -32,10 +32,10 @@ namespace model
 	
 	template< typename Vec3, typename Float, typename Point >
 	IndexedTucanoRenderer< Vec3, Float, Point >::IndexedTucanoRenderer(
-		const PointVector& points, Trackball* camTrackball, Trackball* lightTrackball, Mesh* mesh,
+		const PointVector& points, Camera* camera, Camera* lightCamera, Mesh* mesh,
 		const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip,
 		const typename TucanoRenderingState::Effect& effect )
-	: TucanoRenderingState( camTrackball, lightTrackball, mesh, attribs, shaderPath, jfpbrFrameskip, effect )
+	: TucanoRenderingState( camera, lightCamera, mesh, attribs, shaderPath, jfpbrFrameskip, effect )
 	{
 		MeshInitializer::initMesh( points, *this );
 	}
@@ -50,12 +50,12 @@ namespace model
 		switch( TucanoRenderingState::m_effect )
 		{
 			case TucanoRenderingState::PHONG: TucanoRenderingState::m_phong->render( *TucanoRenderingState::m_mesh,
-				*TucanoRenderingState::m_camTrackball, *TucanoRenderingState::m_lightTrackball ); break;
+				*TucanoRenderingState::m_camera, *TucanoRenderingState::m_lightCamera ); break;
 			case TucanoRenderingState::JUMP_FLOODING:
 			{
 				bool newFrame = TucanoRenderingState::m_nFrames % TucanoRenderingState::m_jfpbrFrameskip == 0;
-				TucanoRenderingState::m_jfpbr->render( TucanoRenderingState::m_mesh, TucanoRenderingState::m_camTrackball,
-													   TucanoRenderingState::m_lightTrackball, newFrame );
+				TucanoRenderingState::m_jfpbr->render( TucanoRenderingState::m_mesh, TucanoRenderingState::m_camera,
+													   TucanoRenderingState::m_lightCamera, newFrame );
 				break;
 			}
 		}

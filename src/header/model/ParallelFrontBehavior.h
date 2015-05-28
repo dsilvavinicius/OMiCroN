@@ -37,7 +37,7 @@ namespace model
 		
 		void trackFront( RenderingState& renderingState, const Float& projThresh )
 		{
-			#pragma omp parallel num_threads( 8 )
+			#pragma omp parallel
 			{
 				int id = omp_get_thread_num();
 				int nThreads = omp_get_num_threads();

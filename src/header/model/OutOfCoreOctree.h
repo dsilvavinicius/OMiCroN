@@ -21,15 +21,17 @@ namespace model
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
+		using IndexVector = vector< unsigned int >;
 		using OctreeNode = model::OctreeNode< MortonPrecision, Float, Vec3 >;
+		using OctreeNodePtr = shared_ptr< OctreeNode >;
+		using OctreeMap = model::OctreeMap< MortonPrecision, Float, Vec3 >;
+		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 		using ParentOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >;
 		
 	public:
 		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
-		
-		virtual void build( PointVector& points ) override;
 		
 		/** Builds octree using the database. */
 		virtual void build();
@@ -38,18 +40,28 @@ namespace model
 									const Attributes& attribs ) override;
 		
 		SQLiteManager& getSQLiteManager() { return m_sqLite; }
+		
+		/** DEPRECATED: use build() instead. */
+		virtual void build( PointVector& points ) override;
+		
+		/** DEPRECATED. */
+		PointVector& getPoints() override;
 	
 	protected:
+		virtual void insertPointInLeaf( const PointPtr& point ) override;
+		
+		/** Acquires a node with given morton code. Searches in-memory hierarchy first and database if not found.
+		 *	@return A smart-pointer to the node or nullptr if not found. */
+		OctreeNodePtr getNode( const MortonCodePtr& code );
+		
+		/** DEPRECATED: use buildBoundaries() instead. */
 		virtual void buildBoundaries( const PointVector& points ) override;
 		
-		/** Build boundaries using the database. */
-		virtual void buildBoundaries();
-		
+		/** DEPRECATED. */
 		virtual void buildNodes( PointVector& points ) override;
 		
+		/** DEPRECATED. */
 		virtual void buildLeaves( const PointVector& points ) override;
-		
-		virtual void insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code );
 		
 		SQLiteManager m_sqLite;
 	};
@@ -75,7 +87,7 @@ namespace model
 	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
 	::build()
 	{
-		buildBoundaries();
+		//buildBoundaries();
 		//buildNodes();
 	}
 	
@@ -91,7 +103,7 @@ namespace model
 		Vec3 minCoords( posInf, posInf, posInf );
 		Vec3 maxCoords( negInf, negInf, negInf );
 		
-		// Whenever a point is read, update the boundary variables, and insert it into a leaf node.
+		// Whenever a point is full read, update the boundary variables, and insert it into a leaf node.
 		auto *reader = new PlyPointReader(
 			[ & ]( const Point& point )
 			{
@@ -104,6 +116,8 @@ namespace model
 				}
 				
 				sqlite_int64 index = m_sqLite.insertPoint( point );
+				
+				insertPointInLeaf( make_shared< Point >( point ) );
 			}
 		);
 		reader->read( plyFileName, precision, attribs );
@@ -125,19 +139,74 @@ namespace model
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::buildBoundaries( const PointVector& points )
+	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::insertPointInLeaf( const PointPtr& point )
 	{
-		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. Use buildBoundaries() to take into consideration"
-							" the database or another non out of core octree implementation" );
+		MortonCodePtr code = make_shared< MortonCode >( ParentOctree::calcMorton( *point ) );
+		OctreeNodePtr node = getNode( code );
+		
+		unsigned long index = ParentOctree::m_nPoints++;
+		
+		if( node == nullptr )
+		{
+			// Creates leaf node.
+			IndexVector indices;
+			indices.push_back( index );
+			auto leafNode = make_shared< LeafNode< MortonPrecision, Float, Vec3, IndexVector > >();
+			leafNode->setContents( indices );
+			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
+		}
+		else
+		{
+			// Node already exists. Appends the point there.
+			shared_ptr< IndexVector > indices = node-> template getContents< IndexVector >();
+			indices->push_back( index );
+		}
+		
+		// START HERE FROM CONDITIONAL NODE PERSISTENCE!
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::getNode( const MortonCodePtr& code )
+	{
+		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+		typename OctreeMap::iterator nodeIt = hierarchy->find( code );
+		if( nodeIt != hierarchy->end() )
+		{
+			return nodeIt->second;
+		}
+		else
+		{
+			OctreeNode* node = m_sqLite. template getNode< IndexVector >( *code );
+			if( node )
+			{
+				OctreeNodePtr nodePtr( node );
+				return nodePtr;
+			}
+			else
+			{
+				return nullptr;
+			}
+		}
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	vector< shared_ptr< Point > >& OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::getPoints()
+	{
+		throw logic_error( "getPoints() is unsuported, since everything is in database in this implementation." );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::buildBoundaries()
+	::buildBoundaries( const PointVector& points )
 	{
-		
+		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. Use buildBoundaries() to take into consideration"
+							" the database or another non out of core octree implementation" );
 	}
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
@@ -156,33 +225,6 @@ namespace model
 	{
 		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. Use ***() to take into consideration"
 							" the database or another non out of core octree implementation" );
-	}
-	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::insertPointInLeaf( const PointPtr& point, const MortonCodePtr& code )
-	{
-		/*typename OctreeMap::iterator genericLeafIt = ParentOctree::m_hierarchy->find( code );
-		
-		unsigned long index = m_nPoints++;
-		
-		if( genericLeafIt == RandomSampleOctree::m_hierarchy->end() )
-		{
-			// Creates leaf node.
-			IndexVector indices;
-			indices.push_back( index );
-			auto leafNode = make_shared< LeafNode >();
-			leafNode->setContents( indices );
-			( *RandomSampleOctree::m_hierarchy )[ code ] = leafNode;
-		}
-		else
-		{
-			// Node already exists. Appends the point there.
-			OctreeNodePtr leafNode = genericLeafIt->second;
-			shared_ptr< IndexVector > indices = leafNode-> template getContents< IndexVector >();
-			indices->push_back( index );
-		}*/
 	}
 	
 	// ====================== Type Sugar ================================ /

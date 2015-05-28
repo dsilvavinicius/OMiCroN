@@ -23,8 +23,9 @@ namespace util
 		 *	@returns the index of the pointer. The first index is 0 and each next point increments it by 1. */
 		sqlite_int64 insertPoint( const Point& point );
 		
-		/** Searches the point in the database, given its index. */
-		Point getPoint( const sqlite3_uint64& index );
+		/** Searches the point in the database, given its index.
+		 *	@return the acquired node or nullptr if no point is found. The pointer ownership is caller's. */
+		Point* getPoint( const sqlite3_uint64& index );
 		
 		/** Inserts the node into database, using the given morton code as identifier.
 		 *	@param NodeContents is the type of the contents of the node. */
@@ -34,7 +35,7 @@ namespace util
 		/** Searches the node in the database, given its morton code.
 		 *	@param NodeContents is the type of the contents of the node.
 		 *	@param morton is the node morton code id.
-		 *	@returns the acquired node. The pointer ownership is caller's. */
+		 *	@returns the acquired node or nullptr if no node is found. The pointer ownership is caller's. */
 		template< typename NodeContents >
 		OctreeNode* getNode( const MortonCode& morton );
 		
@@ -139,15 +140,24 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	Point SQLiteManager< Point, MortonCode, OctreeNode >::getPoint( const sqlite3_uint64& index )
+	Point* SQLiteManager< Point, MortonCode, OctreeNode >::getPoint( const sqlite3_uint64& index )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_pointQuery, 1, index ), SQLITE_OK );
-		safeStep( m_pointQuery );
+		bool isPointFound = safeStep( m_pointQuery );
 		
-		byte* blob = ( byte* ) sqlite3_column_blob( m_pointQuery, 0 );
-		Point point( blob );
+		Point* point = nullptr;
+		
+		if( isPointFound )
+		{
+			byte* blob = ( byte* ) sqlite3_column_blob( m_pointQuery, 0 );
+			point = new Point( blob );
+		}
+		else
+		{
+			cout << "Cannot find point with index " << index << endl << endl;
+		}
+		
 		safeReset( m_pointQuery );
-		
 		return point;
 	}
 	
@@ -172,12 +182,20 @@ namespace util
 	OctreeNode* SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeQuery, 1, morton.getBits() ), SQLITE_OK );
-		safeStep( m_pointQuery );
+		bool isNodeFound = safeStep( m_nodeQuery );
 		
-		byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
-		OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
-		safeReset( m_pointQuery );
+		OctreeNode* node = nullptr;
+		if( isNodeFound )
+		{
+			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
+			node = OctreeNode:: template deserialize< NodeContents >( blob );
+		}
+		else
+		{
+			cout << "Cannot find node with morton " << morton << endl << endl;
+		}
 		
+		safeReset( m_nodeQuery );
 		return node;
 	}
 	
@@ -191,14 +209,14 @@ namespace util
 		
 		vector< OctreeNode* > nodes;
 		
-		while( safeStep( m_pointQuery ) )
+		while( safeStep( m_nodeIntervalQuery ) )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalQuery, 0 );
 			OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
 			nodes.push_back( node );
 		}
 		
-		safeReset( m_pointQuery );
+		safeReset( m_nodeIntervalQuery );
 		
 		return nodes;
 	}
@@ -206,7 +224,6 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createTables()
 	{
-		cout << "Creating tables." << endl;
 		sqlite3_stmt* creationStmt;
 		
 		safePrepare(
@@ -228,14 +245,11 @@ namespace util
 		);
 		safeStep( creationStmt );
 		safeFinalize( creationStmt );
-		
-		cout << "Ending Creating tables." << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::dropTables()
 	{
-		cout << "Dropping tables." << endl;
 		sqlite3_stmt* dropStmt;
 		
 		unsafePrepare( "DROP TABLE IF EXISTS Points;", &dropStmt );
@@ -245,19 +259,16 @@ namespace util
 		unsafePrepare( "DROP TABLE IF EXISTS Nodes;", &dropStmt );
 		unsafeStep( dropStmt );
 		unsafeFinalize( dropStmt );
-		cout << "Ending Dropping tables." << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createStmts()
 	{
-		cout << "Creating stmts." << endl;
 		safePrepare( "INSERT INTO Points VALUES ( ?, ? );", &m_pointInsertionStmt);
 		safePrepare( "INSERT INTO Nodes VALUES ( ?, ? );", &m_nodeInsertion );
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
-		cout << "Ending Creating stmts." << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
