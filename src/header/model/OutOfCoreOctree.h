@@ -4,6 +4,7 @@
 #include "FrontOctree.h"
 #include "PlyPointReader.h"
 #include "SQLiteManager.h"
+#include <MemoryInfo.h>
 
 using namespace std;
 using namespace util;
@@ -63,8 +64,39 @@ namespace model
 		/** DEPRECATED. */
 		virtual void buildLeaves( const PointVector& points ) override;
 		
+	private:
+		/** Release memory by persisting nodes in the in-memory hierarchy. */
+		void persistAndReleaseNodes();
+		
 		SQLiteManager m_sqLite;
+		
+		//unordered_map< unsigned long > m_points;
+		
+		static unsigned long M_MAX_MEMORY_BYTES;
+		static double M_MIN_FREE_MEMORY_BYTES;
+		static unsigned int M_NODES_PER_PERSISTENCE_ITERATION;
+		static unsigned int M_POINTS_CREATED_UNTIL_PERSISTENCE;
 	};
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	unsigned long OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::M_MAX_MEMORY_BYTES = MemoryInfo::getMemorySize();
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	double OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::M_MIN_FREE_MEMORY_BYTES = ( (double) M_MAX_MEMORY_BYTES * 0.1 );
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	unsigned int OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::M_NODES_PER_PERSISTENCE_ITERATION = 50;
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	unsigned int OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::M_POINTS_CREATED_UNTIL_PERSISTENCE = 100;
 	
 	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
 			  typename FrontInsertionContainer >
@@ -118,6 +150,8 @@ namespace model
 				sqlite_int64 index = m_sqLite.insertPoint( point );
 				
 				insertPointInLeaf( make_shared< Point >( point ) );
+				
+				//if( ParentOctree::m_nPoints )
 			}
 		);
 		reader->read( plyFileName, precision, attribs );
@@ -188,6 +222,33 @@ namespace model
 			else
 			{
 				return nullptr;
+			}
+		}
+	}
+	
+	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
+			  typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	::persistAndReleaseNodes()
+	{
+		while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_BYTES )
+		{
+			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+			typename OctreeMapPtr::iterator nodeIt = hierarchy->rbegin();
+			
+			int i = 0;
+			while( i < M_NODES_PER_PERSISTENCE_ITERATION && nodeIt != hierarchy->rend() )
+			{
+				MortonCodePtr code = nodeIt->first;
+				OctreeNodePtr node = nodeIt->second;
+				
+				typename OctreeMapPtr::iterator toErase = nodeIt;
+				
+				++nodeIt;
+				++i;
+				
+				hierarchy->erase( toErase );
+				m_sqLite-> template insertNode< IndexVector >( *code, *node );
 			}
 		}
 	}
