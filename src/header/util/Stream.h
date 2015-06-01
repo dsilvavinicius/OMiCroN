@@ -85,52 +85,12 @@ namespace model
 		return out;
 	}
 	
-	template< typename Float, typename Vec3 >
-	ostream& operator<<( ostream& out, const vector< PointPtr< Float, Vec3> >& v )
-	{
-		out << "size: " << v.size() << endl << "{" << endl;
-		bool first = true;
-		for( PointPtr< Float, Vec3 > element : v )
-		{
-			if( first )
-			{
-				out << *element;
-				first = false;
-			}
-			else
-			{
-				out << ", " << endl << *element;
-			}
-		}
-		out << "}";
-		
-		return out;
-	}
-	
-	template< typename Float, typename Vec3 >
-	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr< Float, Vec3> >& v )
-	{
-		out << "size: " << v.size() << endl << "{" << endl;
-		bool first = true;
-		for( ExtendedPointPtr< Float, Vec3 > element : v )
-		{
-			if( first )
-			{
-				out << *element;
-				first = false;
-			}
-			else
-			{
-				out << ", " << endl << *element;
-			}
-		}
-		out << "}";
-		
-		return out;
-	}
-	
 	template<>
 	ostream& operator<<( ostream& out, const vector< vec3 >& v );
+	
+	ostream& operator<<( ostream& out, const vector< PointPtr >& v );
+	
+	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr >& v );
 	
 	ostream& operator<<( ostream& out, const QSize& size );
 	

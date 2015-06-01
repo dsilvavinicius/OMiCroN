@@ -21,12 +21,9 @@ namespace model
 	 * addition, setCompactionArray() should be called in order to set the compaction flags, indicating vertices that will be erased or
 	 * maintained in compaction. After that, render() can be called to perform the compaction and to append the new data on the
 	 * vertices attrib arrays. */
-	template< typename Vec3, typename Float >
 	class CompactionRenderingState
-	: public QtRenderingState< Vec3, Float >
+	: public QtRenderingState
 	{
-		using RenderingState = model::RenderingState< Vec3, Float >;
-		using QtRenderingState = model::QtRenderingState< Vec3, Float >;
 	public:
 		enum BufferType
 		{
@@ -88,11 +85,9 @@ namespace model
 		static const int BLOCK_SIZE = 1024;
 	};
 	
-	template< typename Vec3, typename Float >
-	CompactionRenderingState< Vec3, Float >::CompactionRenderingState( QOpenGLBuffer* inputBuffers[ 3 ],
-																	   const unsigned int& nElements,
-																	QOpenGLFunctions_4_3_Compatibility* openGL,
-																	const Attributes& attribs )
+	CompactionRenderingState::CompactionRenderingState( QOpenGLBuffer* inputBuffers[ 3 ], const unsigned int& nElements,
+														QOpenGLFunctions_4_3_Compatibility* openGL,
+													 const Attributes& attribs )
 	: QtRenderingState( attribs ),
 	m_openGL( openGL ),
 	m_scan( QCoreApplication::applicationDirPath().toStdString() + "/../shaders", N_MAX_VERTICES, openGL ),
@@ -170,8 +165,7 @@ namespace model
 		assert( m_renderingProgram->isLinked() && "Rendering Program is not linked" );
 	}
 	
-	template< typename Vec3, typename Float >
-	CompactionRenderingState< Vec3, Float >::~CompactionRenderingState()
+	CompactionRenderingState::~CompactionRenderingState()
 	{
 		for( int i = 0; i < N_BUFFER_TYPES; ++i)
 		{
@@ -192,14 +186,12 @@ namespace model
 		delete m_renderingProgram;
 	}
 	
-	template< typename Vec3, typename Float >
-	void CompactionRenderingState< Vec3, Float >::setCompactionArray( const vector< unsigned int >& flags )
+	void CompactionRenderingState::setCompactionArray( const vector< unsigned int >& flags )
 	{
 		m_compactionFlags = flags;
 	}
 	
-	template< typename Vec3, typename Float >
-	unsigned int CompactionRenderingState< Vec3, Float >::compact()
+	unsigned int CompactionRenderingState::compact()
 	{
 		// Makes the compaction of the unused points.
 		unsigned int nElements = m_compactionFlags.size();
@@ -237,8 +229,7 @@ namespace model
 		return nElements;
 	}
 	
-	template< typename Vec3, typename Float >
-	unsigned int CompactionRenderingState< Vec3, Float >::render()
+	unsigned int CompactionRenderingState::render()
 	{
 		m_nElements = compact();
 		
@@ -313,8 +304,7 @@ namespace model
 		}
 	}
 	
-	template< typename Vec3, typename Float >
-	vector< vector< Vec3 > > CompactionRenderingState< Vec3, Float >::getResultCPU()
+	vector< vector< Vec3 > > CompactionRenderingState::getResultCPU()
 	{
 		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );
 		
@@ -343,8 +333,7 @@ namespace model
 		return results;
 	}
 	
-	template< typename Vec3, typename Float >
-	void CompactionRenderingState< Vec3, Float >::dumpBuffer( const BufferType& bufferType, bool isInput,
+	void CompactionRenderingState::dumpBuffer( const BufferType& bufferType, bool isInput,
 															  ostream& out )
 	{
 		m_openGL->glMemoryBarrier( GL_BUFFER_UPDATE_BARRIER_BIT );

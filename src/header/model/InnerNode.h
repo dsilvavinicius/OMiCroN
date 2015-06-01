@@ -3,51 +3,50 @@
 
 #include <glm/glm.hpp>
 #include "OctreeNode.h"
+#include "MortonCode.h"
 
 using namespace glm;
 
 namespace model
 {
-	template< typename MortonPrecision, typename Float, typename Vec3 >
+	template< typename MortonCode >
 	class OctreeNode;
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	class InnerNode : public OctreeNode< MortonPrecision, Float, Vec3 >
+	template< typename MortonCode, typename Contents >
+	class InnerNode : public OctreeNode< MortonCode >
 	{
 	public:
 		bool isLeaf() const;
 		void setContents(const Contents& contents);
 		shared_ptr< Contents > getContents() const;
 		
-		template< typename M, typename F, typename V, typename C >
-		friend ostream& operator<<( ostream& out, const InnerNode< M, F, V, C >& node );
+		template< typename M, typename C >
+		friend ostream& operator<<( ostream& out, const InnerNode< M, C >& node );
 		
 	private:
 		shared_ptr< Contents > m_contents;
 	};
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents>
-	inline bool InnerNode<MortonPrecision, Float, Vec3, Contents>::isLeaf() const
+	template < typename MortonCode, typename Contents>
+	inline bool InnerNode< MortonCode, Contents >::isLeaf() const
 	{
 		return false;
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents>
-	inline void InnerNode<MortonPrecision, Float, Vec3, Contents>::setContents(
-		const Contents& contents)
+	template < typename MortonCode, typename Contents>
+	inline void InnerNode< MortonCode, Contents >::setContents( const Contents& contents)
 	{
 		m_contents = make_shared< Contents >(contents);
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents>
-	inline shared_ptr< Contents > InnerNode<MortonPrecision, Float, Vec3, Contents>::
-		getContents() const
+	template < typename MortonCode, typename Contents>
+	inline shared_ptr< Contents > InnerNode< MortonCode, Contents >::getContents() const
 	{
 		return m_contents;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	ostream& operator<<( ostream& out, const InnerNode< MortonPrecision, Float, Vec3, Contents >& node )
+	template< typename MortonCode, typename Contents >
+	ostream& operator<<( ostream& out, const InnerNode< MortonCode, Contents >& node )
 	{
 		out << "Inner Node: " << endl << *node.getContents();
 		return out;
@@ -57,11 +56,11 @@ namespace model
 	// Type sugar
 	//===========
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	using InnerNodePtr = shared_ptr< InnerNode< MortonPrecision, Float, Vec3, Contents > >;
+	template< typename MortonCode, typename Contents >
+	using InnerNodePtr = shared_ptr< InnerNode< MortonCode, Contents > >;
 	
-	template< typename Float, typename Vec3, typename Contents >
-	using ShallowInnerNode = InnerNode< unsigned int, Float, Vec3, Contents >;
+	template< typename Contents >
+	using ShallowInnerNode = InnerNode< ShallowMortonCode, Contents >;
 }
 	
 #endif

@@ -7,29 +7,23 @@
 
 namespace model
 {
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class FrontOctree;
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class ParallelFrontBehavior{};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	class ParallelFrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > >,
-								 unordered_set< MortonCode< MortonPrecision > > >
-	: public FrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > >,
-							unordered_set< MortonCode< MortonPrecision > > >
+	template< typename MortonCode, typename Point >
+	class ParallelFrontBehavior< MortonCode, Point, unordered_set< MortonCode >, unordered_set< MortonCode > >
+	: public FrontBehavior< MortonCode, Point, unordered_set< MortonCode >, unordered_set< MortonCode > >
 	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
-		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
-		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Front = unordered_set< MortonCode >;
 		using InsertionContainer = unordered_set< MortonCode >;
-		using FrontBehavior = model::FrontBehavior< MortonPrecision, Float, Vec3, Point, Front, InsertionContainer >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, InsertionContainer >;
+		using FrontBehavior = model::FrontBehavior< MortonCode, Point, Front, InsertionContainer >;
+		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, InsertionContainer >;
 	
 	public:
 		ParallelFrontBehavior( FrontOctree& octree )
@@ -108,8 +102,8 @@ namespace model
 	//=====================================================================
 	
 	/** Front behavior with shallow morton code and usual datastructures that allow parallelism. */
-	template< typename Float, typename Vec3, typename Point >
-	using ShallowParallelFrontBehavior = ParallelFrontBehavior< unsigned int, Float, Vec3, Point,
+	template< typename Point >
+	using ShallowParallelFrontBehavior = ParallelFrontBehavior< unsigned int, Point,
 																unordered_set< MortonCode< unsigned int > >,
 																unordered_set< MortonCode< unsigned int > >
 															  >;

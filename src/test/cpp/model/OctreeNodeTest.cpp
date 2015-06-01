@@ -17,7 +17,7 @@ namespace model
 		TEST_F( OctreeNodeTest, LeafNodeSerialization )
 		{
 			using Contents = vector< unsigned long >;
-			using Node = LeafNode< unsigned int, float, vec3, Contents >;
+			using Node = LeafNode< ShallowMortonCode, Contents >;
 			
 			Node node;
 			unsigned long array[ 3 ] = { 1, 2, 3 };
@@ -27,7 +27,7 @@ namespace model
 			byte* bytes;
 			
 			node.serialize< Contents >( &bytes );
-			auto nodePtr = ( Node* ) OctreeNode< unsigned int, float, vec3 >::deserialize< Contents >( bytes );
+			auto nodePtr = ( Node* ) OctreeNode< ShallowMortonCode >::deserialize< Contents >( bytes );
 			Contents resultContents = *nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
@@ -37,7 +37,7 @@ namespace model
 		TEST_F( OctreeNodeTest, InnerNodeSerialization )
 		{
 			using Contents = vector< unsigned long >;
-			using Node = InnerNode< unsigned int, float, vec3, Contents >;
+			using Node = InnerNode< ShallowMortonCode, Contents >;
 			
 			Node node;
 			unsigned long array[ 3 ] = { 1, 2, 3 };
@@ -47,7 +47,7 @@ namespace model
 			byte* bytes;
 			
 			node.serialize< Contents >( &bytes );
-			auto nodePtr = ( Node* ) OctreeNode< unsigned int, float, vec3 >::deserialize< Contents >( bytes );
+			auto nodePtr = ( Node* ) OctreeNode< ShallowMortonCode >::deserialize< Contents >( bytes );
 			Contents resultContents = *nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );

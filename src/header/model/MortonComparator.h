@@ -7,16 +7,16 @@ namespace model
 {
 
 	/** Compares MortonCode. */
-	template <typename MortonPrecision>
+	template< typename MortonCode >
 	class MortonComparator
 	{
+		using MortonCodePtr = shared_ptr< MortonCode >;
 	public:
-		bool operator()(const MortonCodePtr< MortonPrecision >& a, const MortonCodePtr< MortonPrecision >& b) const;
+		bool operator()( const MortonCodePtr& a, const MortonCodePtr& b ) const;
 	};
 
-	template <typename MortonPrecision>
-	bool MortonComparator< MortonPrecision >::operator()(const MortonCodePtr< MortonPrecision >& a,
-														 const MortonCodePtr< MortonPrecision >& b) const
+	template< typename MortonCode >
+	bool MortonComparator< MortonCode >::operator()( const MortonCodePtr& a, const MortonCodePtr& b ) const
 	{
 		return a->getBits() < b->getBits();
 	}
@@ -25,9 +25,9 @@ namespace model
 	// Type sugar.
 	//============
 
-	using ShallowMortonComparator = MortonComparator<unsigned int>;
-	using MediumMortonComparator = MortonComparator<unsigned long>;
-	using DeepMortonComparator = MortonComparator<unsigned long long>;
+	using ShallowMortonComparator = MortonComparator< ShallowMortonCode >;
+	using MediumMortonComparator = MortonComparator< MediumMortonCode >;
+	using DeepMortonComparator = MortonComparator< DeepMortonCode >;
 }
 
 #endif

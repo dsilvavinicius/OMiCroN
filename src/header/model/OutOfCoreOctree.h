@@ -13,23 +13,21 @@ namespace model
 {
 	/** Octree for massive point clouds that cannot be held in main memory because of their sizes. The main memory is used
 	 * as a cache, with data being fetched on demand from a database in disk. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class OutOfCoreOctree
-	: public FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	: public FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using IndexVector = vector< unsigned int >;
-		using OctreeNode = model::OctreeNode< MortonPrecision, Float, Vec3 >;
+		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using OctreeMap = model::OctreeMap< MortonPrecision, Float, Vec3 >;
+		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
-		using PlyPointReader = util::PlyPointReader< Float, Vec3, Point >;
+		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
-		using ParentOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >;
+		using ParentOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
 		
 	public:
 		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -78,54 +76,44 @@ namespace model
 		static unsigned int M_POINTS_CREATED_UNTIL_PERSISTENCE;
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	unsigned long OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::M_MAX_MEMORY_BYTES = MemoryInfo::getMemorySize();
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	double OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	double OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::M_MIN_FREE_MEMORY_BYTES = ( (double) M_MAX_MEMORY_BYTES * 0.1 );
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	unsigned int OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::M_NODES_PER_PERSISTENCE_ITERATION = 50;
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	unsigned int OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::M_POINTS_CREATED_UNTIL_PERSISTENCE = 100;
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >::
-	OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel )
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::OutOfCoreOctree( const int& maxPointsPerNode,
+																						   const int& maxLevel )
 	: ParentOctree( maxPointsPerNode, maxLevel )
 	{}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::build( PointVector& points )
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build( PointVector& points )
 	{
 		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile or another non out of core octree"
 							"implementation" );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::build()
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build()
 	{
 		//buildBoundaries();
 		//buildNodes();
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
 					 const Attributes& attribs )
 	{
@@ -163,7 +151,7 @@ namespace model
 		*ParentOctree::m_origin = minCoords;
 		*ParentOctree::m_size = maxCoords - minCoords;
 		*ParentOctree::m_leafSize = *ParentOctree::m_size *
-									( ( Float )1 / ( ( MortonPrecision )1 << ParentOctree::m_maxLevel ) );
+									( ( Float )1 / ( ( unsigned long long )1 << ParentOctree::m_maxLevel ) );
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
@@ -171,9 +159,8 @@ namespace model
 		//build();
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code = make_shared< MortonCode >( ParentOctree::calcMorton( *point ) );
@@ -186,7 +173,7 @@ namespace model
 			// Creates leaf node.
 			IndexVector indices;
 			indices.push_back( index );
-			auto leafNode = make_shared< LeafNode< MortonPrecision, Float, Vec3, IndexVector > >();
+			auto leafNode = make_shared< LeafNode< MortonCode, IndexVector > >();
 			leafNode->setContents( indices );
 			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -200,9 +187,8 @@ namespace model
 		// START HERE FROM CONDITIONAL NODE PERSISTENCE!
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline OctreeNodePtr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::getNode( const MortonCodePtr& code )
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
@@ -226,10 +212,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::persistAndReleaseNodes()
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseNodes()
 	{
 		while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_BYTES )
 		{
@@ -253,36 +237,28 @@ namespace model
 		}
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	vector< shared_ptr< Point > >& OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::getPoints()
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	vector< shared_ptr< Point > >& OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::getPoints()
 	{
 		throw logic_error( "getPoints() is unsuported, since everything is in database in this implementation." );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::buildBoundaries( const PointVector& points )
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildBoundaries( const PointVector& points )
 	{
 		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. Use buildBoundaries() to take into consideration"
 							" the database or another non out of core octree implementation" );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::buildNodes( PointVector& points )
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildNodes( PointVector& points )
 	{
 		throw logic_error(  "buildNodes( PointVector& ) is unsuported. Use ***() to take into consideration"
 							" the database or another non out of core octree implementation" );
 	}
 		
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonPrecision, Float, Vec3, Point, Front, FrontInsertionContainer >
-	::buildLeaves( const PointVector& points )
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildLeaves( const PointVector& points )
 	{
 		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. Use ***() to take into consideration"
 							" the database or another non out of core octree implementation" );
@@ -290,9 +266,10 @@ namespace model
 	
 	// ====================== Type Sugar ================================ /
 	
-	template< typename Float, typename Vec3, typename Point >
-	using ShallowOutOfCoreOctree = OutOfCoreOctree< unsigned int, Float, Vec3, Point,
-													unordered_set< MortonCode< unsigned int > >, vector< MortonCode< unsigned int > > >;
+	template< typename Point >
+	using ShallowOutOfCoreOctree = OutOfCoreOctree	< ShallowMortonCode, Point, unordered_set< ShallowMortonCode >,
+														vector< ShallowMortonCode >
+													>;
 }
 
 #endif

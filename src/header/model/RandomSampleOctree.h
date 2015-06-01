@@ -8,34 +8,34 @@ namespace model
 {
 	/** Octree which inner nodes have points randomly sampled from child nodes. Provides a smooth transition
 	 * between level of detail (LOD), but has the cost of more points being rendered per frame. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	class RandomSampleOctree
-	: public Octree< MortonPrecision, Float, Vec3, Point >
+	: public Octree< MortonCode, Point >
 	{
-		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
-		using LeafNode = model::LeafNode< MortonPrecision, Float, Vec3, PointVector >;
-		using OctreeMap = model::OctreeMap< MortonPrecision, Float, Vec3 >;
-		using Octree = model::Octree< MortonPrecision, Float, Vec3, Point >;
-		using RenderingState = model::RenderingState< Vec3, Float >;
-		using RandomPointAppender = model::RandomPointAppender< MortonPrecision, Float, Vec3, Point >;
+		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
+		using LeafNode = model::LeafNode< MortonCode, PointVector >;
+		using OctreeMap = model::OctreeMap< MortonCode >;
+		using Octree = model::Octree< MortonCode, Point >;
+		using RandomPointAppender = model::RandomPointAppender< MortonCode, Point >;
 		
 	public:
 		RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
-		template <typename M, typename F, typename V, typename P >
-		friend ostream& operator<<( ostream& out, const RandomSampleOctree< M, F, V, P >& octree );
+		template <typename M, typename P >
+		friend ostream& operator<<( ostream& out, const RandomSampleOctree< M, P >& octree );
 		
 	protected:
 		virtual void buildInnerNode( typename OctreeMap::iterator& firstChildIt,
 									 const typename OctreeMap::iterator& currentChildIt, const MortonCodePtr& parentCode,
-							   const vector< OctreeNodePtr >& children );
+							   const vector< OctreeNodePtr >& children ) override;
 		
 		/** Put all points of the inner nodes inside the rendering lists. */
-		virtual void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState );
+		virtual void setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState )
+		override;
 		
 		virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
 		
@@ -44,9 +44,8 @@ namespace model
 		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::RandomSampleOctree( const int& maxPointsPerNode,
-																				   const int& maxLevel )
+	template< typename MortonCode, typename Point >
+	RandomSampleOctree< MortonCode, Point >::RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel )
 	: Octree::Octree( maxPointsPerNode, maxLevel )
 	{
 		delete Octree::m_pointAppender;
@@ -54,8 +53,8 @@ namespace model
 		srand( 1 );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::buildInnerNode(
+	template< typename MortonCode, typename Point >
+	inline void RandomSampleOctree< MortonCode, Point >::buildInnerNode(
 		typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
 		const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children )
 	{
@@ -99,13 +98,13 @@ namespace model
 		}
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
-		::buildInnerNode( const PointVector& childrenPoints ) const
+	template< typename MortonCode, typename Point >
+	inline OctreeNodePtr< MortonCode > RandomSampleOctree< MortonCode, Point >
+	::buildInnerNode( const PointVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		auto node = make_shared< InnerNode< MortonPrecision, Float, Vec3, PointVector > >();
+		auto node = make_shared< InnerNode< MortonCode, PointVector > >();
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
 		
@@ -121,30 +120,30 @@ namespace model
 		return node;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering(
-		OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState )
+	template< typename MortonCode, typename Point >
+	inline void RandomSampleOctree< MortonCode, Point >::setupInnerNodeRendering( OctreeNodePtr innerNode,
+																				  MortonCodePtr code,
+																			   RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
 		setupNodeRendering( innerNode, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void RandomSampleOctree< MortonPrecision, Float, Vec3, Point >::setupNodeRendering(
-		OctreeNodePtr node, RenderingState& renderingState )
+	template< typename MortonCode, typename Point >
+	inline void RandomSampleOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node,
+																			 RenderingState& renderingState )
 	{
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonPrecision, Float, Vec3, Point >& octree )
+	template< typename MortonCode, typename Point >
+	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonCode, Point >& octree )
 	{
-		using PointVector = model::PointVector< Float, Vec3 >;
-		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
-		using OctreeMapPtr = model::OctreeMapPtr< MortonPrecision, Float, Vec3 >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonPrecision, Float, Vec3 >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
+		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
+		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		
 		out << endl << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string(*octree.m_origin) << endl
@@ -161,7 +160,7 @@ namespace model
 			OctreeNodePtr genericNode = nodeIt->second;
 			
 			out << "Node: {" << endl << *code << "," << endl;
-			operator<< < MortonPrecision, Float, Vec3, PointVector >( out, *genericNode );
+			operator<< < MortonCode, PointVector >( out, *genericNode );
 			out << endl << "}" << endl << endl;
 		}
 		out << "=========== End Octree ============" << endl << endl;
@@ -171,18 +170,18 @@ namespace model
 	// ====================== Type Sugar ================================ /
 	
 	/** RandomSampleOctree with 32 bit morton code. */
-	template< typename Float, typename Vec3, typename Point >
-	using ShallowRandomSampleOctree = RandomSampleOctree< unsigned int, Float, Vec3, Point >;
+	template< typename Point >
+	using ShallowRandomSampleOctree = RandomSampleOctree< ShallowMortonCode, Point >;
 	
-	template< typename Float, typename Vec3, typename Point >
-	using ShallowRandomSampleOctreePtr = shared_ptr< ShallowRandomSampleOctree< Float, Vec3, Point > >;
+	template< typename Point >
+	using ShallowRandomSampleOctreePtr = shared_ptr< ShallowRandomSampleOctree< Point > >;
 	
 	/** RandomSampleOctree with 64 bit morton code. */
-	template< typename Float, typename Vec3, typename Point >
-	using MediumRandomSampleOctree = RandomSampleOctree< unsigned long, Float, Vec3, Point >;
+	template< typename Point >
+	using MediumRandomSampleOctree = RandomSampleOctree< MediumMortonCode, Point >;
 	
-	template< typename Float, typename Vec3, typename Point >
-	using MediumRandomSampleOctreePtr = shared_ptr< MediumRandomSampleOctree< Float, Vec3, Point > >;
+	template< typename Point >
+	using MediumRandomSampleOctreePtr = shared_ptr< MediumRandomSampleOctree< Point > >;
 }
 
 #endif

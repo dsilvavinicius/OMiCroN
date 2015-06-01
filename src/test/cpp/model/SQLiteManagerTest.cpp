@@ -15,8 +15,7 @@ namespace model
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetPoints )
 		{
-			using Point = model::Point< float, vec3 >;
-			using OctreeNode = model::ShallowOctreeNode< float, vec3 >;
+			using OctreeNode = model::ShallowOctreeNode;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			
 			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
@@ -44,12 +43,11 @@ namespace model
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetNodes )
 		{
-			using Point = model::Point< float, vec3 >;
 			using MortonCode = model::ShallowMortonCode;
 			using Contents = vector< int >;
-			using OctreeNode = model::ShallowOctreeNode< float, vec3 >;
-			using LeafNode = model::ShallowLeafNode< float, vec3, Contents >;
-			using InnerNode = model::ShallowInnerNode< float, vec3, Contents >;
+			using OctreeNode = model::ShallowOctreeNode;
+			using LeafNode = model::ShallowLeafNode< Contents >;
+			using InnerNode = model::ShallowInnerNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 			
 			MortonCode leafCode;

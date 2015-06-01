@@ -20,7 +20,7 @@ namespace model
 	template <typename T> class MortonCode;
 	
 	template< typename T >
-	using MortonCodePtr = shared_ptr< MortonCode<T> >;
+	using MortonCodePtr = shared_ptr< MortonCode< T > >;
 	
 	/** Morton code designed for use as an octree node index, represented by interleaving the bits of the node coordinate.
 	 * To avoid collision of node indices, the code for a given node at level l in the Octree only considers the first

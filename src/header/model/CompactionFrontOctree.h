@@ -8,15 +8,15 @@
 namespace model
 {
 	/** Octree that uses stream compaction in order to reuse points rendered in previous frames and transfer less data to the GPU. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	class CompactionFrontOctree
-	: public FrontOctree< MortonPrecision, Float, Vec3, Point, typename FrontTypes< MortonPrecision >::Front >
+	: public FrontOctree< MortonCode, Point, typename FrontTypes< MortonCode >::Front >
 	{
-		using CompactionFrontOctree = model::CompactionFrontOctree< MortonPrecision, Float, Vec3, Point >;
-		using CompactionRenderingState = model::CompactionRenderingState< Vec3 >;
-		using Front = typename model::FrontTypes< MortonPrecision >::Front;
-		using CompactionFrontOctree = model::CompactionFrontOctree< MortonPrecision, Float, Vec3, Point, Front >;
-		using FrontWrapper = model::FrontWrapper< MortonPrecision, Float, Vec3, Point, Front >;
+		using CompactionFrontOctree = model::CompactionFrontOctree< MortonCode, Point >;
+		using CompactionRenderingState = model::CompactionRenderingState;
+		using Front = typename model::FrontTypes< MortonCode >::Front;
+		using CompactionFrontOctree = model::CompactionFrontOctree< MortonCode, Point, Front >;
+		using FrontWrapper = model::FrontWrapper< MortonCode, Point, Front >;
 	public:
 		CompactionFrontOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
@@ -33,17 +33,17 @@ namespace model
 		vector< unsigned int > compactionFlags;
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	CompactionFrontOctree( const int& maxPointsPerNode, const int& maxLevel )
 	: FrontOctree( maxPointsPerNode, maxLevel ) {}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	~CompactionFrontOctree()
 	{
 		delete m_renderingState;
 	}
 	
-	/*template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	/*template< typename MortonCode, typename Float, typename Vec3, typename Point >
 	FrontOctreeStats CompactionFrontOctree::trackFront( QGLPainter* painter, const Attributes& attribs, const Float& projThresh )
 	{
 		clock_t timing = clock();

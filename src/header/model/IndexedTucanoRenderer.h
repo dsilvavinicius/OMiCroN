@@ -5,19 +5,18 @@
 
 namespace model
 {
-	template< typename Vec3, typename Float, typename Point >
+	template< typename Point >
 	struct MeshInitializer;
 	
 	/** Tucano renderer that sends all points to device at initialization time. After that, just sends indices to indicate
 	 * 	which points should be rendered. */
-	template< typename Vec3, typename Float, typename Point >
+	template< typename Point >
 	class IndexedTucanoRenderer
-	: public TucanoRenderingState< Vec3, Float >
+	: public TucanoRenderingState
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using TucanoRenderingState = model::TucanoRenderingState< Vec3, Float >;
-		using MeshInitializer = model::MeshInitializer< Vec3, Float, Point >;
+		using MeshInitializer = model::MeshInitializer< Point >;
 		
 	public:
 		/** This ctor sends all points to the device. */
@@ -30,8 +29,8 @@ namespace model
 		friend MeshInitializer;
 	};
 	
-	template< typename Vec3, typename Float, typename Point >
-	IndexedTucanoRenderer< Vec3, Float, Point >::IndexedTucanoRenderer(
+	template< typename Point >
+	IndexedTucanoRenderer< Point >::IndexedTucanoRenderer(
 		const PointVector& points, Camera* camera, Camera* lightCamera, Mesh* mesh,
 		const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip,
 		const typename TucanoRenderingState::Effect& effect )
@@ -40,8 +39,8 @@ namespace model
 		MeshInitializer::initMesh( points, *this );
 	}
 	
-	template< typename Vec3, typename Float, typename Point >
-	inline unsigned int IndexedTucanoRenderer< Vec3, Float, Point >::render()
+	template< typename Point >
+	inline unsigned int IndexedTucanoRenderer< Point >::render()
 	{
 		++TucanoRenderingState::m_nFrames;
 		
@@ -64,17 +63,16 @@ namespace model
 	}
 	
 	/** Initializes the mesh in IndexedTucanoRenderer. */
-	template< typename Vec3, typename Float, typename Point >
+	template< typename Point >
 	struct MeshInitializer {};
 	
 	/** Specialization for Point type. */
-	template< typename Vec3, typename Float >
-	struct MeshInitializer< Vec3, Float, Point< Float, Vec3 > >
+	template<>
+	struct MeshInitializer< Point >
 	{
-		using Point = model::Point< Float, Vec3 >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Vec3, Float, Point >;
+		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Point >;
 		
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )
@@ -135,13 +133,13 @@ namespace model
 	};
 	
 	/** Specialization for ExtendedPoint type. */
-	template< typename Vec3, typename Float >
-	struct MeshInitializer< Vec3, Float, ExtendedPoint< Float, Vec3 > >
+	template<>
+	struct MeshInitializer< ExtendedPoint >
 	{
-		using Point = model::ExtendedPoint< Float, Vec3 >;
+		using Point = model::ExtendedPoint;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Vec3, Float, Point >;
+		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Point >;
 		
 	public:
 		static void initMesh( const PointVector& points, IndexedTucanoRenderer& renderer )

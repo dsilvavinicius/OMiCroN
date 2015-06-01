@@ -7,7 +7,7 @@
 namespace model
 {
 	/** Class with utilitary methods for appending points into vectors. Used by octree code. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	class PointAppender
 	{
 		using PointPtr = shared_ptr< Point >;
@@ -16,8 +16,8 @@ namespace model
 		using IndexVector = vector< unsigned int >;
 		
 	public:
-		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
-						   int& numLeaves ) const
+		virtual void appendPoints( OctreeNodePtr< MortonCode > node, PointVector& vec, int& numChildren, int& numLeaves )
+		const
 		{
 			++numChildren;
 			if( node->isLeaf() )
@@ -34,14 +34,14 @@ namespace model
 		}
 		
 		/** API for appending points as indices for a point array. */
-		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, IndexVector& vec, int& numChildren,
+		virtual void appendPoints( OctreeNodePtr< MortonCode > node, IndexVector& vec, int& numChildren,
 								   int& numLeaves ) const {}
 		
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	class RandomPointAppender
-	: public PointAppender< MortonPrecision, Float, Vec3, Point >
+	: public PointAppender< MortonCode, Point >
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
@@ -50,8 +50,8 @@ namespace model
 		using IndexVectorPtr = shared_ptr< IndexVector >;
 		
 	public:
-		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, PointVector& vec, int& numChildren,
-						   int& numLeaves ) const
+		virtual void appendPoints( OctreeNodePtr< MortonCode > node, PointVector& vec, int& numChildren, int& numLeaves )
+		const
 		{
 			++numChildren;
 			if( node->isLeaf() )
@@ -64,8 +64,8 @@ namespace model
 			vec.insert( vec.end(), childPoints->begin(), childPoints->end() );
 		}
 		
-		virtual void appendPoints( OctreeNodePtr< MortonPrecision, Float, Vec3 > node, IndexVector& vec, int& numChildren,
-						   int& numLeaves ) const
+		virtual void appendPoints( OctreeNodePtr< MortonCode > node, IndexVector& vec, int& numChildren, int& numLeaves )
+		const
 		{
 			++numChildren;
 			if( node->isLeaf() )

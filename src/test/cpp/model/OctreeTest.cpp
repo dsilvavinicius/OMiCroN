@@ -13,14 +13,14 @@ namespace model
 {
 	namespace test
 	{
-		template< typename Float, typename Vec3, typename Point >
+		template< typename Point >
 		struct OctreeInitializer {};
 		
-		template< typename Float, typename Vec3 >
-		struct OctreeInitializer< Float, Vec3, Point< Float, Vec3 > >
+		template<>
+		struct OctreeInitializer< Point >
 		{
-			using Point = model::Point< Float, Vec3 >;
-			using PointVector = vector< shared_ptr< Point > >;
+			using PointPtr = shared_ptr< Point >;
+			using PointVector = vector< PointPtr >;
 			
 			static PointVector generatePoints()
 			{
@@ -58,11 +58,12 @@ namespace model
 			}
 		};
 		
-		template< typename Float, typename Vec3 >
-		struct OctreeInitializer< Float, Vec3, ExtendedPoint< Float, Vec3 > >
+		template<>
+		struct OctreeInitializer< ExtendedPoint >
 		{
-			using Point = model::ExtendedPoint< Float, Vec3 >;
-			using PointVector = vector< shared_ptr< Point > >;
+			using Point = model::ExtendedPoint;
+			using PointPtr = shared_ptr< Point >;
+			using PointVector = vector< PointPtr >;
 			
 			static PointVector generatePoints()
 			{
@@ -156,22 +157,21 @@ namespace model
 		template< typename P >
         class OctreeTest {};
 		
-		using ShallowPointOctree = model::Octree< unsigned int, float, vec3, Point< float, vec3> >;
-		using MediumPointOctree = model::Octree< unsigned long, float, vec3, Point< float, vec3> >;
-		using ShallowExtendedPointOctree = model::Octree< unsigned int, float, vec3, ExtendedPoint< float, vec3> >;
-		using MediumExtendedPointOctree = model::Octree< unsigned long, float, vec3, ExtendedPoint< float, vec3> >;
-		using ShallowExtendedIndexedOctree = model::IndexedOctree< unsigned int, float, vec3, ExtendedPoint< float, vec3 > >;
+		using ShallowPointOctree = model::Octree< ShallowMortonCode, Point >;
+		using MediumPointOctree = model::Octree< MediumMortonCode, Point >;
+		using ShallowExtendedPointOctree = model::Octree< ShallowMortonCode, ExtendedPoint >;
+		using MediumExtendedPointOctree = model::Octree< MediumMortonCode, ExtendedPoint >;
+		using ShallowExtendedIndexedOctree = model::IndexedOctree< ShallowMortonCode, ExtendedPoint >;
 		
 		template<>
 		class OctreeTest< ShallowPointOctree >
 		: public SimplePointTest
 		{
-			using Point = model::Point< float, vec3 >;
 			using PointVector = vector< shared_ptr< Point > >;
 			using Octree = ShallowPointOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 			
 		public:
 			friend OctreeInitializer;
@@ -191,12 +191,11 @@ namespace model
 		class OctreeTest< MediumPointOctree >
 		: public SimplePointTest
 		{
-			using Point = model::Point< float, vec3 >;
 			using PointVector = vector< shared_ptr< Point > >;
 			using Octree = MediumPointOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 			
 		public:
 			friend OctreeInitializer;
@@ -216,12 +215,12 @@ namespace model
 		class OctreeTest< ShallowExtendedPointOctree >
 		: public ExtendedPointTest
 		{
-			using Point = ExtendedPoint< float, vec3 >;
+			using Point = ExtendedPoint;
 			using PointVector = vector< shared_ptr< Point > >;
 			using Octree = ShallowExtendedPointOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
 		public:
 			friend OctreeInitializer;
@@ -242,12 +241,12 @@ namespace model
 		class OctreeTest< MediumExtendedPointOctree >
 		: public ExtendedPointTest
 		{
-			using Point = ExtendedPoint< float, vec3 >;
+			using Point = ExtendedPoint;
 			using PointVector = vector< shared_ptr< Point > >;
 			using Octree = MediumExtendedPointOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
 		public:
 			friend OctreeInitializer;
@@ -268,12 +267,12 @@ namespace model
 		class OctreeTest< ShallowExtendedIndexedOctree >
 		: public ExtendedPointTest
 		{
-			using Point = ExtendedPoint< float, vec3 >;
+			using Point = ExtendedPoint;
 			using PointVector = vector< shared_ptr< Point > >;
 			using Octree = ShallowExtendedIndexedOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< float, vec3, Point >;
+			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
 		public:
 			friend OctreeInitializer;
@@ -322,45 +321,42 @@ namespace model
 			ASSERT_TRUE( distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) ) < epsilon );
 		}
 		
-		template< typename MortonPrecision, typename Float, typename Vec3 >
-		void checkNode( OctreeMapPtr< MortonPrecision, Float, Vec3 > hierarchy, const MortonPrecision& bits )
+		template< typename MortonCode >
+		void checkNode( OctreeMapPtr< MortonCode > hierarchy, const unsigned long long& bits )
 		{
 			stringstream ss;
 			ss << "0x" << hex << bits << dec;
 			SCOPED_TRACE( ss.str() );
-			auto code = make_shared< MortonCode< MortonPrecision > >();
+			auto code = make_shared< MortonCode >();
 			code->build( bits );
 			auto iter = hierarchy->find(code);
 			ASSERT_FALSE( iter == hierarchy->end() );
 			hierarchy->erase( iter );
 		}
 		
-		template< typename Float, typename Vec3 >
-		void checkSparseHierarchy( ShallowOctreeMapPtr< Float, Vec3 > hierarchy )
+		void checkSparseHierarchy( ShallowOctreeMapPtr hierarchy )
 		{
-			
-			checkNode< unsigned int >( hierarchy, 0xa6c3U );
-			checkNode< unsigned int >( hierarchy, 0xa6c0U );
-			checkNode< unsigned int >( hierarchy, 0xc325U );
-			checkNode< unsigned int >( hierarchy, 0xc320U );
-			checkNode< unsigned int >( hierarchy, 0x1d82U );
-			checkNode< unsigned int >( hierarchy, 0x1d80U );
-			checkNode< unsigned int >( hierarchy, 0x39fU );
-			checkNode< unsigned int >( hierarchy, 0x39dU );
-			checkNode< unsigned int >( hierarchy, 0x67U );
-			checkNode< unsigned int >( hierarchy, 0x61U );
-			checkNode< unsigned int >( hierarchy, 0x70U );
-			checkNode< unsigned int >( hierarchy, 0x71U );
-			checkNode< unsigned int >( hierarchy, 0x73U );
-			checkNode< unsigned int >( hierarchy, 0x76U );
-			checkNode< unsigned int >( hierarchy, 0xaU );
-			checkNode< unsigned int >( hierarchy, 0xcU );
-			checkNode< unsigned int >( hierarchy, 0xeU );
-			checkNode< unsigned int >( hierarchy, 0x1U );
+			checkNode< ShallowMortonCode >( hierarchy, 0xa6c3U );
+			checkNode< ShallowMortonCode >( hierarchy, 0xa6c0U );
+			checkNode< ShallowMortonCode >( hierarchy, 0xc325U );
+			checkNode< ShallowMortonCode >( hierarchy, 0xc320U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x1d82U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x1d80U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x39fU );
+			checkNode< ShallowMortonCode >( hierarchy, 0x39dU );
+			checkNode< ShallowMortonCode >( hierarchy, 0x67U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x61U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x70U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x71U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x73U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x76U );
+			checkNode< ShallowMortonCode >( hierarchy, 0xaU );
+			checkNode< ShallowMortonCode >( hierarchy, 0xcU );
+			checkNode< ShallowMortonCode >( hierarchy, 0xeU );
+			checkNode< ShallowMortonCode >( hierarchy, 0x1U );
 		}
 		
-		template< typename Float, typename Vec3 >
-		void checkHierarchy( const ShallowOctreeMapPtr< Float, Vec3 >& hierarchy )
+		void checkHierarchy( const ShallowOctreeMapPtr& hierarchy )
 		{
 			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
 			// it is a sibling of the node at the same position at the line immediately above.
@@ -382,44 +378,43 @@ namespace model
 			checkSparseHierarchy( hierarchy );
 			
 			// Check the other nodes, which would be merged in a sparse octree.
-			checkNode< unsigned int >( hierarchy, 0x14d8U );
-			checkNode< unsigned int >( hierarchy, 0x1864U );
-			checkNode< unsigned int >( hierarchy, 0x29bU );
-			checkNode< unsigned int >( hierarchy, 0x30cU );
-			checkNode< unsigned int >( hierarchy, 0x3b0U );
-			checkNode< unsigned int >( hierarchy, 0x53U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x14d8U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x1864U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x29bU );
+			checkNode< ShallowMortonCode >( hierarchy, 0x30cU );
+			checkNode< ShallowMortonCode >( hierarchy, 0x3b0U );
+			checkNode< ShallowMortonCode >( hierarchy, 0x53U );
 			
 			ASSERT_TRUE( hierarchy->empty() );
 		}
 		
-		template< typename Float, typename Vec3 >
-		void checkHierarchy( const MediumOctreeMapPtr< Float, Vec3 >& hierarchy )
+		void checkHierarchy( const MediumOctreeMapPtr& hierarchy )
 		{
 			// Checks if the hierarchy has the expected nodes.
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc320UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xc325UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa6c0UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xa6c3UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1d80UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1d82UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1864UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x14d8UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x39dUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x39fUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x3b0UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x30cUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x29bUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x73UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x71UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x70UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x76UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x67UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x61UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x53UL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xeUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xcUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0xaUL );
-			checkNode< unsigned long, float, vec3 >( hierarchy, 0x1UL );
+			checkNode< MediumMortonCode >( hierarchy, 0xc320UL );
+			checkNode< MediumMortonCode >( hierarchy, 0xc325UL );
+			checkNode< MediumMortonCode >( hierarchy, 0xa6c0UL );
+			checkNode< MediumMortonCode >( hierarchy, 0xa6c3UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x1d80UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x1d82UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x1864UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x14d8UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x39dUL );
+			checkNode< MediumMortonCode >( hierarchy, 0x39fUL );
+			checkNode< MediumMortonCode >( hierarchy, 0x3b0UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x30cUL );
+			checkNode< MediumMortonCode >( hierarchy, 0x29bUL );
+			checkNode< MediumMortonCode >( hierarchy, 0x73UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x71UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x70UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x76UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x67UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x61UL );
+			checkNode< MediumMortonCode >( hierarchy, 0x53UL );
+			checkNode< MediumMortonCode >( hierarchy, 0xeUL );
+			checkNode< MediumMortonCode >( hierarchy, 0xcUL );
+			checkNode< MediumMortonCode >( hierarchy, 0xaUL );
+			checkNode< MediumMortonCode >( hierarchy, 0x1UL );
 		}
 		
 		template< typename Octree >

@@ -18,8 +18,8 @@ void MainWindow::initialize()
 {
     ui->pointRendererWidget->initialize( ui->sld_frame_rate->value(), ui->sld_frame_tolerance->value() );
 
-    ui->group_effects->setId( ui->radio_phong, TucanoRenderingState< vec3, float >::PHONG );
-    ui->group_effects->setId( ui->radio_jfpbr, TucanoRenderingState< vec3, float >::JUMP_FLOODING );
+    ui->group_effects->setId( ui->radio_phong, TucanoRenderingState::PHONG );
+    ui->group_effects->setId( ui->radio_jfpbr, TucanoRenderingState::JUMP_FLOODING );
 
     connect( ui->group_effects, static_cast< void ( QButtonGroup::* )( int )>( &QButtonGroup::buttonClicked ),
 			 ui->pointRendererWidget, &PointRendererWidget::toggleEffect );

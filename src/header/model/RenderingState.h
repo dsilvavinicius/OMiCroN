@@ -22,7 +22,7 @@ namespace model
 	 * render them all.
 	 * @param Vec3 is the type for 3-dimensional vector.
 	 * @param Float is the type for floating point numbers. */
-	template< typename Vec3, typename Float >
+	
 	class RenderingState
 	{
 	public:
@@ -69,33 +69,13 @@ namespace model
 		Attributes m_attribs;
 	};
 	
-	template< typename Vec3, typename Float >
-	RenderingState< Vec3, Float >::RenderingState( const Attributes& attribs )
-	: m_attribs( attribs ) {}
-	
-	template< typename Vec3, typename Float >
-	void RenderingState< Vec3, Float >::clearAttribs()
-	{
-		m_positions.clear();
-		m_colors.clear();
-		m_normals.clear();
-		m_indices.clear();
-	}
-	
-	template< typename Vec3, typename Float >
-	void RenderingState< Vec3, Float >::clearIndices()
-	{
-		m_indices.clear();
-	}
-	
 	namespace NodeRenderingHandler
 	{
-		template< typename Vec3, typename Float, typename NodeContents >
-		void handle( RenderingState< Vec3, Float >& state, const NodeContents& contents );
+		template< typename NodeContents >
+		void handle( RenderingState& state, const NodeContents& contents );
 		
 		template<>
-		inline void handle< vec3, float, PointPtr< float, vec3 > >( RenderingState< vec3, float >& state,
-																	const PointPtr< float, vec3 >& point )
+		inline void handle< PointPtr >( RenderingState& state, const PointPtr& point )
 		{
 			state.getPositions().push_back( *point->getPos() );
 			if( state.getAttribs() == COLORS )
@@ -109,18 +89,16 @@ namespace model
 		}
 	
 		template<>
-		inline void handle< vec3, float, PointVectorPtr< float, vec3 > >( RenderingState< vec3, float >& state,
-																	const PointVectorPtr< float, vec3 >& points )
+		inline void handle< PointVectorPtr >( RenderingState& state, const PointVectorPtr& points )
 		{
-			for( PointPtr< float, vec3 > point : *points )
+			for( PointPtr point : *points )
 			{
 				handle( state, point );
 			}
 		}
 	
 		template<>
-		inline void handle< vec3, float, ExtendedPointPtr< float, vec3 > >( RenderingState< vec3, float >& state,
-																	const ExtendedPointPtr< float, vec3 >& point )
+		inline void handle< ExtendedPointPtr >( RenderingState& state, const ExtendedPointPtr& point )
 		{
 			state.getPositions().push_back( *point->getPos() );
 			state.getColors().push_back( *point->getColor() );
@@ -128,18 +106,18 @@ namespace model
 		}
 	
 		template<>
-		inline void handle< vec3, float, ExtendedPointVectorPtr< float, vec3 > >(
-			RenderingState< vec3, float >& state, const ExtendedPointVectorPtr< float, vec3 >& points )
+		inline void handle< ExtendedPointVectorPtr >(
+			RenderingState& state, const ExtendedPointVectorPtr& points )
 		{
-			for( ExtendedPointPtr< float, vec3 > point : *points )
+			for( ExtendedPointPtr point : *points )
 			{
 				handle( state, point );
 			}
 		}
 		
 		template<>
-		inline void handle< vec3, float, shared_ptr< vector< unsigned int > > >(
-			RenderingState< vec3, float >& state, const shared_ptr< vector< unsigned int > >& points )
+		inline void handle< shared_ptr< vector< unsigned int > > >(
+			RenderingState& state, const shared_ptr< vector< unsigned int > >& points )
 		{
 			for( unsigned int index : *points )
 			{
@@ -148,11 +126,10 @@ namespace model
 		}
 	}
 	
-	template< typename Vec3, typename Float >
 	template< typename NodeContents >
-	inline void RenderingState< Vec3, Float >::handleNodeRendering( const NodeContents& contents )
+	inline void RenderingState::handleNodeRendering( const NodeContents& contents )
 	{
-		NodeRenderingHandler::handle< Vec3, Float, NodeContents >( *this, contents );
+		NodeRenderingHandler::handle< NodeContents >( *this, contents );
 	}
 }
 

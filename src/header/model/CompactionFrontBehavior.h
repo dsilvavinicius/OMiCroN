@@ -5,20 +5,19 @@
 
 namespace model
 {
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	class CompactionFrontOctree;
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	struct FrontWrapper< MortonPrecision, Float, Vec3, Point, typename FrontTypes< MortonPrecision >::Front >
+	template< typename MortonCode, typename Point >
+	struct FrontWrapper< MortonCode, Point, typename FrontTypes< MortonCode >::Front >
 	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
-		using MortonCodePtr = model::MortonCodePtr< MortonPrecision >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
-		using RenderingState = model::CompactionRenderingState< Vec3, Float >;
-		using FrontTypes = model::FrontTypes< MortonPrecision >;
+		using RenderingState = model::CompactionRenderingState;
+		using FrontTypes = model::FrontTypes< MortonCode >;
 		using Front = typename FrontTypes::Front;
-		using FrontOctree = model::CompactionFrontOctree< MortonPrecision, Float, Vec3, Point >;
+		using FrontOctree = model::CompactionFrontOctree< MortonCode, Point >;
 		
 		static void trackFront( FrontOctree& octree, RenderingState& renderingState, const Float& projThresh )
 		{

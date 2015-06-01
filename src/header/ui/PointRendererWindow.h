@@ -24,9 +24,8 @@ namespace ui
 		Q_OBJECT
 		
 		using MortonCode = model::ShallowMortonCode;
-		using Point = model::Point< float, vec3 >;
-		using Octree = model::ShallowFrontOctree< float, vec3, Point >;
-		using TransientRenderingState = model::TransientRenderingState< vec3, float >;
+		using Point = model::Point;
+		using Octree = model::ShallowFrontOctree< Point >;
 	
 	public:
 		PointRendererWindow( const QSurfaceFormat &format, QWindow *parent = 0 );

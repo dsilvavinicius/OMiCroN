@@ -14,7 +14,7 @@ namespace util
 {
 	/** Reader for a point .ply file. To access the read points, use getPoints(). */
 	// TODO: Specialize this class so the precision is infered automatically by template parameters.
-	template< typename Float, typename Vec3, typename Point >
+	template< typename Point >
 	class PlyPointReader 
 	{
 		using PointPtr = shared_ptr< Point >;
@@ -53,13 +53,13 @@ namespace util
 		function< void( const Point& ) > m_onPointDone;
 	};
 	
-	template< typename Float, typename Vec3, typename Point >
-	PlyPointReader< Float, Vec3, Point >::PlyPointReader( const function< void( const Point& ) >& onPointDone )
+	template< typename Point >
+	PlyPointReader< Point >::PlyPointReader( const function< void( const Point& ) >& onPointDone )
 	: m_onPointDone( onPointDone )
 	{}
 	
-	template< typename Float, typename Vec3, typename Point >
-	void PlyPointReader< Float, Vec3, Point >::read( const string& fileName, Precision precision, Attributes attribs )
+	template< typename Point >
+	void PlyPointReader< Point >::read( const string& fileName, Precision precision, Attributes attribs )
 	{
 		/* Save application locale */
 		const char *old_locale = setlocale( LC_NUMERIC, NULL );
@@ -124,8 +124,8 @@ namespace util
 		setlocale( LC_NUMERIC, old_locale );
 	}
 	
-	template< typename Float, typename Vec3, typename Point >
-	int PlyPointReader< Float, Vec3, Point >::doRead( p_ply& ply, const Precision& precision, const bool& colorsNeeded,
+	template< typename Point >
+	int PlyPointReader< Point >::doRead( p_ply& ply, const Precision& precision, const bool& colorsNeeded,
 													   const bool& normalsNeeded )
 	{
 		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
@@ -153,15 +153,15 @@ namespace util
 		return ply_read( ply );
 	}
 	
-	template< typename Float, typename Vec3, typename Point >
-	inline unsigned int PlyPointReader< Float, Vec3, Point >::getPropFlag( const unsigned int& propIndex,
+	template< typename Point >
+	inline unsigned int PlyPointReader< Point >::getPropFlag( const unsigned int& propIndex,
 																		   const Precision& precision )
 	{
 		return propIndex | ( precision << 4 );
 	}
 	
 	/** Struct to handle callback data. Agnostic to point type. */
-	template< typename Float, typename Vec3, typename Point >
+	template< typename Point >
 	struct CBDataHandler
 	{
 		using PointPtr = shared_ptr< Point >;
@@ -210,10 +210,10 @@ namespace util
 	};
 	
 	/** Struct to handle callback data. Specialization for points with both colors and normals. */
-	template< typename Float, typename Vec3 >
-	struct CBDataHandler< Float, Vec3, ExtendedPoint< Float,Vec3 > >
+	template<>
+	struct CBDataHandler< ExtendedPoint >
 	{
-		using Point = ExtendedPoint< Float, Vec3 >;
+		using Point = ExtendedPoint;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		
@@ -252,8 +252,8 @@ namespace util
 		}
 	};
 	
-	template< typename Float, typename Vec3, typename Point >
-	int PlyPointReader< Float, Vec3, Point >::vertexCB( p_ply_argument argument )
+	template< typename Point >
+	int PlyPointReader< Point >::vertexCB( p_ply_argument argument )
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
@@ -268,7 +268,7 @@ namespace util
 		
 		unsigned int index = propFlag & 0xF;
 		
-		CBDataHandler< Float, Vec3, Point > dataHandler;
+		CBDataHandler< Point > dataHandler;
 		dataHandler( index, value, readingData );
 		
 		return 1;
@@ -277,10 +277,10 @@ namespace util
 	// ====================== Type Sugar ================================ /
 	
 	/** Reader for points with position and color or normal. */
-	using SimplePointReader = PlyPointReader< float, vec3, Point< float, vec3 > >;
+	using SimplePointReader = PlyPointReader< Point >;
 	
 	/** Reader for points with position, color and normal. */
-	using ExtendedPointReader = PlyPointReader< float, vec3, ExtendedPoint< float, vec3 > >;
+	using ExtendedPointReader = PlyPointReader< ExtendedPoint >;
 }
 
 #endif

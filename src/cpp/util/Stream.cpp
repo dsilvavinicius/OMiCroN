@@ -24,6 +24,48 @@ namespace model
 		return out;
 	}
 	
+		ostream& operator<<( ostream& out, const vector< PointPtr >& v )
+	{
+		out << "size: " << v.size() << endl << "{" << endl;
+		bool first = true;
+		for( PointPtr element : v )
+		{
+			if( first )
+			{
+				out << *element;
+				first = false;
+			}
+			else
+			{
+				out << ", " << endl << *element;
+			}
+		}
+		out << "}";
+		
+		return out;
+	}
+	
+	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr >& v )
+	{
+		out << "size: " << v.size() << endl << "{" << endl;
+		bool first = true;
+		for( ExtendedPointPtr element : v )
+		{
+			if( first )
+			{
+				out << *element;
+				first = false;
+			}
+			else
+			{
+				out << ", " << endl << *element;
+			}
+		}
+		out << "}";
+		
+		return out;
+	}
+	
 	ostream& operator<<( ostream& out, const QPoint& point )
 	{
 		out << "( " << point.x() << ", " << point.y()  <<  " )";

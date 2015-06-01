@@ -6,46 +6,43 @@
 
 namespace model
 {
-	template< typename MortonPrecision, typename Float, typename Vec3 >
+	template< typename MortonCode >
 	class OctreeNode;
 	
-	template< typename MortonPrecision, typename Float, typename Vec3,
-		typename Contents >
-	class LeafNode : public OctreeNode< MortonPrecision, Float, Vec3 >
+	template< typename MortonCode, typename Contents >
+	class LeafNode : public OctreeNode< MortonCode >
 	{
 	public:
 		bool isLeaf() const;
 		void setContents( const Contents& contents );
 		shared_ptr< Contents > getContents() const;
 		
-		template< typename M, typename F, typename V, typename C >
-		friend ostream& operator<<( ostream& out, const LeafNode< M, F, V, C >& node );
+		template< typename M, typename C >
+		friend ostream& operator<<( ostream& out, const LeafNode< M, C >& node );
 	private:
 		shared_ptr< Contents > m_contents;
 	};
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	inline bool LeafNode<MortonPrecision, Float, Vec3, Contents>::isLeaf() const
+	template < typename MortonCode, typename Contents >
+	inline bool LeafNode< MortonCode, Contents >::isLeaf() const
 	{
 		return true;
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	inline void LeafNode<MortonPrecision, Float, Vec3, Contents>::setContents(
-		const Contents& contents)
+	template < typename MortonCode, typename Contents >
+	inline void LeafNode< MortonCode, Contents >::setContents( const Contents& contents )
 	{
 		m_contents = make_shared< Contents>(contents);
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	inline shared_ptr< Contents > LeafNode<MortonPrecision, Float, Vec3, Contents>::
-		getContents() const
+	template < typename MortonCode, typename Contents >
+	inline shared_ptr< Contents > LeafNode< MortonCode, Contents >::getContents() const
 	{
 		return m_contents;
 	}
 	
-	template < typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	ostream& operator<<(ostream& out, const LeafNode< MortonPrecision, Float, Vec3, Contents >& node)
+	template < typename MortonCode, typename Contents >
+	ostream& operator<<(ostream& out, const LeafNode< MortonCode, Contents >& node)
 	{
 		out << "Points Leaf Node: " << endl
 			<< *node.getContents();
@@ -57,11 +54,11 @@ namespace model
 	// Type sugar
 	//===========
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Contents >
-	using LeafNodePtr = shared_ptr< LeafNode< MortonPrecision, Float, Vec3, Contents > >;
+	template< typename MortonCode, typename Contents >
+	using LeafNodePtr = shared_ptr< LeafNode< MortonCode, Contents > >;
 	
-	template< typename Float, typename Vec3, typename Contents >
-	using ShallowLeafNode = LeafNode< unsigned int, Float, Vec3, Contents >;
+	template< typename Contents >
+	using ShallowLeafNode = LeafNode< ShallowMortonCode, Contents >;
 }
 
 #endif

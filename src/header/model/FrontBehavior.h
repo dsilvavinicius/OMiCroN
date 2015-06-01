@@ -23,29 +23,24 @@ namespace model
 		}
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class FrontOctree;
 	
 	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
 	 * should be tightly coupled with the class that it is "specializing". */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename Front,
-			  typename InsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename InsertionContainer >
 	class FrontBehavior
 	{};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point, typename InsertionContainer >
-	class FrontBehavior< MortonPrecision, Float, Vec3, Point, unordered_set< MortonCode< MortonPrecision > >,
-						 InsertionContainer >
+	template< typename MortonCode, typename Point, typename InsertionContainer >
+	class FrontBehavior< MortonCode, Point, unordered_set< MortonCode >, InsertionContainer >
 	{
 	public:
-		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
-		using RenderingState = model::RenderingState< Vec3, Float >;
 		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::FrontOctree< MortonPrecision, Float, Vec3, Point, Front, InsertionContainer >;
+		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, InsertionContainer >;
 		
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}
@@ -136,8 +131,8 @@ namespace model
 		InsertionContainer m_insertionList;
 	};
 	
-	template< typename Float, typename Vec3, typename Point, typename Front, typename InsertionContainer >
-	using ShallowFrontBehavior = FrontBehavior< unsigned int, Float, Vec3, Point, Front, InsertionContainer >;
+	template< typename Point, typename Front, typename InsertionContainer >
+	using ShallowFrontBehavior = FrontBehavior< ShallowMortonCode, Point, Front, InsertionContainer >;
 }
 
 #endif

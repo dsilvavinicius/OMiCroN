@@ -7,22 +7,20 @@
 namespace model
 {
 	/** An octree that uses indices to a vector of points in the hierarchy. */
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
+	template< typename MortonCode, typename Point >
 	class IndexedOctree
-	: public RandomSampleOctree< MortonPrecision, Float, Vec3, Point >
+	: public RandomSampleOctree< MortonCode, Point >
 	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using IndexVector = vector< unsigned int >;
 		using IndexVectorPtr = shared_ptr< IndexVector >;
-		using OctreeNode = model::OctreeNode< MortonPrecision, Float, Vec3 >;
+		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using LeafNode = model::LeafNode< MortonPrecision, Float, Vec3, IndexVector >;
-		using OctreeMap = model::OctreeMap< MortonPrecision, Float, Vec3 >;
-		using RandomSampleOctree = model::RandomSampleOctree< MortonPrecision, Float, Vec3, Point >;
-		using RenderingState = model::RenderingState< Vec3, Float >;
+		using LeafNode = model::LeafNode< MortonCode, IndexVector >;
+		using OctreeMap = model::OctreeMap< MortonCode >;
+		using RandomSampleOctree = model::RandomSampleOctree< MortonCode, Point >;
 		
 	public:
 		IndexedOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -58,13 +56,13 @@ namespace model
 		PointVector m_points;
 	};
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	IndexedOctree< MortonPrecision, Float, Vec3, Point >::IndexedOctree( const int& maxPointsPerNode, const int& maxLevel )
+	template< typename MortonCode, typename Point >
+	IndexedOctree< MortonCode, Point >::IndexedOctree( const int& maxPointsPerNode, const int& maxLevel )
 	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel ),
 	m_nPoints( 0 ) {}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void IndexedOctree< MortonPrecision, Float, Vec3, Point >::build( PointVector& points )
+	template< typename MortonCode, typename Point >
+	void IndexedOctree< MortonCode, Point >::build( PointVector& points )
 	{
 		m_points = points;
 		points.clear();
@@ -73,8 +71,8 @@ namespace model
 		buildNodes( m_points );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	void IndexedOctree< MortonPrecision, Float, Vec3, Point >::buildNodes( PointVector& points )
+	template< typename MortonCode, typename Point >
+	void IndexedOctree< MortonCode, Point >::buildNodes( PointVector& points )
 	{
 		cout << "Before leaf nodes build." << endl << endl;
 		RandomSampleOctree::buildLeaves(points);
@@ -83,8 +81,8 @@ namespace model
 		cout << "After inner nodes build." << endl << endl;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::insertPointInLeaf( const PointPtr& point )
+	template< typename MortonCode, typename Point >
+	inline void IndexedOctree< MortonCode, Point >::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code = make_shared< MortonCode >( RandomSampleOctree::calcMorton( *point ) );
 		typename OctreeMap::iterator genericLeafIt = RandomSampleOctree::m_hierarchy->find( code );
@@ -109,8 +107,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::buildInnerNode(
+	template< typename MortonCode, typename Point >
+	inline void IndexedOctree< MortonCode, Point >::buildInnerNode(
 		typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
 		const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children )
 	{
@@ -154,13 +152,13 @@ namespace model
 		}
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline OctreeNodePtr< MortonPrecision, Float, Vec3 > IndexedOctree< MortonPrecision, Float, Vec3, Point >
+	template< typename MortonCode, typename Point >
+	inline OctreeNodePtr< MortonCode > IndexedOctree< MortonCode, Point >
 		::buildInnerNode( const IndexVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		auto node = make_shared< InnerNode< MortonPrecision, Float, Vec3, IndexVector > >();
+		auto node = make_shared< InnerNode< MortonCode, IndexVector > >();
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		IndexVector selectedPoints( numSamplePoints );
 		
@@ -176,8 +174,8 @@ namespace model
 		return node;
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::setupInnerNodeRendering( OctreeNodePtr innerNode,
+	template< typename MortonCode, typename Point >
+	inline void IndexedOctree< MortonCode, Point >::setupInnerNodeRendering( OctreeNodePtr innerNode,
 																							   MortonCodePtr code,
 																							RenderingState& renderingState )
 	{
@@ -186,8 +184,8 @@ namespace model
 		setupNodeRendering( innerNode, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::setupLeafNodeRendering( OctreeNodePtr leafNode, 
+	template< typename MortonCode, typename Point >
+	inline void IndexedOctree< MortonCode, Point >::setupLeafNodeRendering( OctreeNodePtr leafNode, 
 																							  MortonCodePtr code,
 																						   RenderingState& renderingState )
 	{
@@ -196,8 +194,8 @@ namespace model
 		setupNodeRendering( leafNode, renderingState );
 	}
 	
-	template< typename MortonPrecision, typename Float, typename Vec3, typename Point >
-	inline void IndexedOctree< MortonPrecision, Float, Vec3, Point >::setupNodeRendering( OctreeNodePtr node,
+	template< typename MortonCode, typename Point >
+	inline void IndexedOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node,
 																						  RenderingState& renderingState )
 	{
 		IndexVectorPtr points = node-> template getContents< IndexVector >();
@@ -206,8 +204,8 @@ namespace model
 	
 	// ====================== Type Sugar ================================ /
 	
-	template< typename Float, typename Vec3, typename Point >
-	using ShallowIndexedOctree = IndexedOctree< unsigned int, Float, Vec3, Point >;
+	template< typename Point >
+	using ShallowIndexedOctree = IndexedOctree< ShallowMortonCode, Point >;
 }
 
 #endif

@@ -12,7 +12,7 @@ namespace model
 		{};
 		
 		template<>
-		class RandomSampleOctreeTest< Point<float, vec3> >
+		class RandomSampleOctreeTest< Point >
 		: public ::testing::Test
 		{
 		protected:
@@ -21,7 +21,7 @@ namespace model
 		};
 		
 		template<>
-		class RandomSampleOctreeTest< ExtendedPoint<float, vec3> >
+		class RandomSampleOctreeTest< ExtendedPoint >
 		: public ::testing::Test
 		{
 		protected:
@@ -30,7 +30,7 @@ namespace model
 		};
 
 		void generatePointsInInterval( const int& numPoints, const vec2& xInterval, const vec2& yInterval,
-									   const vec2& zInterval, PointVector< float, vec3 >& out_points )
+									   const vec2& zInterval, PointVector& out_points )
 		{
 			for( int i = 0; i < numPoints; ++i )
 			{
@@ -38,13 +38,13 @@ namespace model
 				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
 				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
 					
-				auto point = make_shared< Point< float, vec3 > >( vec3( 1.f, 1.f, 1.f ), vec3( x, y, z ) );
+				auto point = make_shared< Point >( vec3( 1.f, 1.f, 1.f ), vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
 		}
 		
 		void generatePointsInInterval( const int& numPoints, const vec2& xInterval, const vec2& yInterval,
-									   const vec2& zInterval, ExtendedPointVector< float, vec3 >& out_points )
+									   const vec2& zInterval, ExtendedPointVector& out_points )
 		{
 			for( int i = 0; i < numPoints; ++i )
 			{
@@ -52,7 +52,7 @@ namespace model
 				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
 				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
 					
-				auto point = make_shared< ExtendedPoint< float, vec3 > >( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ),
+				auto point = make_shared< ExtendedPoint >( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ),
 																		  vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
@@ -60,7 +60,7 @@ namespace model
 		
 		using testing::Types;
 		
-		typedef Types< Point< float, vec3 >, ExtendedPoint< float, vec3 > > Implementations;
+		typedef Types< Point, ExtendedPoint > Implementations;
 		TYPED_TEST_CASE( RandomSampleOctreeTest, Implementations );
 		
 		TYPED_TEST( RandomSampleOctreeTest, Hierarchy )
@@ -84,15 +84,15 @@ namespace model
 			
 			PointVector tmpPts = points;
 			
-			ShallowRandomSampleOctree< float, vec3, Point > octree( 1, 1 );
+			ShallowRandomSampleOctree< Point > octree( 1, 1 );
 			octree.build( tmpPts );
 			
-			ShallowOctreeMapPtr< float, vec3 > hierarchy = octree.getHierarchy();
+			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
 			ShallowMortonCodePtr rootCode = make_shared< ShallowMortonCode >();
 			rootCode->build( 0x1 );
 			
-			InnerNodePtr< unsigned int, float, vec3, PointVector > root = dynamic_pointer_cast<
-				InnerNode< unsigned int, float, vec3, PointVector > >( ( *hierarchy )[ rootCode ] );
+			InnerNodePtr< ShallowMortonCode, PointVector > root = dynamic_pointer_cast<
+				InnerNode< ShallowMortonCode, PointVector > >( ( *hierarchy )[ rootCode ] );
 			
 			PointVectorPtr rootPoints = root->getContents();
 			ASSERT_TRUE( rootPoints->size() == pointsPerOctant );

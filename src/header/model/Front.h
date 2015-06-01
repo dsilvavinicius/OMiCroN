@@ -13,11 +13,9 @@ using namespace boost::multi_index;
 namespace model
 {
 	/** This struct has all types used to represent the front as a set with an ordered index and a hashed index. */
-	template< typename MortonPrecision >
+	template< typename MortonCode >
 	struct FrontTypes
 	{
-		using MortonCode = model::MortonCode< MortonPrecision >;
-		
 		struct sequential {};
 		struct morton {};
 		

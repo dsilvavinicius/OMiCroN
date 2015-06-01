@@ -17,7 +17,6 @@ namespace util
 
 		TEST_F( PlyPointReaderTest, Read )
 		{
-			using Point = model::Point< float, vec3 >;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
 			
@@ -42,7 +41,6 @@ namespace util
 		
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
-			using Point = model::Point< float, vec3 >;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
 			
@@ -64,7 +62,7 @@ namespace util
 		
 		TEST_F( PlyPointReaderTest, ReadExtendedPoints )
 		{
-			using Point = model::ExtendedPoint< float, vec3 >;
+			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
 			
