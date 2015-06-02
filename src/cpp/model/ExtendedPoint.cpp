@@ -55,6 +55,12 @@ namespace model
 		m_normal = make_shared< Vec3 >( normal );
 	}
 	
+	ExtendedPoint::ExtendedPoint( byte* serialization, byte*& pastRead )
+	: ExtendedPoint( serialization )
+	{
+		pastRead = serialization + 3 * sizeof( Vec3 );
+	}
+	
 	shared_ptr< Vec3 > ExtendedPoint::getNormal() { return m_normal; }
 	
 	const shared_ptr< const Vec3 > ExtendedPoint::getNormal() const { return m_normal; }

@@ -18,6 +18,7 @@ namespace model
 		ExtendedPoint( ExtendedPoint&& other );
 		ExtendedPoint& operator=( ExtendedPoint&& other);
 		ExtendedPoint( byte* serialization );
+		ExtendedPoint( byte* serialization, byte*& pastRead );
 		
 		shared_ptr< Vec3 > getNormal();
 		

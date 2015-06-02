@@ -116,13 +116,13 @@ namespace model
 		byte* content;
 		size_t contentSize = Serializer::serialize( *getContents< Contents >(), &content );
 		
-		bool flag = isLeaf();
-		size_t flagSize = sizeof( bool );
+		byte flag = isLeaf() ? 1 : 0;
+		size_t flagSize = sizeof( byte );
 		size_t nodeSize = flagSize + contentSize;
 		
 		*serialization = new byte[ nodeSize ];
 		memcpy( *serialization, &flag, flagSize );
-		memcpy( *serialization + flagSize, content, contentSize );
+		memcpy( ( *serialization ) + flagSize, content, contentSize );
 		
 		Serializer::dispose( content );
 		
@@ -131,13 +131,14 @@ namespace model
 	
 	template< typename MortonCode >
 	template< typename Contents >
-	inline OctreeNode< MortonCode >* OctreeNode< MortonCode >::deserialize(
-		byte* serialization )
+	inline OctreeNode< MortonCode >* OctreeNode< MortonCode >::deserialize( byte* serialization )
 	{
-		bool flag;
-		size_t flagSize = sizeof( bool );
+		byte flag;
+		size_t flagSize = sizeof( byte );
 		memcpy( &flag, serialization, flagSize );
 		byte* tempPtr = serialization + flagSize;
+		
+		cout << "flag: " << flag << endl;
 		
 		if( flag )
 		{

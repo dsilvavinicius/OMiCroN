@@ -61,6 +61,12 @@ namespace model
 		m_pos = make_shared< Vec3 >( pos );
 	}
 	
+	Point::Point( byte* serialization, byte*& pastRead )
+	: Point( serialization )
+	{
+		pastRead = serialization + 2 * sizeof( Vec3 );
+	}
+	
 	Vec3Ptr Point::getColor() { return m_color; }
 	
 	const ConstVec3Ptr Point::getColor() const { return m_color; }

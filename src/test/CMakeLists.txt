@@ -19,6 +19,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/OctreeNodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp

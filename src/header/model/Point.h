@@ -28,6 +28,11 @@ namespace model
 		 *	@param serialization must be acquired by the serialize() method.*/
 		Point( byte* serialization );
 		
+		/** Deserialization constructor that returns a pointer past read data.
+		 *	@param serialization must be acquired by the serialize() method.
+		 *	@param pastReadPtr returns a pointer to data past the reading. */
+		Point( byte* serialization, byte*& pastRead );
+		
 		Vec3Ptr getColor();
 		Vec3Ptr getPos();
 		
