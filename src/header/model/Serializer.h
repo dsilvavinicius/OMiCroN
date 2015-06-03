@@ -54,28 +54,18 @@ namespace model
 		size_t count = vector.size();
 		size_t countSize = sizeof( size_t );
 		
-		cout << "Serializing PointVector. Size: " << count << endl;
-		
 		if( count > 0 )
 		{
 			byte* pointBytes;
 			size_t elemSize = vector[ 0 ]->serialize( &pointBytes );
-			
-			cout << "Point size:" << elemSize << endl;
 			
 			size_t vecSize = count * elemSize;
 			size_t serializationSize = countSize + vecSize;
 			
 			*serialization = new byte[ serializationSize ];
 			byte* tempPointer = *serialization;
-			
-			cout << "Inserting vector size " << count << endl;
-			
 			memcpy( tempPointer, &count, countSize );
 			tempPointer += countSize;
-			
-			cout << "Serialized point 0." << endl;
-			
 			memcpy( tempPointer, pointBytes, elemSize );
 			
 			for( int i = 1; i < vector.size(); ++i )
@@ -84,21 +74,19 @@ namespace model
 				tempPointer += elemSize;
 				Serializer::dispose( pointBytes );
 				point->serialize( &pointBytes );
-				
-				cout << "Serialized point " << i << endl;
-				
 				memcpy( tempPointer, pointBytes, elemSize );
 			}
 			
-			cout << "Serialized count: " << *( ( size_t* ) ( *serialization ) ) << endl;
-			
 			Serializer::dispose( pointBytes );
+			return serializationSize;
 		}
 		else
 		{
 			size_t serializationSize = countSize;
 			*serialization = new byte[ serializationSize ];
 			memcpy( *serialization, &count, countSize );
+			
+			return serializationSize;
 		}
 	}
 	
@@ -108,8 +96,6 @@ namespace model
 		size_t count;
 		size_t countSize = sizeof( size_t );
 		memcpy( &count, serialization, countSize );
-		
-		cout << "count: " << count << endl;
 		
 		size_t vecSize = count * sizeof( T );
 		T* array = ( T* ) malloc( vecSize );
@@ -125,8 +111,6 @@ namespace model
 		size_t count;
 		size_t countSize = sizeof( size_t );
 		memcpy( &count, serialization, countSize );
-		
-		cout << "Deserializing PointPtr. Num elements: " << count << endl;
 		
 		byte* tempPtr0 = serialization + countSize;
 		byte* tempPtr1 = nullptr;
