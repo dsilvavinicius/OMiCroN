@@ -264,8 +264,8 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createStmts()
 	{
-		safePrepare( "INSERT INTO Points VALUES ( ?, ? );", &m_pointInsertionStmt);
-		safePrepare( "INSERT INTO Nodes VALUES ( ?, ? );", &m_nodeInsertion );
+		safePrepare( "INSERT OR REPLACE INTO Points VALUES ( ?, ? );", &m_pointInsertionStmt);
+		safePrepare( "INSERT OR REPLACE INTO Nodes VALUES ( ?, ? );", &m_nodeInsertion );
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );

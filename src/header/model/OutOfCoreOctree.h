@@ -20,7 +20,6 @@ namespace model
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using IndexVector = vector< unsigned int >;
 		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
@@ -42,9 +41,6 @@ namespace model
 		
 		/** DEPRECATED: use build() instead. */
 		virtual void build( PointVector& points ) override;
-		
-		/** DEPRECATED. */
-		PointVector& getPoints() override;
 	
 	protected:
 		virtual void insertPointInLeaf( const PointPtr& point ) override;
@@ -68,34 +64,30 @@ namespace model
 		
 		SQLiteManager m_sqLite;
 		
-		//unordered_map< unsigned long > m_points;
+		unsigned long m_nodesUntilLastPersistence; 
 		
-		static unsigned long M_MAX_MEMORY_BYTES;
-		static double M_MIN_FREE_MEMORY_BYTES;
+		static unsigned long M_MAX_MEMORY_SIZE;
+		static double M_MIN_FREE_MEMORY_SIZE;
 		static unsigned int M_NODES_PER_PERSISTENCE_ITERATION;
-		static unsigned int M_POINTS_CREATED_UNTIL_PERSISTENCE;
 	};
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MAX_MEMORY_BYTES = MemoryInfo::getMemorySize();
+	::M_MAX_MEMORY_SIZE = MemoryInfo::getMemorySize();
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	double OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_BYTES = ( (double) M_MAX_MEMORY_BYTES * 0.1 );
+	::M_MIN_FREE_MEMORY_SIZE = ( (double) M_MAX_MEMORY_SIZE * 0.1 );
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::M_NODES_PER_PERSISTENCE_ITERATION = 50;
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_POINTS_CREATED_UNTIL_PERSISTENCE = 100;
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::OutOfCoreOctree( const int& maxPointsPerNode,
 																						   const int& maxLevel )
-	: ParentOctree( maxPointsPerNode, maxLevel )
+	: ParentOctree( maxPointsPerNode, maxLevel ),
+	m_nodesUntilLastPersistence( 0uL )
 	{}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -138,8 +130,6 @@ namespace model
 				sqlite_int64 index = m_sqLite.insertPoint( point );
 				
 				insertPointInLeaf( make_shared< Point >( point ) );
-				
-				//if( ParentOctree::m_nPoints )
 			}
 		);
 		reader->read( plyFileName, precision, attribs );
@@ -160,31 +150,61 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseNodes()
+	{
+		while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_SIZE )
+		{
+			m_nodesUntilLastPersistence = 0;
+			
+			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+			typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
+			
+			int i = 0;
+			while( i < M_NODES_PER_PERSISTENCE_ITERATION && nodeIt != hierarchy->rend() )
+			{
+				MortonCodePtr code = nodeIt->first;
+				OctreeNodePtr node = nodeIt->second;
+				
+				typename OctreeMap::reverse_iterator toErase = nodeIt;
+				
+				++nodeIt;
+				++i;
+				
+				hierarchy->erase( toErase.base() );
+				m_sqLite. template insertNode< PointVector >( *code, *node );
+			}
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code = make_shared< MortonCode >( ParentOctree::calcMorton( *point ) );
 		OctreeNodePtr node = getNode( code );
 		
-		unsigned long index = ParentOctree::m_nPoints++;
-		
 		if( node == nullptr )
 		{
+			++m_nodesUntilLastPersistence;
+			
 			// Creates leaf node.
-			IndexVector indices;
-			indices.push_back( index );
-			auto leafNode = make_shared< LeafNode< MortonCode, IndexVector > >();
-			leafNode->setContents( indices );
+			PointVector points;
+			points.push_back( point );
+			auto leafNode = make_shared< LeafNode< MortonCode, PointVector > >();
+			leafNode->setContents( points );
 			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
 		}
 		else
 		{
 			// Node already exists. Appends the point there.
-			shared_ptr< IndexVector > indices = node-> template getContents< IndexVector >();
-			indices->push_back( index );
+			shared_ptr< PointVector > points = node-> template getContents< PointVector >();
+			points->push_back( point );
 		}
 		
-		// START HERE FROM CONDITIONAL NODE PERSISTENCE!
+		if( m_nodesUntilLastPersistence > M_NODES_PER_PERSISTENCE_ITERATION )
+		{
+			persistAndReleaseNodes();
+		}
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -193,15 +213,18 @@ namespace model
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::iterator nodeIt = hierarchy->find( code );
+		
 		if( nodeIt != hierarchy->end() )
 		{
 			return nodeIt->second;
 		}
 		else
 		{
-			OctreeNode* node = m_sqLite. template getNode< IndexVector >( *code );
+			OctreeNode* node = m_sqLite. template getNode< PointVector >( *code );
 			if( node )
 			{
+				++m_nodesUntilLastPersistence;
+				
 				OctreeNodePtr nodePtr( node );
 				return nodePtr;
 			}
@@ -210,37 +233,6 @@ namespace model
 				return nullptr;
 			}
 		}
-	}
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseNodes()
-	{
-		while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_BYTES )
-		{
-			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
-			typename OctreeMapPtr::iterator nodeIt = hierarchy->rbegin();
-			
-			int i = 0;
-			while( i < M_NODES_PER_PERSISTENCE_ITERATION && nodeIt != hierarchy->rend() )
-			{
-				MortonCodePtr code = nodeIt->first;
-				OctreeNodePtr node = nodeIt->second;
-				
-				typename OctreeMapPtr::iterator toErase = nodeIt;
-				
-				++nodeIt;
-				++i;
-				
-				hierarchy->erase( toErase );
-				m_sqLite-> template insertNode< IndexVector >( *code, *node );
-			}
-		}
-	}
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	vector< shared_ptr< Point > >& OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::getPoints()
-	{
-		throw logic_error( "getPoints() is unsuported, since everything is in database in this implementation." );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

@@ -4,8 +4,7 @@
 #include <unordered_set>
 
 #include "FrontBehavior.h"
-//#include "RandomSampleOctree.h"
-#include "IndexedOctree.h"
+#include "RandomSampleOctree.h"
 
 namespace model
 {
@@ -15,10 +14,10 @@ namespace model
 	 *	@param: FrontInsertionContainer is the insertion container, used to track nodes that should be added to the front. */
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class FrontOctree
-	: public IndexedOctree< MortonCode, Point >
+	: public RandomSampleOctree< MortonCode, Point >
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
-		using ParentOctree = model::IndexedOctree< MortonCode, Point >;
+		using ParentOctree = model::RandomSampleOctree< MortonCode, Point >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using MortonVector = vector< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
@@ -68,10 +67,6 @@ namespace model
 		/** Rendering setup method for both leaf and inner node cases. Adds the node into the front. */
 		void setupNodeRendering( OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState );
 		
-		/** Rendering setup method that leaves the front insertion responsibility to the caller. Can be also used in cases
-		 *	that insertion the node into front is not necessary. */
-		//virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
-		
 		/** Object with data related behavior of the front. */
 		FrontBehavior* m_frontBehavior;
 	};
@@ -79,7 +74,7 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::FrontOctree( const int& maxPointsPerNode,
 																						const int& maxLevel )
-	: ParentOctree::IndexedOctree( maxPointsPerNode, maxLevel )
+	: ParentOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
 	{
 		m_frontBehavior = new FrontBehavior( *this );
 	}

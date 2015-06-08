@@ -28,8 +28,8 @@ class PointRendererWidget
 	//using Octree = model::ShallowRandomSampleOctree< Point >;
 	using Octree = model::ShallowFrontOctree< Point >;
 	//using Octree = model::ShallowParallelOctree< Point >;
-	using RenderingState = model::IndexedTucanoRenderer< Point >;
-	//using RenderingState = model::TucanoRenderingState;
+	//using RenderingState = model::IndexedTucanoRenderer< Point >;
+	using RenderingState = model::TucanoRenderingState;
 	
 public:
 	explicit PointRendererWidget( QWidget *parent );

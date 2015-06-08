@@ -19,7 +19,7 @@ namespace model
 		{
 			using OctreeNode = ShallowOctreeNode;
 			
-			ShallowOutOfCoreOctree< Point >  octree( 1, 10 );
+			ShallowOutOfCoreOctree< Point > octree( 1, 10 );
 			octree.buildFromFile( g_appPath + "/data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 			
 			float epsilon = 1.e-15;

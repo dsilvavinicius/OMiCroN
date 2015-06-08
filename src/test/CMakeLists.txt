@@ -28,6 +28,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/CompactionTest.cpp
 	
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
+	${CPP_DIR}/${UTIL_DIR}/MemoryInfoTest.cpp
 	${CPP_DIR}/main.cpp)
 
 target_include_directories (Tests PUBLIC include/)
