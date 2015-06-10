@@ -11,11 +11,20 @@ using namespace std;
 
 namespace util
 {
+	template< typename MortonCode, typename OctreeNode >
+	using IdNode = pair< MortonCode*, OctreeNode* >;
+	
+	template< typename MortonCode, typename OctreeNode >
+	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode > >;
+	
 	/** Manages all SQLite operations. */
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	class SQLiteManager
 	{
 	public:
+		using IdNode = pair< MortonCode*, OctreeNode* >;
+		using IdNodeVector = vector< IdNode >;
+		
 		SQLiteManager();
 		~SQLiteManager();
 		
@@ -39,13 +48,21 @@ namespace util
 		template< typename NodeContents >
 		OctreeNode* getNode( const MortonCode& morton );
 		
-		/** Searches for a range of nodes in the database, given the morton code interval (a, b).
+		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param NodeContents is the type of the contents of the node.
-		 *	@param a is the minor boundary of the morton code open interval.
-		 *	@param b is the major boundary of the morton open interval.
+		 *	@param a is the minor boundary of the morton code closed interval.
+		 *	@param b is the major boundary of the morton closed interval.
 		 *	@returns the acquired nodes. The ownership of the node pointers is caller's. */
 		template< typename NodeContents >
 		vector< OctreeNode* > getNodes( const MortonCode& a, const MortonCode& b );
+		
+		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
+		 *	@param NodeContents is the type of the contents of the node.
+		 *	@param a is the minor boundary of the morton code closed interval.
+		 *	@param b is the major boundary of the morton closed interval.
+		 *	@returns pairs of acquired nodes and morton id. The ownership of the node pointers is caller's. */
+		template< typename NodeContents >
+		IdNodeVector getIdNodes( const MortonCode& a, const MortonCode& b );
 		
 	private:
 		/** Release all acquired resources. */
@@ -93,6 +110,7 @@ namespace util
 		sqlite3_stmt* m_nodeInsertion;
 		sqlite3_stmt* m_nodeQuery;
 		sqlite3_stmt* m_nodeIntervalQuery;
+		sqlite3_stmt* m_nodeIntervalIdQuery;
 		
 		/** Current number of inserted points. */
 		sqlite_int64 m_nPoints;
@@ -106,6 +124,7 @@ namespace util
 	m_nodeInsertion( nullptr ),
 	m_nodeQuery( nullptr ),
 	m_nodeIntervalQuery( nullptr ),
+	m_nodeIntervalIdQuery( nullptr ),
 	m_nPoints( 0 )
 	{
 		checkReturnCode(
@@ -222,6 +241,30 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
+	template< typename NodeContents >
+	IdNodeVector< MortonCode, OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getIdNodes(
+		const MortonCode& a, const MortonCode& b )
+	{
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 2, b.getBits() ), SQLITE_OK );
+		
+		IdNodeVector queried;
+		while( safeStep( m_nodeIntervalIdQuery ) )
+		{
+			sqlite3_int64 mortonBits = sqlite3_column_int64( m_nodeIntervalIdQuery, 0 );
+			MortonCode* code = new MortonCode();
+			code->build( mortonBits );
+			
+			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
+			OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
+			
+			queried.push_back( IdNode( code, node ) );
+		}
+		
+		return queried;
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createTables()
 	{
 		sqlite3_stmt* creationStmt;
@@ -269,6 +312,7 @@ namespace util
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
+		safePrepare( "SELECT Morton, Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalIdQuery );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -280,6 +324,7 @@ namespace util
 		unsafeFinalize( m_nodeInsertion );
 		unsafeFinalize( m_nodeQuery );
 		unsafeFinalize( m_nodeIntervalQuery );
+		unsafeFinalize( m_nodeIntervalIdQuery );
 		
 		if( m_db )
 		{

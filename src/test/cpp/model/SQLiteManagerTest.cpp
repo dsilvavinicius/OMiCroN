@@ -98,10 +98,8 @@ namespace model
 			code.build( 1, 2, 3, 4 );
 			SQLiteManager sqLite;
 			
-			cout << "Inserting point node." << endl;
 			sqLite.insertNode< PointVector >( code, node );
 			
-			cout << "Getting point node." << endl;
 			OctreeNode* queriedNode = sqLite.getNode< PointVector >( code );
 			
 			cout << "Asserting." << endl;
@@ -114,6 +112,49 @@ namespace model
 			}
 			
 			delete queriedNode;
+		}
+		
+		TEST_F( SQLiteManagerTest, InsertAndGetIdNodes )
+		{
+			using Contents = vector< int >;
+			using OctreeNode = model::ShallowOctreeNode;
+			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
+			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
+			using IdNode = util::IdNode< ShallowMortonCode, OctreeNode >;
+			
+			int rawInts0[ 3 ] = { 1, 2, 3 };
+			int rawInts1[ 3 ] = { 10, 20, 30 };
+			Contents ints0( rawInts0, rawInts0 + 3 );
+			Contents ints1( rawInts1, rawInts1 + 3 );
+			
+			LeafNode node0;
+			LeafNode node1;
+			node0.setContents( ints0 );
+			node1.setContents( ints1 );
+			
+			ShallowMortonCode code0;
+			code0.build( 1, 2, 3, 4 );
+			ShallowMortonCode code1;
+			code1.build( 7, 7, 7, 10 );
+			ShallowMortonCode intervalEnd;
+			intervalEnd.build( 1, 2, 3, 5 );
+			
+			SQLiteManager sqLite;
+			sqLite.insertNode< Contents >( code0, node0 );
+			sqLite.insertNode< Contents >( code1, node1 );
+			
+			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
+			
+			cout << "Asserting." << endl;
+			
+			ShallowMortonCode queriedId = *queried[ 0 ].first;
+			ASSERT_EQ( queriedId, code0 );
+			
+			Contents queriedInts = *queried[ 0 ].second->getContents< Contents >();
+			ASSERT_EQ( queriedInts, ints0 );
+			
+			delete queried[ 0 ].first;
+			delete queried[ 0 ].second;
 		}
 		
 		/*

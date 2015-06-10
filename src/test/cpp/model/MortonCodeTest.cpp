@@ -152,5 +152,44 @@ namespace model
 			ASSERT_EQ( decodedL[ 1 ], coordsL[ 1 ]);
 			ASSERT_EQ( decodedL[ 2 ], coordsL[ 2 ]);
 		}
+		
+		TEST_F( MortonCodeTest, isChild )
+		{
+			ShallowMortonCode code0;
+			code0.build( 0xF );
+			
+			ShallowMortonCode code1;
+			code1.build( 0x1 );
+			
+			ASSERT_TRUE( code0.isChildOf( code1 ) );
+			
+			code1.build( 0x3 );
+			
+			ASSERT_FALSE( code0.isChildOf( code1 ) );
+		}
+		
+		TEST_F( MortonCodeTest, getFirstChild )
+		{
+			ShallowMortonCode code;
+			code.build( 0x1 );
+			ASSERT_EQ( code.getFirstChild()->getBits(), 0x8 );
+		}
+		
+		TEST_F( MortonCodeTest, getLastChild )
+		{
+			ShallowMortonCode code;
+			code.build( 0x1 );
+			ASSERT_EQ( code.getLastChild()->getBits(), 0xF );
+		}
+		
+		TEST_F( MortonCodeTest, getChildInterval )
+		{
+			ShallowMortonCode code;
+			code.build( 0x1 );
+			ShallowMortonInterval interval = code.getChildInterval();
+			
+			ASSERT_EQ( interval.first->getBits(), 0x8 );
+			ASSERT_EQ( interval.second->getBits(), 0xF );
+		}
 	}
 }

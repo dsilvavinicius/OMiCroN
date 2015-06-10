@@ -11,8 +11,9 @@ using namespace util;
 
 namespace model
 {
-	/** Octree for massive point clouds that cannot be held in main memory because of their sizes. The main memory is used
-	 * as a cache, with data being fetched on demand from a database in disk. */
+	/** Octree for massive point clouds that cannot be held in main memory because of their sizes. The main memory is
+	 * used as a cache, with data being fetched on demand from a database in disk. The persistence is tracked, so
+	 * the construction and front tracking algorithms try to minimize database access. */
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class OutOfCoreOctree
 	: public FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
@@ -27,6 +28,7 @@ namespace model
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 		using ParentOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
+		using IdNode = pair< MortonCode*, OctreeNode* >;
 		
 	public:
 		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -47,15 +49,20 @@ namespace model
 		virtual void insertPointInLeaf( const PointPtr& point ) override;
 		
 		/** Acquires a node with given morton code. Searches in-memory hierarchy first and database if not found.
-		 * Also, it assumes that sequential getNode calls will have sequential ascendent morton code parameters, since it
-		 * modifies m_lastInMemory if code is greater than the current m_lastInMemory value. In other words, the caller must
-		 * ensure that all nodes with morton code less than the parameter are in-memory at call time.
-		 *	@return A smart-pointer to the node or nullptr if not found. */
+		 * DOES NOT TRACK PERSISTENCE, since the traversal and creation algorithms expect the atomic persistence
+		 * operation to have a per-sibling basis. 
+		 * @return A smart-pointer to the node or nullptr if not found. */
 		OctreeNodePtr getNode( const MortonCodePtr& code );
+		
+		/** Acquires all child nodes of a given parent node code. Searches in-memory hierarchy first and database if
+		 * not found. It assumes that the parameter is a code for an inner node. Using this method for a leaf node code
+		 * will result in unnecessary accesses to database. TRACKS PERSISTENCE.
+		 * @return A vector with all found nodes. */
+		vector< OctreeNodePtr > getChildren( const MortonCodePtr& parent );
 		
 		void buildInners() override;
 		
-		/** DEPRECATED: use buildBoundaries() instead. */
+		/** DEPRECATED. */
 		virtual void buildBoundaries( const PointVector& points ) override;
 		
 		/** DEPRECATED. */
@@ -65,11 +72,14 @@ namespace model
 		virtual void buildLeaves( const PointVector& points ) override;
 		
 	private:
-		/** Releases memory in the in-memory hierarchy. Persists all "dirty" nodes in the database. */
+		/** Releases node in the in-memory hierarchy. Persists all "dirty" nodes in the database. TRACKS PERSISTENCE. */
 		void releaseNodes();
 		
-		/** Persists and release leaf nodes. . */
+		/** Persists and release leaf nodes. DOES NOT TRACK PERSISTENCE. */
 		void persistAndReleaseLeaves();
+		
+		/** Checks if a node is dirty and needs to be persisted before released. */
+		bool isDirty( const MortonCodePtr& code ) const;
 		
 		SQLiteManager m_sqLite;
 		
@@ -78,9 +88,6 @@ namespace model
 		/** Last fully persisted node's morton code. Any morton code less than this one is dirty and should be written in
 		 * database before released. */
 		MortonCode* m_lastPersisted;
-		
-		/** Last in-memory node's morton code. Any morton code greater than this one should be queried in database. */
-		MortonCode* m_lastInMemory;
 		
 		unsigned long m_nodesUntilLastPersistence; 
 		
@@ -110,25 +117,14 @@ namespace model
 	: ParentOctree( maxPointsPerNode, maxLevel ),
 	m_nodesUntilLastPersistence( 0uL )
 	{
-		lastPersisted = new MortonCode();
-		lastPersisted->build( 7, 7, 7, maxLevel ); // Infinity.
-		
-		lastInMemory = new MortonCode();
-		*lastInMemory = *lastPersisted; // Negative infinity.
+		m_lastPersisted = new MortonCode();
+		m_lastPersisted->build( 7, 7, 7, maxLevel ); // Infinity.
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::~OutOfCoreOctree()
 	{
-		delete lastPersisted;
-		delete lastInMemory;
-	}
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build( PointVector& points )
-	{
-		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile or another non out of core octree"
-							"implementation" );
+		delete m_lastPersisted;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -179,7 +175,7 @@ namespace model
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
 		
-		build();
+		//build();
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -209,7 +205,7 @@ namespace model
 		
 		if( m_nodesUntilLastPersistence > M_NODES_PER_PERSISTENCE_ITERATION )
 		{
-			persistAndReleaseNodes();
+			persistAndReleaseLeaves();
 		}
 	}
 	
@@ -230,10 +226,6 @@ namespace model
 			if( node )
 			{
 				++m_nodesUntilLastPersistence;
-				if( *code > *m_lastInMemory )
-				{
-					*m_lastInMemory = *code;
-				}
 				
 				OctreeNodePtr nodePtr( node );
 				return nodePtr;
@@ -246,7 +238,39 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseNodes()
+	inline vector< OctreeNodePtr< MortonCode > > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::getChildren( const MortonCodePtr& parent )
+	{
+		MortonCodePtr firstChildCode = parent->getFirstChild();
+		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+		typename OctreeMap::iterator it = hierarchy->lower_bound( firstChildCode );
+		typename OctreeMap::iterator end = hierarchy->end();
+		vector< OctreeNodePtr > nodes;
+		
+		while( it != end && it->second->isChildOf( parent ) )
+		{
+			nodes.push_back( it->second );
+			++it;
+		}
+		
+		if( nodes.empty() )
+		{
+			// Nodes aren't in memory
+			vector< IdNode > queried = m_sqLite. template getIdNodes< PointVector >( firstChildCode,
+																					 parent->getLastChild() );
+			for( IdNode idNode : queried )
+			{
+				MortonCodePtr code( idNode.first );
+				OctreeNodePtr node( idNode.second );
+				hierarchy[ code ] = node;
+				
+				nodes.push_back( node );
+			}
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
 	{
 		while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_SIZE )
 		{
@@ -260,21 +284,57 @@ namespace model
 			{
 				MortonCodePtr code = nodeIt->first;
 				OctreeNodePtr node = nodeIt->second;
-				
-				typename OctreeMap::reverse_iterator toErase = nodeIt;
-				
-				++nodeIt;
-				++i;
-				
-				hierarchy->erase( toErase.base() );
 				m_sqLite. template insertNode< PointVector >( *code, *node );
+				
+				typename OctreeMap::reverse_iterator toRelease = nodeIt++;
+				++i;
+				hierarchy->erase( toRelease.base() );
 			}
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodes()
+	{
+		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+		typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
+		MortonCodePtr currentCode = nullptr;
+		
+		while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_SIZE && nodeIt != hierarchy->rend() )
+		{
+			MortonCodePtr parentCode = nodeIt->first->traverseUp();
+			
+			while( nodeIt != hierarchy->rend() && currentCode->isChildOf( *parentCode ) )
+			{
+				currentCode = nodeIt->first;
+				
+				if( isDirty( currentCode ) )
+				{
+					m_sqLite. template insertNode< PointVector >( *currentCode, *nodeIt->second );
+				}
+				
+				typename OctreeMap::reverse_iterator toRelease= nodeIt++;
+				hierarchy->erase( toRelease.base() );
+			}
+		}
+		
+		if( currentCode != nullptr )
+		{
+			if( isDirty( currentCode ) )
+			{
+				*m_lastPersisted = *currentCode;
+			}
+		}
+		else
+		{
+			throw runtime_error( "Hierarchy is empty. Could not release nodes." );
 		}
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
 	{
+		/*
 		// Do a bottom-up per-level construction of inner nodes.
 		for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
 		{
@@ -309,7 +369,14 @@ namespace model
 			}
 			
 			cout << "========== End of level " << level << " ==========" << endl << endl;
-		}
+		}*/
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline bool OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::isDirty( const MortonCodePtr& code ) const
+	{
+		return *code < *m_lastPersisted;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -331,6 +398,13 @@ namespace model
 	{
 		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. Use ***() to take into consideration"
 							" the database or another non out of core octree implementation" );
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build( PointVector& points )
+	{
+		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile or another non out of core octree"
+							"implementation" );
 	}
 	
 	// ====================== Type Sugar ================================ /

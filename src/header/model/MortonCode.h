@@ -22,6 +22,9 @@ namespace model
 	template< typename T >
 	using MortonCodePtr = shared_ptr< MortonCode< T > >;
 	
+	template< typename T >
+	using MortonInterval = pair< MortonCodePtr< T >, MortonCodePtr< T > >;
+	
 	/** Morton code designed for use as an octree node index, represented by interleaving the bits of the node coordinate.
 	 * To avoid collision of node indices, the code for a given node at level l in the Octree only considers the first
 	 * l groups of interleaved bits. Also an 1 is concatenated at the end of the code to disambiguate with other
@@ -60,6 +63,21 @@ namespace model
 		
 		shared_ptr< MortonCode< T > > traverseUp() const;
 		vector< shared_ptr< MortonCode< T > >  > traverseDown() const;
+		
+		/** @returns the first child of this morton code. The first child has the morton code of the father appended
+		 * with the bitmask 000. */
+		MortonCodePtr< T > getFirstChild() const;
+		
+		/** @returns the last child of this morton code. The last child has the morton code of the father appended
+		 * with the bitmask 111. */
+		MortonCodePtr< T > getLastChild() const;
+		
+		/** Returns the children code closed interval [ a, b ] for this morton code.
+		 * @returns a pair with first element being a and second element being b. */
+		MortonInterval< T > getChildInterval() const;
+		
+		/** Check if this MortonCode is child the code passed as parameter. */
+		bool isChildOf( const MortonCode& code ) const;
 		
 		bool operator==( const MortonCode& other ) const;
 		bool operator!=( const MortonCode& other ) const;
@@ -174,6 +192,37 @@ namespace model
 		}
 		
 		return children;
+	}
+	
+	template <typename T>
+	inline MortonCodePtr< T > MortonCode< T >::getFirstChild() const
+	{
+		MortonCodePtr< T > firstChild = make_shared< MortonCode >();
+		firstChild->build( m_bits << 3 );
+		return firstChild;
+	}
+	
+	template <typename T>
+	inline MortonCodePtr< T > MortonCode< T >::getLastChild() const
+	{
+		MortonCodePtr< T > lastChild = make_shared< MortonCode >();
+		lastChild->build( ( m_bits << 3 ) | ( T ) 0x7 );
+		return lastChild;
+	}
+	
+	template <typename T>
+	inline MortonInterval< T > MortonCode< T >::getChildInterval() const
+	{
+		MortonCodePtr< T > a = getFirstChild();
+		MortonCodePtr< T > b = getLastChild();
+		
+		return MortonInterval< T >( a, b );
+	}
+	
+	template <typename T>
+	inline bool MortonCode< T >::isChildOf( const MortonCode& code ) const
+	{
+		return code.getBits() == ( m_bits >> 3 );
 	}
 	
 	template <typename T>
@@ -332,6 +381,10 @@ namespace model
 	using ShallowMortonCode = MortonCode< unsigned int >;
 	using MediumMortonCode = MortonCode< unsigned long >;
 	using DeepMortonCode = MortonCode< unsigned long long >;
+	
+	using ShallowMortonInterval = MortonInterval< unsigned int >;
+	using MediumMortonInterval = MortonInterval< unsigned long >;
+	using DeepMortonInterval = MortonInterval< unsigned long long >;
 	
 	using ShallowMortonCodePtr = shared_ptr< ShallowMortonCode >;
 	using MediumMortonCodePtr = shared_ptr< MediumMortonCode >;
