@@ -6,17 +6,12 @@
 #include <sqlite3.h>
 #include <iostream>
 #include <OctreeNode.h>
+#include "SQLiteQuery.h"
 
 using namespace std;
 
 namespace util
 {
-	template< typename MortonCode, typename OctreeNode >
-	using IdNode = pair< MortonCode*, OctreeNode* >;
-	
-	template< typename MortonCode, typename OctreeNode >
-	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode > >;
-	
 	/** Manages all SQLite operations. */
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	class SQLiteManager
@@ -24,6 +19,7 @@ namespace util
 	public:
 		using IdNode = pair< MortonCode*, OctreeNode* >;
 		using IdNodeVector = vector< IdNode >;
+		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 		SQLiteManager();
 		~SQLiteManager();
@@ -63,6 +59,16 @@ namespace util
 		 *	@returns pairs of acquired nodes and morton id. The ownership of the node pointers is caller's. */
 		template< typename NodeContents >
 		IdNodeVector getIdNodes( const MortonCode& a, const MortonCode& b );
+		
+		/** Searches for a range of nodes in the database, given the morton code interval [a, b]. This version returns
+		 * a query for stepping and should be used for probable big queries or to avoid the performance penalty of
+		 * creating a result vector.
+		 *	@param NodeContents is the type of the contents of the node.
+		 *	@param a is the minor boundary of the morton code closed interval.
+		 *	@param b is the major boundary of the morton closed interval.
+		 *	@returns a query that can be iterated for IdNodeAcquisition. */
+		template< typename NodeContents >
+		SQLiteQuery getIdNodesQuery( const MortonCode& a, const MortonCode& b );
 		
 	private:
 		/** Release all acquired resources. */
@@ -245,23 +251,51 @@ namespace util
 	IdNodeVector< MortonCode, OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getIdNodes(
 		const MortonCode& a, const MortonCode& b )
 	{
-		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );
-		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 2, b.getBits() ), SQLITE_OK );
+		SQLiteQuery query = getIdNodesQuery< NodeContents >( a, b );
 		
 		IdNodeVector queried;
-		while( safeStep( m_nodeIntervalIdQuery ) )
+		
+		IdNode idNode;
+		while( query.step( &idNode ) )
 		{
-			sqlite3_int64 mortonBits = sqlite3_column_int64( m_nodeIntervalIdQuery, 0 );
-			MortonCode* code = new MortonCode();
-			code->build( mortonBits );
-			
-			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
-			OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
-			
-			queried.push_back( IdNode( code, node ) );
+			queried.push_back( idNode );
 		}
 		
 		return queried;
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	template< typename NodeContents >
+	SQLiteQuery< IdNode< MortonCode, OctreeNode > > SQLiteManager< Point, MortonCode, OctreeNode >
+	::getIdNodesQuery( const MortonCode& a, const MortonCode& b )
+	{
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 2, b.getBits() ), SQLITE_OK );
+		
+		SQLiteQuery query(
+			[ & ] ( IdNode* queried )
+			{
+				bool rowIsFound = safeStep( m_nodeIntervalIdQuery );
+				if( rowIsFound )
+				{
+					sqlite3_int64 mortonBits = sqlite3_column_int64( m_nodeIntervalIdQuery, 0 );
+					MortonCode* code = new MortonCode();
+					code->build( mortonBits );
+					
+					byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
+					OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
+					*queried = IdNode( code, node );
+				}
+				else
+				{
+					*queried = IdNode( nullptr, nullptr );
+				}
+				
+				return rowIsFound;
+			}
+		);
+		
+		return query;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >

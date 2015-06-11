@@ -334,9 +334,8 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
 	{
-		/*
 		// Do a bottom-up per-level construction of inner nodes.
-		for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
+		/*for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than

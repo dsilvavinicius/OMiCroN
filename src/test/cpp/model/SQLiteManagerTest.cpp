@@ -102,7 +102,6 @@ namespace model
 			
 			OctreeNode* queriedNode = sqLite.getNode< PointVector >( code );
 			
-			cout << "Asserting." << endl;
 			float epsilon = 1.e-15;
 			PointVector queriedPoints = *queriedNode->getContents< PointVector >();
 			
@@ -144,8 +143,6 @@ namespace model
 			sqLite.insertNode< Contents >( code1, node1 );
 			
 			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
-			
-			cout << "Asserting." << endl;
 			
 			ShallowMortonCode queriedId = *queried[ 0 ].first;
 			ASSERT_EQ( queriedId, code0 );
