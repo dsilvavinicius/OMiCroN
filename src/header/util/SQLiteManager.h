@@ -17,7 +17,7 @@ namespace util
 	class SQLiteManager
 	{
 	public:
-		using IdNode = pair< MortonCode*, OctreeNode* >;
+		using IdNode = util::IdNode< MortonCode >;
 		using IdNodeVector = vector< IdNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
@@ -248,7 +248,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	IdNodeVector< MortonCode, OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getIdNodes(
+	IdNodeVector< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >::getIdNodes(
 		const MortonCode& a, const MortonCode& b )
 	{
 		SQLiteQuery query = getIdNodesQuery< NodeContents >( a, b );
@@ -266,7 +266,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	SQLiteQuery< IdNode< MortonCode, OctreeNode > > SQLiteManager< Point, MortonCode, OctreeNode >
+	SQLiteQuery< IdNode< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
 	::getIdNodesQuery( const MortonCode& a, const MortonCode& b )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );

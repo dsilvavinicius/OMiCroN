@@ -191,5 +191,23 @@ namespace model
 			ASSERT_EQ( interval.first->getBits(), 0x8 );
 			ASSERT_EQ( interval.second->getBits(), 0xF );
 		}
+		
+		TEST_F( MortonCodeTest, getNext )
+		{
+			ShallowMortonCode code;
+			code.build( 0x1 );
+			ShallowMortonCode next = *code.getNext();
+			
+			ASSERT_EQ( next.getBits(), 0x2 );
+		}
+		
+		TEST_F( MortonCodeTest, lessThan )
+		{
+			ShallowMortonCode code;
+			code.build( 0x1 );
+			ShallowMortonCode next = *code.getNext();
+			
+			ASSERT_TRUE( code < next );
+		}
 	}
 }

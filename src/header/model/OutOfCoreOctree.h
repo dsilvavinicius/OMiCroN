@@ -72,10 +72,12 @@ namespace model
 		virtual void buildLeaves( const PointVector& points ) override;
 		
 	private:
-		/** Releases node in the in-memory hierarchy. Persists all "dirty" nodes in the database. TRACKS PERSISTENCE. */
-		void releaseNodes();
+		/** Releases node in the in-memory hierarchy at hierarchy creation time. Persists all "dirty" nodes in the
+		 * database. TRACKS PERSISTENCE.
+		 * @returns the last released node code or nullptr in case of no release. */
+		MortonCodePtr releaseNodesAtCreation();
 		
-		/** Persists and release leaf nodes. DOES NOT TRACK PERSISTENCE. */
+		/** Persists and release leaf nodes at hierarchy creation. DOES NOT TRACK PERSISTENCE. */
 		void persistAndReleaseLeaves();
 		
 		/** Checks if a node is dirty and needs to be persisted before released. */
@@ -269,6 +271,15 @@ namespace model
 		}
 	}
 	
+	/*
+	// @@@@@@@@@@@@@@@@@@@@ START HERE @@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline SQLiteQuery< IdNode< MortonCode > > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::getRangeInDB( const MortonCodePtr& parent )
+	{
+		
+	}*/
+	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
 	{
@@ -294,7 +305,8 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodes()
+	inline shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::releaseNodesAtCreation()
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
@@ -325,30 +337,32 @@ namespace model
 				*m_lastPersisted = *currentCode;
 			}
 		}
-		else
-		{
-			throw runtime_error( "Hierarchy is empty. Could not release nodes." );
-		}
+		
+		return currentCode;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
 	{
+		/*
 		// Do a bottom-up per-level construction of inner nodes.
-		/*for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
+		for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
 			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
-			// below the current one. 
-			unsigned long long mortonLvlBoundary = ( unsigned long long )( 1 ) << ( 3 * ( level + 1 ) + 1 );
+			// below the current one.
+			MortonCode lvlBoundary;
+			lvlBoundary.build( ( unsigned long long )( 1 ) << ( 3 * ( level + 1 ) + 1 ) );
 			
 			//cout << "Morton lvl boundary: 0x" << hex << mortonLvlBoundary << dec << endl;
 			
 			typename OctreeMap::iterator firstChildIt = m_hierarchy->begin(); 
+			typename OctreeMap::iterator hierarchyEnd = m_hierarchy->end();
+			bool isLevelEnded = false;
 			
 			// Loops per siblings in a level.
-			while( firstChildIt != m_hierarchy->end() && firstChildIt->first->getBits() < mortonLvlBoundary )
+			while( !isLevelEnded )
 			{
 				MortonCodePtr parentCode = firstChildIt->first->traverseUp();
 				
@@ -358,13 +372,34 @@ namespace model
 				children.push_back( firstChildIt->second );
 				
 				typename OctreeMap::iterator currentChildIt = firstChildIt;
-				while( ( ++currentChildIt ) != m_hierarchy->end() && *currentChildIt->first->traverseUp() == *parentCode )
+				while( ( ++currentChildIt ) != hierarchyEnd && *currentChildIt->first->traverseUp() == *parentCode )
 				{
 					OctreeNodePtr currentChild = currentChildIt->second;
 					children.push_back( currentChild );
 				}
 				
 				buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
+				
+				// Release nodes if necessary, checking if the iterator is invalidated in the process.
+				MortonCodePtr nextFirstChildCode = parentCode->getLastChild()->getNext();
+				MortonCodePtr lastReleased = releaseNodesAtCreation();
+				
+				if( *lastReleased < *nextFirstChildCode )
+				{
+					while( getChildren() )
+				}
+				
+				if( nextFirstChildCode < lvlBoundarylastReleased != nullptr && )
+				{
+					if( *firstChildIt->first > *lastReleased )
+					{
+						// Iterator could be invalidated by node release.
+					}
+					
+					isLevelEnded = true;
+				}
+				endedLvlfirstChildIt != m_hierarchy->end() && firstChildIt->first->getBits() < mortonLvlBoundary
+				
 			}
 			
 			cout << "========== End of level " << level << " ==========" << endl << endl;

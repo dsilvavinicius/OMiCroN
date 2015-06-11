@@ -79,8 +79,12 @@ namespace model
 		/** Check if this MortonCode is child the code passed as parameter. */
 		bool isChildOf( const MortonCode& code ) const;
 		
+		/** Gets the morton code that procede this one. */
+		MortonCodePtr< T > getNext() const;
+		
 		bool operator==( const MortonCode& other ) const;
 		bool operator!=( const MortonCode& other ) const;
+		bool operator< ( const MortonCode& other ) const;
 		
 		/** Prints the nodes in the path from this node to the root node.
 		 * @param simple indicates that the node should be printed in a simpler representation. */
@@ -226,6 +230,14 @@ namespace model
 	}
 	
 	template <typename T>
+	inline MortonCodePtr< T > MortonCode< T >::getNext() const
+	{
+		MortonCodePtr< T > next = make_shared< MortonCode >();
+		next->build( m_bits + ( T )1 );
+		return next;
+	}
+	
+	template <typename T>
 	inline bool MortonCode< T >::operator==(const MortonCode< T >& other) const
 	{
 		return m_bits == other.m_bits;
@@ -235,6 +247,12 @@ namespace model
 	inline bool MortonCode< T >::operator!=(const MortonCode< T >& other) const
 	{
 		return !( m_bits == other.m_bits );
+	}
+	
+	template <typename T>
+	inline bool MortonCode< T >::operator<( const MortonCode& other ) const
+	{
+		return m_bits < other.m_bits;
 	}
 	
 	template <typename T>

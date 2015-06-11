@@ -38,13 +38,13 @@ namespace util
 	}
 	
 	// ====================== Type Sugar ================================ /
-	template< typename MortonCode, typename OctreeNode >
-	using IdNode = pair< MortonCode*, OctreeNode* >;
+	template< typename MortonCode >
+	using IdNode = pair< MortonCode*, OctreeNode< MortonCode >* >;
 	
-	template< typename MortonCode, typename OctreeNode >
-	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode > >;
+	template< typename MortonCode >
+	using IdNodeVector = vector< IdNode< MortonCode > >;
 	
-	using ShallowIdNodeSQLQuery = SQLiteQuery< IdNode< ShallowMortonCode, ShallowOctreeNode > >;
+	using ShallowIdNodeSQLQuery = SQLiteQuery< IdNode< ShallowMortonCode > >;
 }
 
 #endif

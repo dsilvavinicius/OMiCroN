@@ -119,7 +119,7 @@ namespace model
 			using OctreeNode = model::ShallowOctreeNode;
 			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
-			using IdNode = util::IdNode< ShallowMortonCode, OctreeNode >;
+			using IdNode = util::IdNode< ShallowMortonCode >;
 			
 			int rawInts0[ 3 ] = { 1, 2, 3 };
 			int rawInts1[ 3 ] = { 10, 20, 30 };
