@@ -242,7 +242,6 @@ namespace util
 		}
 		
 		safeReset( m_nodeIntervalQuery );
-		
 		return nodes;
 	}
 	
@@ -293,6 +292,8 @@ namespace util
 				
 				return rowIsFound;
 			}
+			,
+			[ & ] () { safeReset( m_nodeIntervalIdQuery ); }
 		);
 		
 		return query;

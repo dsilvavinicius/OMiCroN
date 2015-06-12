@@ -35,12 +35,19 @@ using namespace std;
 
 namespace util
 {
-	/** Utility methods for memory info acquisition. */
-	class MemoryInfo
+	// DETAIL!
+	class MemorySize
 	{
 	public:
-		/** Returns the size of physical memory (RAM) in bytes. */
-		static size_t getMemorySize( )
+		MemorySize()
+		{
+			value = calcMemorySize();
+		}
+	
+		size_t value; // In bytes.
+	
+	private:
+		static size_t calcMemorySize( )
 		{
 		#if defined(_WIN32) && (defined(__CYGWIN__) || defined(__CYGWIN32__))
 			/* Cygwin under Windows. ------------------------------------ */
@@ -110,6 +117,16 @@ namespace util
 			return 0L;			/* Unknown OS. */
 		#endif
 		}
+	};
+	
+	/** Utility methods for memory info acquisition. */
+	class MemoryInfo
+	{
+	public:
+		static size_t getMemorySize()
+		{
+			return m_memSize.value;
+		}
 		
 		/** Returns the size of available physical memory (RAM) in bytes. */
 		static size_t getAvailableMemorySize( )
@@ -118,6 +135,9 @@ namespace util
 			sysinfo( &info );
 			return info.freeram;
 		}
+		
+	private:
+		static MemorySize m_memSize;
 	};
 }
 

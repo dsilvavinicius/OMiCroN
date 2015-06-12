@@ -111,7 +111,9 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/TransientRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/TucanoRenderingState.cpp
+	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h						${CPP_DIR}/${UTIL_DIR}/Stream.cpp
+	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h					${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
 	
 	# Tucano related code
 	include/tucano/src/utils/qtflycamerawidget.hpp #ugly hack to use qmake in this file.
