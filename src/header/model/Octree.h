@@ -655,6 +655,19 @@ namespace model
 		assert( ( OctreeBase< DeepMortonCode, Point >::m_maxLevel <=
 			OctreeBase< DeepMortonCode, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
 	}
+	
+	// ====================== Type Sugar ================================ /
+	using ShallowOctree = Octree< ShallowMortonCode, Point >;
+	using ShallowOctreePtr = shared_ptr< ShallowOctree >;
+	
+	using MediumOctree = Octree< MediumMortonCode, Point >;
+	using MediumOctreePtr = shared_ptr< MediumOctree >;
+	
+	using ShallowExtOctree = Octree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtOctreePtr = shared_ptr< ShallowExtOctree >;
+	
+	using MediumExtOctree = Octree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtOctreePtr = shared_ptr< MediumExtOctree >;
 }
 
 #endif

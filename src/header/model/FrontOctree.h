@@ -285,10 +285,21 @@ namespace model
 	//=====================================================================
 	
 	/** An front octree with shallow morton code and usual data structures for front and front insertion container. */
-	template< typename Point >
-	using ShallowFrontOctree = FrontOctree	< ShallowMortonCode, Point, unordered_set< ShallowMortonCode >,
-												vector< ShallowMortonCode >
-											>;
+	template< typename MortonCode, typename Point  >
+	using DefaultFrontOctree = FrontOctree< MortonCode, Point, unordered_set< ShallowMortonCode >,
+											vector< ShallowMortonCode > >;
+	
+	using ShallowFrontOctree = DefaultFrontOctree< ShallowMortonCode, Point >;
+	using ShallowFrontOctreePtr = shared_ptr< ShallowFrontOctree >;
+	
+	using MediumFrontOctree = DefaultFrontOctree< MediumMortonCode, Point >;
+	using MediumFrontOctreePtr = shared_ptr< MediumFrontOctree >;
+	
+	using ShallowExtFrontOctree = DefaultFrontOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtFrontOctreePtr = shared_ptr< ShallowExtFrontOctree >;
+	
+	using MediumExtFrontOctree = DefaultFrontOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtFrontOctreePtr = shared_ptr< MediumExtFrontOctree >;
 }
 
 #endif

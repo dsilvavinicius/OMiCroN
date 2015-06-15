@@ -18,8 +18,9 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, Creation )
 		{
 			using OctreeNode = ShallowOctreeNode;
+			using Octree = DefaultOutOfCoreOctree< ShallowMortonCode, Point >;
 			
-			ShallowOutOfCoreOctree< Point > octree( 1, 10 );
+			Octree octree( 1, 10 );
 			octree.buildFromFile( g_appPath + "/data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 			
 			float epsilon = 1.e-15;
@@ -46,8 +47,9 @@ namespace model
 		{
 			using Point = ExtendedPoint;
 			using OctreeNode = ShallowOctreeNode;
+			using Octree = DefaultOutOfCoreOctree< ShallowMortonCode, Point >;
 			
-			ShallowOutOfCoreOctree< Point >  octree( 1, 10 );
+			Octree octree( 1, 10 );
 			octree.buildFromFile( g_appPath + "/data/test_extended_points.ply", ExtendedPointReader::SINGLE,
 								  COLORS_AND_NORMALS );
 			

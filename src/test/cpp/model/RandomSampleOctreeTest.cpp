@@ -69,6 +69,7 @@ namespace model
 			using PointPtr = shared_ptr< TypeParam >;
 			using PointVector = vector< PointPtr >;
 			using PointVectorPtr = shared_ptr< PointVector >;
+			using Octree = RandomSampleOctree< ShallowMortonCode, Point >;
 			
 			srand( 1 );
 			PointVector points;
@@ -84,7 +85,7 @@ namespace model
 			
 			PointVector tmpPts = points;
 			
-			ShallowRandomSampleOctree< Point > octree( 1, 1 );
+			Octree octree( 1, 1 );
 			octree.build( tmpPts );
 			
 			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();

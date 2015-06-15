@@ -3,6 +3,7 @@
 
 #include "Octree.h"
 #include <IndexedOctree.h>
+#include <OutOfCoreOctree.h>
 #include "Stream.h"
 
 extern "C" int g_argc;
@@ -157,18 +158,12 @@ namespace model
 		template< typename P >
         class OctreeTest {};
 		
-		using ShallowPointOctree = model::Octree< ShallowMortonCode, Point >;
-		using MediumPointOctree = model::Octree< MediumMortonCode, Point >;
-		using ShallowExtendedPointOctree = model::Octree< ShallowMortonCode, ExtendedPoint >;
-		using MediumExtendedPointOctree = model::Octree< MediumMortonCode, ExtendedPoint >;
-		using ShallowExtendedIndexedOctree = model::IndexedOctree< ShallowMortonCode, ExtendedPoint >;
-		
 		template<>
-		class OctreeTest< ShallowPointOctree >
+		class OctreeTest< ShallowOctree >
 		: public SimplePointTest
 		{
 			using PointVector = vector< shared_ptr< Point > >;
-			using Octree = ShallowPointOctree;
+			using Octree = ShallowOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
 			using OctreeInitializer = model::test::OctreeInitializer< Point >;
@@ -188,11 +183,11 @@ namespace model
 		};
 		
 		template<>
-		class OctreeTest< MediumPointOctree >
+		class OctreeTest< MediumOctree >
 		: public SimplePointTest
 		{
 			using PointVector = vector< shared_ptr< Point > >;
-			using Octree = MediumPointOctree;
+			using Octree = MediumOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
 			using OctreeInitializer = model::test::OctreeInitializer< Point >;
@@ -212,12 +207,12 @@ namespace model
 		};
 		
 		template<>
-		class OctreeTest< ShallowExtendedPointOctree >
+		class OctreeTest< ShallowExtOctree >
 		: public ExtendedPointTest
 		{
 			using Point = ExtendedPoint;
 			using PointVector = vector< shared_ptr< Point > >;
-			using Octree = ShallowExtendedPointOctree;
+			using Octree = ShallowExtOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
 			using OctreeInitializer = model::test::OctreeInitializer< Point >;
@@ -238,12 +233,12 @@ namespace model
 		};
 		
 		template<>
-		class OctreeTest< MediumExtendedPointOctree >
+		class OctreeTest< MediumExtOctree >
 		: public ExtendedPointTest
 		{
 			using Point = ExtendedPoint;
 			using PointVector = vector< shared_ptr< Point > >;
-			using Octree = MediumExtendedPointOctree;
+			using Octree = MediumExtOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
 			using OctreeInitializer = model::test::OctreeInitializer< Point >;
@@ -264,12 +259,12 @@ namespace model
 		};
 		
 		template<>
-		class OctreeTest< ShallowExtendedIndexedOctree >
+		class OctreeTest< ShallowExtIndexedOctree >
 		: public ExtendedPointTest
 		{
 			using Point = ExtendedPoint;
 			using PointVector = vector< shared_ptr< Point > >;
-			using Octree = ShallowExtendedIndexedOctree;
+			using Octree = ShallowExtIndexedOctree;
 			using OctreePtr = shared_ptr< Octree >;
 			using Test = model::test::OctreeTest< Octree >;
 			using OctreeInitializer = model::test::OctreeInitializer< Point >;
@@ -421,70 +416,70 @@ namespace model
 		struct OctreeTester {};
 		
 		template<>
-		struct OctreeTester< ShallowPointOctree  >
+		struct OctreeTester< ShallowOctree  >
 		{
-			static void testBoundaries( const ShallowPointOctree& octree )
+			static void testBoundaries( const ShallowOctree& octree )
 			{
 				testShallowBoundaries( octree );
 			}
 			
-			static void testHierarchy( const ShallowPointOctree& octree )
+			static void testHierarchy( const ShallowOctree& octree )
 			{
 				checkHierarchy( octree.getHierarchy() );
 			}
 		};
 		
 		template<>
-		struct OctreeTester< MediumPointOctree  >
+		struct OctreeTester< MediumOctree  >
 		{
-			static void testBoundaries( const MediumPointOctree& octree )
+			static void testBoundaries( const MediumOctree& octree )
 			{
 				testMediumBoundaries( octree );
 			}
 			
-			static void testHierarchy( const MediumPointOctree& octree )
+			static void testHierarchy( const MediumOctree& octree )
 			{
 				checkHierarchy( octree.getHierarchy() );
 			}
 		};
 		
 		template<>
-		struct OctreeTester< ShallowExtendedPointOctree  >
+		struct OctreeTester< ShallowExtOctree  >
 		{
-			static void testBoundaries( const ShallowExtendedPointOctree& octree )
+			static void testBoundaries( const ShallowExtOctree& octree )
 			{
 				testShallowBoundaries( octree );
 			}
 			
-			static void testHierarchy( const ShallowExtendedPointOctree& octree )
+			static void testHierarchy( const ShallowExtOctree& octree )
 			{
 				checkHierarchy( octree.getHierarchy() );
 			}
 		};
 		
 		template<>
-		struct OctreeTester< MediumExtendedPointOctree  >
+		struct OctreeTester< MediumExtOctree  >
 		{
-			static void testBoundaries( const MediumExtendedPointOctree& octree )
+			static void testBoundaries( const MediumExtOctree& octree )
 			{
 				testMediumBoundaries( octree );
 			}
 			
-			static void testHierarchy( const MediumExtendedPointOctree& octree )
+			static void testHierarchy( const MediumExtOctree& octree )
 			{
 				checkHierarchy( octree.getHierarchy() );
 			}
 		};
 		
 		template<>
-		struct OctreeTester< ShallowExtendedIndexedOctree  >
+		struct OctreeTester< ShallowExtIndexedOctree  >
 		{
-			static void testBoundaries( const ShallowExtendedIndexedOctree& octree )
+			static void testBoundaries( const ShallowExtIndexedOctree& octree )
 			{
 				testShallowBoundaries( octree );
 			}
 			
-			static void testHierarchy( const ShallowExtendedIndexedOctree& octree )
+			static void testHierarchy( const ShallowExtIndexedOctree& octree )
 			{
 				checkHierarchy( octree.getHierarchy() );
 			}
@@ -492,8 +487,9 @@ namespace model
 		
 		using testing::Types;
 		
-		typedef Types< ShallowPointOctree, ShallowExtendedPointOctree, MediumPointOctree, MediumExtendedPointOctree,
-					   ShallowExtendedIndexedOctree > Implementations;
+		typedef Types< ShallowOctree, ShallowExtOctree, MediumOctree, MediumExtOctree, ShallowExtIndexedOctree >
+		Implementations;
+		
 		TYPED_TEST_CASE( OctreeTest, Implementations );
 
 		/** Tests the calculated boundaries of the ShallowOctree. */

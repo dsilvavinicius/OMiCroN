@@ -168,20 +168,17 @@ namespace model
 	}
 	
 	// ====================== Type Sugar ================================ /
-	
-	/** RandomSampleOctree with 32 bit morton code. */
-	template< typename Point >
 	using ShallowRandomSampleOctree = RandomSampleOctree< ShallowMortonCode, Point >;
+	using ShallowRandomSampleOctreePtr = shared_ptr< ShallowRandomSampleOctree >;
 	
-	template< typename Point >
-	using ShallowRandomSampleOctreePtr = shared_ptr< ShallowRandomSampleOctree< Point > >;
-	
-	/** RandomSampleOctree with 64 bit morton code. */
-	template< typename Point >
 	using MediumRandomSampleOctree = RandomSampleOctree< MediumMortonCode, Point >;
+	using MediumRandomSampleOctreePtr = shared_ptr< MediumRandomSampleOctree >;
 	
-	template< typename Point >
-	using MediumRandomSampleOctreePtr = shared_ptr< MediumRandomSampleOctree< Point > >;
+	using ShallowExtRandomSampleOctree = RandomSampleOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtRandomSampleOctreePtr = shared_ptr< ShallowExtRandomSampleOctree >;
+	
+	using MediumExtRandomSampleOctree = RandomSampleOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtRandomSampleOctreePtr = shared_ptr< MediumExtRandomSampleOctree >;
 }
 
 #endif

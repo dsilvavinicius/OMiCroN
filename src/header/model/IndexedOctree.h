@@ -203,9 +203,17 @@ namespace model
 	}
 	
 	// ====================== Type Sugar ================================ /
-	
-	template< typename Point >
 	using ShallowIndexedOctree = IndexedOctree< ShallowMortonCode, Point >;
+	using ShallowIndexedOctreePtr = shared_ptr< ShallowIndexedOctree >;
+	
+	using MediumIndexedOctree = IndexedOctree< MediumMortonCode, Point >;
+	using MediumIndexedOctreePtr = shared_ptr< MediumIndexedOctree >;
+	
+	using ShallowExtIndexedOctree = IndexedOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtIndexedOctreePtr = shared_ptr< ShallowExtIndexedOctree >;
+	
+	using MediumExtIndexedOctree = IndexedOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtIndexedOctreePtr = shared_ptr< MediumExtIndexedOctree >;
 }
 
 #endif

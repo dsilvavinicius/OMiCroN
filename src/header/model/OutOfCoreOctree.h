@@ -529,11 +529,21 @@ namespace model
 	}
 	
 	// ====================== Type Sugar ================================ /
+	template< typename MortonCode, typename Point >
+	using DefaultOutOfCoreOctree = OutOfCoreOctree< MortonCode, Point, unordered_set< ShallowMortonCode >,
+									vector< ShallowMortonCode > >;
 	
-	template< typename Point >
-	using ShallowOutOfCoreOctree = OutOfCoreOctree	< ShallowMortonCode, Point, unordered_set< ShallowMortonCode >,
-														vector< ShallowMortonCode >
-													>;
+	using ShallowOutOfCoreOctree = DefaultOutOfCoreOctree< ShallowMortonCode, Point >;
+	using ShallowOutOfCoreOctreePtr = shared_ptr< ShallowOutOfCoreOctree >;
+	
+	using MediumOutOfCoreOctree = DefaultOutOfCoreOctree< MediumMortonCode, Point >;
+	using MediumOutOfCoreOctreePtr = shared_ptr< MediumOutOfCoreOctree >;
+	
+	using ShallowExtOutOfCoreOctree = DefaultOutOfCoreOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtOutOfCoreOctreePtr = shared_ptr< ShallowExtOutOfCoreOctree >;
+	
+	using MediumExtOutOfCoreOctree = DefaultOutOfCoreOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtOutOfCoreOctreePtr = shared_ptr< MediumExtOutOfCoreOctree >;
 }
 
 #endif
