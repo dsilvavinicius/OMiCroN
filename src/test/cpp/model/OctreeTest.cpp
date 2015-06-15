@@ -6,8 +6,6 @@
 #include <OutOfCoreOctree.h>
 #include "Stream.h"
 
-extern "C" int g_argc;
-extern "C" char** g_argv;
 extern "C" string g_appPath;
 
 namespace model
@@ -97,9 +95,7 @@ namespace model
 		public:
 			static void SetUpTestCase()
 			{
-				string exeFilename = string( g_argv[ 0 ] );
-				m_plyFileName = new string( g_appPath +
-					"/../../../src/data/tests/simple_point_octree.ply" );
+				m_plyFileName = new string( g_appPath + "/data/simple_point_octree.ply" );
 			}
 		
 			static void TearDownTestCase()
@@ -118,9 +114,7 @@ namespace model
 		public:
 			static void SetUpTestCase()
 			{
-				string exeFilename = string( g_argv[ 0 ] );
-				m_plyFileName = new string( exeFilename.substr( 0, exeFilename.find_last_of( "/" ) ) +
-					"/../../../src/data/tests/extended_point_octree.ply" );
+				m_plyFileName = new string( g_appPath + "/data/extended_point_octree.ply" );
 			}
 			
 			static void TearDownTestCase()
@@ -486,6 +480,86 @@ namespace model
 			OctreePtr m_octree;
 		};
 		
+		template<>
+		class OctreeTest< ShallowOutOfCoreOctree >
+		: public SimplePointTest
+		{
+			using Octree = ShallowOutOfCoreOctree;
+			using OctreePtr = ShallowOutOfCoreOctreePtr;
+			using Test = model::test::OctreeTest< Octree >;
+		
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
+		template<>
+		class OctreeTest< MediumOutOfCoreOctree >
+		: public SimplePointTest
+		{
+			using Octree = MediumOutOfCoreOctree;
+			using OctreePtr = MediumOutOfCoreOctreePtr;
+			using Test = model::test::OctreeTest< Octree >;
+		
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
+		template<>
+		class OctreeTest< ShallowExtOutOfCoreOctree >
+		: public ExtendedPointTest
+		{
+			using Point = ExtendedPoint;
+			using PointVector = ExtendedPointVector;
+			using Octree = ShallowExtOutOfCoreOctree;
+			using OctreePtr = ShallowExtOutOfCoreOctreePtr;
+			using Test = model::test::OctreeTest< Octree >;
+		
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
+		template<>
+		class OctreeTest< MediumExtOutOfCoreOctree >
+		: public ExtendedPointTest
+		{
+			using Point = ExtendedPoint;
+			using PointVector = ExtendedPointVector;
+			using Octree = MediumExtOutOfCoreOctree;
+			using OctreePtr = MediumExtOutOfCoreOctreePtr;
+			using Test = model::test::OctreeTest< Octree >;
+		
+		protected:
+			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
+			void SetUp()
+			{
+				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
+			}
+			
+			OctreePtr m_octree;
+		};
+		
 		template< typename Octree >
 		void testShallowBoundaries( const Octree& octree )
 		{
@@ -659,9 +733,9 @@ namespace model
 		typedef Types< 	ShallowOctree, ShallowExtOctree, MediumOctree, MediumExtOctree, ShallowRandomSampleOctree,
 						ShallowExtRandomSampleOctree, MediumRandomSampleOctree, MediumExtRandomSampleOctree,
 						ShallowIndexedOctree, ShallowExtIndexedOctree, MediumIndexedOctree, MediumExtIndexedOctree,
-						ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree, MediumExtFrontOctree/*,
+						ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree, MediumExtFrontOctree,
 						ShallowOutOfCoreOctree, ShallowExtOutOfCoreOctree, MediumOutOfCoreOctree,
-						MediumExtOutOfCoreOctree*/ > Implementations;
+						MediumExtOutOfCoreOctree > Implementations;
 		
 		TYPED_TEST_CASE( OctreeTest, Implementations );
 
