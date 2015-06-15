@@ -14,104 +14,82 @@ namespace model
 {
 	namespace test
 	{
-		template< typename Point >
-		struct OctreeInitializer {};
-		
-		template<>
-		struct OctreeInitializer< Point >
+		void generatePoints( PointVector& points )
 		{
-			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			// These points should define the boundaries of the octree hexahedron.
+			auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
+			auto down = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
+			auto left = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
+			auto right = make_shared< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) );
+			auto front = make_shared< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) );
+			auto back = make_shared< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) );
 			
-			static PointVector generatePoints()
-			{
-				// These points should define the boundaries of the octree hexahedron.
-				auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
-				auto down = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-				auto left = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
-				auto right = make_shared< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) );
-				auto front = make_shared< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) );
-				auto back = make_shared< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) );
-				
-				// Additional points inside the hexahedron.
-				auto addPoint0 = make_shared< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) );
-				auto addPoint1 = make_shared< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) );
-				auto addPoint2 = make_shared< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) );
-				auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) );
-				auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) );
-				
-				PointVector points;
-				
-				points.push_back( back );
-				points.push_back( front );
-				points.push_back( right );
-				points.push_back( left );
-				points.push_back( down );
-				points.push_back( up );
-				
-				points.push_back( addPoint0 );
-				points.push_back( addPoint1 );
-				points.push_back( addPoint2 );
-				points.push_back( addPoint3 );
-				points.push_back( addPoint4 );
-				
-				return points;
-			}
-		};
+			// Additional points inside the hexahedron.
+			auto addPoint0 = make_shared< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) );
+			auto addPoint1 = make_shared< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) );
+			auto addPoint2 = make_shared< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) );
+			auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) );
+			auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) );
+			
+			points.push_back( back );
+			points.push_back( front );
+			points.push_back( right );
+			points.push_back( left );
+			points.push_back( down );
+			points.push_back( up );
+			
+			points.push_back( addPoint0 );
+			points.push_back( addPoint1 );
+			points.push_back( addPoint2 );
+			points.push_back( addPoint3 );
+			points.push_back( addPoint4 );
+		}
 		
-		template<>
-		struct OctreeInitializer< ExtendedPoint >
+		void generatePoints( ExtendedPointVector& points )
 		{
-			using Point = model::ExtendedPoint;
-			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using Point = ExtendedPoint;
+			using PointPtr = ExtendedPointPtr;
+			using PointVector = ExtendedPointVector;
 			
-			static PointVector generatePoints()
-			{
-				// These points should define the boundaries of the octree hexahedron.
-				auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-												vec3( 1.f, 15.f ,2.f ) );
-				auto down = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-												  vec3( 3.f, -31.f ,4.f ) );
-				auto left = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-												  vec3( -14.f, 5.f ,6.f ) );
-				auto right = make_shared< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 0.1f, 0.11f, 0.12f ),
-												   vec3( 46.f, 7.f ,8.f ) );
-				auto front = make_shared< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 0.13f, 0.14f, 0.15f ),
-												   vec3( 9.f, 10.f ,24.f ) );
-				auto back = make_shared< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 0.16f, 0.17f, 0.18f ),
-												  vec3( 11.f, 12.f ,-51.f ) );
-				
-				// Additional points inside the hexahedron.
-				auto addPoint0 = make_shared< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 0.19f, 0.2f, 0.21f ),
-													   vec3( 13.f, -12.f, 9.f ) );
-				auto addPoint1 = make_shared< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( 0.22f, 0.23f, 0.24f ),
-													   vec3( -5.f, -8.f, 1.f ) );
-				auto addPoint2 = make_shared< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 0.25f, 0.26f, 0.27f ),
-													   vec3( 14.f, 11.f, -4.f ) );
-				auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 0.28f, 0.29f, 0.30f ),
-													   vec3( 7.f, 3.f, -12.f ) );
-				auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 0.31f, 0.32f, 0.33f ),
-													   vec3( 12.f, 5.f, 0.f ) );
-				
-				PointVector points;
-				
-				points.push_back( back );
-				points.push_back( front );
-				points.push_back( right );
-				points.push_back( left );
-				points.push_back( down );
-				points.push_back( up );
-				
-				points.push_back( addPoint0 );
-				points.push_back( addPoint1 );
-				points.push_back( addPoint2 );
-				points.push_back( addPoint3 );
-				points.push_back( addPoint4 );
-				
-				return points;
-			}
-		};
+			// These points should define the boundaries of the octree hexahedron.
+			auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+											vec3( 1.f, 15.f ,2.f ) );
+			auto down = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+												vec3( 3.f, -31.f ,4.f ) );
+			auto left = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+												vec3( -14.f, 5.f ,6.f ) );
+			auto right = make_shared< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 0.1f, 0.11f, 0.12f ),
+												vec3( 46.f, 7.f ,8.f ) );
+			auto front = make_shared< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 0.13f, 0.14f, 0.15f ),
+												vec3( 9.f, 10.f ,24.f ) );
+			auto back = make_shared< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 0.16f, 0.17f, 0.18f ),
+												vec3( 11.f, 12.f ,-51.f ) );
+			
+			// Additional points inside the hexahedron.
+			auto addPoint0 = make_shared< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 0.19f, 0.2f, 0.21f ),
+													vec3( 13.f, -12.f, 9.f ) );
+			auto addPoint1 = make_shared< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( 0.22f, 0.23f, 0.24f ),
+													vec3( -5.f, -8.f, 1.f ) );
+			auto addPoint2 = make_shared< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 0.25f, 0.26f, 0.27f ),
+													vec3( 14.f, 11.f, -4.f ) );
+			auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 0.28f, 0.29f, 0.30f ),
+													vec3( 7.f, 3.f, -12.f ) );
+			auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 0.31f, 0.32f, 0.33f ),
+													vec3( 12.f, 5.f, 0.f ) );
+			
+			points.push_back( back );
+			points.push_back( front );
+			points.push_back( right );
+			points.push_back( left );
+			points.push_back( down );
+			points.push_back( up );
+			
+			points.push_back( addPoint0 );
+			points.push_back( addPoint1 );
+			points.push_back( addPoint2 );
+			points.push_back( addPoint3 );
+			points.push_back( addPoint4 );
+		}
 		
 		class SimplePointTest
 		: public ::testing::Test
@@ -165,15 +143,12 @@ namespace model
 			using Octree = ShallowOctree;
 			using OctreePtr = ShallowOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
-			
-		public:
-			friend OctreeInitializer;
 			
 		protected:
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -188,15 +163,12 @@ namespace model
 			using Octree = MediumOctree;
 			using OctreePtr = MediumOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
-			
-		public:
-			friend OctreeInitializer;
 			
 		protected:
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -213,16 +185,13 @@ namespace model
 			using Octree = ShallowExtOctree;
 			using OctreePtr = ShallowExtOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -239,16 +208,13 @@ namespace model
 			using Octree = MediumExtOctree;
 			using OctreePtr = MediumExtOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -263,16 +229,13 @@ namespace model
 			using Octree = ShallowRandomSampleOctree;
 			using OctreePtr = ShallowRandomSampleOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -287,16 +250,13 @@ namespace model
 			using Octree = MediumRandomSampleOctree;
 			using OctreePtr = MediumRandomSampleOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -313,16 +273,13 @@ namespace model
 			using Octree = ShallowExtRandomSampleOctree;
 			using OctreePtr = ShallowExtRandomSampleOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -339,16 +296,13 @@ namespace model
 			using Octree = MediumExtRandomSampleOctree;
 			using OctreePtr = MediumExtRandomSampleOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -363,16 +317,13 @@ namespace model
 			using Octree = ShallowIndexedOctree;
 			using OctreePtr = ShallowIndexedOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -387,16 +338,13 @@ namespace model
 			using Octree = MediumIndexedOctree;
 			using OctreePtr = MediumIndexedOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -413,16 +361,13 @@ namespace model
 			using Octree = ShallowExtIndexedOctree;
 			using OctreePtr = ShallowExtIndexedOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -439,16 +384,13 @@ namespace model
 			using Octree = MediumExtIndexedOctree;
 			using OctreePtr = MediumExtIndexedOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -463,16 +405,13 @@ namespace model
 			using Octree = ShallowFrontOctree;
 			using OctreePtr = ShallowFrontOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -487,16 +426,13 @@ namespace model
 			using Octree = MediumFrontOctree;
 			using OctreePtr = MediumFrontOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -513,16 +449,13 @@ namespace model
 			using Octree = ShallowExtFrontOctree;
 			using OctreePtr = ShallowExtFrontOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 10 );
 				m_octree->build( points );
 			}
@@ -539,16 +472,13 @@ namespace model
 			using Octree = MediumExtFrontOctree;
 			using OctreePtr = MediumExtFrontOctreePtr;
 			using Test = model::test::OctreeTest< Octree >;
-			using OctreeInitializer = model::test::OctreeInitializer< Point >;
 		
-		public:
-			friend OctreeInitializer;
-			
 		protected:
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				PointVector points = OctreeInitializer::generatePoints();
+				PointVector points;
+				generatePoints( points );
 				m_octree = make_shared< Octree >( 1, 20 );
 				m_octree->build( points );
 			}
@@ -684,232 +614,165 @@ namespace model
 			checkNode< MediumMortonCode >( hierarchy, 0x1UL );
 		}
 		
-		template< typename Octree >
-		struct OctreeTester {};
-		
-		template<>
-		struct OctreeTester< ShallowOctree  >
+		void testBoundaries( const ShallowOctree& octree )
 		{
-			static void testBoundaries( const ShallowOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testShallowBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumOctree  >
+		void testHierarchy( const ShallowOctree& octree )
 		{
-			static void testBoundaries( const MediumOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowExtOctree  >
+		void testBoundaries( const MediumOctree& octree )
 		{
-			static void testBoundaries( const ShallowExtOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowExtOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testMediumBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumExtOctree  >
+		void testHierarchy( const MediumOctree& octree )
 		{
-			static void testBoundaries( const MediumExtOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumExtOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowRandomSampleOctree  >
+		void testBoundaries( const ShallowExtOctree& octree )
 		{
-			static void testBoundaries( const ShallowRandomSampleOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowRandomSampleOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testShallowBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumRandomSampleOctree  >
+		void testHierarchy( const ShallowExtOctree& octree )
 		{
-			static void testBoundaries( const MediumRandomSampleOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumRandomSampleOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowExtRandomSampleOctree  >
+		void testBoundaries( const MediumExtOctree& octree )
 		{
-			static void testBoundaries( const ShallowExtRandomSampleOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowExtRandomSampleOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testMediumBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumExtRandomSampleOctree  >
+		void testHierarchy( const MediumExtOctree& octree )
 		{
-			static void testBoundaries( const MediumExtRandomSampleOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumExtRandomSampleOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowIndexedOctree  >
+		void testBoundaries( const ShallowRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const ShallowIndexedOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowIndexedOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testShallowBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumIndexedOctree  >
+		void testHierarchy( const ShallowRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const MediumIndexedOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumIndexedOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowExtIndexedOctree  >
+		void testBoundaries( const MediumRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const ShallowExtIndexedOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowExtIndexedOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testMediumBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumExtIndexedOctree  >
+		void testHierarchy( const MediumRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const MediumExtIndexedOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumExtIndexedOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowFrontOctree  >
+		void testBoundaries( const ShallowExtRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const ShallowFrontOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowFrontOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testShallowBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumFrontOctree  >
+		void testHierarchy( const ShallowExtRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const MediumFrontOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumFrontOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
-		template<>
-		struct OctreeTester< ShallowExtFrontOctree  >
+		void testBoundaries( const MediumExtRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const ShallowExtFrontOctree& octree )
-			{
-				testShallowBoundaries( octree );
-			}
-			
-			static void testHierarchy( const ShallowExtFrontOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			testMediumBoundaries( octree );
+		}
 		
-		template<>
-		struct OctreeTester< MediumExtFrontOctree  >
+		void testHierarchy( const MediumExtRandomSampleOctree& octree )
 		{
-			static void testBoundaries( const MediumExtFrontOctree& octree )
-			{
-				testMediumBoundaries( octree );
-			}
-			
-			static void testHierarchy( const MediumExtFrontOctree& octree )
-			{
-				checkHierarchy( octree.getHierarchy() );
-			}
-		};
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const ShallowIndexedOctree& octree )
+		{
+			testShallowBoundaries( octree );
+		}
+		
+		void testHierarchy( const ShallowIndexedOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const MediumIndexedOctree& octree )
+		{
+			testMediumBoundaries( octree );
+		}
+		
+		static void testHierarchy( const MediumIndexedOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const ShallowExtIndexedOctree& octree )
+		{
+			testShallowBoundaries( octree );
+		}
+		
+		static void testHierarchy( const ShallowExtIndexedOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const MediumExtIndexedOctree& octree )
+		{
+			testMediumBoundaries( octree );
+		}
+		
+		static void testHierarchy( const MediumExtIndexedOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const ShallowFrontOctree& octree )
+		{
+			testShallowBoundaries( octree );
+		}
+		
+		void testHierarchy( const ShallowFrontOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const MediumFrontOctree& octree )
+		{
+			testMediumBoundaries( octree );
+		}
+		
+		void testHierarchy( const MediumFrontOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const ShallowExtFrontOctree& octree )
+		{
+			testShallowBoundaries( octree );
+		}
+		
+		void testHierarchy( const ShallowExtFrontOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
+		
+		void testBoundaries( const MediumExtFrontOctree& octree )
+		{
+			testMediumBoundaries( octree );
+		}
+		
+		void testHierarchy( const MediumExtFrontOctree& octree )
+		{
+			checkHierarchy( octree.getHierarchy() );
+		}
 		
 		using testing::Types;
 		
@@ -925,13 +788,13 @@ namespace model
 		/** Tests the calculated boundaries of the ShallowOctree. */
 		TYPED_TEST( OctreeTest, Boundaries )
 		{
-			OctreeTester< TypeParam >::testBoundaries( *this->m_octree );
+			testBoundaries( *this->m_octree );
 		}
 
 		/** Tests the ShallowOctree created hierarchy. */
 		TYPED_TEST( OctreeTest, Hierarchy )
 		{
-			OctreeTester< TypeParam >::testHierarchy( *this->m_octree );
+			testHierarchy( *this->m_octree );
 		}
 		
 		// TODO Make these tests viable again ( typed tests cannot receive value parameters right now ).
