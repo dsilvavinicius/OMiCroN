@@ -193,6 +193,7 @@ namespace model
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
 		
+		cout << "Before build." << endl;
 		build();
 	}
 	
@@ -373,7 +374,8 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
 	{
-		MortonCodePtr lastReleased = nullptr;
+		MortonCodePtr lastReleased = make_shared< MortonCode >();
+		lastReleased->build( 7, 7, 7, ParentOctree::m_maxLevel ); // infinity
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
 		// Do a bottom-up per-level construction of inner nodes.
@@ -395,6 +397,8 @@ namespace model
 			// Loops per siblings in a level.
 			while( !isLevelEnded )
 			{
+				//cout << *this << endl;
+				
 				MortonCodePtr parentCode = firstChildIt->first->traverseUp();
 				
 				auto children = vector< OctreeNodePtr >();
@@ -409,6 +413,7 @@ namespace model
 					children.push_back( currentChild );
 				}
 				
+				// TODO: This calling should ensure that already persisted nodes should be deleted in case of node merge.
 				ParentOctree::buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
 				
 				// Release nodes if necessary, checking if the iterator is invalidated in the process.

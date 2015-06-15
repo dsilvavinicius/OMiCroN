@@ -88,8 +88,10 @@ namespace model
 	template<>
 	ostream& operator<<( ostream& out, const vector< vec3 >& v );
 	
+	template<>
 	ostream& operator<<( ostream& out, const vector< PointPtr >& v );
 	
+	template<>
 	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr >& v );
 	
 	ostream& operator<<( ostream& out, const QSize& size );

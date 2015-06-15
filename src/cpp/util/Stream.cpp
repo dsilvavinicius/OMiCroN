@@ -24,7 +24,8 @@ namespace model
 		return out;
 	}
 	
-		ostream& operator<<( ostream& out, const vector< PointPtr >& v )
+	template<>
+	ostream& operator<<( ostream& out, const vector< PointPtr >& v )
 	{
 		out << "size: " << v.size() << endl << "{" << endl;
 		bool first = true;
@@ -45,6 +46,7 @@ namespace model
 		return out;
 	}
 	
+	template<>
 	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr >& v )
 	{
 		out << "size: " << v.size() << endl << "{" << endl;

@@ -1,6 +1,8 @@
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include "Stream.h"
+
 #include <cassert>
 #include <map>
 #include <ctime>
@@ -11,9 +13,7 @@
 #include "LeafNode.h"
 #include "MortonComparator.h"
 #include "InnerNode.h"
-#include "OctreeTypes.h"
 #include "OctreeMapTypes.h"
-#include "Stream.h"
 #include "TransientRenderingState.h"
 #include "OctreeStats.h"
 #include "PlyPointReader.h"

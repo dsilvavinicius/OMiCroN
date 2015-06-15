@@ -1,8 +1,8 @@
 #ifndef RANDOM_SAMPLE__OCTREE_H
 #define RANDOM_SAMPLE__OCTREE_H
 
-#include <time.h>
 #include "Octree.h"
+#include <time.h>
 
 namespace model
 {
@@ -141,6 +141,7 @@ namespace model
 	template< typename MortonCode, typename Point >
 	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonCode, Point >& octree )
 	{
+		using PointVector = vector< shared_ptr< Point > >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
