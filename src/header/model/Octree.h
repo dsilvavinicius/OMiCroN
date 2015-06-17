@@ -122,6 +122,9 @@ namespace model
 									 const typename OctreeMap::iterator& currentChildIt,
 									 const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children );
 		
+		/** Erase a range of nodes, represented by iterator for first (inclusive) and last (not inclusive). */
+		virtual void eraseNodes( const typename OctreeMap::iterator& first, const typename OctreeMap::iterator& last );
+		
 		/** Traversal recursion. */
 		virtual void traverse( MortonCodePtr nodeCode, RenderingState& renderingState, const Float& projThresh );
 		
@@ -375,7 +378,7 @@ namespace model
 			auto tempIt = firstChildIt;
 			advance( firstChildIt, numChildren );
 			
-			m_hierarchy->erase( tempIt, currentChildIt );
+			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
 			auto mergedNode = make_shared< LeafNode >();
@@ -391,6 +394,13 @@ namespace model
 			
 			( *m_hierarchy )[ parentCode ] = buildInnerNode( childrenPoints );
 		}
+	}
+	
+	template< typename MortonCode, typename Point >
+	inline void OctreeBase< MortonCode, Point >::eraseNodes( const typename OctreeMap::iterator& first,
+															 const typename OctreeMap::iterator& last )
+	{
+		m_hierarchy->erase( first, last );
 	}
 	
 	template< typename MortonCode, typename Point >

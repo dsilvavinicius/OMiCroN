@@ -33,7 +33,6 @@ namespace model
 		
 	public:
 		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
-		~OutOfCoreOctree();
 		
 		/** Builds octree using the database. */
 		virtual void build();
@@ -66,6 +65,8 @@ namespace model
 		
 		void buildInners() override;
 		
+		void eraseNodes( const typename OctreeMap::iterator& first, const typename OctreeMap::iterator& last ) override;
+		
 		/** DEPRECATED. */
 		virtual void buildBoundaries( const PointVector& points ) override;
 		
@@ -76,13 +77,20 @@ namespace model
 		virtual void buildLeaves( const PointVector& points ) override;
 		
 	private:
-		/** Releases node in the in-memory hierarchy at hierarchy creation time. Persists all "dirty" nodes in the
-		 * database. TRACKS PERSISTENCE.
+		/** Releases node in the in-memory hierarchy at hierarchy creation time in order to ease memory pressure.
+		 * Persists all "dirty" nodes in the database. TRACKS PERSISTENCE.
 		 * @returns the last released node code or nullptr in case of no release. */
 		MortonCodePtr releaseNodesAtCreation();
 		
-		/** Persists and release leaf nodes at hierarchy creation. DOES NOT TRACK PERSISTENCE. */
+		/** Persists and release leaf nodes at hierarchy creation in order to ease memory pressure. Since leaf nodes
+		 * are acessed in a random pattern and a loaded node is assured to be modified in the near future, this method
+		 * just assumed all nodes in memory dirty, sending them to database whenever released. This trait also imposes
+		 * NO PERSISTENCE TRACKING. */
 		void persistAndReleaseLeaves();
+		
+		/** Persists all leaf nodes in order to start bottom-up inner nodes creation. Also load a few nodes to start
+		 work. */
+		void persistAllLeaves();
 		
 		/** Checks if a node is dirty and needs to be persisted before released. */
 		bool isDirty( const MortonCodePtr& code ) const;
@@ -92,13 +100,18 @@ namespace model
 		void loadNodesAndValidateIter( const MortonCodePtr& nextFirstChildCode, const MortonCodePtr& lvlBoundary,
 									   typename OctreeMap::iterator& firstChildIt );
 		
+		/** Load sibling groups in a query.
+		 * @param query is the query with nodes to load.
+		 * @returns The first loaded MortonCode or nullptr if the query returns no node. */
+		shared_ptr< MortonCode > loadSiblingGroups( SQLiteQuery& query );
+		
 		SQLiteManager m_sqLite;
 		
 		// Octree creation related data:
 		
-		/** Last fully persisted node's morton code. Any morton code less than this one is dirty and should be written in
-		 * database before released. */
-		MortonCode* m_lastPersisted;
+		/** Last fully persisted node's morton code. Any morton code less than this one is dirty and should be written
+		 * in database before released. */
+		MortonCodePtr m_lastPersisted;
 		
 		unsigned long m_nodesUntilLastPersistence; 
 		
@@ -135,14 +148,7 @@ namespace model
 	: ParentOctree( maxPointsPerNode, maxLevel ),
 	m_nodesUntilLastPersistence( 0uL )
 	{
-		m_lastPersisted = new MortonCode();
-		m_lastPersisted->build( 7, 7, 7, maxLevel ); // Infinity.
-	}
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::~OutOfCoreOctree()
-	{
-		delete m_lastPersisted;
+		m_lastPersisted = make_shared< MortonCode >( MortonCode::getLvlLast( maxLevel ) );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -192,6 +198,9 @@ namespace model
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
+		
+		// Persist all leaves in order to start bottom-up octree creation.
+		persistAllLeaves();
 		
 		cout << "Before build." << endl;
 		build();
@@ -328,6 +337,28 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllLeaves()
+	{
+		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+		
+		// Send all in-memory leaves to database.
+		for( auto elem : *hierarchy )
+		{
+			m_sqLite. template insertNode< PointVector >( *elem.first, *elem.second );
+		}
+		
+		// Since leaf creation is unsorted by nature, some sibling groups must be loaded from database to ensure no
+		// "holes" in the in-memory sibling groups.
+		SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastPersisted );
+		
+		// Clears the hierarchy to eliminate possible sibling groups with holes.
+		hierarchy->clear();
+		
+		// Loads a few sibling groups in order to start bottom-up construction.
+		loadSiblingGroups( query );
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::releaseNodesAtCreation()
 	{
@@ -374,8 +405,6 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
 	{
-		MortonCodePtr lastReleased = make_shared< MortonCode >();
-		lastReleased->build( 7, 7, 7, ParentOctree::m_maxLevel ); // infinity
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
 		// Do a bottom-up per-level construction of inner nodes.
@@ -383,12 +412,8 @@ namespace model
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
-			// the current one. This is the same of the morton code filled with just one 1 bit from the level
-			// immediately below the current one.
-			MortonCodePtr lvlBoundary = make_shared< MortonCode >();
-			lvlBoundary->build( ( unsigned long long )( 1 ) << ( 3 * ( level + 1 ) + 1 ) );
-			
-			//cout << "Morton lvl boundary: 0x" << hex << mortonLvlBoundary << dec << endl;
+			// the current one.
+			MortonCodePtr lvlBoundary = make_shared< MortonCode >( MortonCode::getLvlFirst( level + 1 ) );
 			
 			typename OctreeMap::iterator firstChildIt = hierarchy->begin(); 
 			typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
@@ -413,22 +438,33 @@ namespace model
 					children.push_back( currentChild );
 				}
 				
-				// TODO: This calling should ensure that already persisted nodes should be deleted in case of node merge.
+				// TODO: This calling should ensure that already persisted nodes should be deleted in case of node
+				// merge.
 				ParentOctree::buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
 				
-				// Release nodes if necessary, checking if the iterator is invalidated in the process.
-				MortonCodePtr releaseReturn = releaseNodesAtCreation();
+				// Release node if memory pressure is high enough.
+				MortonCodePtr lastReleased = releaseNodesAtCreation();
 				
-				if( releaseReturn != nullptr )
+				if( lastReleased == nullptr )
 				{
-					lastReleased = releaseReturn;
+					if( firstChildIt == hierarchyEnd )
+					{
+						MortonCodePtr nextFirstChildCode = parentCode->getLastChild()->getNext();
+						if( *nextFirstChildCode < *lvlBoundary )
+						{
+							// No more in-memory nodes in this lvl. Load more if any.
+							loadNodesAndValidateIter( nextFirstChildCode, lvlBoundary, firstChildIt );
+						}
+					}
 				}
-				
-				MortonCodePtr nextFirstChildCode = parentCode->getLastChild()->getNext();
-				if( *lastReleased < *nextFirstChildCode )
+				else
 				{
-					// Nodes should be loaded and iterator revalidated, since it was released.
-					loadNodesAndValidateIter( nextFirstChildCode, lvlBoundary, firstChildIt );
+					MortonCodePtr nextFirstChildCode = parentCode->getLastChild()->getNext();
+					if( *lastReleased < *nextFirstChildCode )
+					{
+						// Nodes should be loaded and iterator revalidated, since it was released.
+						loadNodesAndValidateIter( nextFirstChildCode, lvlBoundary, firstChildIt );
+					}
 				}
 				
 				if( firstChildIt == hierarchyEnd )
@@ -454,48 +490,72 @@ namespace model
 		typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
 		
 		SQLiteQuery query = getRangeInDB( nextFirstChildCode, lvlBoundary->getPrevious() );
-					
-		IdNode idNode;
-		bool isQueryEnded = !query.step( &idNode );
-		if( isQueryEnded )
+		
+		MortonCodePtr firstLoadedCode = loadSiblingGroups( query );
+		
+		if( firstLoadedCode == nullptr )
 		{
 			//No more nodes in this lvl. Nodes are not needed to be loaded. End iteration.
 			firstChildIt = hierarchyEnd;
 		}
 		else
 		{
-			// This lvl still have nodes. Need to load a few sibling groups in order to proceed the hierarchy creation.
-			
-			MortonCodePtr currentCode( idNode.first );
-			MortonCodePtr parentCode = currentCode->traverseUp();
-			MortonCodePtr firstLoadedCode = currentCode;
-			
-			int nLoadedSiblingGroups = 0;
-			for( int i = 0; i < M_SIBLING_GROUPS_PER_LOAD; ++i )
+			// Revalidating iterator
+			firstChildIt = hierarchy->find( firstLoadedCode );
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::loadSiblingGroups( SQLiteQuery& query )
+	{
+		IdNode idNode;
+		bool isQueryEnded = !query.step( &idNode );
+		
+		if( isQueryEnded )
+		{
+			return nullptr;
+		}
+		
+		MortonCodePtr firstLoadedCode = make_shared< MortonCode >( *idNode.first );
+		MortonCodePtr currentCode( idNode.first );
+		MortonCodePtr parentCode = currentCode->traverseUp();
+		
+		int nLoadedSiblingGroups = 0;
+		for( int i = 0; i < M_SIBLING_GROUPS_PER_LOAD; ++i )
+		{
+			while( currentCode->isChildOf( *parentCode ) )
 			{
-				while( currentCode->isChildOf( *parentCode ) )
-				{
-					( *hierarchy )[ currentCode ] = OctreeNodePtr( idNode.second );
-					
-					isQueryEnded = !query.step( &idNode );
-					if( isQueryEnded )
-					{
-						break;
-					}
-					*currentCode = *idNode.first;
-				}
+				( *ParentOctree::m_hierarchy )[ currentCode ] = OctreeNodePtr( idNode.second );
 				
+				isQueryEnded = !query.step( &idNode );
 				if( isQueryEnded )
 				{
 					break;
 				}
-				
-				parentCode = currentCode->traverseUp();
+				*currentCode = *idNode.first;
 			}
 			
-			// Revalidating iterator
-			firstChildIt = hierarchy->find( firstLoadedCode );
+			if( isQueryEnded )
+			{
+				break;
+			}
+			
+			parentCode = currentCode->traverseUp();
 		}
+		
+		return firstLoadedCode;
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::eraseNodes( const typename OctreeMap::iterator& first, const typename OctreeMap::iterator& last )
+	{
+		auto prevLast = last;
+		--prevLast;
+		
+		m_sqLite.deleteNodes( *first->first, *prevLast->first );
+		ParentOctree::m_hierarchy->erase( first, last );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

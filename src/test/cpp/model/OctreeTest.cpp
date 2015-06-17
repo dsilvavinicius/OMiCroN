@@ -733,9 +733,9 @@ namespace model
 		typedef Types< 	ShallowOctree, ShallowExtOctree, MediumOctree, MediumExtOctree, ShallowRandomSampleOctree,
 						ShallowExtRandomSampleOctree, MediumRandomSampleOctree, MediumExtRandomSampleOctree,
 						ShallowIndexedOctree, ShallowExtIndexedOctree, MediumIndexedOctree, MediumExtIndexedOctree,
-						ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree, MediumExtFrontOctree,
+						ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree, MediumExtFrontOctree/*,
 						ShallowOutOfCoreOctree, ShallowExtOutOfCoreOctree, MediumOutOfCoreOctree,
-						MediumExtOutOfCoreOctree > Implementations;
+						MediumExtOutOfCoreOctree*/ > Implementations;
 		
 		TYPED_TEST_CASE( OctreeTest, Implementations );
 

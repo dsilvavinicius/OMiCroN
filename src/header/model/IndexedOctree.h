@@ -134,7 +134,7 @@ namespace model
 			auto tempIt = firstChildIt;
 			advance( firstChildIt, numChildren );
 			
-			RandomSampleOctree::m_hierarchy->erase( tempIt, currentChildIt );
+			RandomSampleOctree::eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
 			auto mergedNode = make_shared< LeafNode >();

@@ -154,6 +154,41 @@ namespace model
 			delete queried[ 0 ].second;
 		}
 		
+		TEST_F( SQLiteManagerTest, DeleteNodes )
+		{
+			using MortonCode = model::ShallowMortonCode;
+			using Contents = vector< int >;
+			using OctreeNode = model::ShallowOctreeNode;
+			using LeafNode = model::ShallowLeafNode< Contents >;
+			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
+			
+			MortonCode code0; code0.build( 0x8 );
+			MortonCode code1; code1.build( 0x9 );
+			MortonCode code2; code2.build( 0xA );
+			MortonCode code3; code3.build( 0xB );
+			
+			LeafNode node0; node0.setContents( Contents( 3, 0 ) );
+			LeafNode node1; node1.setContents( Contents( 3, 1 ) );
+			LeafNode node2; node2.setContents( Contents( 3, 2 ) );
+			LeafNode node3; node3.setContents( Contents( 3, 3 ) );
+			
+			SQLiteManager sqLite;
+			sqLite.insertNode< Contents >( code0, node0 );
+			sqLite.insertNode< Contents >( code1, node1 );
+			sqLite.insertNode< Contents >( code2, node2 );
+			sqLite.insertNode< Contents >( code3, node3 );
+			
+			sqLite.deleteNodes( code1, code2 );
+			vector< OctreeNode* > queried = sqLite. template getNodes< Contents >( code0, code3 );
+			
+			ASSERT_EQ( queried.size(), 2 );
+			ASSERT_EQ( *queried[ 0 ]->getContents< Contents >(), Contents( 3, 0 ) );
+			delete queried[ 0 ];
+			
+			ASSERT_EQ( *queried[ 1 ]->getContents< Contents >(), Contents( 3, 3 ) );
+			delete queried[ 1 ];
+		}
+		
 		/*
 		TEST_F( SQLiteManagerTest, InsertAndGetExtendedPoints )
 		{

@@ -40,6 +40,8 @@ namespace model
 	class MortonCode
 	{
 	public:
+		//TODO: Put move constructors here.
+		
 		/** Use this method to calculate code from position. */
 		void build( const T& x, const T& y, const T& z, const unsigned int& level );
 		
@@ -92,6 +94,12 @@ namespace model
 		/** Prints the nodes in the path from this node to the root node.
 		 * @param simple indicates that the node should be printed in a simpler representation. */
 		void printPathToRoot( ostream& out, bool simple ) const;
+		
+		/** Gets the first code of a given lvl. */
+		static MortonCode< T > getLvlFirst( const unsigned int& lvl );
+		
+		/** Gets the last code of a given lvl. */
+		static MortonCode< T > getLvlLast( const unsigned int& lvl );
 		
 		template< typename Precision >
 		friend ostream& operator<<( ostream& out, const MortonCode<Precision>& dt );
@@ -187,7 +195,6 @@ namespace model
 			// Overflow: cannot go deeper.
 			return vector< MortonCodePtr<T> >();
 		}
-		//assert( shifted > bits && "MortonCode traversal overflow." );
 		
 		vector< MortonCodePtr<T> > children(8);
 		
@@ -268,29 +275,45 @@ namespace model
 	
 	template <typename T>
 	void MortonCode< T >::printPathToRoot(ostream& out, bool simple) const
+	{
+		MortonCode< T > code = *this;
+		out << "Path to root: ";
+		
+		if (simple)
 		{
-			MortonCode< T > code = *this;
-			out << "Path to root: ";
-			
-			if (simple)
+			while( code.getBits() != 1 )
 			{
-				while( code.getBits() != 1 )
-				{
-					out << "0x" << hex << code.getBits() << dec << "->";
-					code = *code.traverseUp();
-				}
-				out << "0x" << hex << code.getBits() << dec;
+				out << "0x" << hex << code.getBits() << dec << "->";
+				code = *code.traverseUp();
 			}
-			else
-			{
-				while( code.getBits() != 1 )
-				{
-					out << code << dec << " -> ";
-					code = *code.traverseUp();
-				}
-				out << code << dec;
-			}
+			out << "0x" << hex << code.getBits() << dec;
 		}
+		else
+		{
+			while( code.getBits() != 1 )
+			{
+				out << code << dec << " -> ";
+				code = *code.traverseUp();
+			}
+			out << code << dec;
+		}
+	}
+	
+	template <typename T>
+	inline MortonCode< T > MortonCode< T >::getLvlFirst( const unsigned int& lvl )
+	{
+		MortonCode< T > code;
+		code.build( 0, 0, 0, lvl );
+		return code;
+	}
+		
+	template <typename T>
+	inline MortonCode< T > MortonCode< T >::getLvlLast( const unsigned int& lvl )
+	{
+		MortonCode< T > code;
+		code.build( ( T )( ( 1 << ( 3 * lvl + 1 ) ) - 1 ) );
+		return code;
+	}
 	
 	template <typename Precision>
 	ostream& operator<<(ostream& out, const MortonCode<Precision>& code)

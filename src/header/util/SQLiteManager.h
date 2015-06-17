@@ -70,6 +70,11 @@ namespace util
 		template< typename NodeContents >
 		SQLiteQuery getIdNodesQuery( const MortonCode& a, const MortonCode& b );
 		
+		/** Deletes a range of nodes in the database, given the morton code interval [ a, b ]
+		 * @param a is the minor boundary of the morton code closed interval.
+		 * @param b is the major boundary of the morton closed interval.*/
+		void deleteNodes( const MortonCode& a, const MortonCode& b );
+		
 	private:
 		/** Release all acquired resources. */
 		void release();
@@ -110,13 +115,14 @@ namespace util
 		
 		sqlite3* m_db;
 		
-		sqlite3_stmt* m_pointInsertionStmt;
+		sqlite3_stmt* m_pointInsertion;
 		sqlite3_stmt* m_pointQuery;
 		
 		sqlite3_stmt* m_nodeInsertion;
 		sqlite3_stmt* m_nodeQuery;
 		sqlite3_stmt* m_nodeIntervalQuery;
 		sqlite3_stmt* m_nodeIntervalIdQuery;
+		sqlite3_stmt* m_nodeIntervalDeletion;
 		
 		/** Current number of inserted points. */
 		sqlite_int64 m_nPoints;
@@ -125,12 +131,13 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager()
 	: m_db( nullptr ),
-	m_pointInsertionStmt( nullptr ),
+	m_pointInsertion( nullptr ),
 	m_pointQuery( nullptr ),
 	m_nodeInsertion( nullptr ),
 	m_nodeQuery( nullptr ),
 	m_nodeIntervalQuery( nullptr ),
 	m_nodeIntervalIdQuery( nullptr ),
+	m_nodeIntervalDeletion( nullptr ),
 	m_nPoints( 0 )
 	{
 		checkReturnCode(
@@ -154,10 +161,10 @@ namespace util
 		byte* serialization;
 		size_t blobSize = point.serialize( &serialization );
 		
-		checkReturnCode( sqlite3_bind_int64( m_pointInsertionStmt, 1, m_nPoints ), SQLITE_OK );
-		checkReturnCode( sqlite3_bind_blob( m_pointInsertionStmt, 2, serialization, blobSize, SQLITE_STATIC ), SQLITE_OK );
-		safeStep( m_pointInsertionStmt );
-		safeReset( m_pointInsertionStmt );
+		checkReturnCode( sqlite3_bind_int64( m_pointInsertion, 1, m_nPoints ), SQLITE_OK );
+		checkReturnCode( sqlite3_bind_blob( m_pointInsertion, 2, serialization, blobSize, SQLITE_STATIC ), SQLITE_OK );
+		safeStep( m_pointInsertion );
+		safeReset( m_pointInsertion );
 		
 		delete[] serialization;
 		
@@ -300,6 +307,16 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
+	void SQLiteManager< Point, MortonCode, OctreeNode >::deleteNodes( const MortonCode& a, const MortonCode& b )
+	{
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalDeletion, 1, a.getBits() ), SQLITE_OK );
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalDeletion, 2, b.getBits() ), SQLITE_OK );
+		
+		safeStep( m_nodeIntervalDeletion );
+		safeReset( m_nodeIntervalDeletion );
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createTables()
 	{
 		sqlite3_stmt* creationStmt;
@@ -342,12 +359,13 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createStmts()
 	{
-		safePrepare( "INSERT OR REPLACE INTO Points VALUES ( ?, ? );", &m_pointInsertionStmt);
+		safePrepare( "INSERT OR REPLACE INTO Points VALUES ( ?, ? );", &m_pointInsertion );
 		safePrepare( "INSERT OR REPLACE INTO Nodes VALUES ( ?, ? );", &m_nodeInsertion );
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
 		safePrepare( "SELECT Morton, Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalIdQuery );
+		safePrepare( "DELETE FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalDeletion );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -355,11 +373,13 @@ namespace util
 	{
 		dropTables();
 		
+		unsafeFinalize( m_pointInsertion );
 		unsafeFinalize( m_pointQuery );
 		unsafeFinalize( m_nodeInsertion );
 		unsafeFinalize( m_nodeQuery );
 		unsafeFinalize( m_nodeIntervalQuery );
 		unsafeFinalize( m_nodeIntervalIdQuery );
+		unsafeFinalize( m_nodeIntervalDeletion );
 		
 		if( m_db )
 		{

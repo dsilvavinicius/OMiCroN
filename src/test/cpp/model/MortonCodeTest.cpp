@@ -218,5 +218,19 @@ namespace model
 			
 			ASSERT_TRUE( code < next );
 		}
+		
+		TEST_F( MortonCodeTest, getLvlFirst )
+		{
+			ShallowMortonCode code = ShallowMortonCode::getLvlFirst( 7 );
+			
+			ASSERT_EQ( code.getBits(), 0x200000 );
+		}
+		
+		TEST_F( MortonCodeTest, getLvlLast )
+		{
+			ShallowMortonCode code = ShallowMortonCode::getLvlLast( 7 );
+			
+			ASSERT_EQ( code.getBits(), 0x3FFFFF );
+		}
 	}
 }
