@@ -15,7 +15,7 @@ namespace model
 			void SetUp(){}
 		};
 		
-		TEST_F( OutOfCoreOctreeTest, DISABLED_Creation )
+		TEST_F( OutOfCoreOctreeTest, Creation )
 		{
 			using OctreeNode = ShallowOctreeNode;
 			using Octree = DefaultOutOfCoreOctree< ShallowMortonCode, Point >;
@@ -43,7 +43,7 @@ namespace model
 			delete p;
 		}
 		
-		TEST_F( OutOfCoreOctreeTest, DISABLED_CreationExtended )
+		TEST_F( OutOfCoreOctreeTest, CreationExtended )
 		{
 			using Point = ExtendedPoint;
 			using OctreeNode = ShallowOctreeNode;

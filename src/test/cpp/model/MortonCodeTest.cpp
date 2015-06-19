@@ -217,6 +217,19 @@ namespace model
 			ShallowMortonCode next = *code.getNext();
 			
 			ASSERT_TRUE( code < next );
+			ASSERT_FALSE( code < code );
+			ASSERT_FALSE( next < code );
+		}
+		
+		TEST_F( MortonCodeTest, lessOrEqual )
+		{
+			ShallowMortonCode code;
+			code.build( 0x1 );
+			ShallowMortonCode next = *code.getNext();
+			
+			ASSERT_TRUE( code <= next );
+			ASSERT_TRUE( code <= code );
+			ASSERT_FALSE( next <= code );
 		}
 		
 		TEST_F( MortonCodeTest, getLvlFirst )

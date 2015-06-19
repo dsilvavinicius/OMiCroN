@@ -90,10 +90,11 @@ namespace model
 		bool operator==( const MortonCode& other ) const;
 		bool operator!=( const MortonCode& other ) const;
 		bool operator< ( const MortonCode& other ) const;
+		bool operator<=( const MortonCode& other ) const;
 		
 		/** Prints the nodes in the path from this node to the root node.
 		 * @param simple indicates that the node should be printed in a simpler representation. */
-		void printPathToRoot( ostream& out, bool simple ) const;
+		string getPathToRoot( bool simple ) const;
 		
 		/** Gets the first code of a given lvl. */
 		static MortonCode< T > getLvlFirst( const unsigned int& lvl );
@@ -274,29 +275,37 @@ namespace model
 	}
 	
 	template <typename T>
-	void MortonCode< T >::printPathToRoot(ostream& out, bool simple) const
+	inline bool MortonCode< T >::operator<=( const MortonCode& other ) const
 	{
+		return m_bits <= other.m_bits;
+	}
+	
+	template <typename T>
+	string MortonCode< T >::getPathToRoot( bool simple ) const
+	{
+		stringstream ss;
 		MortonCode< T > code = *this;
-		out << "Path to root: ";
 		
 		if (simple)
 		{
 			while( code.getBits() != 1 )
 			{
-				out << "0x" << hex << code.getBits() << dec << "->";
+				ss << "0x" << hex << code.getBits() << dec << "->";
 				code = *code.traverseUp();
 			}
-			out << "0x" << hex << code.getBits() << dec;
+			ss << "0x" << hex << code.getBits() << dec << endl;
 		}
 		else
 		{
 			while( code.getBits() != 1 )
 			{
-				out << code << dec << " -> ";
+				ss << code << dec << " -> ";
 				code = *code.traverseUp();
 			}
-			out << code << dec;
+			ss << code << dec << endl;
 		}
+		
+		return ss.str();
 	}
 	
 	template <typename T>
@@ -316,16 +325,12 @@ namespace model
 	}
 	
 	template <typename Precision>
-	ostream& operator<<(ostream& out, const MortonCode<Precision>& code)
+	ostream& operator<<( ostream& out, const MortonCode<Precision>& code )
 	{
 		unsigned int level = code.getLevel();
 		vector< Precision > decoded = code.decode(level);
 		out << "MortonCode: " << endl << "level = " << level << endl
-			<< "coords = " << decoded << endl;
-		
-		code.printPathToRoot( out, true );
-		
-		out << endl;
+			<< "coords = " << decoded << endl << code.getPathToRoot( true ) << endl;
 		
 		return out;
 	}

@@ -12,14 +12,17 @@ add_subdirectory (gtest/)
 
 # Adds the executable
 add_executable (Tests
+	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
+	${CPP_DIR}/${UTIL_DIR}/MemoryInfoTest.cpp
+	
 	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrustumTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/PointTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
@@ -27,8 +30,6 @@ add_executable (Tests
 	${HEADER_DIR}/${MODEL_DIR}/CompactionQGLView.h	${CPP_DIR}/${MODEL_DIR}/CompactionQGLView.cpp
 	${CPP_DIR}/${MODEL_DIR}/CompactionTest.cpp
 	
-	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
-	${CPP_DIR}/${UTIL_DIR}/MemoryInfoTest.cpp
 	${CPP_DIR}/main.cpp)
 
 target_include_directories (Tests PUBLIC include/)

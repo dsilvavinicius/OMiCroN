@@ -39,6 +39,8 @@ namespace model
 		
 		virtual void setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState );
 		
+		virtual void eraseNodes( const typename OctreeMap::iterator& first, const typename OctreeMap::iterator& last );
+		
 	private:
 		/** Creates a new inner node by randomly sampling the points of the child nodes. */
 		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
@@ -75,12 +77,14 @@ namespace model
 
 		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
 		{
+			cout << "Merging." << endl;
+			
 			//cout << "Will merge children." << endl << endl;
 			// All children are leaves, but they have less points than the threshold and must be merged.
 			auto tempIt = firstChildIt;
 			advance( firstChildIt, numChildren );
 			
-			Octree::eraseNodes( tempIt, currentChildIt );
+			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
 			auto mergedNode = make_shared< LeafNode >();
@@ -90,6 +94,8 @@ namespace model
 		}
 		else
 		{
+			cout << "Making parent." << endl;
+			
 			//cout << "Just LOD." << endl << endl;
 			// No merge or absorption is needed. Just does LOD.
 			advance( firstChildIt, numChildren );
@@ -136,6 +142,13 @@ namespace model
 	{
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
+	}
+	
+	template< typename MortonCode, typename Point >
+	inline void RandomSampleOctree< MortonCode, Point >::eraseNodes( const typename OctreeMap::iterator& first,
+																	 const typename OctreeMap::iterator& last )
+	{
+		Octree::eraseNodes( first, last );
 	}
 	
 	template< typename MortonCode, typename Point >

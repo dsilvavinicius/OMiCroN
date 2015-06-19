@@ -224,7 +224,7 @@ namespace util
 		}
 		else
 		{
-			cout << "Cannot find node with morton " << morton << endl << endl;
+			cout << "Cannot find node with morton:" << endl << morton.getPathToRoot( true ) << endl << endl;
 		}
 		
 		safeReset( m_nodeQuery );
@@ -254,8 +254,8 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	IdNodeVector< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >::getIdNodes(
-		const MortonCode& a, const MortonCode& b )
+	IdNodeVector< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >
+	::getIdNodes( const MortonCode& a, const MortonCode& b )
 	{
 		SQLiteQuery query = getIdNodesQuery< NodeContents >( a, b );
 		
@@ -275,8 +275,13 @@ namespace util
 	SQLiteQuery< IdNode< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
 	::getIdNodesQuery( const MortonCode& a, const MortonCode& b )
 	{
+		cout << "Binding query param 0" << endl;
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );
+		
+		cout << "Binding query param 1" << endl;
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 2, b.getBits() ), SQLITE_OK );
+		
+		cout << "Creating query" << endl;
 		
 		SQLiteQuery query(
 			[ & ] ( IdNode* queried )
@@ -302,6 +307,8 @@ namespace util
 			,
 			[ & ] () { safeReset( m_nodeIntervalIdQuery ); }
 		);
+		
+		cout << "Returning query" << endl;
 		
 		return query;
 	}
