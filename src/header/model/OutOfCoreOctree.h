@@ -608,11 +608,17 @@ namespace model
 		auto prevLast = last;
 		--prevLast;
 		
-		cout << "Deleting siblings:" << endl << "From: " << first->first->getPathToRoot( true )
-			 << "To: " << prevLast->first->getPathToRoot( true );
+		cout << "Deleting siblings:" << endl;
+		cout << "From: " << first->first->getPathToRoot( true );
+		cout << "To: " << prevLast->first->getPathToRoot( true );
 		
 		m_sqLite.deleteNodes( *first->first, *prevLast->first );
+		
+		cout << "Erasing nodes in-memory" << endl;
+		
 		ParentOctree::m_hierarchy->erase( first, last );
+		
+		cout << "After in-memory erase." << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
