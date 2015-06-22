@@ -78,7 +78,7 @@ namespace model
 		
 	private:
 		/** Releases node in the in-memory hierarchy at hierarchy creation time in order to ease memory pressure.
-		 * Persists all "dirty" nodes in the database. TRACKS PERSISTENCE.
+		 * Persists all released "dirty" nodes in the database. TRACKS PERSISTENCE.
 		 * @returns the last released node code or nullptr in case of no release. */
 		MortonCodePtr releaseNodesAtCreation();
 		
@@ -89,14 +89,16 @@ namespace model
 		void persistAndReleaseLeaves();
 		
 		/** Persists all leaf nodes in order to start bottom-up inner nodes creation. Also load a few nodes to start
-		 work. */
+		 work. DOESN'T TRACK PERSISTENCE. */
 		void persistAllLeaves();
+		
+		/** Persists all dirty nodes currently in memory. TRACKS PERSISTENCE. */
+		void persistAllDirty();
 		
 		/** Checks if a node is dirty and needs to be persisted before released. */
 		bool isDirty( const MortonCodePtr& code ) const;
 		
-		/** Load nodes from database at hierarchy creation and revalidates the iterator for the first child of the
-		 * current parent. */
+		/** Load nodes from database at hierarchy creation and revalidates the iterator. */
 		void loadNodesAndValidateIter( const MortonCodePtr& nextFirstChildCode, const MortonCodePtr& lvlBoundary,
 									   typename OctreeMap::iterator& firstChildIt );
 		
@@ -111,7 +113,7 @@ namespace model
 		
 		/** Last fully persisted node's morton code. Any morton code less than this one is dirty and should be written
 		 * in database before released. */
-		MortonCodePtr m_lastPersisted;
+		MortonCodePtr m_lastDirty;
 		
 		unsigned long m_nodesUntilLastPersistence; 
 		
@@ -148,7 +150,7 @@ namespace model
 	: ParentOctree( maxPointsPerNode, maxLevel ),
 	m_nodesUntilLastPersistence( 0uL )
 	{
-		m_lastPersisted = make_shared< MortonCode >( MortonCode::getLvlLast( maxLevel ) );
+		m_lastDirty = make_shared< MortonCode >( MortonCode::getLvlLast( maxLevel ) );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -349,9 +351,9 @@ namespace model
 					OctreeNodePtr node = nodeIt->second;
 					m_sqLite. template insertNode< PointVector >( *code, *node );
 					
-					typename OctreeMap::reverse_iterator toRelease = nodeIt++;
 					++i;
-					hierarchy->erase( toRelease.base() );
+					// Little hack because reverse_iterator has an offset of 1 of its base (God knows why...).
+					nodeIt = typename OctreeMap::reverse_iterator( hierarchy->erase( std::next( nodeIt ).base() ) );
 					
 					if( nodeIt == hierarchy->rend() )
 					{
@@ -380,11 +382,11 @@ namespace model
 		}
 		
 		cout << "Before querying:" << endl << "a: " << hierarchy->begin()->first->getPathToRoot( true )
-			 << "b: " << m_lastPersisted->getPathToRoot( true ) << endl;
+			 << "b: " << m_lastDirty->getPathToRoot( true ) << endl;
 		
 		// Since leaf creation is unsorted by nature, some sibling groups must be loaded from database to ensure no
 		// "holes" in the in-memory sibling groups.
-		SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastPersisted );
+		SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastDirty );
 		
 		cout << "Before clearing hierarchy" << endl;
 		// Clears the hierarchy to eliminate possible sibling groups with holes.
@@ -395,6 +397,30 @@ namespace model
 		loadSiblingGroups( query );
 		
 		cout << "========================== persistsAllLeaves end ===============================" << endl << endl;
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllDirty()
+	{
+		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+ 		MortonCodePtr currentCode = nullptr;
+		MortonCodePtr firstCode = hierarchy->begin()->first;
+		
+		if( isDirty( firstCode ) )
+		{
+			m_lastDirty = firstCode;
+			
+			for( auto elem : *hierarchy )
+			{
+				currentCode = elem.first;
+				if( !isDirty( currentCode ) )
+				{
+					break;
+				}
+				
+				m_sqLite. template insertNode< PointVector >( *currentCode, *elem.second );
+			}
+		}
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -420,8 +446,8 @@ namespace model
 						m_sqLite. template insertNode< PointVector >( *currentCode, *nodeIt->second );
 					}
 					
-					typename OctreeMap::reverse_iterator toRelease = nodeIt++;
-					hierarchy->erase( toRelease.base() );
+					// Little hack because reverse_iterator has an offset of 1 of its base (God knows why...).
+					nodeIt = typename OctreeMap::reverse_iterator( hierarchy->erase( std::next( nodeIt ).base() ) );
 					
 					if( nodeIt == hierarchy->rend() )
 					{
@@ -434,7 +460,7 @@ namespace model
 			
 			if( isDirty( currentCode ) )
 			{
-				*m_lastPersisted = *currentCode;
+				*m_lastDirty = *currentCode;
 			}
 		}
 		
@@ -530,6 +556,8 @@ namespace model
 			
 			cout << "========== End of level " << level << " ==========" << endl << endl;
 		}
+		
+		persistAllDirty();
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -625,7 +653,7 @@ namespace model
 	inline bool OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::isDirty( const MortonCodePtr& code ) const
 	{
-		return *code < *m_lastPersisted;
+		return *code <= *m_lastDirty;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

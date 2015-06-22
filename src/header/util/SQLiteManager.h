@@ -321,12 +321,7 @@ namespace util
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalDeletion, 1, a.getBits() ), SQLITE_OK );
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalDeletion, 2, b.getBits() ), SQLITE_OK );
 		
-		cout << "Stepping" << endl;
-		
 		safeStep( m_nodeIntervalDeletion );
-		
-		cout << "Reset" << endl;
-		
 		safeReset( m_nodeIntervalDeletion );
 	}
 	
