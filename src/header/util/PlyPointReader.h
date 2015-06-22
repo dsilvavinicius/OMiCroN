@@ -136,18 +136,18 @@ namespace util
 		ply_set_read_cb( ply, "vertex", "y", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 1, precision ) );
 		ply_set_read_cb( ply, "vertex", "z", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 2, precision ) );
 		
-		if( colorsNeeded )
-		{
-			ply_set_read_cb( ply, "vertex", "red", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 3, precision ) );
-			ply_set_read_cb( ply, "vertex", "green", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
-			ply_set_read_cb( ply, "vertex", "blue", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
-		}
-		
 		if( normalsNeeded )
 		{
-			ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 6, precision ) );
-			ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 7, precision ) );
-			ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 8, precision ) );
+			ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 3, precision ) );
+			ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
+			ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
+		}
+		
+		if( colorsNeeded )
+		{
+			ply_set_read_cb( ply, "vertex", "red", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 6, precision ) );
+			ply_set_read_cb( ply, "vertex", "green", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 7, precision ) );
+			ply_set_read_cb( ply, "vertex", "blue", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 8, precision ) );
 		}
 		
 		return ply_read( ply );
@@ -181,27 +181,27 @@ namespace util
 				}
 				case 3: case 4:
 				{
-					// Flat color case.
-					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
+					// Normal case.
+					( *tempPoint->getColor() )[ index % 3 ] = value;
 					break;
 				}
 				case 5:
 				{
 					// Last point component. Send complete point to vector.
-					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value;
 					( *readingData->second )( Point( *tempPoint->getColor(), *tempPoint->getPos() ) );
 					break;
 				}
 				case 6: case 7:
 				{
-					// Normal case.
-					( *tempPoint->getColor() )[ index % 3 ] = value;
+					// Flat color case.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
 				case 8:
 				{
 					// Last point component. Send complete point to vector.
-					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value;
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					( *readingData->second )( Point( *tempPoint->getColor(), *tempPoint->getPos() ) );
 					break;
 				}
@@ -231,20 +231,21 @@ namespace util
 				}
 				case 3: case 4: case 5:
 				{
-					// Flat color case.
-					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
+					// Normal case.
+					( *tempPoint->getNormal() )[ index % 3 ] = value;
 					break;
 				}
 				case 6: case 7:
 				{
-					// Normal case.
-					( *tempPoint->getNormal() )[ index % 3 ] = value;
+					// Flat color case.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
 				case 8:
 				{
 					// Last point component. Send complete point to vector.
-					( *tempPoint->getNormal() )[ index % 3 ] = ( float ) value;
+					// Flat color case.
+					( *tempPoint->getColor() )[ index % 3 ] = ( float ) value / 255;
 					( *readingData->second )( Point( *tempPoint->getColor(), *tempPoint->getNormal(), *tempPoint->getPos() ) );
 					break;
 				}

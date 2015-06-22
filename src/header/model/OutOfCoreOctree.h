@@ -223,12 +223,8 @@ namespace model
 	{
 		cout << "===== Inserting point in leaf: ====" << endl << *point << endl;
 		
-		MortonCode tempCode = ParentOctree::calcMorton( *point );
-		cout << "Calc morton: " << endl << tempCode.getPathToRoot( true );
-		
-		MortonCodePtr code = make_shared< MortonCode >( tempCode );
-		
-		cout << "Calc morton ptr: " << endl << code->getPathToRoot( true );
+		MortonCodePtr code = make_shared< MortonCode >( ParentOctree::calcMorton( *point ) );
+		cout << "Calc morton: " << endl << code->getPathToRoot( true );
 		
 		OctreeNodePtr node = getNode( code );
 		
@@ -607,7 +603,10 @@ namespace model
 			while( currentCode->isChildOf( *parentCode ) )
 			{
 				cout << "Loading: "<< currentCode->getPathToRoot( true );
+				cout << "Contents:" << *idNode.second-> template getContents< PointVector >() << endl;
+				
 				( *ParentOctree::m_hierarchy )[ currentCode ] = OctreeNodePtr( idNode.second );
+				cout << "In hierarchy:" << *( *ParentOctree::m_hierarchy )[ currentCode ]-> template getContents< PointVector >() << endl;
 				
 				isQueryEnded = !query.step( &idNode );
 				if( isQueryEnded )
@@ -636,11 +635,12 @@ namespace model
 		auto prevLast = last;
 		--prevLast;
 		
+		m_sqLite.deleteNodes( *first->first, *prevLast->first );
+		
 		cout << "Deleting siblings:" << endl;
 		cout << "From: " << first->first->getPathToRoot( true );
+		cout << "Contents: " << *first->second-> template getContents< PointVector >();
 		cout << "To: " << prevLast->first->getPathToRoot( true );
-		
-		m_sqLite.deleteNodes( *first->first, *prevLast->first );
 		
 		cout << "Erasing nodes in-memory" << endl;
 		

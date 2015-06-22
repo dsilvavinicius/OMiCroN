@@ -189,34 +189,91 @@ namespace model
 			delete queried[ 1 ];
 		}
 		
-		/*
-		TEST_F( SQLiteManagerTest, InsertAndGetExtendedPoints )
+		TEST_F( SQLiteManagerTest, InsertAndGetExtPointNodes )
 		{
-			using Point = ExtendedPoint< float, vec3 >;
-			using OctreeNode = ShallowOctreeNode< float, vec3 >;
+			using Point = ExtendedPoint;
+			using PointVector = ExtendedPointVector;
+			using OctreeNode = ShallowOctreeNode;
+			using LeafNode = model::LeafNode< ShallowMortonCode, PointVector >;
+			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			
-			ShallowOutOfCoreOctree< float, vec3, Point>  octree( 1, 10 );
-			octree.buildFromFile( g_appPath + "/data/test_extended_points.ply", ExtendedPointReader::SINGLE,
-								  COLORS_AND_NORMALS );
+			Point p0( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
+			Point p1( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
+			Point p2( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
+			
+			PointVector points;
+			points.push_back( make_shared< Point >( p0 ) );
+			points.push_back( make_shared< Point >( p1 ) );
+			points.push_back( make_shared< Point >( p2 ) );
+			
+			LeafNode node;
+			node.setContents( points );
+			
+			ShallowMortonCode code;
+			code.build( 1, 2, 3, 4 );
+			SQLiteManager sqLite;
+			
+			sqLite.insertNode< PointVector >( code, node );
+			
+			OctreeNode* queriedNode = sqLite.getNode< PointVector >( code );
 			
 			float epsilon = 1.e-15;
+			PointVector queriedPoints = *queriedNode->getContents< PointVector >();
 			
-			SQLiteManager< Point, ShallowMortonCode, OctreeNode >& sqLite = octree.getSQLiteManager();
+			for( int i = 0; i < points.size(); ++i )
+			{
+				ASSERT_TRUE( points[ i ]->equal( *queriedPoints[ i ], epsilon ) );
+			}
 			
-			Point p = sqLite.getPoint( 0 );
-			Point expected( vec3( 0.003921569f, 0.007843137f, 0.011764706f ), vec3( 11.321565f, 4.658535f, 7.163479f ),
-							vec3( 7.163479f, 4.658535f, 11.321565f ) );
-			ASSERT_TRUE( p.equal( expected, epsilon ) );
+			delete queriedNode;
+		}
+		
+		TEST_F( SQLiteManagerTest, InsertAndGetExtIdNodes )
+		{
+			using Contents = ExtendedPointVector;
+			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
+			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, ShallowOctreeNode >;
+			using IdNode = util::IdNode< ShallowMortonCode >;
 			
-			p = sqLite.getPoint( 1 );
-			expected = Point( vec3( 0.015686275f, 0.019607843f, 0.023529412f ), vec3( 11.201763f, 5.635769f, 6.996898f ),
-							  vec3( 6.996898f, 5.635769f, 11.201763f ) ); 
-			ASSERT_TRUE( p.equal( expected, epsilon ) );
+			ExtendedPointPtr p0 = make_shared< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+																vec3( 1.f, 15.f ,2.f ) );
+			ExtendedPointPtr p1 = make_shared< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+																vec3( 3.f, -31.f ,4.f ) );
+			ExtendedPointPtr p2 = make_shared< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+																vec3( -14.f, 5.f ,6.f ) );
 			
-			p = sqLite.getPoint( 2 );
-			expected = Point( vec3( 0.02745098f, 0.031372549f, 0.035294118f ), vec3( 11.198129f, 4.750132f, 7.202037f ),
-							  vec3( 7.202037f, 4.750132f, 11.198129f ) ); 
-			ASSERT_TRUE( p.equal( expected, epsilon ) );
-		}*/
+			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
+			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
+			
+			Contents vec0( rawPoints0, rawPoints0 + 3 );
+			Contents vec1( rawPoints1, rawPoints1 + 3 );
+			
+			LeafNode node0;
+			LeafNode node1;
+			node0.setContents( vec0 );
+			node1.setContents( vec1 );
+			
+			ShallowMortonCode code0;
+			code0.build( 1, 2, 3, 4 );
+			ShallowMortonCode code1;
+			code1.build( 7, 7, 7, 10 );
+			ShallowMortonCode intervalEnd;
+			intervalEnd.build( 1, 2, 3, 5 );
+			
+			SQLiteManager sqLite;
+			sqLite.insertNode< Contents >( code0, node0 );
+			sqLite.insertNode< Contents >( code1, node1 );
+			
+			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
+			
+			ShallowMortonCode queriedId = *queried[ 0 ].first;
+			ASSERT_EQ( queriedId, code0 );
+			
+			Contents queriedVec = *queried[ 0 ].second->getContents< Contents >();
+			ASSERT_EQ( queriedVec, vec0 );
+			
+			delete queried[ 0 ].first;
+			delete queried[ 0 ].second;
+		}
 	}
 }
