@@ -22,25 +22,25 @@ namespace util
 		 * @param parser is the function that will parse the queried data into Queried type pointer. Also allocates the
 		 * queried data.
 		 * @disposer is the function that will clean-up resources associated with the query. */
-		SQLiteQuery( const function< bool ( Queried** ) >& parser, const function< void () >& disposer );
+		SQLiteQuery( const function< bool ( Queried* ) >& parser, const function< void () >& disposer );
 		
 		~SQLiteQuery();
 		
 		/** Steps into results.
 		 * @param queried is the data acquired in the step.
 		 * @returns true if the step returns data or false if the query is done. */
-		bool step( Queried** queried );
+		bool step( Queried* queried );
 		
 		/** Disposes query resources. */
 		void dispose();
 		
 	private:
-		function< bool ( Queried** ) > m_parser;
+		function< bool ( Queried* ) > m_parser;
 		function< void () > m_disposer;
 	};
 	
 	template< typename Queried >
-	SQLiteQuery< Queried >::SQLiteQuery( const function< bool ( Queried** ) >& parser,
+	SQLiteQuery< Queried >::SQLiteQuery( const function< bool ( Queried* ) >& parser,
 										 const function< void () >& disposer )
 	: m_parser( parser ),
 	m_disposer( disposer )
@@ -53,7 +53,7 @@ namespace util
 	}
 	
 	template< typename Queried >
-	inline bool SQLiteQuery< Queried >::step( Queried** queried )
+	inline bool SQLiteQuery< Queried >::step( Queried* queried )
 	{
 		return m_parser( queried );
 	}

@@ -320,7 +320,7 @@ namespace model
 	inline MortonCode< T > MortonCode< T >::getLvlLast( const unsigned int& lvl )
 	{
 		MortonCode< T > code;
-		code.build( ( T )( ( 1 << ( 3 * lvl + 1 ) ) - 1 ) );
+		code.build( ( ( ( T )1 ) << ( 3 * lvl + 1 ) ) - 1 );
 		return code;
 	}
 	

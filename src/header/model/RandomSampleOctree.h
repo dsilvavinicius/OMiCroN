@@ -68,8 +68,6 @@ namespace model
 		// Points to be accumulated for LOD or to be merged into the parent.
 		auto childrenPoints = PointVector();
 		
-		//cout << "numChildren: " << numChildren << endl << "numLeaves" << numLeaves << endl;
-		
 		for( OctreeNodePtr child : children )
 		{
 			Octree::m_pointAppender->appendPoints( child, childrenPoints, numChildren, numLeaves );
@@ -77,9 +75,6 @@ namespace model
 
 		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
 		{
-			cout << "Merging." << endl;
-			
-			//cout << "Will merge children." << endl << endl;
 			// All children are leaves, but they have less points than the threshold and must be merged.
 			auto tempIt = firstChildIt;
 			advance( firstChildIt, numChildren );
@@ -94,9 +89,6 @@ namespace model
 		}
 		else
 		{
-			cout << "Making parent." << endl;
-			
-			//cout << "Just LOD." << endl << endl;
 			// No merge or absorption is needed. Just does LOD.
 			advance( firstChildIt, numChildren );
 			

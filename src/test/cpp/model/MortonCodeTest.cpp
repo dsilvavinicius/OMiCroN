@@ -241,9 +241,11 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getLvlLast )
 		{
-			ShallowMortonCode code = ShallowMortonCode::getLvlLast( 7 );
+			ShallowMortonCode shallowCode = ShallowMortonCode::getLvlLast( 7 );
+			ASSERT_EQ( shallowCode.getBits(), 0x3FFFFF );
 			
-			ASSERT_EQ( code.getBits(), 0x3FFFFF );
+			MediumMortonCode mediumCode = MediumMortonCode::getLvlLast( 20 );
+			ASSERT_EQ( mediumCode.getBits(), 0x1FFFFFFFFFFFFFFFul );
 		}
 	}
 }

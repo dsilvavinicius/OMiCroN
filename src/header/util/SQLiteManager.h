@@ -222,10 +222,6 @@ namespace util
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
 			node = OctreeNode:: template deserialize< NodeContents >( blob );
 		}
-		else
-		{
-			cout << "Cannot find node with morton:" << endl << morton.getPathToRoot( true ) << endl << endl;
-		}
 		
 		safeReset( m_nodeQuery );
 		return node;
@@ -261,11 +257,10 @@ namespace util
 		
 		IdNodeVector queried;
 		
-		IdNode* idNode;
+		IdNode idNode;
 		while( query.step( &idNode ) )
 		{
-			queried.push_back( *idNode );
-			delete idNode;
+			queried.push_back( idNode );
 		}
 		
 		return queried;
@@ -276,16 +271,13 @@ namespace util
 	SQLiteQuery< IdNode< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
 	::getIdNodesQuery( const MortonCode& a, const MortonCode& b )
 	{
-		cout << "Binding query param 0" << endl;
-		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );
+		assert( a <= b && "a <= b should holds in order to define an interval." );
 		
-		cout << "Binding query param 1" << endl;
+		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 1, a.getBits() ), SQLITE_OK );
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalIdQuery, 2, b.getBits() ), SQLITE_OK );
 		
-		cout << "Creating query" << endl;
-		
 		SQLiteQuery query(
-			[ & ] ( IdNode** queried )
+			[ & ] ( IdNode* queried )
 			{
 				bool rowIsFound = safeStep( m_nodeIntervalIdQuery );
 				if( rowIsFound )
@@ -297,16 +289,11 @@ namespace util
 					byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
 					OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
 					
-					cout << "Deserialized node contents:" << *node-> template getContents< NodeContents >() << endl;
-					//cout << "Deserialized node contents 2:" << *node-> template getContents< NodeContents >() << endl;
-					
-					*queried = new IdNode( code, node );
-					
-					cout << "Node contents in step:" << *( *queried )->second-> template getContents< NodeContents >() << endl;
+					*queried = IdNode( code, node );
 				}
 				else
 				{
-					*queried = new IdNode( nullptr, nullptr );
+					*queried = IdNode( nullptr, nullptr );
 				}
 				
 				return rowIsFound;
@@ -315,16 +302,12 @@ namespace util
 			[ & ] () { safeReset( m_nodeIntervalIdQuery ); }
 		);
 		
-		cout << "Returning query" << endl;
-		
 		return query;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::deleteNodes( const MortonCode& a, const MortonCode& b )
 	{
-		cout << "Binding parameters: a: 0x" << hex << a.getBits() << " b: 0x" << b.getBits() << dec << endl;
-		
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalDeletion, 1, a.getBits() ), SQLITE_OK );
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalDeletion, 2, b.getBits() ), SQLITE_OK );
 		

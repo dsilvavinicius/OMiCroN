@@ -187,7 +187,6 @@ namespace model
 		reader->read( plyFileName, precision, attribs );
 		
 		cout << "Attributes:" << reader->getAttributes() << endl << endl;
-		cout << "After reading points first pass." << endl << endl;
 		
 		// Save boundary info.
 		*ParentOctree::m_origin = minCoords;
@@ -204,16 +203,12 @@ namespace model
 		);
 		reader->read( plyFileName, precision, attribs );
 		
-		cout << "After reading points second pass." << endl << endl;
-		
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;
-		cout << "Before persisting all leaves" << endl;
 		
 		// Persist all leaves in order to start bottom-up octree creation.
 		persistAllLeaves();
 		
-		cout << "Before build." << endl;
 		build();
 	}
 	
@@ -221,17 +216,12 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
-		cout << "===== Inserting point in leaf: ====" << endl << *point << endl;
-		
 		MortonCodePtr code = make_shared< MortonCode >( ParentOctree::calcMorton( *point ) );
-		cout << "Calc morton: " << endl << code->getPathToRoot( true );
 		
 		OctreeNodePtr node = getNode( code );
 		
 		if( node == nullptr )
 		{
-			cout << "Creating node" << endl;
-			
 			++m_nodesUntilLastPersistence;
 			
 			// Creates leaf node.
@@ -243,8 +233,6 @@ namespace model
 		}
 		else
 		{
-			cout << "Appending in existent node" << endl;
-			
 			// Node already exists. Appends the point there.
 			shared_ptr< PointVector > points = node-> template getContents< PointVector >();
 			points->push_back( point );
@@ -252,11 +240,8 @@ namespace model
 		
 		if( m_nodesUntilLastPersistence > M_NODES_PER_PERSISTENCE_ITERATION )
 		{
-			cout << "Leaf release and persistence checking" << endl;
 			persistAndReleaseLeaves();
 		}
-		
-		cout << "===== Inserting point in leaf end ====" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -365,11 +350,7 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllLeaves()
 	{
-		cout << "========================== persistsAllLeaves ===============================" << endl;
-		
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
-		
-		cout << "Before inserting nodes. Hierarchy size:" << hierarchy->size() << endl;
 		
 		// Send all in-memory leaves to database.
 		for( auto elem : *hierarchy )
@@ -377,18 +358,13 @@ namespace model
 			m_sqLite. template insertNode< PointVector >( *elem.first, *elem.second );
 		}
 		
-		cout << "Before querying:" << endl << "a: " << hierarchy->begin()->first->getPathToRoot( true )
-			 << "b: " << m_lastDirty->getPathToRoot( true ) << endl;
-		
 		// Since leaf creation is unsorted by nature, some sibling groups must be loaded from database to ensure no
 		// "holes" in the in-memory sibling groups.
 		SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastDirty );
 		
-		cout << "Before clearing hierarchy" << endl;
 		// Clears the hierarchy to eliminate possible sibling groups with holes.
 		hierarchy->clear();
 		
-		cout << "Before loading siblings" << endl;
 		// Loads a few sibling groups in order to start bottom-up construction.
 		loadSiblingGroups( query );
 		
@@ -429,6 +405,8 @@ namespace model
 		
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
+			cout << "=================== Node release triggered ==================" << endl;
+			
 			currentCode = nodeIt->first;
 			
 			while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_AFTER_RELEASE )
@@ -458,6 +436,8 @@ namespace model
 			{
 				*m_lastDirty = *currentCode;
 			}
+			
+			cout << "=================== Node release ended ==================" << endl;
 		}
 		
 		return currentCode;
@@ -475,9 +455,6 @@ namespace model
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
 			MortonCodePtr lvlBoundary = make_shared< MortonCode >( MortonCode::getLvlLast( level + 1 ) );
-			
-			cout << "Lvl boundary calculated. Bits: 0x" << hex << lvlBoundary->getBits() << dec << endl;
-			cout << "Lvl boundary: " << lvlBoundary->getPathToRoot( true );
 			
 			typename OctreeMap::iterator firstChildIt = hierarchy->begin(); 
 			typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
@@ -502,18 +479,13 @@ namespace model
 					children.push_back( currentChild );
 				}
 				
-				cout << "Before node build: " << parentCode->getPathToRoot( true );
-				
 				ParentOctree::buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
 				
-				cout << "Before release" << endl;
 				// Release node if memory pressure is high enough.
 				MortonCodePtr lastReleased = releaseNodesAtCreation();
 				
 				if( lastReleased == nullptr )
 				{
-					cout << "No release necessary" << endl;
-					
 					if( firstChildIt == hierarchyEnd )
 					{
 						MortonCodePtr nextFirstChildCode = parentCode->getLastChild()->getNext();
@@ -526,8 +498,6 @@ namespace model
 				}
 				else
 				{
-					cout << "Release done" << endl;
-					
 					MortonCodePtr nextFirstChildCode = parentCode->getLastChild()->getNext();
 					if( *lastReleased < *nextFirstChildCode )
 					{
@@ -536,16 +506,12 @@ namespace model
 					}
 				}
 				
-				cout << "Before lvl end checking" << endl;
-				
 				if( firstChildIt == hierarchyEnd )
 				{
-					cout << "Hierarchy ended" << endl;
 					isLevelEnded = true;
 				}
 				else
 				{
-					cout << "Hierarchy not ended ended, checking lvl boundary" << endl;
 					isLevelEnded = !( *firstChildIt->first <= *lvlBoundary );
 				}
 			}
@@ -584,17 +550,16 @@ namespace model
 	shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::loadSiblingGroups( SQLiteQuery& query )
 	{
-		IdNode* idNode;
+		IdNode idNode;
 		bool isQueryEnded = !query.step( &idNode );
 		
 		if( isQueryEnded )
 		{
-			cout << "Query have no results." << endl;
 			return nullptr;
 		}
 		
-		MortonCodePtr firstLoadedCode = make_shared< MortonCode >( *idNode->first );
-		MortonCodePtr currentCode( idNode->first );
+		MortonCodePtr firstLoadedCode = make_shared< MortonCode >( *idNode.first );
+		MortonCodePtr currentCode( idNode.first );
 		MortonCodePtr parentCode = currentCode->traverseUp();
 		
 		int nLoadedSiblingGroups = 0;
@@ -602,19 +567,14 @@ namespace model
 		{
 			while( currentCode->isChildOf( *parentCode ) )
 			{
-				cout << "Loading: "<< currentCode->getPathToRoot( true );
-				cout << "Contents:" << *idNode->second-> template getContents< PointVector >() << endl;
+				( *ParentOctree::m_hierarchy )[ currentCode ] = OctreeNodePtr( idNode.second );
 				
-				( *ParentOctree::m_hierarchy )[ currentCode ] = OctreeNodePtr( idNode->second );
-				cout << "In hierarchy:" << *( *ParentOctree::m_hierarchy )[ currentCode ]-> template getContents< PointVector >() << endl;
-				
-				delete idNode;
 				isQueryEnded = !query.step( &idNode );
 				if( isQueryEnded )
 				{
 					break;
 				}
-				currentCode = MortonCodePtr( idNode->first );
+				currentCode = MortonCodePtr( idNode.first );
 			}
 			
 			if( isQueryEnded )
@@ -624,7 +584,6 @@ namespace model
 			
 			parentCode = currentCode->traverseUp();
 		}
-		cout << "Hierarchy size after persisting:" << ParentOctree::m_hierarchy->size() << endl;
 		
 		return firstLoadedCode;
 	}
@@ -637,17 +596,7 @@ namespace model
 		--prevLast;
 		
 		m_sqLite.deleteNodes( *first->first, *prevLast->first );
-		
-		cout << "Deleting siblings:" << endl;
-		cout << "From: " << first->first->getPathToRoot( true );
-		cout << "Contents: " << *first->second-> template getContents< PointVector >();
-		cout << "To: " << prevLast->first->getPathToRoot( true );
-		
-		cout << "Erasing nodes in-memory" << endl;
-		
 		ParentOctree::m_hierarchy->erase( first, last );
-		
-		cout << "After in-memory erase." << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

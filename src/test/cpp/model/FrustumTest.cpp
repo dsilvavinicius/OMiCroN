@@ -94,8 +94,6 @@ namespace model
 			// Translates 10 in the direction the camera is pointing out.
 			view( 0, 3 ) = 0.f; view( 1, 3 ) = 0.f; view( 2, 3 ) = 10.f;
 			
-			cout << "Model-view: " << endl << view << endl << endl;
-			
 			// This projection matrix represents a frustum with planes in the following coordinates in the related view
 			// space axis:
 			// left: -0.5, right: 0.5, bottom: -0.5, top: 0.5, near: 1, far: 10.
