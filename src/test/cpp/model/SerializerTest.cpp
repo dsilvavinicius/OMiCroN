@@ -60,6 +60,7 @@ namespace model
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )
 			{
+				cout << "Deserialized point: " << *deserializedPoints[ i ] << "Expected: " << *points[ i ] << endl;
 				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
 			}
 		}

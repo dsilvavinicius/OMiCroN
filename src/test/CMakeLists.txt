@@ -19,8 +19,8 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/FrustumTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/PointTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp

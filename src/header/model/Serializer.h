@@ -90,6 +90,49 @@ namespace model
 		}
 	}
 	
+	template<>
+	inline size_t Serializer::serialize< ExtendedPointPtr >( const vector< ExtendedPointPtr >& vector ,
+															 byte** serialization )
+	{
+		size_t count = vector.size();
+		size_t countSize = sizeof( size_t );
+		
+		if( count > 0 )
+		{
+			byte* pointBytes;
+			size_t elemSize = vector[ 0 ]->serialize( &pointBytes );
+			
+			size_t vecSize = count * elemSize;
+			size_t serializationSize = countSize + vecSize;
+			
+			*serialization = new byte[ serializationSize ];
+			byte* tempPointer = *serialization;
+			memcpy( tempPointer, &count, countSize );
+			tempPointer += countSize;
+			memcpy( tempPointer, pointBytes, elemSize );
+			
+			for( int i = 1; i < vector.size(); ++i )
+			{
+				ExtendedPointPtr point = vector[ i ];
+				tempPointer += elemSize;
+				Serializer::dispose( pointBytes );
+				point->serialize( &pointBytes );
+				memcpy( tempPointer, pointBytes, elemSize );
+			}
+			
+			Serializer::dispose( pointBytes );
+			return serializationSize;
+		}
+		else
+		{
+			size_t serializationSize = countSize;
+			*serialization = new byte[ serializationSize ];
+			memcpy( *serialization, &count, countSize );
+			
+			return serializationSize;
+		}
+	}
+	
 	template< typename T >
 	inline void Serializer::deserialize( byte* serialization, vector< T >& out )
 	{
@@ -119,6 +162,24 @@ namespace model
 		{
 			Point p( tempPtr0, tempPtr1 );
 			out.push_back( make_shared< Point >( p ) );
+			swap( tempPtr0, tempPtr1 );
+		}
+	}
+	
+	template<>
+	inline void Serializer::deserialize< ExtendedPointPtr >( byte* serialization, ExtendedPointVector& out )
+	{
+		size_t count;
+		size_t countSize = sizeof( size_t );
+		memcpy( &count, serialization, countSize );
+		
+		byte* tempPtr0 = serialization + countSize;
+		byte* tempPtr1 = nullptr;
+		
+		for( int i = 0; i < count; ++i )
+		{
+			ExtendedPoint p( tempPtr0, tempPtr1 );
+			out.push_back( make_shared< ExtendedPoint >( p ) );
 			swap( tempPtr0, tempPtr1 );
 		}
 	}

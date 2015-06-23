@@ -222,6 +222,7 @@ namespace model
 			
 			for( int i = 0; i < points.size(); ++i )
 			{
+				cout << "Queried point: " << *queriedPoints[ i ] << endl;
 				ASSERT_TRUE( points[ i ]->equal( *queriedPoints[ i ], epsilon ) );
 			}
 			

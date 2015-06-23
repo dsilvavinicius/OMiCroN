@@ -584,7 +584,7 @@ namespace model
 	shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::loadSiblingGroups( SQLiteQuery& query )
 	{
-		IdNode idNode;
+		IdNode* idNode;
 		bool isQueryEnded = !query.step( &idNode );
 		
 		if( isQueryEnded )
@@ -593,8 +593,8 @@ namespace model
 			return nullptr;
 		}
 		
-		MortonCodePtr firstLoadedCode = make_shared< MortonCode >( *idNode.first );
-		MortonCodePtr currentCode( idNode.first );
+		MortonCodePtr firstLoadedCode = make_shared< MortonCode >( *idNode->first );
+		MortonCodePtr currentCode( idNode->first );
 		MortonCodePtr parentCode = currentCode->traverseUp();
 		
 		int nLoadedSiblingGroups = 0;
@@ -603,17 +603,18 @@ namespace model
 			while( currentCode->isChildOf( *parentCode ) )
 			{
 				cout << "Loading: "<< currentCode->getPathToRoot( true );
-				cout << "Contents:" << *idNode.second-> template getContents< PointVector >() << endl;
+				cout << "Contents:" << *idNode->second-> template getContents< PointVector >() << endl;
 				
-				( *ParentOctree::m_hierarchy )[ currentCode ] = OctreeNodePtr( idNode.second );
+				( *ParentOctree::m_hierarchy )[ currentCode ] = OctreeNodePtr( idNode->second );
 				cout << "In hierarchy:" << *( *ParentOctree::m_hierarchy )[ currentCode ]-> template getContents< PointVector >() << endl;
 				
+				delete idNode;
 				isQueryEnded = !query.step( &idNode );
 				if( isQueryEnded )
 				{
 					break;
 				}
-				currentCode = MortonCodePtr( idNode.first );
+				currentCode = MortonCodePtr( idNode->first );
 			}
 			
 			if( isQueryEnded )

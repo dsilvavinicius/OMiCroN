@@ -261,10 +261,11 @@ namespace util
 		
 		IdNodeVector queried;
 		
-		IdNode idNode;
+		IdNode* idNode;
 		while( query.step( &idNode ) )
 		{
-			queried.push_back( idNode );
+			queried.push_back( *idNode );
+			delete idNode;
 		}
 		
 		return queried;
@@ -284,7 +285,7 @@ namespace util
 		cout << "Creating query" << endl;
 		
 		SQLiteQuery query(
-			[ & ] ( IdNode* queried )
+			[ & ] ( IdNode** queried )
 			{
 				bool rowIsFound = safeStep( m_nodeIntervalIdQuery );
 				if( rowIsFound )
@@ -295,11 +296,17 @@ namespace util
 					
 					byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
 					OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
-					*queried = IdNode( code, node );
+					
+					cout << "Deserialized node contents:" << *node-> template getContents< NodeContents >() << endl;
+					//cout << "Deserialized node contents 2:" << *node-> template getContents< NodeContents >() << endl;
+					
+					*queried = new IdNode( code, node );
+					
+					cout << "Node contents in step:" << *( *queried )->second-> template getContents< NodeContents >() << endl;
 				}
 				else
 				{
-					*queried = IdNode( nullptr, nullptr );
+					*queried = new IdNode( nullptr, nullptr );
 				}
 				
 				return rowIsFound;

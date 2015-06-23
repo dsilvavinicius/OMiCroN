@@ -48,6 +48,8 @@ namespace model
 	ExtendedPoint::ExtendedPoint( byte* serialization )
 	: Point::Point( serialization )
 	{
+		cout << "Deserializing ExtendedPoint." << endl;
+		
 		size_t sizeOfVec3 = sizeof( Vec3 );
 		Vec3 normal;
 		memcpy( &normal, serialization + 2 * sizeOfVec3, sizeOfVec3 );
@@ -58,6 +60,7 @@ namespace model
 	ExtendedPoint::ExtendedPoint( byte* serialization, byte*& pastRead )
 	: ExtendedPoint( serialization )
 	{
+		cout << "Deserializing ExtendedPoint with pastRead." << endl;
 		pastRead = serialization + 3 * sizeof( Vec3 );
 	}
 	
@@ -111,6 +114,8 @@ namespace model
 	
 	size_t ExtendedPoint::serialize( byte** serialization ) const
 	{
+		cout << "Serializing ExtendedPoint." << endl;
+		
 		size_t sizeOfVec3 = sizeof( Vec3 );
 		size_t sizeOfPoint = 3 * sizeOfVec3;
 		
