@@ -270,8 +270,12 @@ namespace model
 			ShallowMortonCode queriedId = *queried[ 0 ].first;
 			ASSERT_EQ( queriedId, code0 );
 			
+			float epsilon = 1.e-15;
 			Contents queriedVec = *queried[ 0 ].second->getContents< Contents >();
-			ASSERT_EQ( queriedVec, vec0 );
+			for( int i = 0; i < 3; ++i )
+			{
+				ASSERT_TRUE( vec0[ i ]->equal( *queriedVec[ i ], epsilon ) );
+			}
 			
 			delete queried[ 0 ].first;
 			delete queried[ 0 ].second;
