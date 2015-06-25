@@ -4,6 +4,7 @@
 //#include "CompactionRenderingState.h"
 #include "RenderingState.h"
 #include "Front.h"
+#include "OctreeMapTypes.h"
 
 namespace model
 {
@@ -44,6 +45,7 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using Front = unordered_set< MortonCode >;
 		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, InsertionContainer >;
+		using OctreeMapPtr = shared_ptr< OctreeMap< MortonCode > >;
 		
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}
@@ -89,10 +91,20 @@ namespace model
 		/** Prune all siblings of a node ( the node itself is not affected ). */
 		virtual void prune( const MortonCodePtr& code )
 		{
-			MortonPtrVector deletedCodes = code->traverseUp()->traverseDown();
+			MortonCodePtr parent = code->traverseUp();
 			
-			for( MortonCodePtr deletedCode : deletedCodes )
+			OctreeMapPtr hierarchy = m_octree.getHierarchy();
+			
+			auto childIt = hierarchy->lower_bound( parent->getFirstChild() );
+			auto pastLastChildIt = hierarchy->upper_bound( parent->getLastChild() );
+			
+			assert( childIt != hierarchy->end() && "Parent is expected to have siblings." );
+			assert( childIt != pastLastChildIt && "Parent's first and past last iterators are expected to be different." );
+			
+			while( childIt != pastLastChildIt )
 			{
+				MortonCodePtr deletedCode = childIt->first;
+				
 				if( *deletedCode != *code )
 				{
 					//cout << "Prunning: " << hex << deletedCode->getBits() << dec << endl;
@@ -104,6 +116,8 @@ namespace model
 						m_front.erase( it );
 					}
 				}
+				
+				++childIt;
 			}
 		}
 		

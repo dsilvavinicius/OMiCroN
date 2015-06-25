@@ -11,7 +11,6 @@
 #include "MortonCode.h"
 #include "OctreeNode.h"
 #include "LeafNode.h"
-#include "MortonComparator.h"
 #include "InnerNode.h"
 #include "OctreeMapTypes.h"
 #include "TransientRenderingState.h"

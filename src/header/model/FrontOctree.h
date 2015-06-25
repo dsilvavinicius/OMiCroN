@@ -226,8 +226,8 @@ namespace model
 			//cout << "First child: " << childIt->first->getPathToRoot( true ) << "Last child: "
 			//	 << std::prev( pastLastChildIt )->first->getPathToRoot( true ) << endl;
 			
-			assert( childIt != ParentOctree::m_hierarchy->end() );
-			assert( childIt != pastLastChildIt );
+			assert( childIt != ParentOctree::m_hierarchy->end() && "Parent is expected to have siblings." );
+			assert( childIt != pastLastChildIt && "Parent's first and past last iterators are expected to be different." );
 			
 			while( childIt != pastLastChildIt )
 			{

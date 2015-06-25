@@ -4,6 +4,8 @@
 #include <memory>
 #include <map>
 #include "MortonCode.h"
+#include "MortonComparator.h"
+#include "OctreeNode.h"
 
 namespace model
 {	
