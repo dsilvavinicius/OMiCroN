@@ -44,14 +44,21 @@ namespace model
 		/** Checks if the node and their siblings should be pruned from the front, giving place to their parent. */
 		bool checkPrune( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const;
 		
-		/** Creates the deletion and insertion entries related with the prunning of the node and their siblings. */
-		void prune( const MortonCodePtr& code );
+		/** Creates the deletion and insertion entries related with the prunning of the node and their siblings and
+		 * puts parent points into renderingState if needed. */
+		void prune( const MortonCodePtr& code, RenderingState& renderingState );
 		
 		/** Check if the node should be branched, giving place to its children.
 		 * @param isCullable is an output that indicates if the node was culled by frustrum. */
 		bool checkBranch( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh,
 			bool& out_isCullable ) const;
 		
+		/** Creates deletion ansd insertion entries related with the branching of the node and puts children's points
+		 * into renderer if necessary.
+		 * @returns true if code identifies an inner node (and must be deleted to make place for its children), false
+		 * otherwise. */
+		bool branch( const MortonCodePtr& code, RenderingState& renderingState );
+			
 		/** Overriden to add rendered node into front addition list. */
 		void setupLeafNodeRendering( OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState );
 		
@@ -91,16 +98,7 @@ namespace model
 	{
 		clock_t timing = clock();
 		
-		//cout << "========== Starting front tracking ==========" << endl;
 		m_frontBehavior->clearMarkedNodes();
-		
-		//
-		/*cout << "Front: " << endl;
-		for( MortonCode code : m_front )
-		{
-			cout << hex << code.getBits() << dec << endl;
-		}*/
-		//
 		
 		m_frontBehavior->trackFront( renderer, projThresh );
 		
@@ -116,8 +114,6 @@ namespace model
 		timing = clock() - timing;
 		float renderingTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 		
-		//cout << "========== Ending front tracking ==========" << endl << endl;
-		
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_frontBehavior->size() );
 	}
 	
@@ -131,55 +127,17 @@ namespace model
 		// Code for prunnable front
 		if( checkPrune( renderingState, code, projThresh ) )
 		{
-			//cout << "Prune" << endl;
 			eraseNode = true;
-			prune( code );
-			code = code->traverseUp();
-			
-			auto nodeIt = ParentOctree::m_hierarchy->find( code );
-			assert( nodeIt != ParentOctree::m_hierarchy->end() );
-			OctreeNodePtr node = nodeIt->second;
-			setupNodeRendering( node, code, renderingState );
+			prune( code, renderingState );
 		}
 		else if( checkBranch( renderingState, code, projThresh, isCullable ) )
 		{
-			//cout << "Branch" << endl;
-			eraseNode = false;
-			
-			MortonPtrVector children = code->traverseDown();
-			
-			for( MortonCodePtr child : children  )
-			{
-				auto nodeIt = ParentOctree::m_hierarchy->find( child );
-				
-				if( nodeIt != ParentOctree::m_hierarchy->end() )
-				{
-					eraseNode = true;
-					//cout << "Inserted in front: " << hex << child->getBits() << dec << endl;
-					m_frontBehavior->insert( *child );
-					
-					pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( child );
-					if( !renderingState.isCullable( box ) )
-					{
-						//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
-						OctreeNodePtr node = nodeIt->second;
-						ParentOctree::setupNodeRendering( node, renderingState );
-					}
-				}
-			}
-			
-			if( !eraseNode )
-			{
-				auto nodeIt = ParentOctree::m_hierarchy->find( code );
-				assert( nodeIt != ParentOctree::m_hierarchy->end() );
-				
-				OctreeNodePtr node = nodeIt->second;
-				ParentOctree::setupNodeRendering( node, renderingState );
-			}
+			eraseNode = branch( code, renderingState );
 		}
 		else
 		{
-			//cout << "Still" << endl;
+			//cout << "Still: " << code->getPathToRoot( true ) << endl;
+			
 			if( !isCullable )
 			{
 				// No prunning or branching done. Just send the current front node for rendering.
@@ -193,13 +151,6 @@ namespace model
 		
 		return eraseNode;
 	}
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::prune( const MortonCodePtr& code )
-	{
-		m_frontBehavior->prune( code );
-	}
-	
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::checkPrune(
@@ -229,13 +180,76 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::checkBranch(
-		RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh, bool& out_isCullable ) const
+	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::prune( const MortonCodePtr& code, RenderingState& renderingState )
+	{
+		//cout << "Prune: " << code->getPathToRoot( true ) << endl;
+		
+		m_frontBehavior->prune( code );
+		MortonCodePtr parentCode = code->traverseUp();
+			
+		auto nodeIt = ParentOctree::m_hierarchy->find( parentCode );
+		assert( nodeIt != ParentOctree::m_hierarchy->end() ); // SEND A NODE REQUEST TO DATABASE!
+		
+		OctreeNodePtr parentNode = nodeIt->second;
+		setupNodeRendering( parentNode, parentCode, renderingState );
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::checkBranch( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh,
+				   bool& out_isCullable ) const
 	{
 		pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( code );
 		out_isCullable = renderingState.isCullable( box );
 		
 		return !renderingState.isRenderable( box, projThresh ) && !out_isCullable;
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::branch( const MortonCodePtr& code, RenderingState& renderingState )
+	{
+		//cout << "Branch:" << code->getPathToRoot( true ) << endl;
+		
+		auto nodeIt = ParentOctree::m_hierarchy->find( code );
+		assert( nodeIt != ParentOctree::m_hierarchy->end() );
+		OctreeNodePtr node = nodeIt->second;
+		
+		bool isInner = !node->isLeaf();
+		
+		if( isInner )
+		{
+			auto childIt = ParentOctree::m_hierarchy->lower_bound( code->getFirstChild() );
+			auto pastLastChildIt = ParentOctree::m_hierarchy->upper_bound( code->getLastChild() );
+			
+			//cout << "First child: " << childIt->first->getPathToRoot( true ) << "Last child: "
+			//	 << std::prev( pastLastChildIt )->first->getPathToRoot( true ) << endl;
+			
+			assert( childIt != ParentOctree::m_hierarchy->end() );
+			assert( childIt != pastLastChildIt );
+			
+			while( childIt != pastLastChildIt )
+			{
+				MortonCodePtr childCode = childIt->first;
+				
+				//cout << "Inserting: " << childCode->getPathToRoot( true ) << endl;
+				
+				m_frontBehavior->insert( *childCode );
+				
+				pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( childCode );
+				if( !renderingState.isCullable( box ) )
+				{
+					//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
+					OctreeNodePtr node = childIt->second;
+					ParentOctree::setupNodeRendering( node, renderingState );
+				}
+				
+				++childIt;
+			}
+		}
+		
+		return isInner;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -260,7 +274,7 @@ namespace model
 	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
-		//cout << "Inserted draw: " << hex << code->getBits() << dec << endl;
+		//cout << "Inserted draw: " << code->getPathToRoot( true ) << endl;
 		m_frontBehavior->insert( *code );
 		
 		ParentOctree::setupNodeRendering( node, renderingState );

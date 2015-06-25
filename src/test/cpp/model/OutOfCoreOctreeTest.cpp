@@ -18,9 +18,5 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, Creation )
 		{
 		}
-		
-		TEST_F( OutOfCoreOctreeTest, CreationExtended )
-		{
-		}
 	}
 }

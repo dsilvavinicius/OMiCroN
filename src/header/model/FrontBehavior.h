@@ -26,6 +26,9 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	class FrontOctree;
 	
+	// TODO: Make an implementation using set< MortonCode > as front, profile results and compare with
+	// unordered_set< MortonCode >.
+	
 	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
 	 * should be tightly coupled with the class that it is "specializing". */
 	template< typename MortonCode, typename Point, typename Front, typename InsertionContainer >
@@ -48,6 +51,8 @@ namespace model
 		/** Main front tracking method. */
 		virtual void trackFront( RenderingState& renderingState, const Float& projThresh )
 		{
+			//cout << "============== Starting front tracking ===================" << endl << endl;
+			
 			// Flag to indicate if the previous front entry should be deleted. This can be done only after the
 			// iterator to the entry to be deleted is incremented. Otherwise the iterator will be invalidated before
 			// increment.
@@ -59,13 +64,12 @@ namespace model
 			for( typename Front::iterator it = m_front.begin(); it != end; prev = it, ++it,
 				end = m_front.end() )
 			{
-				//cout << endl << "Current: " << hex << it->getBits() << dec << endl;
+				//cout << endl << "Current front node: " << hex << it->getBits() << dec << endl;
 				if( erasePrevious )
 				{
 					//cout << "Erased: " << hex << prev->getBits() << dec << endl;
 					m_front.erase( prev );
 				}
-				//erasePrevious = false;
 				
 				MortonCodePtr code = make_shared< MortonCode >( *it );
 				
@@ -78,6 +82,8 @@ namespace model
 				//cout << "Erased: " << hex << prev->getBits() << dec << endl;
 				m_front.erase( prev );
 			}
+			
+			//cout << "============== Ending front tracking ===================" << endl << endl;
 		}
 		
 		/** Prune all siblings of a node ( the node itself is not affected ). */
