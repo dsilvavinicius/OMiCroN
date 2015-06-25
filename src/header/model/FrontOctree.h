@@ -221,15 +221,14 @@ namespace model
 		if( isInner )
 		{
 			auto childIt = ParentOctree::m_hierarchy->lower_bound( code->getFirstChild() );
-			auto pastLastChildIt = ParentOctree::m_hierarchy->upper_bound( code->getLastChild() );
+			//auto pastLastChildIt = ParentOctree::m_hierarchy->upper_bound( code->getLastChild() );
 			
 			//cout << "First child: " << childIt->first->getPathToRoot( true ) << "Last child: "
 			//	 << std::prev( pastLastChildIt )->first->getPathToRoot( true ) << endl;
 			
-			assert( childIt != ParentOctree::m_hierarchy->end() && "Parent is expected to have siblings." );
-			assert( childIt != pastLastChildIt && "Parent's first and past last iterators are expected to be different." );
+			assert( childIt != ParentOctree::m_hierarchy->end() && "Code is expected to have child." );
 			
-			while( childIt != pastLastChildIt )
+			while( childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code )
 			{
 				MortonCodePtr childCode = childIt->first;
 				

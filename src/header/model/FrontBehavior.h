@@ -96,12 +96,10 @@ namespace model
 			OctreeMapPtr hierarchy = m_octree.getHierarchy();
 			
 			auto childIt = hierarchy->lower_bound( parent->getFirstChild() );
-			auto pastLastChildIt = hierarchy->upper_bound( parent->getLastChild() );
 			
-			assert( childIt != hierarchy->end() && "Parent is expected to have siblings." );
-			assert( childIt != pastLastChildIt && "Parent's first and past last iterators are expected to be different." );
+			assert( childIt != hierarchy->end() && "Parent is expected to have child." );
 			
-			while( childIt != pastLastChildIt )
+			while( childIt != hierarchy->end() && *childIt->first->traverseUp() == *parent )
 			{
 				MortonCodePtr deletedCode = childIt->first;
 				
