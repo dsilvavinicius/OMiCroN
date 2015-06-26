@@ -66,7 +66,7 @@ namespace util
 	
 	// ====================== Type Sugar ================================ /
 	template< typename MortonCode >
-	using IdNode = pair< MortonCode*, OctreeNode< MortonCode >* >;
+	using IdNode = pair< shared_ptr< MortonCode >, OctreeNodePtr< MortonCode > >;
 	
 	template< typename MortonCode >
 	using IdNodeVector = vector< IdNode< MortonCode > >;

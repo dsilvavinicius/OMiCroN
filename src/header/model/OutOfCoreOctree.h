@@ -67,6 +67,17 @@ namespace model
 		
 		void eraseNodes( const typename OctreeMap::iterator& first, const typename OctreeMap::iterator& last ) override;
 		
+		/** This implementation makes a node load request if the iterator indicates that the node was not found in
+		 * memory. */
+		void onPrunningItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code ) override;
+		
+		/** This implementation makes a node load request if the iterator indicates that the node was not found in
+		 * memory. */
+		void onBranchingItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code ) override;
+		
+		/** Override to also check for completed node requests. */
+		void onTraversalEnd() override;
+		
 		/** DEPRECATED. */
 		virtual void buildBoundaries( const PointVector& points ) override;
 		
@@ -126,6 +137,7 @@ namespace model
 		
 		static unsigned long M_MIN_FREE_MEMORY_TO_RELEASE;
 		static unsigned long M_MIN_FREE_MEMORY_AFTER_RELEASE;
+		static unsigned int M_NODE_REQUESTS_PER_FRAME;
 	};
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -143,6 +155,10 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::M_SIBLING_GROUPS_PER_LOAD = 100;
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::M_NODE_REQUESTS_PER_FRAME = 100;
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::OutOfCoreOctree( const int& maxPointsPerNode,
@@ -257,13 +273,11 @@ namespace model
 		}
 		else
 		{
-			OctreeNode* node = m_sqLite. template getNode< PointVector >( *code );
+			OctreeNodePtr node = m_sqLite. template getNode< PointVector >( *code );
 			if( node )
 			{
 				++m_nodesUntilLastPersistence;
-				
-				OctreeNodePtr nodePtr( node );
-				return nodePtr;
+				return node;
 			}
 			else
 			{
@@ -604,6 +618,43 @@ namespace model
 	::isDirty( const MortonCodePtr& code ) const
 	{
 		return *code <= *m_lastDirty;
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::onPrunningItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
+	{
+		if( it == ParentOctree::m_hierarchy->end() )
+		{
+			m_sqLite.requestNodesAsync( *code, *code );
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::onBranchingItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
+	{
+		if( it == ParentOctree::m_hierarchy->end() )
+		{
+			m_sqLite.requestNodesAsync( *code, *code->traverseUp()->getLastChild() );
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::onTraversalEnd()
+	{
+		ParentOctree::onTraversalEnd();
+		
+		/*// Add requested nodes to hierarchy.
+		vector< IdNodeVector > queries = m_sqLite.getRequestResults( M_NODE_REQUESTS_PER_FRAME );
+		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+		
+		for( IdNodeVector query : queries )
+		{
+			IdNode firstIdNode = query[ 0 ];
+			auto pastInsertionIt = hierarchy->upper_bound( MortonCodePtr( firstIdNode.first ) );
+			hierarchy->insert( pastInsertionIt, pair< MortonCodePtr, OctreeNodePtr >( query[ 0 ].first ) );
+		}*/
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

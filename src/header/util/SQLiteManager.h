@@ -5,6 +5,9 @@
 #include <functional>
 #include <sqlite3.h>
 #include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <OctreeNode.h>
 #include "SQLiteQuery.h"
 
@@ -12,7 +15,8 @@ using namespace std;
 
 namespace util
 {
-	/** Manages all SQLite operations. */
+	/** Manages all SQLite operations. Provides a sync and async API. The async API can be used to make node requests
+	 * and to acquire them later on. */
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	class SQLiteManager
 	{
@@ -20,6 +24,9 @@ namespace util
 		using IdNode = util::IdNode< MortonCode >;
 		using IdNodeVector = vector< IdNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
+		using PointPtr = shared_ptr< Point >;
+		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		
 		SQLiteManager();
 		~SQLiteManager();
@@ -30,7 +37,7 @@ namespace util
 		
 		/** Searches the point in the database, given its index.
 		 *	@return the acquired node or nullptr if no point is found. The pointer ownership is caller's. */
-		Point* getPoint( const sqlite3_uint64& index );
+		PointPtr getPoint( const sqlite3_uint64& index );
 		
 		/** Inserts the node into database, using the given morton code as identifier.
 		 *	@param NodeContents is the type of the contents of the node. */
@@ -42,7 +49,7 @@ namespace util
 		 *	@param morton is the node morton code id.
 		 *	@returns the acquired node or nullptr if no node is found. The pointer ownership is caller's. */
 		template< typename NodeContents >
-		OctreeNode* getNode( const MortonCode& morton );
+		OctreeNodePtr getNode( const MortonCode& morton );
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param NodeContents is the type of the contents of the node.
@@ -50,7 +57,7 @@ namespace util
 		 *	@param b is the major boundary of the morton closed interval.
 		 *	@returns the acquired nodes. The ownership of the node pointers is caller's. */
 		template< typename NodeContents >
-		vector< OctreeNode* > getNodes( const MortonCode& a, const MortonCode& b );
+		vector< OctreeNodePtr > getNodes( const MortonCode& a, const MortonCode& b );
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param NodeContents is the type of the contents of the node.
@@ -74,6 +81,17 @@ namespace util
 		 * @param a is the minor boundary of the morton code closed interval.
 		 * @param b is the major boundary of the morton closed interval.*/
 		void deleteNodes( const MortonCode& a, const MortonCode& b );
+		
+		/** Async request the closed interval of nodes [ a, b ]. They will be available later on and can be acessed
+		 * using getRequestResults().
+		 * @param a is the minor boundary of the morton code closed interval.
+		 * @param b is the major boundary of the morton closed interval.*/
+		void requestNodesAsync( const MortonCode& a, const MortonCode& b ) {}
+		
+		/** Get results available from earlier async node requests.
+		 * @param maxResults maximum number of results to be returned.
+		 * @returns a vector which each entry represents the results of one async request. */
+		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults ) {}
 		
 	private:
 		/** Release all acquired resources. */
@@ -126,6 +144,17 @@ namespace util
 		
 		/** Current number of inserted points. */
 		sqlite_int64 m_nPoints;
+		
+		// Async request manager associated data:
+		// The manager itself.
+		//thread requestManager;
+		// Lock to the request container.
+		//mutex requestLock;
+		// Indicates that request were generated for requestManager.
+		//condition_variable requestFlag;
+		// Indicates that all async requests are sent to requestManager and no more will be generated. requestManager
+		// should then finish processing all request and join with main thread.
+		//bool requestsDone;
 	};
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -147,6 +176,8 @@ namespace util
 		
 		createTables();
 		createStmts();
+		
+		//requestManager = thread(  );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -172,17 +203,17 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	Point* SQLiteManager< Point, MortonCode, OctreeNode >::getPoint( const sqlite3_uint64& index )
+	shared_ptr< Point > SQLiteManager< Point, MortonCode, OctreeNode >::getPoint( const sqlite3_uint64& index )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_pointQuery, 1, index ), SQLITE_OK );
 		bool isPointFound = safeStep( m_pointQuery );
 		
-		Point* point = nullptr;
+		PointPtr point = nullptr;
 		
 		if( isPointFound )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_pointQuery, 0 );
-			point = new Point( blob );
+			point = make_shared< Point >( blob );
 		}
 		else
 		{
@@ -211,16 +242,16 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	OctreeNode* SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
+	OctreeNodePtr< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeQuery, 1, morton.getBits() ), SQLITE_OK );
 		bool isNodeFound = safeStep( m_nodeQuery );
 		
-		OctreeNode* node = nullptr;
+		OctreeNodePtr node = nullptr;
 		if( isNodeFound )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
-			node = OctreeNode:: template deserialize< NodeContents >( blob );
+			node = OctreeNodePtr( OctreeNode:: template deserialize< NodeContents >( blob ) );
 		}
 		
 		safeReset( m_nodeQuery );
@@ -229,18 +260,18 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	vector< OctreeNode* > SQLiteManager< Point, MortonCode, OctreeNode >::getNodes( const MortonCode& a,
-																					const MortonCode& b )
+	vector< OctreeNodePtr< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
+	::getNodes( const MortonCode& a, const MortonCode& b )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 1, a.getBits() ), SQLITE_OK );
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 2, b.getBits() ), SQLITE_OK );
 		
-		vector< OctreeNode* > nodes;
+		vector< OctreeNodePtr > nodes;
 		
 		while( safeStep( m_nodeIntervalQuery ) )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalQuery, 0 );
-			OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
+			OctreeNodePtr node( OctreeNode:: template deserialize< NodeContents >( blob ) );
 			nodes.push_back( node );
 		}
 		
@@ -283,11 +314,11 @@ namespace util
 				if( rowIsFound )
 				{
 					sqlite3_int64 mortonBits = sqlite3_column_int64( m_nodeIntervalIdQuery, 0 );
-					MortonCode* code = new MortonCode();
+					MortonCodePtr code = make_shared< MortonCode >();
 					code->build( mortonBits );
 					
 					byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
-					OctreeNode* node = OctreeNode:: template deserialize< NodeContents >( blob );
+					OctreeNodePtr node( OctreeNode:: template deserialize< NodeContents >( blob ) );
 					
 					*queried = IdNode( code, node );
 				}
@@ -370,6 +401,9 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::release()
 	{
+		//requestsDone = true;
+		//requestManager.join();
+		
 		dropTables();
 		
 		unsafeFinalize( m_pointInsertion );

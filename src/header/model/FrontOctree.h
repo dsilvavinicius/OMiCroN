@@ -21,6 +21,8 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using MortonVector = vector< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
+		using OctreeMap = model::OctreeMap< MortonCode >;
+		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
@@ -58,7 +60,19 @@ namespace model
 		 * @returns true if code identifies an inner node (and must be deleted to make place for its children), false
 		 * otherwise. */
 		bool branch( const MortonCodePtr& code, RenderingState& renderingState );
-			
+		
+		/** Called when the hierarchy iterator resulting of a prunning operation is acquired. Default implementation
+		 * does nothing.
+		 * @param it is the hierarchy iterator returned while searching for code.
+		 * @param code is the node id used for searching. */
+		virtual void onPrunningItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code ) {}
+		
+		/** Called when the hierarchy iterator resulting of a branching operation is acquired. Default implementation
+		 * does nothing.
+		 * @param it is the hierarchy iterator returned while searching for code.
+		 * @param code is the node id used for searching. */
+		virtual void onBranchingItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code ) {}
+		
 		/** Overriden to add rendered node into front addition list. */
 		void setupLeafNodeRendering( OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState );
 		
@@ -69,7 +83,7 @@ namespace model
 		void handleCulledNode( MortonCodePtr code );
 		
 		/** Overriden to push the front addition list to the front itself. */
-		void onTraversalEnd();
+		virtual void onTraversalEnd();
 		
 		/** Rendering setup method for both leaf and inner node cases. Adds the node into the front. */
 		void setupNodeRendering( OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState );
@@ -189,10 +203,14 @@ namespace model
 		MortonCodePtr parentCode = code->traverseUp();
 			
 		auto nodeIt = ParentOctree::m_hierarchy->find( parentCode );
-		assert( nodeIt != ParentOctree::m_hierarchy->end() ); // SEND A NODE REQUEST TO DATABASE!
 		
-		OctreeNodePtr parentNode = nodeIt->second;
-		setupNodeRendering( parentNode, parentCode, renderingState );
+		onPrunningItAcquired( nodeIt, parentCode );
+		
+		if( nodeIt != ParentOctree::m_hierarchy->end() )
+		{
+			OctreeNodePtr parentNode = nodeIt->second;
+			setupNodeRendering( parentNode, parentCode, renderingState );
+		}
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -220,13 +238,14 @@ namespace model
 		
 		if( isInner )
 		{
-			auto childIt = ParentOctree::m_hierarchy->lower_bound( code->getFirstChild() );
+			MortonCodePtr firstChild = code->getFirstChild();
+			auto childIt = ParentOctree::m_hierarchy->lower_bound( firstChild );
 			//auto pastLastChildIt = ParentOctree::m_hierarchy->upper_bound( code->getLastChild() );
 			
 			//cout << "First child: " << childIt->first->getPathToRoot( true ) << "Last child: "
 			//	 << std::prev( pastLastChildIt )->first->getPathToRoot( true ) << endl;
 			
-			assert( childIt != ParentOctree::m_hierarchy->end() && "Code is expected to have child." );
+			onBranchingItAcquired( childIt, firstChild );
 			
 			while( childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code )
 			{

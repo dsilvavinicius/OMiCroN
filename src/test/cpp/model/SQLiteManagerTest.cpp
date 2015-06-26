@@ -28,17 +28,14 @@ namespace model
 			sqLite.insertPoint( p2 );
 			
 			float epsilon = 1.e-15;
-			Point* p = sqLite.getPoint( 0 );
+			PointPtr p = sqLite.getPoint( 0 );
 			ASSERT_TRUE( p->equal( p0, epsilon ) );
-			delete p;
 			
 			p = sqLite.getPoint( 1 );
 			ASSERT_TRUE( p->equal( p1, epsilon ) );
-			delete p;
 			
 			p = sqLite.getPoint( 2 ); 
 			ASSERT_TRUE( p->equal( p2, epsilon ) );
-			delete p;
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetIndexNodes )
@@ -46,6 +43,7 @@ namespace model
 			using MortonCode = model::ShallowMortonCode;
 			using Contents = vector< int >;
 			using OctreeNode = model::ShallowOctreeNode;
+			using OctreeNodePtr = model::ShallowOctreeNodePtr;
 			using LeafNode = model::ShallowLeafNode< Contents >;
 			using InnerNode = model::ShallowInnerNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
@@ -67,18 +65,17 @@ namespace model
 			
 			sqLite.insertNode< Contents >( innerCode, innerNode );
 			
-			OctreeNode* queriedNode = sqLite.getNode< Contents >( leafCode );
+			OctreeNodePtr queriedNode = sqLite.getNode< Contents >( leafCode );
 			ASSERT_EQ( *queriedNode->getContents< Contents >(), leafPoints );
-			delete queriedNode;
 			
 			queriedNode = sqLite.getNode< Contents >( innerCode );
 			ASSERT_EQ( *queriedNode->getContents< Contents >(), innerPoints );
-			delete queriedNode;
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetPointNodes )
 		{
 			using OctreeNode = model::ShallowOctreeNode;
+			using OctreeNodePtr = model::ShallowOctreeNodePtr;
 			using LeafNode = model::LeafNode< ShallowMortonCode, PointVector >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			
@@ -100,7 +97,7 @@ namespace model
 			
 			sqLite.insertNode< PointVector >( code, node );
 			
-			OctreeNode* queriedNode = sqLite.getNode< PointVector >( code );
+			OctreeNodePtr queriedNode = sqLite.getNode< PointVector >( code );
 			
 			float epsilon = 1.e-15;
 			PointVector queriedPoints = *queriedNode->getContents< PointVector >();
@@ -109,8 +106,6 @@ namespace model
 			{
 				ASSERT_TRUE( points[ i ]->equal( *queriedPoints[ i ], epsilon ) );
 			}
-			
-			delete queriedNode;
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetIdNodes )
@@ -149,9 +144,6 @@ namespace model
 			
 			Contents queriedInts = *queried[ 0 ].second->getContents< Contents >();
 			ASSERT_EQ( queriedInts, ints0 );
-			
-			delete queried[ 0 ].first;
-			delete queried[ 0 ].second;
 		}
 		
 		TEST_F( SQLiteManagerTest, DeleteNodes )
@@ -159,6 +151,7 @@ namespace model
 			using MortonCode = model::ShallowMortonCode;
 			using Contents = vector< int >;
 			using OctreeNode = model::ShallowOctreeNode;
+			using OctreeNodePtr = model::ShallowOctreeNodePtr;
 			using LeafNode = model::ShallowLeafNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 			
@@ -179,14 +172,11 @@ namespace model
 			sqLite.insertNode< Contents >( code3, node3 );
 			
 			sqLite.deleteNodes( code1, code2 );
-			vector< OctreeNode* > queried = sqLite. template getNodes< Contents >( code0, code3 );
+			vector< OctreeNodePtr > queried = sqLite. template getNodes< Contents >( code0, code3 );
 			
 			ASSERT_EQ( queried.size(), 2 );
 			ASSERT_EQ( *queried[ 0 ]->getContents< Contents >(), Contents( 3, 0 ) );
-			delete queried[ 0 ];
-			
 			ASSERT_EQ( *queried[ 1 ]->getContents< Contents >(), Contents( 3, 3 ) );
-			delete queried[ 1 ];
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetExtPointNodes )
@@ -194,6 +184,7 @@ namespace model
 			using Point = ExtendedPoint;
 			using PointVector = ExtendedPointVector;
 			using OctreeNode = ShallowOctreeNode;
+			using OctreeNodePtr = ShallowOctreeNodePtr;
 			using LeafNode = model::LeafNode< ShallowMortonCode, PointVector >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 
@@ -215,7 +206,7 @@ namespace model
 			
 			sqLite.insertNode< PointVector >( code, node );
 			
-			OctreeNode* queriedNode = sqLite.getNode< PointVector >( code );
+			OctreeNodePtr queriedNode = sqLite.getNode< PointVector >( code );
 			
 			float epsilon = 1.e-15;
 			PointVector queriedPoints = *queriedNode->getContents< PointVector >();
@@ -224,8 +215,6 @@ namespace model
 			{
 				ASSERT_TRUE( points[ i ]->equal( *queriedPoints[ i ], epsilon ) );
 			}
-			
-			delete queriedNode;
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetExtIdNodes )
@@ -275,9 +264,6 @@ namespace model
 			{
 				ASSERT_TRUE( vec0[ i ]->equal( *queriedVec[ i ], epsilon ) );
 			}
-			
-			delete queried[ 0 ].first;
-			delete queried[ 0 ].second;
 		}
 	}
 }

@@ -39,6 +39,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 
 void PointRendererWidget::resizeGL( int width, int height )
 {
+	// TODO: It seems that resing is resulting in memory leak ( probably in jump flooding code... ).
+	
 	camera.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 	camera.setPerspectiveMatrix( camera.getFovy(), width / height, 0.1f, 10000.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
