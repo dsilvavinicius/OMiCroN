@@ -23,6 +23,8 @@ namespace model
 	
 	using ShallowMortonInterval = MortonInterval< ShallowMortonCode >;
 	using MediumMortonInterval = MortonInterval< MediumMortonCode >;
+	using ShallowMortonIntervalComparator = MortonIntervalComparator< ShallowMortonInterval >;
+	using MediumMortonIntervalComparator = MortonIntervalComparator< MediumMortonInterval >;
 }
 
 namespace std
