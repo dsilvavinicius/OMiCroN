@@ -265,5 +265,57 @@ namespace model
 				ASSERT_TRUE( vec0[ i ]->equal( *queriedVec[ i ], epsilon ) );
 			}
 		}
+		
+		TEST_F( SQLiteManagerTest, AsyncAPI )
+		{
+			using Contents = ExtendedPointVector;
+			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
+			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, ShallowOctreeNode >;
+			using IdNode = util::IdNode< ShallowMortonCode >;
+			
+			ExtendedPointPtr p0 = make_shared< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+																vec3( 1.f, 15.f ,2.f ) );
+			ExtendedPointPtr p1 = make_shared< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+																vec3( 3.f, -31.f ,4.f ) );
+			ExtendedPointPtr p2 = make_shared< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+																vec3( -14.f, 5.f ,6.f ) );
+			
+			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
+			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
+			
+			Contents vec0( rawPoints0, rawPoints0 + 3 );
+			Contents vec1( rawPoints1, rawPoints1 + 3 );
+			
+			LeafNode node0;
+			LeafNode node1;
+			node0.setContents( vec0 );
+			node1.setContents( vec1 );
+			
+			ShallowMortonCode code0;
+			code0.build( 1, 2, 3, 4 );
+			ShallowMortonCode code1;
+			code1.build( 7, 7, 7, 10 );
+			
+			SQLiteManager sqLite;
+			sqLite.insertNode< Contents >( code0, node0 );
+			sqLite.insertNode< Contents >( code1, node1 );
+			
+			ShallowMortonCodePtr code0Ptr = make_shared< ShallowMortonCode >( code0 );
+			ShallowMortonCodePtr code1Ptr = make_shared< ShallowMortonCode >( code1 );
+			
+			sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code0Ptr ) );
+			sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code1Ptr ) );
+			
+			this_thread::sleep_for( std::chrono::seconds(1) );
+			
+			vector< util::IdNodeVector< ShallowMortonCode > > results = sqLite.getRequestResults( 10 );
+			
+			ASSERT_EQ( results.size(), 2 );
+			ASSERT_EQ( results[ 0 ].size(), 1 );
+			ASSERT_EQ( results[ 1 ].size(), 2 );
+			ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );
+			ASSERT_EQ( *results[ 1 ][ 0 ].first, *code0Ptr );
+			ASSERT_EQ( *results[ 1 ][ 1 ].first, *code1Ptr );
+		}
 	}
 }
