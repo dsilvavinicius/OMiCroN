@@ -27,7 +27,7 @@ namespace model
 
 	using ShallowMortonComparator = MortonComparator< ShallowMortonCode >;
 	using MediumMortonComparator = MortonComparator< MediumMortonCode >;
-	using DeepMortonComparator = MortonComparator< DeepMortonCode >;
+	//using DeepMortonComparator = MortonComparator< DeepMortonCode >;
 }
 
 #endif

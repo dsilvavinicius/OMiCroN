@@ -169,9 +169,9 @@ namespace model
 	
 	using MediumOctreeNodePtr = shared_ptr< MediumOctreeNode >;
 	
-	using DeepOctreeNode = OctreeNode< DeepMortonCode >;
+	//using DeepOctreeNode = OctreeNode< DeepMortonCode >;
 	
-	using DeepOctreeNodePtr = shared_ptr< DeepOctreeNode >;
+	//using DeepOctreeNodePtr = shared_ptr< DeepOctreeNode >;
 }
 
 #endif

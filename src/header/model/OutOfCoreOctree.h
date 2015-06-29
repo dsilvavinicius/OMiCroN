@@ -29,6 +29,7 @@ namespace model
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 		using ParentOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
 		using IdNode = util::IdNode< MortonCode >;
+		using IdNodeVector = util::IdNodeVector< MortonCode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 	public:
@@ -626,7 +627,7 @@ namespace model
 	{
 		if( it == ParentOctree::m_hierarchy->end() )
 		{
-			m_sqLite.requestNodesAsync( *code, *code );
+			m_sqLite.requestNodesAsync( MortonInterval< MortonCode >( code, code ) );
 		}
 	}
 	
@@ -636,7 +637,7 @@ namespace model
 	{
 		if( it == ParentOctree::m_hierarchy->end() )
 		{
-			m_sqLite.requestNodesAsync( *code, *code->traverseUp()->getLastChild() );
+			m_sqLite.requestNodesAsync( MortonInterval< MortonCode >( code, code->traverseUp()->getLastChild() ) );
 		}
 	}
 	
@@ -645,44 +646,46 @@ namespace model
 	{
 		ParentOctree::onTraversalEnd();
 		
-		/*// Add requested nodes to hierarchy.
+		// Add requested nodes to hierarchy.
 		vector< IdNodeVector > queries = m_sqLite.getRequestResults( M_NODE_REQUESTS_PER_FRAME );
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
 		for( IdNodeVector query : queries )
 		{
-			IdNode firstIdNode = query[ 0 ];
-			auto pastInsertionIt = hierarchy->upper_bound( MortonCodePtr( firstIdNode.first ) );
-			hierarchy->insert( pastInsertionIt, pair< MortonCodePtr, OctreeNodePtr >( query[ 0 ].first ) );
-		}*/
+			auto pastInsertionIt = hierarchy->upper_bound( query[ 0 ].first );
+			
+			for( IdNode idNode : query )
+			{
+				hierarchy->insert( pastInsertionIt, idNode );
+			}
+		}
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildBoundaries( const PointVector& points )
 	{
-		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. Use buildBoundaries() to take into consideration"
-							" the database or another non out of core octree implementation" );
+		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. The boundaries are now calculated in"
+							"buildFromFile()" );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildNodes( PointVector& points )
 	{
-		throw logic_error(  "buildNodes( PointVector& ) is unsuported. Use ***() to take into consideration"
-							" the database or another non out of core octree implementation" );
+		throw logic_error(  "buildNodes( PointVector& ) is unsuported. Use buildFromFile() to take into consideration"
+							"the database or use FrontOctree." );
 	}
 		
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildLeaves( const PointVector& points )
 	{
-		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. Use ***() to take into consideration"
-							" the database or another non out of core octree implementation" );
+		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. The leaves are now being built in "
+							"buildFromFile()" );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build( PointVector& points )
 	{
-		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile or another non out of core octree"
-							"implementation" );
+		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile() instead." );
 	}
 	
 	// ====================== Type Sugar ================================ /

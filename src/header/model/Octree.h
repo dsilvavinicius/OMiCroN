@@ -631,12 +631,12 @@ namespace model
 		Octree( const int& maxPointsPerNode, const int& maxLevel );
 	};
 	
-	template< typename Point >
-	class Octree< DeepMortonCode, Point > : public OctreeBase< DeepMortonCode, Point >
-	{
-	public:
-		Octree( const int& maxPointsPerNode, const int& maxLevel );
-	};
+	//template< typename Point >
+	//class Octree< DeepMortonCode, Point > : public OctreeBase< DeepMortonCode, Point >
+	//{
+	//public:
+	//	Octree( const int& maxPointsPerNode, const int& maxLevel );
+	//};
 	
 	template< typename Point >
 	Octree< ShallowMortonCode, Point >::Octree( const int& maxPointsPerNode, const int& maxLevel )
@@ -656,14 +656,14 @@ namespace model
 			OctreeBase< MediumMortonCode, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
 	}
 	
-	template< typename Point >
-	Octree< DeepMortonCode, Point >::Octree( const int& maxPointsPerNode, const int& maxLevel )
-	: OctreeBase< DeepMortonCode, Point >::OctreeBase( maxPointsPerNode, maxLevel )
-	{
-		OctreeBase< DeepMortonCode, Point >::m_maxMortonLevel = 42; // 0 to 42
-		assert( ( OctreeBase< DeepMortonCode, Point >::m_maxLevel <=
-			OctreeBase< DeepMortonCode, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
-	}
+	//template< typename Point >
+	//Octree< DeepMortonCode, Point >::Octree( const int& maxPointsPerNode, const int& maxLevel )
+	//: OctreeBase< DeepMortonCode, Point >::OctreeBase( maxPointsPerNode, maxLevel )
+	//{
+	//	OctreeBase< DeepMortonCode, Point >::m_maxMortonLevel = 42; // 0 to 42
+	//	assert( ( OctreeBase< DeepMortonCode, Point >::m_maxLevel <=
+	//		OctreeBase< DeepMortonCode, Point >::m_maxMortonLevel ) && "Octree level cannot exceed maximum." );
+	//}
 	
 	// ====================== Type Sugar ================================ /
 	using ShallowOctree = Octree< ShallowMortonCode, Point >;

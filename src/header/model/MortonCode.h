@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
-#include <boost/functional/hash.hpp>
 #include <glm/ext.hpp>
 
 #include "Stream.h"
@@ -17,13 +16,10 @@ using namespace std;
 namespace model
 {
 	// Forward declaration.
-	template <typename T> class MortonCode;
+	template< typename T > class MortonCode;
 	
 	template< typename T >
 	using MortonCodePtr = shared_ptr< MortonCode< T > >;
-	
-	template< typename T >
-	using MortonInterval = pair< MortonCodePtr< T >, MortonCodePtr< T > >;
 	
 	/** Morton code designed for use as an octree node index, represented by interleaving the bits of the node coordinate.
 	 * To avoid collision of node indices, the code for a given node at level l in the Octree only considers the first
@@ -76,7 +72,7 @@ namespace model
 		
 		/** Returns the children code closed interval [ a, b ] for this morton code.
 		 * @returns a pair with first element being a and second element being b. */
-		MortonInterval< T > getChildInterval() const;
+		pair< MortonCodePtr< T >, MortonCodePtr< T > > getChildInterval() const;
 		
 		/** Check if this MortonCode is child the code passed as parameter. */
 		bool isChildOf( const MortonCode& code ) const;
@@ -226,12 +222,12 @@ namespace model
 	}
 	
 	template <typename T>
-	inline MortonInterval< T > MortonCode< T >::getChildInterval() const
+	inline pair< MortonCodePtr< T >, MortonCodePtr< T > > MortonCode< T >::getChildInterval() const
 	{
 		MortonCodePtr< T > a = getFirstChild();
 		MortonCodePtr< T > b = getLastChild();
 		
-		return MortonInterval< T >( a, b );
+		return pair< MortonCodePtr< T >, MortonCodePtr< T > >( a, b );
 	}
 	
 	template <typename T>
@@ -437,30 +433,30 @@ namespace model
 	
 	using ShallowMortonCode = MortonCode< unsigned int >;
 	using MediumMortonCode = MortonCode< unsigned long >;
-	using DeepMortonCode = MortonCode< unsigned long long >;
-	
-	using ShallowMortonInterval = MortonInterval< unsigned int >;
-	using MediumMortonInterval = MortonInterval< unsigned long >;
-	using DeepMortonInterval = MortonInterval< unsigned long long >;
+	//using DeepMortonCode = MortonCode< unsigned long long >;
 	
 	using ShallowMortonCodePtr = shared_ptr< ShallowMortonCode >;
 	using MediumMortonCodePtr = shared_ptr< MediumMortonCode >;
-	using DeepMortonCodePtr = shared_ptr< DeepMortonCode >;
+	//using DeepMortonCodePtr = shared_ptr< DeepMortonCode >;
 }
 
 namespace std
 {
 	template<>
-	template< typename MortonPrecision >
-    struct hash< model::MortonCode< MortonPrecision > >
+    struct hash< model::ShallowMortonCode >
     {
-        typedef model::MortonCode< MortonPrecision > argument_type;
-        typedef size_t result_type;
-
-        size_t operator()( const model::MortonCode< MortonPrecision >& code ) const
+        size_t operator()( const model::ShallowMortonCode& k ) const
         {
-			boost::hash< MortonPrecision > hasher;
-			return hasher( code.getBits() );
+			return hash< unsigned int >()( k.getBits() );
+        }
+    };
+	
+	template<>
+    struct hash< model::MediumMortonCode >
+    {
+        size_t operator()( const model::MediumMortonCode& k ) const
+        {
+			return hash< unsigned long >()( k.getBits() );
         }
     };
 }

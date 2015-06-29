@@ -1,4 +1,4 @@
-#include "../model/MortonCode.h"
+#include "MortonInterval.h"
 #include <MortonComparator.h>
 
 #include <gtest/gtest.h>

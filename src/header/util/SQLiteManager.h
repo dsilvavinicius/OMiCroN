@@ -8,7 +8,10 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <OctreeNode.h>
+#include <unordered_set>
+#include <queue>
+#include "OctreeNode.h"
+#include <MortonInterval.h>
 #include "SQLiteQuery.h"
 
 using namespace std;
@@ -25,10 +28,15 @@ namespace util
 		using IdNodeVector = vector< IdNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
+		using MortonInterval = model::MortonInterval< MortonCode >;
+		using unordered_set = std::unordered_set< MortonInterval, hash< MortonInterval >,
+												  MortonIntervalComparator< MortonInterval > >;
 		
 		SQLiteManager();
+		
 		~SQLiteManager();
 		
 		/** Inserts point into database.
@@ -82,16 +90,14 @@ namespace util
 		 * @param b is the major boundary of the morton closed interval.*/
 		void deleteNodes( const MortonCode& a, const MortonCode& b );
 		
-		/** Async request the closed interval of nodes [ a, b ]. They will be available later on and can be acessed
-		 * using getRequestResults().
-		 * @param a is the minor boundary of the morton code closed interval.
-		 * @param b is the major boundary of the morton closed interval.*/
-		void requestNodesAsync( const MortonCode& a, const MortonCode& b ) {}
+		/** Async request the closed interval of nodes. They will be available later on and can be acessed using
+		 * getRequestResults(). */
+		void requestNodesAsync( const MortonInterval& interval );
 		
 		/** Get results available from earlier async node requests.
 		 * @param maxResults maximum number of results to be returned.
 		 * @returns a vector which each entry represents the results of one async request. */
-		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults ) {}
+		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults );
 		
 	private:
 		/** Release all acquired resources. */
@@ -146,15 +152,28 @@ namespace util
 		sqlite_int64 m_nPoints;
 		
 		// Async request manager associated data:
+		
 		// The manager itself.
-		//thread requestManager;
+		thread m_requestManager;
+		
 		// Lock to the request container.
-		//mutex requestLock;
+		mutex m_requestLock;
+		
+		// Request container.
+		unordered_set m_requests;
+		
+		// Lock to the result container.
+		mutex m_resultLock;
+		
+		// Requests result container.
+		queue< IdNodeVector > m_requestsResults;
+		
 		// Indicates that request were generated for requestManager.
-		//condition_variable requestFlag;
+		condition_variable m_requestFlag;
+		
 		// Indicates that all async requests are sent to requestManager and no more will be generated. requestManager
 		// should then finish processing all request and join with main thread.
-		//bool requestsDone;
+		bool m_requestsDone;
 	};
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -167,7 +186,8 @@ namespace util
 	m_nodeIntervalQuery( nullptr ),
 	m_nodeIntervalIdQuery( nullptr ),
 	m_nodeIntervalDeletion( nullptr ),
-	m_nPoints( 0 )
+	m_nPoints( 0 ),
+	m_requestsDone( false )
 	{
 		checkReturnCode(
 			sqlite3_open_v2( "Octree.db", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL ),
@@ -177,7 +197,27 @@ namespace util
 		createTables();
 		createStmts();
 		
-		//requestManager = thread(  );
+		m_requestManager = thread(
+			[ & ]()
+			{
+				while( !m_requestsDone )
+				{
+					unique_lock< mutex > requestLock( m_requestLock );
+					m_requestFlag.wait( requestLock, [ & ](){ return !m_requests.empty() || m_requestsDone; } );
+					
+					for( auto it = m_requests.begin(); it != m_requests.end(); )
+					{
+						MortonInterval interval = *it;
+						IdNodeVector idNodes = getIdNodes< PointVector >( *interval.first, *interval.second );
+						{
+							lock_guard< mutex > resultLock( m_resultLock );
+							m_requestsResults.push( idNodes );
+						}
+						m_requests.erase(it++);
+					}
+				}
+			}
+		);
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -347,6 +387,31 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
+	void SQLiteManager< Point, MortonCode, OctreeNode >::requestNodesAsync( const MortonInterval& interval )
+	{
+		unique_lock< mutex > locker( m_requestLock );
+		m_requests.insert( interval );
+		locker.unlock();
+		m_requestFlag.notify_one();
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	vector< IdNodeVector< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
+	::getRequestResults( const unsigned int& maxResults )
+	{
+		lock_guard< mutex > locker( m_resultLock );
+		vector< IdNodeVector > results;
+		
+		for( unsigned int i = 0; i < maxResults && !m_requestsResults.empty(); ++i )
+		{
+			results.push_back( m_requestsResults.front() );
+			m_requestsResults.pop();
+		}
+		
+		return results;
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::createTables()
 	{
 		sqlite3_stmt* creationStmt;
@@ -401,8 +466,9 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	void SQLiteManager< Point, MortonCode, OctreeNode >::release()
 	{
-		//requestsDone = true;
-		//requestManager.join();
+		m_requestsDone = true;
+		m_requestFlag.notify_one();
+		m_requestManager.join();
 		
 		dropTables();
 		

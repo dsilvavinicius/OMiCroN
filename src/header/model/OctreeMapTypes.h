@@ -31,10 +31,10 @@ namespace model
 	using MediumOctreeMapPtr = shared_ptr< MediumOctreeMap >;
 
 	/** 128-bit morton code octree map. */
-	using DeepOctreeMap = OctreeMap< DeepMortonCode >; 
+	//using DeepOctreeMap = OctreeMap< DeepMortonCode >; 
 
 	/** 128-bit morton code octree map pointer. */
-	using DeepOctreeMapPtr =  shared_ptr< DeepOctreeMap >;
+	//using DeepOctreeMapPtr =  shared_ptr< DeepOctreeMap >;
 }
 
 #endif
