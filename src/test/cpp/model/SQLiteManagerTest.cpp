@@ -314,14 +314,24 @@ namespace model
 			
 			ASSERT_EQ( results.size(), 2 );
 			
-			cout << "Results 0" << *results[ 0 ][ 0 ].first << endl;
-			cout << "Results 1" << *results[ 0 ][ 1 ].first << endl;
+			int result0Size = results[ 0 ].size();
+			ASSERT_TRUE( result0Size == 1 || result0Size == 2 );
 			
-			ASSERT_EQ( results[ 0 ].size(), 1 );
-			ASSERT_EQ( results[ 1 ].size(), 2 );
-			ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );
-			ASSERT_EQ( *results[ 1 ][ 0 ].first, *code0Ptr );
-			ASSERT_EQ( *results[ 1 ][ 1 ].first, *code1Ptr );
+			int result1Size = results[ 1 ].size();
+			if( result0Size == 1 )
+			{
+				ASSERT_EQ( result1Size, 2 );
+				ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );
+				ASSERT_EQ( *results[ 1 ][ 0 ].first, *code0Ptr );
+				ASSERT_EQ( *results[ 1 ][ 1 ].first, *code1Ptr );
+			}
+			else
+			{
+				ASSERT_EQ( result1Size, 1 );
+				ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );
+				ASSERT_EQ( *results[ 0 ][ 1 ].first, *code1Ptr );
+				ASSERT_EQ( *results[ 1 ][ 0 ].first, *code0Ptr );
+			}
 		}
 	}
 }

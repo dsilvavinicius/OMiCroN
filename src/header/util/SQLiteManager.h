@@ -209,7 +209,6 @@ namespace util
 						MortonInterval interval = *it;
 						
 						IdNodeVector idNodes = getIdNodes< PointVector >( *interval.first, *interval.second );
-						cout << idNodes << endl;
 						{
 							lock_guard< mutex > resultLock( m_resultLock );
 							m_requestsResults.push( idNodes );
