@@ -10,9 +10,8 @@
 #include <condition_variable>
 #include <unordered_set>
 #include <queue>
-#include "OctreeNode.h"
-#include <MortonInterval.h>
 #include "SQLiteQuery.h"
+#include "MortonInterval.h"
 
 using namespace std;
 
@@ -24,7 +23,7 @@ namespace util
 	class SQLiteManager
 	{
 	public:
-		using IdNode = util::IdNode< MortonCode >;
+		using IdNode = model::IdNode< MortonCode >;
 		using IdNodeVector = vector< IdNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		using PointPtr = shared_ptr< Point >;
@@ -208,7 +207,9 @@ namespace util
 					for( auto it = m_requests.begin(); it != m_requests.end(); )
 					{
 						MortonInterval interval = *it;
+						
 						IdNodeVector idNodes = getIdNodes< PointVector >( *interval.first, *interval.second );
+						cout << idNodes << endl;
 						{
 							lock_guard< mutex > resultLock( m_resultLock );
 							m_requestsResults.push( idNodes );

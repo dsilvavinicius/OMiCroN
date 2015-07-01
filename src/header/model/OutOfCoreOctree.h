@@ -28,8 +28,8 @@ namespace model
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 		using ParentOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
-		using IdNode = util::IdNode< MortonCode >;
-		using IdNodeVector = util::IdNodeVector< MortonCode >;
+		using IdNode = model::IdNode< MortonCode >;
+		using IdNodeVector = model::IdNodeVector< MortonCode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 	public:

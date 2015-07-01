@@ -114,7 +114,7 @@ namespace model
 			using OctreeNode = model::ShallowOctreeNode;
 			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
-			using IdNode = util::IdNode< ShallowMortonCode >;
+			using IdNode = model::IdNode< ShallowMortonCode >;
 			
 			int rawInts0[ 3 ] = { 1, 2, 3 };
 			int rawInts1[ 3 ] = { 10, 20, 30 };
@@ -222,7 +222,7 @@ namespace model
 			using Contents = ExtendedPointVector;
 			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, ShallowOctreeNode >;
-			using IdNode = util::IdNode< ShallowMortonCode >;
+			using IdNode = model::IdNode< ShallowMortonCode >;
 			
 			ExtendedPointPtr p0 = make_shared< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
 																vec3( 1.f, 15.f ,2.f ) );
@@ -253,10 +253,12 @@ namespace model
 			sqLite.insertNode< Contents >( code0, node0 );
 			sqLite.insertNode< Contents >( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
+			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, code0 );
+			ASSERT_EQ( queried.size(), 1 );
+			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
-			ShallowMortonCode queriedId = *queried[ 0 ].first;
-			ASSERT_EQ( queriedId, code0 );
+			queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
+			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
 			float epsilon = 1.e-15;
 			Contents queriedVec = *queried[ 0 ].second->getContents< Contents >();
@@ -271,7 +273,7 @@ namespace model
 			using Contents = ExtendedPointVector;
 			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, ShallowOctreeNode >;
-			using IdNode = util::IdNode< ShallowMortonCode >;
+			using IdNode = model::IdNode< ShallowMortonCode >;
 			
 			ExtendedPointPtr p0 = make_shared< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
 																vec3( 1.f, 15.f ,2.f ) );
@@ -308,9 +310,13 @@ namespace model
 			
 			this_thread::sleep_for( std::chrono::seconds(1) );
 			
-			vector< util::IdNodeVector< ShallowMortonCode > > results = sqLite.getRequestResults( 10 );
+			vector< IdNodeVector< ShallowMortonCode > > results = sqLite.getRequestResults( 10 );
 			
 			ASSERT_EQ( results.size(), 2 );
+			
+			cout << "Results 0" << *results[ 0 ][ 0 ].first << endl;
+			cout << "Results 1" << *results[ 0 ][ 1 ].first << endl;
+			
 			ASSERT_EQ( results[ 0 ].size(), 1 );
 			ASSERT_EQ( results[ 1 ].size(), 2 );
 			ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );

@@ -3,8 +3,9 @@
 
 #include <sqlite3.h>
 #include <functional>
-#include "MortonCode.h"
+#include "IdNode.h"
 #include "OctreeNode.h"
+#include "MortonCode.h"
 
 using namespace std;
 using namespace model;
@@ -65,12 +66,6 @@ namespace util
 	}
 	
 	// ====================== Type Sugar ================================ /
-	template< typename MortonCode >
-	using IdNode = pair< shared_ptr< MortonCode >, OctreeNodePtr< MortonCode > >;
-	
-	template< typename MortonCode >
-	using IdNodeVector = vector< IdNode< MortonCode > >;
-	
 	using ShallowIdNodeSQLQuery = SQLiteQuery< IdNode< ShallowMortonCode > >;
 }
 

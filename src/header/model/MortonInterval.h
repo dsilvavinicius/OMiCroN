@@ -17,12 +17,22 @@ namespace model
 		}
 	};
 	
+	template< typename MortonCode >
+	ostream& operator<<( ostream& out, const MortonInterval< MortonCode >& interval )
+	{
+		out << "(" <<  endl << interval.first->getPathToRoot( true ) << ","
+			<< interval.second->getPathToRoot( true ) << ")" << endl;
+			
+		return out;
+	}
+	
 	//=================
 	// Type sugar.
 	//=================
 	
 	using ShallowMortonInterval = MortonInterval< ShallowMortonCode >;
 	using MediumMortonInterval = MortonInterval< MediumMortonCode >;
+	
 	using ShallowMortonIntervalComparator = MortonIntervalComparator< ShallowMortonInterval >;
 	using MediumMortonIntervalComparator = MortonIntervalComparator< MediumMortonInterval >;
 }
