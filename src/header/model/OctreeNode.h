@@ -3,10 +3,10 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include "Point.h"
 #include "InnerNode.h"
 #include "LeafNode.h"
 #include "Serializer.h"
+#include "ExtendedPoint.h"
 
 using namespace std;
 using namespace glm;
@@ -33,9 +33,6 @@ namespace model
 		/** Gets the contents of this node. Implies reinterpret_cast downawards hierarchy. */
 		template< typename Contents >
 		shared_ptr< Contents > getContents() const;
-		
-		/** Returns two vertices that defines the boundaries box of this node (minimum, maximum). */
-		pair< Vec3, Vec3 > getBoundaries() const;
 		
 		template< typename M, typename C >
 		friend ostream& operator<<( ostream& out, OctreeNode< M >& node );

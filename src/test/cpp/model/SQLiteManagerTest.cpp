@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <random>
 #include "SQLiteManager.h"
 #include "MortonCode.h"
 
@@ -268,6 +269,58 @@ namespace model
 			}
 		}
 		
+		template< typename Point, typename MortonCode, typename OctreeNode >
+		void checkRequestResults( util::SQLiteManager< Point, MortonCode, OctreeNode >& sqLite,
+								  const IdNode< MortonCode >& code0, const IdNode< MortonCode >& code1 )
+		{
+			using PointVector = vector< shared_ptr< Point > >;
+			
+			vector< IdNodeVector< MortonCode > > results = sqLite.getRequestResults( 10 );
+	
+			float epsilon = 1.e-15;
+			for( IdNodeVector< MortonCode > queryResult : results )
+			{
+				int resultSize = queryResult.size();
+				ASSERT_TRUE( resultSize == 1 || resultSize == 2 );
+				
+				if( resultSize == 1 )
+				{
+					ASSERT_EQ( *queryResult[ 0 ].first, *code0.first );
+					
+					PointVector expectedPoints = *code0.second-> template getContents< PointVector >();
+					PointVector queriedPoints = *queryResult[ 0 ].second-> template getContents< PointVector >();;
+					
+					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
+					for( int i = 0; i < expectedPoints.size(); ++i )
+					{
+						ASSERT_TRUE( expectedPoints[ i ]->equal( *queriedPoints[ i ], epsilon ) );
+					}
+				}
+				else
+				{
+					ASSERT_EQ( *queryResult[ 0 ].first, *code0.first );
+					
+					PointVector expectedPoints = *code0.second-> template getContents< PointVector >();;
+					PointVector queriedPoints = *queryResult[ 0 ].second-> template getContents< PointVector >();;
+					
+					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
+					for( int i = 0; i < expectedPoints.size(); ++i )
+					{
+						ASSERT_TRUE( expectedPoints[ i ]->equal( *queriedPoints[ i ], epsilon ) );
+					}
+					
+					expectedPoints = *code1.second-> template getContents< PointVector >();;
+					queriedPoints = *queryResult[ 1 ].second-> template getContents< PointVector >();;
+					
+					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
+					for( int i = 0; i < expectedPoints.size(); ++i )
+					{
+						ASSERT_TRUE( expectedPoints[ i ]->equal( *queriedPoints[ i ], epsilon ) );
+					}
+				}
+			}
+		}
+		
 		TEST_F( SQLiteManagerTest, AsyncAPI )
 		{
 			using Contents = ExtendedPointVector;
@@ -305,33 +358,35 @@ namespace model
 			ShallowMortonCodePtr code0Ptr = make_shared< ShallowMortonCode >( code0 );
 			ShallowMortonCodePtr code1Ptr = make_shared< ShallowMortonCode >( code1 );
 			
-			sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code0Ptr ) );
-			sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code1Ptr ) );
+			IdNode idNode0( code0Ptr, make_shared< LeafNode >( node0 ) );
+			IdNode idNode1( code1Ptr, make_shared< LeafNode >( node1 ) );
 			
-			this_thread::sleep_for( std::chrono::seconds(1) );
+			default_random_engine generator;
+			uniform_int_distribution< int > boolDistribution( 0, 1 );
+			uniform_int_distribution< int > sleepDistribution( 0, 30 );
 			
-			vector< IdNodeVector< ShallowMortonCode > > results = sqLite.getRequestResults( 10 );
-			
-			ASSERT_EQ( results.size(), 2 );
-			
-			int result0Size = results[ 0 ].size();
-			ASSERT_TRUE( result0Size == 1 || result0Size == 2 );
-			
-			int result1Size = results[ 1 ].size();
-			if( result0Size == 1 )
+			int nRequests = 100;
+			for( int i = 0; i < nRequests; ++i )
 			{
-				ASSERT_EQ( result1Size, 2 );
-				ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );
-				ASSERT_EQ( *results[ 1 ][ 0 ].first, *code0Ptr );
-				ASSERT_EQ( *results[ 1 ][ 1 ].first, *code1Ptr );
+				if( boolDistribution( generator ) )
+				{
+					sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code0Ptr ) );
+				}
+				else
+				{
+					sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code1Ptr ) );
+				}
+				
+				this_thread::sleep_for( std::chrono::milliseconds( sleepDistribution( generator ) ) );
+				
+				if( boolDistribution( generator ) )
+				{
+					checkRequestResults( sqLite, idNode0, idNode1 );
+				}
 			}
-			else
-			{
-				ASSERT_EQ( result1Size, 1 );
-				ASSERT_EQ( *results[ 0 ][ 0 ].first, *code0Ptr );
-				ASSERT_EQ( *results[ 0 ][ 1 ].first, *code1Ptr );
-				ASSERT_EQ( *results[ 1 ][ 0 ].first, *code0Ptr );
-			}
+			
+			this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
+			checkRequestResults( sqLite, idNode0, idNode1  );
 		}
 	}
 }
