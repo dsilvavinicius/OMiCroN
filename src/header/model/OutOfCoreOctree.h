@@ -89,10 +89,14 @@ namespace model
 		virtual void buildLeaves( const PointVector& points ) override;
 		
 	private:
-		/** Releases node in the in-memory hierarchy at hierarchy creation time in order to ease memory pressure.
+		/** Releases nodes in the in-memory hierarchy at hierarchy creation time in order to ease memory pressure.
 		 * Persists all released "dirty" nodes in the database. TRACKS PERSISTENCE.
 		 * @returns the last released node code or nullptr in case of no release. */
 		MortonCodePtr releaseNodesAtCreation();
+		
+		/** Releases nodes while tracking front in order to ease memory pressure. All not-front node are eligible to
+		 * release and it is done until the memory pressure threshold is achieved. */
+		void releaseNodesAtFrontTracking();
 		
 		/** Persists and release leaf nodes at hierarchy creation in order to ease memory pressure. Since leaf nodes
 		 * are acessed in a random pattern and a loaded node is assured to be modified in the near future, this method
@@ -101,10 +105,10 @@ namespace model
 		void persistAndReleaseLeaves();
 		
 		/** Persists all leaf nodes in order to start bottom-up inner nodes creation. Also load a few nodes to start
-		 work. DOESN'T TRACK PERSISTENCE. */
+		 working. DOESN'T TRACK PERSISTENCE. */
 		void persistAllLeaves();
 		
-		/** Persists all dirty nodes currently in memory. TRACKS PERSISTENCE. */
+		/** Persists all dirty nodes currently in memory while in inner nodes creation. TRACKS PERSISTENCE. */
 		void persistAllDirty();
 		
 		/** Checks if a node is dirty and needs to be persisted before released. */
@@ -488,6 +492,29 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodesAtFrontTracking()
+	{
+		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
+		{
+			cout << "====== Node release triggered ======" << endl;
+			
+			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+			
+			for( auto it = hierarchy->begin();
+				it != hierarchy->end() && MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_AFTER_RELEASE; )
+			{
+				if( !ParentOctree::m_frontBehavior->contains( *it->first ) )
+				{
+					hierarchy->erase( it++ );
+				}
+				++it;
+			}
+			
+			cout << "====== Node release ended ======" << endl;
+		}
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
@@ -674,6 +701,8 @@ namespace model
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::onTraversalEnd()
 	{
 		ParentOctree::onTraversalEnd();
+		
+		releaseNodesAtFrontTracking();
 		
 		// Add requested nodes to hierarchy.
 		vector< IdNodeVector > queries = m_sqLite.getRequestResults( M_NODE_REQUESTS_PER_FRAME );

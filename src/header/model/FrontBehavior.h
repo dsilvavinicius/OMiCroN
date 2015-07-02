@@ -125,6 +125,12 @@ namespace model
 			ContainerAPIUnifier::insert( m_insertionList, code );
 		}
 		
+		/** Verifies if a node is in front. */
+		bool contains( const MortonCode& code ) const
+		{
+			return m_front.find( code ) != m_front.end();
+		}
+		
 		/** Inserts all nodes marked for insertion into front. */
 		virtual void onFrontTrackingEnd()
 		{

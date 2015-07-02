@@ -316,6 +316,7 @@ namespace model
 	// Type Sugar.
 	//=====================================================================
 	
+	//TODO: Use an unordered_set< MortonCodePtr > as front, so data is reused from hierarchy.
 	/** An front octree with shallow morton code and usual data structures for front and front insertion container. */
 	template< typename MortonCode, typename Point  >
 	using DefaultFrontOctree = FrontOctree< MortonCode, Point, unordered_set< MortonCode >, vector< MortonCode > >;
