@@ -201,6 +201,9 @@ namespace model
 				}
 			}
 		);
+		
+		cout << "===== Starting first .ply file reading for octree boundaries calculation =====" << endl;
+		
 		reader->read( plyFileName, precision, attribs );
 		
 		cout << "Attributes:" << reader->getAttributes() << endl << endl;
@@ -218,6 +221,9 @@ namespace model
 				insertPointInLeaf( make_shared< Point >( point ) );
 			}
 		);
+		
+		cout << "===== Starting second .ply file reading for octree point insertion =====" << endl;
+		
 		reader->read( plyFileName, precision, attribs );
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.
@@ -332,6 +338,7 @@ namespace model
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
 			cout << "==== Leaf persistence triggered ====" << endl;
+			m_sqLite.beginTransaction();
 			
 			while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_AFTER_RELEASE )
 			{
@@ -358,6 +365,8 @@ namespace model
 				}
 			}
 			
+			m_sqLite.endTransaction();
+			
 			cout << "==== Leaf persistence ended ====" << endl << endl;
 		}
 	}
@@ -365,13 +374,21 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllLeaves()
 	{
+		cout << "===== Persisting all leaves before inner node creation =====" << endl;
+		
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
+		
+		m_sqLite.beginTransaction();
 		
 		// Send all in-memory leaves to database.
 		for( auto elem : *hierarchy )
 		{
 			m_sqLite. template insertNode< PointVector >( *elem.first, *elem.second );
 		}
+		
+		m_sqLite.endTransaction();
+		
+		cout << "Querying leaves" << endl;
 		
 		// Since leaf creation is unsorted by nature, some sibling groups must be loaded from database to ensure no
 		// "holes" in the in-memory sibling groups.
@@ -380,10 +397,12 @@ namespace model
 		// Clears the hierarchy to eliminate possible sibling groups with holes.
 		hierarchy->clear();
 		
+		cout << "Loading sibling groups" << endl;
+		
 		// Loads a few sibling groups in order to start bottom-up construction.
 		loadSiblingGroups( query );
 		
-		cout << "========================== persistsAllLeaves end ===============================" << endl << endl;
+		cout << "===== Ending leaf persistence =====" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -395,6 +414,10 @@ namespace model
 		
 		if( isDirty( firstCode ) )
 		{
+			cout << "===== Persist all dirty method triggered =====" << endl;
+			
+			m_sqLite.beginTransaction();
+			
 			m_lastDirty = firstCode;
 			
 			for( auto elem : *hierarchy )
@@ -407,6 +430,8 @@ namespace model
 				
 				m_sqLite. template insertNode< PointVector >( *currentCode, *elem.second );
 			}
+			
+			m_sqLite.endTransaction();
 		}
 	}
 	
@@ -420,7 +445,9 @@ namespace model
 		
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
-			cout << "=================== Node release triggered ==================" << endl;
+			cout << "====== Node release triggered ======" << endl;
+			
+			m_sqLite.beginTransaction();
 			
 			currentCode = nodeIt->first;
 			
@@ -452,7 +479,9 @@ namespace model
 				*m_lastDirty = *currentCode;
 			}
 			
-			cout << "=================== Node release ended ==================" << endl;
+			m_sqLite.endTransaction();
+			
+			cout << "====== Node release ended ======" << endl;
 		}
 		
 		return currentCode;

@@ -8,7 +8,8 @@
 #include <point_model.hpp>
 #include "IndexedTucanoRenderer.h"
 //#include "FrontOctree.h"
-#include "ParallelOctree.h"
+//#include "ParallelOctree.h"
+#include "OutOfCoreOctree.h"
 #include <QApplication>
 
 using namespace std;
@@ -22,12 +23,13 @@ class PointRendererWidget
 	using MortonCode = model::ShallowMortonCode;
 	using Point = model::Point;
 	//using Point = model::ExtendedPoint< float, vec3 >;
-	using PointReader = SimplePointReader;
-	//using PointReader = ExtendedPointReader;
+	using PointReader = util::SimplePointReader;
+	//using PointReader = util::ExtendedPointReader;
 	//using Octree = model::ShallowIndexedOctree< Point >;
 	//using Octree = model::ShallowRandomSampleOctree< Point >;
-	using Octree = model::ShallowFrontOctree;
+	//using Octree = model::ShallowFrontOctree;
 	//using Octree = model::ShallowParallelOctree< Point >;
+	using Octree = model::ShallowOutOfCoreOctree;
 	//using RenderingState = model::IndexedTucanoRenderer< Point >;
 	using RenderingState = model::TucanoRenderingState;
 	

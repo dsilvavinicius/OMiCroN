@@ -38,6 +38,13 @@ namespace util
 		
 		~SQLiteManager();
 		
+		/** Indicates that the next operations will be part of a transaction until endTransaction() is called.
+		 * Transaction should be used to improve performance. */
+		void beginTransaction();
+		
+		/** Finishes the current transaction. */
+		void endTransaction();
+		
 		/** Inserts point into database.
 		 *	@returns the index of the pointer. The first index is 0 and each next point increments it by 1. */
 		sqlite_int64 insertPoint( const Point& point );
@@ -146,6 +153,8 @@ namespace util
 		sqlite3_stmt* m_nodeIntervalQuery;
 		sqlite3_stmt* m_nodeIntervalIdQuery;
 		sqlite3_stmt* m_nodeIntervalDeletion;
+		sqlite3_stmt* m_beginTransaction;
+		sqlite3_stmt* m_endTransaction;
 		
 		/** Current number of inserted points. */
 		sqlite_int64 m_nPoints;
@@ -185,6 +194,8 @@ namespace util
 	m_nodeIntervalQuery( nullptr ),
 	m_nodeIntervalIdQuery( nullptr ),
 	m_nodeIntervalDeletion( nullptr ),
+	m_beginTransaction( nullptr ),
+	m_endTransaction( nullptr ),
 	m_nPoints( 0 ),
 	m_requestsDone( false )
 	{
@@ -192,6 +203,8 @@ namespace util
 			sqlite3_open_v2( "Octree.db", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL ),
 			SQLITE_OK
 		);
+		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
+		sqlite3_exec( m_db, "PRAGMA journal_mode = MEMORY", NULL, NULL, NULL );
 		
 		createTables();
 		createStmts();
@@ -224,6 +237,20 @@ namespace util
 	SQLiteManager< Point, MortonCode, OctreeNode >::~SQLiteManager()
 	{
 		release();
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	void SQLiteManager< Point, MortonCode, OctreeNode >::beginTransaction()
+	{
+		safeStep( m_beginTransaction );
+		safeReset( m_beginTransaction );
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	void SQLiteManager< Point, MortonCode, OctreeNode >::endTransaction()
+	{
+		safeStep( m_endTransaction );
+		safeReset( m_endTransaction );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -461,6 +488,8 @@ namespace util
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
 		safePrepare( "SELECT Morton, Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalIdQuery );
 		safePrepare( "DELETE FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalDeletion );
+		safePrepare( "BEGIN TRANSACTION", &m_beginTransaction );
+		safePrepare( "END TRANSACTION", &m_endTransaction );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -479,6 +508,8 @@ namespace util
 		unsafeFinalize( m_nodeIntervalQuery );
 		unsafeFinalize( m_nodeIntervalIdQuery );
 		unsafeFinalize( m_nodeIntervalDeletion );
+		unsafeFinalize( m_beginTransaction );
+		unsafeFinalize( m_endTransaction );
 		
 		if( m_db )
 		{
