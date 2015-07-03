@@ -56,16 +56,16 @@ namespace model
 		if( isLeaf() )
 		{
 			LeafNode< MortonCode, Contents >* node =
-				reinterpret_cast< LeafNode< MortonCode, Contents > >( this );
+				reinterpret_cast< LeafNode< MortonCode, Contents >* >( this );
 			
 			node->setContents( contents );
 		}
 		else
 		{
 			InnerNode< MortonCode, Contents >* node =
-				reinterpret_cast< LeafNode< MortonCode, Contents > >( this );
+				reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
 			
-			node->setContents(contents);
+			node->setContents( contents );
 		}
 	}
 		

@@ -147,11 +147,11 @@ namespace model
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_TO_RELEASE = MemoryInfo::getMemorySize() * 0.1;
+	::M_MIN_FREE_MEMORY_TO_RELEASE = MemoryInfo::getMemorySize() * 0.1f;
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = MemoryInfo::getMemorySize() * 0.2;
+	::M_MIN_FREE_MEMORY_AFTER_RELEASE = MemoryInfo::getMemorySize() * 0.2f;
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
@@ -341,11 +341,15 @@ namespace model
 	{
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
-			cout << "==== Leaf persistence triggered ====" << endl;
+			cout << "==== Leaf persistence triggered ====" << endl
+				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION;
+			
 			m_sqLite.beginTransaction();
 			
 			while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_AFTER_RELEASE )
 			{
+				cout << "Free mem: " << MemoryInfo::getAvailableMemorySize() << endl;
+				
 				m_nodesUntilLastPersistence = 0;
 				
 				OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
@@ -359,7 +363,6 @@ namespace model
 					m_sqLite. template insertNode< PointVector >( *code, *node );
 					
 					++i;
-					// Little hack because reverse_iterator has an offset of 1 of its base (God knows why...).
 					nodeIt = typename OctreeMap::reverse_iterator( hierarchy->erase( std::next( nodeIt ).base() ) );
 					
 					if( nodeIt == hierarchy->rend() )

@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include "OctreeNode.h"
 #include "MortonCode.h"
+#include "NodeReleaser.h"
 
 using namespace glm;
 
@@ -16,6 +17,7 @@ namespace model
 	class InnerNode : public OctreeNode< MortonCode >
 	{
 	public:
+		~InnerNode();
 		bool isLeaf() const;
 		void setContents(const Contents& contents);
 		shared_ptr< Contents > getContents() const;
@@ -26,6 +28,12 @@ namespace model
 	private:
 		shared_ptr< Contents > m_contents;
 	};
+	
+	template < typename MortonCode, typename Contents>
+	inline InnerNode< MortonCode, Contents >::~InnerNode()
+	{
+		NodeReleaser::releaseInner( *this );
+	}
 	
 	template < typename MortonCode, typename Contents>
 	inline bool InnerNode< MortonCode, Contents >::isLeaf() const
@@ -61,6 +69,9 @@ namespace model
 	
 	template< typename Contents >
 	using ShallowInnerNode = InnerNode< ShallowMortonCode, Contents >;
+	
+	template< typename Contents >
+	using ShallowInnerNodePtr = shared_ptr< ShallowInnerNode< Contents > >;
 }
 	
 #endif

@@ -3,6 +3,7 @@
 
 #include "Point.h"
 #include "OctreeNode.h"
+#include "NodeReleaser.h"
 
 namespace model
 {
@@ -13,6 +14,7 @@ namespace model
 	class LeafNode : public OctreeNode< MortonCode >
 	{
 	public:
+		~LeafNode();
 		bool isLeaf() const;
 		void setContents( const Contents& contents );
 		shared_ptr< Contents > getContents() const;
@@ -24,6 +26,12 @@ namespace model
 	};
 	
 	template < typename MortonCode, typename Contents >
+	inline LeafNode< MortonCode, Contents >::~LeafNode()
+	{
+		NodeReleaser::releaseLeaf( *this );
+	}
+	
+	template < typename MortonCode, typename Contents >
 	inline bool LeafNode< MortonCode, Contents >::isLeaf() const
 	{
 		return true;
@@ -32,7 +40,7 @@ namespace model
 	template < typename MortonCode, typename Contents >
 	inline void LeafNode< MortonCode, Contents >::setContents( const Contents& contents )
 	{
-		m_contents = make_shared< Contents>(contents);
+		m_contents = make_shared< Contents >( contents );
 	}
 	
 	template < typename MortonCode, typename Contents >
@@ -59,6 +67,9 @@ namespace model
 	
 	template< typename Contents >
 	using ShallowLeafNode = LeafNode< ShallowMortonCode, Contents >;
+	
+	template< typename Contents >
+	using ShallowLeafNodePtr = shared_ptr< ShallowLeafNode< Contents > >;
 }
 
 #endif
