@@ -1,5 +1,27 @@
 #include "MemoryInfo.h"
 
+#include <iostream>
+#include <fstream>
+#include <stdexcept>
+#include <limits>
+
+#if defined(_WIN32)
+#include <Windows.h>
+
+#elif defined(__unix__) || defined(__unix) || defined(unix) || (defined(__APPLE__) && defined(__MACH__))
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <string.h>
+#include <sys/sysinfo.h>
+#if defined(BSD)
+#include <sys/sysctl.h>
+#endif
+
+#else
+#error "Unable to define getMemorySize( ) for an unknown OS."
+#endif
+
 namespace util
 {
 	size_t MemoryInfo::getMemorySize()
@@ -71,5 +93,56 @@ namespace util
 	#else
 		return 0L;			/* Unknown OS. */
 	#endif
+	}
+	
+	size_t MemoryInfo::getAvailableMemorySize( )
+	{
+		return getAvailMemByTrial();
+	}
+	
+	size_t MemoryInfo::getAvailMemByTrial()
+	{
+		unsigned int required;
+		void* mem = NULL; 
+		
+		for( required = ( unsigned int )-1; required > 0xFFF && ( mem = malloc( required ) ) == NULL; required >>= 1 )
+		{}
+		
+		if( mem )
+		{
+			free( mem );
+		}
+		else
+		{
+			return 0;
+		}
+		
+		return required;
+	}
+	
+	size_t MemoryInfo::getAvailMemByMemInfo()
+	{
+		string token;
+		ifstream file( "/proc/meminfo" );
+		size_t freeTotal = 0;
+		int tokensFound = 0;
+		while( file >> token ) {
+			if( token == "MemFree:" || token == "Buffers:" || token == "Cached:" ) {
+				size_t value;
+				if( file >> value ) {
+					freeTotal += value;
+				} else {
+					throw runtime_error( "Cannot read memory stats data." );
+				}
+				
+				if( ++tokensFound == 3 )
+				{
+					break;
+				}
+			}
+			// ignore rest of the line
+			file.ignore( numeric_limits< streamsize >::max(), '\n');
+		}
+		return freeTotal * 1024; //meminfo has entries in kB.
 	}
 }

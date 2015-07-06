@@ -20,6 +20,8 @@ namespace model
 		ExtendedPoint( byte* serialization );
 		ExtendedPoint( byte* serialization, byte*& pastRead );
 		
+		~ExtendedPoint();
+		
 		shared_ptr< Vec3 > getNormal();
 		
 		const shared_ptr< const Vec3 > getNormal() const;

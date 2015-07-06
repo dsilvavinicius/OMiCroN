@@ -61,6 +61,11 @@ namespace model
 		pastRead = serialization + 3 * sizeof( Vec3 );
 	}
 	
+	ExtendedPoint::~ExtendedPoint()
+	{
+		m_normal = nullptr;
+	}
+	
 	shared_ptr< Vec3 > ExtendedPoint::getNormal() { return m_normal; }
 	
 	const shared_ptr< const Vec3 > ExtendedPoint::getNormal() const { return m_normal; }

@@ -147,11 +147,11 @@ namespace model
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_TO_RELEASE = MemoryInfo::getMemorySize() * 0.1f;
+	::M_MIN_FREE_MEMORY_TO_RELEASE = 1024 * 1024 * 1024; // 1GB
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = MemoryInfo::getMemorySize() * 0.2f;
+	::M_MIN_FREE_MEMORY_AFTER_RELEASE = ( 1024 + 512 ) * 1024 * 1024; // 1,5GB
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
@@ -342,24 +342,29 @@ namespace model
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
 			cout << "==== Leaf persistence triggered ====" << endl
-				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION;
-			
-			m_sqLite.beginTransaction();
+				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION << endl;
 			
 			while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_AFTER_RELEASE )
 			{
-				cout << "Free mem: " << MemoryInfo::getAvailableMemorySize() << endl;
+				cout << "Free mem: " << MemoryInfo::getAvailableMemorySize() / ( 1024 * 1024 ) << endl;
 				
 				m_nodesUntilLastPersistence = 0;
 				
 				OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 				typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
 				
+				cout << "Before transaction" << endl;
+				m_sqLite.beginTransaction();
+				cout << "After transaction" << endl;
+				
 				int i = 0;
 				while( i < M_NODES_PER_PERSISTENCE_ITERATION )
 				{
 					MortonCodePtr code = nodeIt->first;
 					OctreeNodePtr node = nodeIt->second;
+					
+					cout << "Before db insertion" << endl;
+					
 					m_sqLite. template insertNode< PointVector >( *code, *node );
 					
 					++i;
@@ -370,9 +375,9 @@ namespace model
 						throw runtime_error( "Node release emptied hierarchy. This is not supposed to do." );
 					}
 				}
+				
+				m_sqLite.endTransaction();
 			}
-			
-			m_sqLite.endTransaction();
 			
 			cout << "==== Leaf persistence ended ====" << endl << endl;
 		}
@@ -452,7 +457,7 @@ namespace model
 		
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
-			cout << "====== Node release triggered ======" << endl;
+			cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl;
 			
 			m_sqLite.beginTransaction();
 			
@@ -499,7 +504,7 @@ namespace model
 	{
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
-			cout << "====== Node release triggered ======" << endl;
+			cout << "====== releaseNodesAtFrontTracking:Node release triggered ======" << endl;
 			
 			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 			

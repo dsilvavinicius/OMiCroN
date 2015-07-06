@@ -67,6 +67,12 @@ namespace model
 		pastRead = serialization + 2 * sizeof( Vec3 );
 	}
 	
+	Point::~Point()
+	{
+		m_color = nullptr;
+		m_pos = nullptr;
+	}
+	
 	Vec3Ptr Point::getColor() { return m_color; }
 	
 	const ConstVec3Ptr Point::getColor() const { return m_color; }
