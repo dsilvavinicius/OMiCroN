@@ -33,7 +33,7 @@ namespace model
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 	public:
-		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel );
+		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename );
 		
 		/** Builds octree using the database. */
 		virtual void build();
@@ -166,10 +166,11 @@ namespace model
 	::M_NODE_REQUESTS_PER_FRAME = 100;
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::OutOfCoreOctree( const int& maxPointsPerNode,
-																						   const int& maxLevel )
+	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename )
 	: ParentOctree( maxPointsPerNode, maxLevel ),
-	m_nodesUntilLastPersistence( 0uL )
+	m_nodesUntilLastPersistence( 0uL ),
+	m_sqLite( dbFilename )
 	{
 		m_lastDirty = make_shared< MortonCode >( MortonCode::getLvlLast( maxLevel ) );
 	}

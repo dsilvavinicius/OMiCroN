@@ -34,7 +34,7 @@ namespace util
 		using unordered_set = std::unordered_set< MortonInterval, hash< MortonInterval >,
 												  MortonIntervalComparator< MortonInterval > >;
 		
-		SQLiteManager();
+		SQLiteManager( const string& dbFileName );
 		
 		~SQLiteManager();
 		
@@ -185,7 +185,7 @@ namespace util
 	};
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager()
+	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager( const string& dbFileName )
 	: m_db( nullptr ),
 	m_pointInsertion( nullptr ),
 	m_pointQuery( nullptr ),
@@ -200,7 +200,8 @@ namespace util
 	m_requestsDone( false )
 	{
 		checkReturnCode(
-			sqlite3_open_v2( "Octree.db", &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL ),
+			sqlite3_open_v2( dbFileName.c_str(), &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
+							 NULL ),
 			SQLITE_OK
 		);
 		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );

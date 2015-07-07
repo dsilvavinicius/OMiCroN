@@ -492,7 +492,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = make_shared< Octree >( 1, 10, g_appPath + "/Octree.db" );
 				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
 			}
 			
@@ -511,7 +511,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = make_shared< Octree >( 1, 20, g_appPath + "/Octree.db" );
 				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
 			}
 			
@@ -532,7 +532,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = make_shared< Octree >( 1, 10, g_appPath + "/Octree.db" );
 				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
 			}
 			
@@ -553,7 +553,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = make_shared< Octree >( 1, 20, g_appPath + "/Octree.db" );
 				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
 			}
 			

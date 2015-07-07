@@ -3,6 +3,8 @@
 #include "SQLiteManager.h"
 #include "MortonCode.h"
 
+extern "C" string g_appPath;
+
 namespace model
 {
 	namespace test
@@ -23,7 +25,7 @@ namespace model
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
 			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			sqLite.insertPoint( p0 );
 			sqLite.insertPoint( p1 );
 			sqLite.insertPoint( p2 );
@@ -55,7 +57,7 @@ namespace model
 			Contents leafPoints = { 5, 4, 3, 2 };
 			leafNode.setContents( leafPoints );
 			
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			sqLite.insertNode< Contents >( leafCode, leafNode );
 			
 			MortonCode innerCode;
@@ -94,7 +96,7 @@ namespace model
 			
 			ShallowMortonCode code;
 			code.build( 1, 2, 3, 4 );
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			
 			sqLite.insertNode< PointVector >( code, node );
 			
@@ -134,7 +136,7 @@ namespace model
 			ShallowMortonCode intervalEnd;
 			intervalEnd.build( 1, 2, 3, 5 );
 			
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			sqLite.insertNode< Contents >( code0, node0 );
 			sqLite.insertNode< Contents >( code1, node1 );
 			
@@ -166,7 +168,7 @@ namespace model
 			LeafNode node2; node2.setContents( Contents( 3, 2 ) );
 			LeafNode node3; node3.setContents( Contents( 3, 3 ) );
 			
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			sqLite.insertNode< Contents >( code0, node0 );
 			sqLite.insertNode< Contents >( code1, node1 );
 			sqLite.insertNode< Contents >( code2, node2 );
@@ -203,7 +205,7 @@ namespace model
 			
 			ShallowMortonCode code;
 			code.build( 1, 2, 3, 4 );
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			
 			sqLite.insertNode< PointVector >( code, node );
 			
@@ -250,7 +252,7 @@ namespace model
 			ShallowMortonCode intervalEnd;
 			intervalEnd.build( 1, 2, 3, 5 );
 			
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			sqLite.insertNode< Contents >( code0, node0 );
 			sqLite.insertNode< Contents >( code1, node1 );
 			
@@ -351,7 +353,7 @@ namespace model
 			ShallowMortonCode code1;
 			code1.build( 7, 7, 7, 10 );
 			
-			SQLiteManager sqLite;
+			SQLiteManager sqLite( g_appPath + "/Octree.db" );
 			sqLite.insertNode< Contents >( code0, node0 );
 			sqLite.insertNode< Contents >( code1, node1 );
 			
