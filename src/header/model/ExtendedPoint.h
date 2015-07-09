@@ -20,11 +20,9 @@ namespace model
 		ExtendedPoint( byte* serialization );
 		ExtendedPoint( byte* serialization, byte*& pastRead );
 		
-		~ExtendedPoint();
+		Vec3& getNormal();
 		
-		shared_ptr< Vec3 > getNormal();
-		
-		const shared_ptr< const Vec3 > getNormal() const;
+		const Vec3& getNormal() const;
 		
 		// Comparison operators.
 		bool equal( const ExtendedPoint& other, const float& epsilon ) const;
@@ -45,7 +43,7 @@ namespace model
 		size_t serialize( byte** serialization ) const;
 		
 	protected:
-		shared_ptr< Vec3 > m_normal;
+		Vec3 m_normal;
 	};
 	
 	//===========

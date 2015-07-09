@@ -77,14 +77,14 @@ namespace model
 		template<>
 		inline void handle< PointPtr >( RenderingState& state, const PointPtr& point )
 		{
-			state.getPositions().push_back( *point->getPos() );
+			state.getPositions().push_back( point->getPos() );
 			if( state.getAttribs() == COLORS )
 			{
-				state.getColors().push_back( *point->getColor() );
+				state.getColors().push_back( point->getColor() );
 			}
 			else
 			{
-				state.getNormals().push_back( *point->getColor() );
+				state.getNormals().push_back( point->getColor() );
 			}
 		}
 	
@@ -100,9 +100,9 @@ namespace model
 		template<>
 		inline void handle< ExtendedPointPtr >( RenderingState& state, const ExtendedPointPtr& point )
 		{
-			state.getPositions().push_back( *point->getPos() );
-			state.getColors().push_back( *point->getColor() );
-			state.getNormals().push_back( *point->getNormal() );
+			state.getPositions().push_back( point->getPos() );
+			state.getColors().push_back( point->getColor() );
+			state.getNormals().push_back( point->getNormal() );
 		}
 	
 		template<>

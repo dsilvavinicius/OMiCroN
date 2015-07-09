@@ -236,12 +236,12 @@ namespace model
 		
 		for( PointPtr point : points )
 		{
-			const shared_ptr< const Vec3 > pos = point->getPos();
+			const Vec3& pos = point->getPos();
 			
 			for( int i = 0; i < 3; ++i )
 			{
-				minCoords[ i ] = glm::min( minCoords[ i ], ( *pos )[ i ] );
-				maxCoords[ i ] = glm::max( maxCoords[ i ], ( *pos )[ i ] );
+				minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
+				maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
 			}
 		}
 		
@@ -276,8 +276,8 @@ namespace model
 	template< typename MortonCode, typename Point >
 	inline MortonCode OctreeBase< MortonCode, Point >::calcMorton( const Point& point ) const
 	{
-		const shared_ptr< const Vec3 > pos = point.getPos();
-		Vec3 index = ( ( *pos ) - ( *m_origin ) ) / ( *m_leafSize );
+		const Vec3& pos = point.getPos();
+		Vec3 index = ( pos - ( *m_origin ) ) / ( *m_leafSize );
 		MortonCode code;
 		code.build( index.x, index.y, index.z, m_maxLevel );
 		

@@ -1,6 +1,7 @@
 #ifndef NODE_RELEASER
 #define NODE_RELEASER
 
+#include <iostream>
 #include <vector>
 #include <memory>
 

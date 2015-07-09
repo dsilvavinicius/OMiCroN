@@ -105,17 +105,17 @@ namespace model
 			{
 				PointPtr point = points[ i ];
 				
-				Vec3 pos = *point->getPos();
+				const Vec3& pos = point->getPos();
 				positions[ i ] = Vector4f( pos.x, pos.y, pos.z, 1.f );
 				
 				if( hasColors )
 				{
-					Vec3 color = *point->getColor();
+					const Vec3& color = point->getColor();
 					colors[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
 				}
 				else
 				{
-					Vec3 normal = *point->getColor();
+					const Vec3& normal = point->getColor();
 					normals[ i ] = Vector3f( normal.x, normal.y, normal.z );
 				}
 			}
@@ -171,17 +171,17 @@ namespace model
 			{
 				PointPtr point = points[ i ];
 				
-				Vec3 pos = *point->getPos();
+				const Vec3& pos = point->getPos();
 				positions[ i ] = Vector4f( pos.x, pos.y, pos.z, 1.f );
 				
 				if( hasColors )
 				{
-					Vec3 color = *point->getColor();
+					const Vec3& color = point->getColor();
 					colors[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
 				}
 				if( hasNormals )
 				{
-					Vec3 normal = *point->getNormal();
+					const Vec3& normal = point->getNormal();
 					normals[ i ] = Vector3f( normal.x, normal.y, normal.z );
 				}
 			}

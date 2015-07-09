@@ -33,13 +33,11 @@ namespace model
 		 *	@param pastReadPtr returns a pointer to data past the reading. */
 		Point( byte* serialization, byte*& pastRead );
 		
-		~Point();
+		Vec3& getColor();
+		Vec3& getPos();
 		
-		Vec3Ptr getColor();
-		Vec3Ptr getPos();
-		
-		const ConstVec3Ptr getColor() const;
-		const ConstVec3Ptr getPos() const;
+		const Vec3& getColor() const;
+		const Vec3& getPos() const;
 		
 		// Comparison operators.
 		bool equal( const Point& other, const Float& epsilon ) const;
@@ -63,8 +61,8 @@ namespace model
 		size_t serialize( byte** serialization ) const;
 		
 	protected:
-		Vec3Ptr m_color;
-		Vec3Ptr m_pos;
+		Vec3 m_color;
+		Vec3 m_pos;
 	};
 	
 	//===========

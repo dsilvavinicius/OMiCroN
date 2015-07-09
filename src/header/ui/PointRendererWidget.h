@@ -29,7 +29,8 @@ class PointRendererWidget
 	//using Octree = model::ShallowRandomSampleOctree< Point >;
 	//using Octree = model::ShallowFrontOctree;
 	//using Octree = model::ShallowParallelOctree< Point >;
-	using Octree = model::MediumOutOfCoreOctree;
+	using Octree = model::ShallowOutOfCoreOctree;
+	//using Octree = model::MediumOutOfCoreOctree;
 	//using RenderingState = model::IndexedTucanoRenderer< Point >;
 	using RenderingState = model::TucanoRenderingState;
 	

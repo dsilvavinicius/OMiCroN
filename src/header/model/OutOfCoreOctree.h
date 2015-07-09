@@ -151,11 +151,11 @@ namespace model
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = ( 1024 + 512 ) * 1024 * 1024; // 1,5GB
+	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 1.9 * 1024 * 1024 * 1024; // 1,9GB
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_NODES_PER_PERSISTENCE_ITERATION = 400;
+	::M_NODES_PER_PERSISTENCE_ITERATION = 200;
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
@@ -197,12 +197,12 @@ namespace model
 		auto *reader = new PlyPointReader(
 			[ & ]( const Point& point )
 			{
-				const shared_ptr< const Vec3 > pos = point.getPos();
+				const Vec3& pos = point.getPos();
 				
 				for( int i = 0; i < 3; ++i )
 				{
-					minCoords[ i ] = glm::min( minCoords[ i ], ( *pos )[ i ] );
-					maxCoords[ i ] = glm::max( maxCoords[ i ], ( *pos )[ i ] );
+					minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
+					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
 				}
 			}
 		);
@@ -250,6 +250,8 @@ namespace model
 		
 		if( node == nullptr )
 		{
+			//cout << "Creating node " << code->getPathToRoot( true ) << endl;
+			
 			++m_nodesUntilLastPersistence;
 			
 			// Creates leaf node.
@@ -261,6 +263,8 @@ namespace model
 		}
 		else
 		{
+			//cout << "Changing node " << code->getPathToRoot( true ) << endl;
+			
 			// Node already exists. Appends the point there.
 			shared_ptr< PointVector > points = node-> template getContents< PointVector >();
 			points->push_back( point );
@@ -286,6 +290,7 @@ namespace model
 		else
 		{
 			OctreeNodePtr node = m_sqLite. template getNode< PointVector >( *code );
+			( *hierarchy )[ code ] = node;
 			if( node )
 			{
 				++m_nodesUntilLastPersistence;
@@ -343,7 +348,8 @@ namespace model
 		if( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_TO_RELEASE )
 		{
 			cout << "==== Leaf persistence triggered ====" << endl
-				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION << endl;
+				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION << endl
+				 << "Expected free memory after release: " << M_MIN_FREE_MEMORY_AFTER_RELEASE / ( 1024 * 1024 ) << endl;
 			
 			while( MemoryInfo::getAvailableMemorySize() < M_MIN_FREE_MEMORY_AFTER_RELEASE )
 			{
@@ -354,9 +360,7 @@ namespace model
 				OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 				typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
 				
-				cout << "Before transaction" << endl;
 				m_sqLite.beginTransaction();
-				cout << "After transaction" << endl;
 				
 				int i = 0;
 				while( i < M_NODES_PER_PERSISTENCE_ITERATION )
@@ -364,12 +368,18 @@ namespace model
 					MortonCodePtr code = nodeIt->first;
 					OctreeNodePtr node = nodeIt->second;
 					
-					cout << "Before db insertion" << endl;
-					
 					m_sqLite. template insertNode< PointVector >( *code, *node );
 					
 					++i;
 					nodeIt = typename OctreeMap::reverse_iterator( hierarchy->erase( std::next( nodeIt ).base() ) );
+					
+					//cout << "Erased code count: " << code.use_count() << endl;
+					//cout << "Erased node is unique? " << boolalpha << node.unique() << endl;
+					//PointVector points = *node-> template getContents< PointVector >();
+					//for( PointPtr point : points )
+					//{
+					//	cout << "Point counter: " << point.use_count() << endl;
+					//}
 					
 					if( nodeIt == hierarchy->rend() )
 					{
@@ -380,6 +390,7 @@ namespace model
 				m_sqLite.endTransaction();
 			}
 			
+			cout << "Free mem after release: " << MemoryInfo::getAvailableMemorySize() / ( 1024 * 1024 ) << endl;
 			cout << "==== Leaf persistence ended ====" << endl << endl;
 		}
 	}
