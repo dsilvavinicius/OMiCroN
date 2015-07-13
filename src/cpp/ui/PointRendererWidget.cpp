@@ -31,8 +31,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	//openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
-	openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_all.ply" );
-	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
+	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_all.ply" );
+	openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -243,7 +243,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	string dbFilename = QApplication::applicationDirPath().toStdString() +
 						filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 12, dbFilename );
+	m_octree = new Octree( 1, 10, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
 	
 	cout << "Octree built." << endl;
