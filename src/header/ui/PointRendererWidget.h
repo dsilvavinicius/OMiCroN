@@ -4,7 +4,7 @@
 //#include <GL/glew.h>
 //#include <phongshader.hpp>
 //#include <imgSpacePBR.hpp>
-#include <utils/qtflycamerawidget.hpp>
+#include <utils/qtfreecamerawidget.hpp>
 #include <point_model.hpp>
 #include "IndexedTucanoRenderer.h"
 //#include "FrontOctree.h"
@@ -16,11 +16,10 @@ using namespace std;
 using namespace model;
 
 class PointRendererWidget
-: public Tucano::QtFlycameraWidget
+: public Tucano::QtFreecameraWidget
 {
 	Q_OBJECT
 	
-	using MortonCode = model::ShallowMortonCode;
 	using Point = model::Point;
 	//using Point = model::ExtendedPoint;
 	using PointReader = util::SimplePointReader;
@@ -29,8 +28,8 @@ class PointRendererWidget
 	//using Octree = model::ShallowRandomSampleOctree< Point >;
 	//using Octree = model::ShallowFrontOctree;
 	//using Octree = model::ShallowParallelOctree< Point >;
-	using Octree = model::ShallowOutOfCoreOctree;
-	//using Octree = model::MediumOutOfCoreOctree;
+	//using Octree = model::ShallowOutOfCoreOctree;
+	using Octree = model::MediumOutOfCoreOctree;
 	//using RenderingState = model::IndexedTucanoRenderer< Point >;
 	using RenderingState = model::TucanoRenderingState;
 	

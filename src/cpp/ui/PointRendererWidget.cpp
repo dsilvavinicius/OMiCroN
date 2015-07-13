@@ -3,7 +3,7 @@
 #include <QTimer>
 
 PointRendererWidget::PointRendererWidget( QWidget *parent )
-: Tucano::QtFlycameraWidget( parent ),
+: Tucano::QtFreecameraWidget( parent ),
 m_projThresh( 0.001f ),
 m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
@@ -13,7 +13,7 @@ m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
-	camera.setSpeed( 3.f );
+	camera->setSpeed( 1.f );
 }
 
 PointRendererWidget::~PointRendererWidget()
@@ -25,14 +25,14 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	Tucano::QtFlycameraWidget::initialize();
+	Tucano::QtFreecameraWidget::initialize();
 	
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	//openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
-	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_all.ply" );
-	openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
+	openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_all.ply" );
+	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -43,8 +43,8 @@ void PointRendererWidget::resizeGL( int width, int height )
 {
 	// TODO: It seems that resing is resulting in memory leak ( probably in jump flooding code... ).
 	
-	camera.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera.setPerspectiveMatrix( camera.getFovy(), width / height, 0.1f, 10000.0f );
+	camera->setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
+	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.1f, 10000.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )
@@ -116,7 +116,7 @@ void PointRendererWidget::paintGL (void)
 	glEnable(GL_DEPTH_TEST);
 	if( draw_trackball )
 	{
-		camera.renderAtCorner();
+		camera->renderAtCorner();
 	}
 	
 	m_endOfFrameTime = clock();
@@ -243,7 +243,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	string dbFilename = QApplication::applicationDirPath().toStdString() +
 						filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 10, dbFilename );
+	m_octree = new Octree( 1, 12, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
 	
 	cout << "Octree built." << endl;
@@ -256,7 +256,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ &camera, &light_trackball, &mesh, vertAttribs,
+	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, vertAttribs,
 									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;

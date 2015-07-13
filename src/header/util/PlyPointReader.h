@@ -87,6 +87,12 @@ namespace util
 		bool normalsNeeded = attribs & NORMALS;
 		int rawAttribs = 0x0;
 		
+		{
+			long nPoints;
+			ply_get_element_info( vertexElement, NULL, &nPoints );
+			cout << "Points in file: " << nPoints << endl;
+		}
+		
 		while( property != NULL )
 		{
 			char* name;
