@@ -78,7 +78,7 @@ namespace model
 			
 			node.serialize< Contents >( &bytes );
 			auto nodePtr = ( Node* ) OctreeNode< ShallowMortonCode >::deserialize< Contents >( bytes );
-			Contents resultContents = *nodePtr->getContents();
+			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
 			delete nodePtr;
@@ -98,7 +98,7 @@ namespace model
 			
 			node.serialize< Contents >( &bytes );
 			auto nodePtr = ( Node* ) OctreeNode< ShallowMortonCode >::deserialize< Contents >( bytes );
-			Contents resultContents = *nodePtr->getContents();
+			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
 			delete nodePtr;
@@ -121,7 +121,7 @@ namespace model
 			genericNode->serialize< PointVector >( &bytes );
 			
 			ShallowOctreeNode* deserializedNode = ShallowOctreeNode::deserialize< PointVector >( bytes );
-			PointVector deserializedPoints = *deserializedNode->getContents< PointVector >();
+			PointVector deserializedPoints = deserializedNode->getContents< PointVector >();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )
@@ -156,7 +156,7 @@ namespace model
 			genericNode->serialize< PointVector >( &bytes );
 			
 			ShallowOctreeNode* deserializedNode = ShallowOctreeNode::deserialize< PointVector >( bytes );
-			PointVector deserializedPoints = *deserializedNode->getContents< PointVector >();
+			PointVector deserializedPoints = deserializedNode->getContents< PointVector >();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )

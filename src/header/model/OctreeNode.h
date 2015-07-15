@@ -32,7 +32,11 @@ namespace model
 		
 		/** Gets the contents of this node. Implies reinterpret_cast downawards hierarchy. */
 		template< typename Contents >
-		shared_ptr< Contents > getContents() const;
+		Contents& getContents();
+		
+		/** Gets the const contents of this node. Implies reinterpret_cast downawards hierarchy. */
+		template< typename Contents >
+		const Contents& getContents() const;
 		
 		template< typename M, typename C >
 		friend ostream& operator<<( ostream& out, OctreeNode< M >& node );
@@ -71,20 +75,34 @@ namespace model
 		
 	template< typename MortonCode >
 	template< typename Contents >
-	inline shared_ptr< Contents > OctreeNode< MortonCode >::getContents() const
+	inline Contents& OctreeNode< MortonCode >::getContents()
+	{
+		if( isLeaf() )
+		{
+			LeafNode< MortonCode, Contents >* node = reinterpret_cast< LeafNode< MortonCode, Contents >* >( this );
+			return node->getContents();
+		}
+		else
+		{
+			InnerNode< MortonCode, Contents >* node = reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
+			return node->getContents();
+		}
+	}
+	
+	template< typename MortonCode >
+	template< typename Contents >
+	inline const Contents& OctreeNode< MortonCode >::getContents() const
 	{
 		if( isLeaf() )
 		{
 			const LeafNode< MortonCode, Contents >* node =
 				reinterpret_cast< const LeafNode< MortonCode, Contents >* >( this );
-			
 			return node->getContents();
 		}
 		else
 		{
 			const InnerNode< MortonCode, Contents >* node =
 				reinterpret_cast< const InnerNode< MortonCode, Contents >* >( this );
-			
 			return node->getContents();
 		}
 	}
@@ -111,7 +129,7 @@ namespace model
 	inline size_t OctreeNode< MortonCode >::serialize( byte** serialization ) const
 	{
 		byte* content;
-		size_t contentSize = Serializer::serialize( *getContents< Contents >(), &content );
+		size_t contentSize = Serializer::serialize( getContents< Contents >(), &content );
 		
 		bool flag = isLeaf();
 		size_t flagSize = sizeof( bool );

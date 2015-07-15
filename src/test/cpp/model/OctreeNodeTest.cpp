@@ -28,17 +28,15 @@ namespace model
 			
 			float epsilon = 1.e-15f;
 			
-			PointVectorPtr pointsGot = node->getContents();
-			ASSERT_EQ( pointsGot.use_count(), 2 );
-			ASSERT_TRUE( ( *pointsGot )[ 0 ]->equal( p0, epsilon ) );
-			ASSERT_TRUE( ( *pointsGot )[ 1 ]->equal( p1, epsilon ) );
-			ASSERT_EQ( ( *pointsGot )[ 0 ].use_count(), 2 );
-			ASSERT_EQ( ( *pointsGot )[ 1 ].use_count(), 2 );
+			const PointVector& pointsGot = node->getContents();
+			ASSERT_TRUE( pointsGot[ 0 ]->equal( p0, epsilon ) );
+			ASSERT_TRUE( pointsGot[ 1 ]->equal( p1, epsilon ) );
+			ASSERT_EQ( pointsGot[ 0 ].use_count(), 2 );
+			ASSERT_EQ( pointsGot[ 1 ].use_count(), 2 );
 			ASSERT_EQ( points[ 0 ].use_count(), 2 );
 			ASSERT_EQ( points[ 1 ].use_count(), 2 );
 			
 			node = nullptr;
-			ASSERT_EQ( pointsGot.use_count(), 1 );
 			ASSERT_EQ( points[ 0 ].use_count(), 1 );
 			ASSERT_EQ( points[ 1 ].use_count(), 1 );
 			ASSERT_TRUE( points[ 0 ]->equal( p0, epsilon ) );

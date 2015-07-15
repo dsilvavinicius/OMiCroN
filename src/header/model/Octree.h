@@ -41,7 +41,7 @@ namespace model
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using InnerNode = model::InnerNode< MortonCode, Point >;
+		using InnerNode = model::InnerNode< MortonCode, PointPtr >;
 		using InnerNodePtr = shared_ptr< InnerNode >;
 		using LeafNode = model::LeafNode< MortonCode, PointVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
@@ -304,8 +304,8 @@ namespace model
 		{
 			// Node already exists. Appends the point there.
 			OctreeNodePtr leafNode = genericLeafIt->second;
-			shared_ptr< PointVector > nodePoints = leafNode-> template getContents< PointVector >();
-			nodePoints->push_back( point );
+			PointVector& nodePoints = leafNode-> template getContents< PointVector >();
+			nodePoints.push_back( point );
 		}
 	}
 	
@@ -414,9 +414,8 @@ namespace model
 		}
 		accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
 		
-		// Creates leaf to replace children.
 		auto LODNode = make_shared< InnerNode >();
-		LODNode->setContents( accumulated );
+		LODNode->setContents( make_shared< Point >( accumulated ) );
 		
 		return LODNode;
 	}
@@ -528,7 +527,7 @@ namespace model
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		
-		PointPtr point = innerNode-> template getContents< Point >();
+		PointPtr& point = innerNode-> template getContents< PointPtr >();
 		renderingState.handleNodeRendering( point );
 	}
 	
@@ -538,7 +537,7 @@ namespace model
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
 		
-		PointVectorPtr points = leafNode-> template getContents< PointVector >();
+		PointVector& points = leafNode-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	

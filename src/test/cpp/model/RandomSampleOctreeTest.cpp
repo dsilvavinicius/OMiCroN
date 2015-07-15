@@ -95,10 +95,10 @@ namespace model
 			InnerNodePtr< ShallowMortonCode, PointVector > root = dynamic_pointer_cast<
 				InnerNode< ShallowMortonCode, PointVector > >( ( *hierarchy )[ rootCode ] );
 			
-			PointVectorPtr rootPoints = root->getContents();
-			ASSERT_TRUE( rootPoints->size() == pointsPerOctant );
+			PointVector rootPoints = root->getContents();
+			ASSERT_TRUE( rootPoints.size() == pointsPerOctant );
 			
-			for( PointPtr point : *rootPoints )
+			for( PointPtr point : rootPoints )
 			{
 				ASSERT_TRUE( find( points.begin(), points.end(), point ) != points.end() );
 			}

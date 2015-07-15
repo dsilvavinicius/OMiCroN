@@ -22,13 +22,13 @@ namespace model
 			++numChildren;
 			if( node->isLeaf() )
 			{
-				PointVectorPtr childPoints = node-> template getContents< PointVector >();
-				vec.insert( vec.end(), childPoints->begin(), childPoints->end() );
+				PointVector& childPoints = node-> template getContents< PointVector >();
+				vec.insert( vec.end(), childPoints.begin(), childPoints.end() );
 				++numLeaves;
 			}
 			else
 			{
-				PointPtr LODPoint = node-> template getContents< Point >();
+				PointPtr LODPoint = node-> template getContents< PointPtr >();
 				vec.push_back( LODPoint );
 			}
 		}
@@ -59,9 +59,8 @@ namespace model
 				++numLeaves;
 			}
 			
-			PointVectorPtr childPoints = node-> template getContents< PointVector >();
-			
-			vec.insert( vec.end(), childPoints->begin(), childPoints->end() );
+			PointVector& childPoints = node-> template getContents< PointVector >();
+			vec.insert( vec.end(), childPoints.begin(), childPoints.end() );
 		}
 		
 		virtual void appendPoints( OctreeNodePtr< MortonCode > node, IndexVector& vec, int& numChildren, int& numLeaves )
@@ -73,8 +72,8 @@ namespace model
 				++numLeaves;
 			}
 			
-			IndexVectorPtr childIndices = node-> template getContents< IndexVector >();
-			vec.insert( vec.end(), childIndices->begin(), childIndices->end() );
+			IndexVector& childIndices = node-> template getContents< IndexVector >();
+			vec.insert( vec.end(), childIndices.begin(), childIndices.end() );
 		}
 	};
 }

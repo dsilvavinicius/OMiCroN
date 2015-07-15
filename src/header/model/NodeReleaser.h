@@ -32,7 +32,7 @@ namespace model
 		void releaseLeaf( LeafNode< MortonCode, vector< shared_ptr< T > > >& node )
 		{
 			using ElementPtr = shared_ptr< T >;
-			vector< ElementPtr >& vector = *node.getContents();
+			vector< ElementPtr >& vector = node.getContents();
 			for( ElementPtr& element : vector )
 			{
 				element = nullptr;
@@ -43,7 +43,7 @@ namespace model
 		void releaseInner( InnerNode< MortonCode, vector< shared_ptr< T > > >& node )
 		{
 			using ElementPtr = shared_ptr< T >;
-			vector< ElementPtr >& vector = *node.getContents();
+			vector< ElementPtr >& vector = node.getContents();
 			for( ElementPtr& element : vector )
 			{
 				element = nullptr;

@@ -132,7 +132,7 @@ namespace model
 	inline void RandomSampleOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node,
 																			 RenderingState& renderingState )
 	{
-		PointVectorPtr points = node-> template getContents< PointVector >();
+		PointVector points = node-> template getContents< PointVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	

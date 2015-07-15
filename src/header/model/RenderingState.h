@@ -89,9 +89,9 @@ namespace model
 		}
 	
 		template<>
-		inline void handle< PointVectorPtr >( RenderingState& state, const PointVectorPtr& points )
+		inline void handle< PointVector >( RenderingState& state, const PointVector& points )
 		{
-			for( PointPtr point : *points )
+			for( PointPtr point : points )
 			{
 				handle( state, point );
 			}
@@ -106,20 +106,20 @@ namespace model
 		}
 	
 		template<>
-		inline void handle< ExtendedPointVectorPtr >(
-			RenderingState& state, const ExtendedPointVectorPtr& points )
+		inline void handle< ExtendedPointVector >(
+			RenderingState& state, const ExtendedPointVector& points )
 		{
-			for( ExtendedPointPtr point : *points )
+			for( ExtendedPointPtr point : points )
 			{
 				handle( state, point );
 			}
 		}
 		
 		template<>
-		inline void handle< shared_ptr< vector< unsigned int > > >(
-			RenderingState& state, const shared_ptr< vector< unsigned int > >& points )
+		inline void handle< vector< unsigned int > >(
+			RenderingState& state, const vector< unsigned int >& points )
 		{
-			for( unsigned int index : *points )
+			for( unsigned int index : points )
 			{
 				state.getIndices().push_back( index );
 			}

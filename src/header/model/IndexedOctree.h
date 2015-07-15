@@ -102,8 +102,8 @@ namespace model
 		{
 			// Node already exists. Appends the point there.
 			OctreeNodePtr leafNode = genericLeafIt->second;
-			shared_ptr< IndexVector > indices = leafNode-> template getContents< IndexVector >();
-			indices->push_back( index );
+			IndexVector& indices = leafNode-> template getContents< IndexVector >();
+			indices.push_back( index );
 		}
 	}
 	
@@ -198,7 +198,7 @@ namespace model
 	inline void IndexedOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node,
 																						  RenderingState& renderingState )
 	{
-		IndexVectorPtr points = node-> template getContents< IndexVector >();
+		const IndexVector& points = node-> template getContents< IndexVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	

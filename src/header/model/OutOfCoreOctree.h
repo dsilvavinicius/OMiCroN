@@ -266,8 +266,8 @@ namespace model
 			//cout << "Changing node " << code->getPathToRoot( true ) << endl;
 			
 			// Node already exists. Appends the point there.
-			shared_ptr< PointVector > points = node-> template getContents< PointVector >();
-			points->push_back( point );
+			PointVector& points = node-> template getContents< PointVector >();
+			points.push_back( point );
 		}
 		
 		if( m_nodesUntilLastPersistence > M_NODES_PER_PERSISTENCE_ITERATION )

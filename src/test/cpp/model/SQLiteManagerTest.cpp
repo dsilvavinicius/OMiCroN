@@ -69,10 +69,10 @@ namespace model
 			sqLite.insertNode< Contents >( innerCode, innerNode );
 			
 			OctreeNodePtr queriedNode = sqLite.getNode< Contents >( leafCode );
-			ASSERT_EQ( *queriedNode->getContents< Contents >(), leafPoints );
+			ASSERT_EQ( queriedNode->getContents< Contents >(), leafPoints );
 			
 			queriedNode = sqLite.getNode< Contents >( innerCode );
-			ASSERT_EQ( *queriedNode->getContents< Contents >(), innerPoints );
+			ASSERT_EQ( queriedNode->getContents< Contents >(), innerPoints );
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetPointNodes )
@@ -103,7 +103,7 @@ namespace model
 			OctreeNodePtr queriedNode = sqLite.getNode< PointVector >( code );
 			
 			float epsilon = 1.e-15;
-			PointVector queriedPoints = *queriedNode->getContents< PointVector >();
+			PointVector queriedPoints = queriedNode->getContents< PointVector >();
 			
 			for( int i = 0; i < points.size(); ++i )
 			{
@@ -145,7 +145,7 @@ namespace model
 			ShallowMortonCode queriedId = *queried[ 0 ].first;
 			ASSERT_EQ( queriedId, code0 );
 			
-			Contents queriedInts = *queried[ 0 ].second->getContents< Contents >();
+			Contents queriedInts = queried[ 0 ].second->getContents< Contents >();
 			ASSERT_EQ( queriedInts, ints0 );
 		}
 		
@@ -178,8 +178,8 @@ namespace model
 			vector< OctreeNodePtr > queried = sqLite. template getNodes< Contents >( code0, code3 );
 			
 			ASSERT_EQ( queried.size(), 2 );
-			ASSERT_EQ( *queried[ 0 ]->getContents< Contents >(), Contents( 3, 0 ) );
-			ASSERT_EQ( *queried[ 1 ]->getContents< Contents >(), Contents( 3, 3 ) );
+			ASSERT_EQ( queried[ 0 ]->getContents< Contents >(), Contents( 3, 0 ) );
+			ASSERT_EQ( queried[ 1 ]->getContents< Contents >(), Contents( 3, 3 ) );
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetExtPointNodes )
@@ -212,7 +212,7 @@ namespace model
 			OctreeNodePtr queriedNode = sqLite.getNode< PointVector >( code );
 			
 			float epsilon = 1.e-15;
-			PointVector queriedPoints = *queriedNode->getContents< PointVector >();
+			PointVector queriedPoints = queriedNode->getContents< PointVector >();
 			
 			for( int i = 0; i < points.size(); ++i )
 			{
@@ -264,7 +264,7 @@ namespace model
 			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
 			float epsilon = 1.e-15;
-			Contents queriedVec = *queried[ 0 ].second->getContents< Contents >();
+			Contents queriedVec = queried[ 0 ].second->getContents< Contents >();
 			for( int i = 0; i < 3; ++i )
 			{
 				ASSERT_TRUE( vec0[ i ]->equal( *queriedVec[ i ], epsilon ) );
@@ -289,8 +289,8 @@ namespace model
 				{
 					ASSERT_EQ( *queryResult[ 0 ].first, *code0.first );
 					
-					PointVector expectedPoints = *code0.second-> template getContents< PointVector >();
-					PointVector queriedPoints = *queryResult[ 0 ].second-> template getContents< PointVector >();;
+					PointVector expectedPoints = code0.second-> template getContents< PointVector >();
+					PointVector queriedPoints = queryResult[ 0 ].second-> template getContents< PointVector >();;
 					
 					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
 					for( int i = 0; i < expectedPoints.size(); ++i )
@@ -302,8 +302,8 @@ namespace model
 				{
 					ASSERT_EQ( *queryResult[ 0 ].first, *code0.first );
 					
-					PointVector expectedPoints = *code0.second-> template getContents< PointVector >();;
-					PointVector queriedPoints = *queryResult[ 0 ].second-> template getContents< PointVector >();;
+					PointVector expectedPoints = code0.second-> template getContents< PointVector >();;
+					PointVector queriedPoints = queryResult[ 0 ].second-> template getContents< PointVector >();;
 					
 					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
 					for( int i = 0; i < expectedPoints.size(); ++i )
@@ -311,8 +311,8 @@ namespace model
 						ASSERT_TRUE( expectedPoints[ i ]->equal( *queriedPoints[ i ], epsilon ) );
 					}
 					
-					expectedPoints = *code1.second-> template getContents< PointVector >();;
-					queriedPoints = *queryResult[ 1 ].second-> template getContents< PointVector >();;
+					expectedPoints = code1.second-> template getContents< PointVector >();;
+					queriedPoints = queryResult[ 1 ].second-> template getContents< PointVector >();;
 					
 					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
 					for( int i = 0; i < expectedPoints.size(); ++i )

@@ -20,13 +20,14 @@ namespace model
 		~InnerNode();
 		bool isLeaf() const;
 		void setContents(const Contents& contents);
-		shared_ptr< Contents > getContents() const;
+		Contents& getContents();
+		const Contents& getContents() const;
 		
 		template< typename M, typename C >
 		friend ostream& operator<<( ostream& out, const InnerNode< M, C >& node );
 		
 	private:
-		shared_ptr< Contents > m_contents;
+		Contents m_contents;
 	};
 	
 	template < typename MortonCode, typename Contents>
@@ -42,13 +43,19 @@ namespace model
 	}
 	
 	template < typename MortonCode, typename Contents>
-	inline void InnerNode< MortonCode, Contents >::setContents( const Contents& contents)
+	inline void InnerNode< MortonCode, Contents >::setContents( const Contents& contents )
 	{
-		m_contents = make_shared< Contents >(contents);
+		m_contents = contents;
 	}
 	
 	template < typename MortonCode, typename Contents>
-	inline shared_ptr< Contents > InnerNode< MortonCode, Contents >::getContents() const
+	inline Contents& InnerNode< MortonCode, Contents >::getContents()
+	{
+		return m_contents;
+	}
+	
+	template < typename MortonCode, typename Contents>
+	inline const Contents& InnerNode< MortonCode, Contents >::getContents() const
 	{
 		return m_contents;
 	}
