@@ -10,6 +10,9 @@ using namespace glm;
 namespace model
 {
 	// Definition of library's basic types.
+	using uint = unsigned int;
+	using ulong = unsigned long;
+	using uchar = unsigned char;
 	using Float = float;
 	
 	using Vec3 = vec3;

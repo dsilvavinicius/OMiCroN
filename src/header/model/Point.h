@@ -33,6 +33,11 @@ namespace model
 		 *	@param pastReadPtr returns a pointer to data past the reading. */
 		Point( byte* serialization, byte*& pastRead );
 		
+		void* operator new( size_t size );
+		void* operator new[]( size_t size );
+		void operator delete( void* p );
+		void operator delete[]( void* p );
+		
 		Vec3& getColor();
 		Vec3& getPos();
 		

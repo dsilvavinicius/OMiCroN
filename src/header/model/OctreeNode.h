@@ -16,6 +16,7 @@ namespace model
 	template< typename MortonCode, typename Point >
 	class Octree;
 	
+	// TODO: MortonCode seems to be unnecessary here.
 	// TODO: Eliminates the reinterpret_casts on this class.
 	/** Base class for octree nodes. */
 	template< typename MortonCode >

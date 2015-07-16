@@ -1,4 +1,5 @@
 #include "ExtendedPoint.h"
+#include <MemoryManager.h>
 
 namespace model
 {
@@ -52,6 +53,26 @@ namespace model
 	: ExtendedPoint( serialization )
 	{
 		pastRead = serialization + 3 * sizeof( Vec3 );
+	}
+	
+	void* ExtendedPoint::operator new( size_t size )
+	{
+		return MemoryManager::instance().allocateExtendedPoint();
+	}
+	
+	void* ExtendedPoint::operator new[]( size_t size )
+	{
+		throw logic_error( "ExtendedPoint::operator new[] is unsupported." );
+	}
+	
+	void ExtendedPoint::operator delete( void* p )
+	{
+		MemoryManager::instance().deallocateExtendedPoint( p );
+	}
+	
+	void ExtendedPoint::operator delete[]( void* p )
+	{
+		throw logic_error( "ExtendedPoint::operator delete[] is unsupported." );
 	}
 	
 	Vec3& ExtendedPoint::getNormal() { return m_normal; }

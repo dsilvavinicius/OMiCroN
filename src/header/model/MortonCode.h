@@ -10,6 +10,7 @@
 #include <glm/ext.hpp>
 
 #include "Stream.h"
+#include "MemoryManager.h"
 
 using namespace std;
 
@@ -37,6 +38,10 @@ namespace model
 	{
 	public:
 		//TODO: Put move constructors here.
+		void* operator new( size_t size );
+		void* operator new[]( size_t size );
+		void operator delete( void* p );
+		void operator delete[]( void* p );
 		
 		/** Use this method to calculate code from position. */
 		void build( const T& x, const T& y, const T& z, const unsigned int& level );
@@ -113,6 +118,18 @@ namespace model
 		
 		T m_bits;
 	};
+	
+	template< typename T >
+	inline void* MortonCode< T >::operator new[]( size_t size )
+	{
+		throw logic_error( "MortonCode::operator new[] is unsupported." );
+	}
+	
+	template< typename T >
+	inline void MortonCode< T>::operator delete[]( void* p )
+	{
+		throw logic_error( "MortonCode::operator delete[] is unsupported." );
+	}
 	
 	template <typename T>
 	void MortonCode<T>::build(const T& x, const T& y, const T& z, const unsigned int& level)
@@ -341,6 +358,30 @@ namespace model
 	//=================
 	// Specializations.
 	//=================
+	
+	template<>
+	inline void* MortonCode< unsigned int >::operator new( size_t size )
+	{
+		return MemoryManager::instance().allocateShallowMorton();
+	}
+	
+	template<>
+	inline void* MortonCode< unsigned long >::operator new( size_t size )
+	{
+		return MemoryManager::instance().allocateMediumMorton();
+	}
+	
+	template<>
+	inline void MortonCode< unsigned int >::operator delete( void* p )
+	{
+		MemoryManager::instance().deallocateShallowMorton( p );
+	}
+	
+	template<>
+	inline void MortonCode< unsigned long >::operator delete( void* p )
+	{
+		MemoryManager::instance().deallocateMediumMorton( p );
+	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */

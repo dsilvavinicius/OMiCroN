@@ -1,4 +1,5 @@
 #include "Point.h"
+#include <MemoryManager.h>
 
 namespace model
 {
@@ -52,6 +53,26 @@ namespace model
 	: Point( serialization )
 	{
 		pastRead = serialization + 2 * sizeof( Vec3 );
+	}
+	
+	void* Point::operator new( size_t size )
+	{
+		return MemoryManager::instance().allocatePoint();
+	}
+	
+	void* Point::operator new[]( size_t size )
+	{
+		throw logic_error( "Point::operator new[] is unsupported." );
+	}
+	
+	void Point::operator delete( void* p )
+	{
+		MemoryManager::instance().deallocatePoint( p );
+	}
+	
+	void Point::operator delete[]( void* p )
+	{
+		throw logic_error( "Point::operator delete[] is unsupported." );
 	}
 	
 	Vec3& Point::getColor() { return m_color; }

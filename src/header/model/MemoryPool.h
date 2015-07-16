@@ -1,16 +1,17 @@
 #ifndef MEMORY_POOL_H
 #define MEMORY_POOL_H
 
+#include <cstdlib>
+#include "BasicTypes.h"
+
+using namespace std;
+
 namespace model
 {
 	/** Implementation of Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
 	 * http://www.thinkmind.org/index.php?view=article&articleid=computation_tools_2012_1_10_80006. */
 	class MemoryPool
 	{
-		// Basic type define
-		typedef unsigned int uint;
-		typedef unsigned char uchar;
-
 		uint	m_numOfBlocks;		// Num of blocks
 		uint	m_sizeOfEachBlock; 	// Size of each block
 		uint	m_numFreeBlocks;	// Num of remaining blocks
@@ -39,22 +40,6 @@ namespace model
 			m_memStart = new uchar[ m_sizeOfEachBlock * m_numOfBlocks ];
 			m_numFreeBlocks = numOfBlocks;
 			m_next = m_memStart;
-		}
-		
-		void destroyPool()
-		{
-			delete[] m_memStart;
-			m_memStart = NULL;
-		}
-		
-		uchar* addrFromIndex( uint i ) const
-		{
-			return m_memStart + ( i * m_sizeOfEachBlock );
-		}
-		
-		uint indexFromAddr( const uchar* p ) const
-		{
-			return ( ( ( uint )( p - m_memStart )) / m_sizeOfEachBlock );
 		}
 		
 		void* allocate()
@@ -95,6 +80,23 @@ namespace model
 				m_next = ( uchar* )p;
 			}
 			++m_numFreeBlocks;
+		}
+		
+	private:
+		void destroyPool()
+		{
+			delete[] m_memStart;
+			m_memStart = NULL;
+		}
+		
+		uchar* addrFromIndex( uint i ) const
+		{
+			return m_memStart + ( i * m_sizeOfEachBlock );
+		}
+		
+		uint indexFromAddr( const uchar* p ) const
+		{
+			return ( ( ( uint )( p - m_memStart )) / m_sizeOfEachBlock );
 		}
 	};
 }

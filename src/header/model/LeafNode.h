@@ -4,16 +4,23 @@
 #include "Point.h"
 #include "OctreeNode.h"
 #include "NodeReleaser.h"
+#include "MemoryManager.h"
 
 namespace model
 {
 	template< typename MortonCode >
 	class OctreeNode;
 	
+	// TODO: MortonCode seems to be unnecessary here.
 	template< typename MortonCode, typename Contents >
 	class LeafNode : public OctreeNode< MortonCode >
 	{
 	public:
+		void* operator new( size_t size );
+		void* operator new[]( size_t size );
+		void operator delete( void* p );
+		void operator delete[]( void* p );
+		
 		~LeafNode();
 		bool isLeaf() const;
 		void setContents( const Contents& contents );
@@ -25,6 +32,30 @@ namespace model
 	private:
 		Contents m_contents;
 	};
+	
+	template< typename MortonCode, typename Contents >
+	void* LeafNode< MortonCode, Contents >::operator new( size_t size )
+	{
+		return MemoryManager::instance().allocateNode();
+	}
+	
+	template< typename MortonCode, typename Contents >
+	void* LeafNode< MortonCode, Contents >::operator new[]( size_t size )
+	{
+		throw logic_error( "LeafNode::operator new[] is unsupported." );
+	}
+	
+	template< typename MortonCode, typename Contents >
+	void LeafNode< MortonCode, Contents >::operator delete( void* p )
+	{
+		MemoryManager::instance().deallocateNode( p );
+	}
+	
+	template< typename MortonCode, typename Contents >
+	void LeafNode< MortonCode, Contents >::operator delete[]( void* p )
+	{
+		throw logic_error( "LeafNode::operator delete[] is unsupported." );
+	}
 	
 	template < typename MortonCode, typename Contents >
 	inline LeafNode< MortonCode, Contents >::~LeafNode()

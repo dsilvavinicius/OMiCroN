@@ -19,6 +19,10 @@ namespace model
 		ExtendedPoint& operator=( ExtendedPoint&& other);
 		ExtendedPoint( byte* serialization );
 		ExtendedPoint( byte* serialization, byte*& pastRead );
+		void* operator new( size_t size );
+		void* operator new[]( size_t size );
+		void operator delete( void* p );
+		void operator delete[]( void* p );
 		
 		Vec3& getNormal();
 		
