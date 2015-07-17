@@ -21,8 +21,9 @@ class MemoryManagedEnvironment
 public:
 	void SetUp()
 	{
-		// The default manager allows allocations of 100 entities of each type.
-		MemoryManager::initInstance( 100, 100, 20709060, 20709060, 20709060 );
+		// The default manager allows this setup of allocations. This ammount of memory is enough for any currently
+		// executed test. In case a new test needs more, the values here must be changed.
+		MemoryManager::initInstance( 20709060, 100, 41418120, 100, 20709060 );
 	}
 };
 

@@ -1,5 +1,7 @@
 #include "PlyPointReader.h"
 #include "Stream.h"
+#include <LeafNode.h>
+#include <MortonCode.h>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <QApplication>
@@ -19,9 +21,6 @@ namespace util
 		{
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			
-			cout << "Size of a PointVector:" << sizeof( PointVector ) << endl
-				 << "Size of a ExtendedPointVector:" << sizeof( ExtendedPointVector ) << endl;
 			
 			PointVector points;
 			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( make_shared< Point >( point ) ); } );

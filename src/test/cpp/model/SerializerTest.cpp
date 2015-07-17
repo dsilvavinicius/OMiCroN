@@ -130,6 +130,7 @@ namespace model
 			}
 			
 			delete node;
+			cout << "Before node deletion" << endl;
 			delete deserializedNode;
 		}
 		

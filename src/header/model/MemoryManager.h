@@ -7,10 +7,18 @@
 namespace model
 {
 	/** Utilizes Memory pools in order to manage creation of MortonCode, Point and Node objects. Allocates one large
-	 * memory chunk to be served for each type. Reuses deallocated memory for next allocations. */
+	 * memory chunk to be served for each type. Reuses deallocated memory for next allocations. Also provides API to
+	 * the number of current available memory blocks for each type. */
 	class MemoryManager
 	{
 	public:
+		/** Initializes the singleton instance with the number of memory blocks for each type specified by the
+		 * parameters.
+		 * @param nShallowMorton is the number of ShallowMortonCode memory blocks.
+		 * @param nMediumMorton is the number of MediumMortonCode memory blocks.
+		 * @param nPoints is the number of Point memory blocks.
+		 * @param nExtendedPoints is the number of ExtendedPoint memory blocks.
+		 * @param nNodes is the number of LeafNode or InnerNode memory blocks. */
 		static void initInstance( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
 								  const ulong& nExtendedPoints, const ulong& nNodes );
 		
@@ -47,10 +55,31 @@ namespace model
 		/** Deallocates memory for a Node. */
 		void deallocateNode( void* p );
 		
+		/** Gets the number of yet available ShallowMortonCode memory blocks. */
+		uint availableShallowMortonBlocks();
+		
+		/** Gets the number of yet available MediumMortonCode memory blocks. */
+		uint availableMediumMortonBlocks();
+		
+		/** Gets the number of yet available Point memory blocks. */
+		uint availablePointBlocks();
+		
+		/** Gets the number of yet available ExtendedPoint memory blocks. */
+		uint availableExtendedPointBlocks();
+		
+		/** Gets the number of yet available Node blocks available. */
+		uint availableNodeBlocks();
+		
 	private:
 		/** Ctor doesn't allocates memory. Use initInstance to initialize it. */
 		MemoryManager() {}
 		
+		/** Initializes instance with the number of memory blocks for each type specified by the parameters.
+		 * @param nShallowMorton is the number of ShallowMortonCode memory blocks.
+		 * @param nMediumMorton is the number of MediumMortonCode memory blocks.
+		 * @param nPoints is the number of Point memory blocks.
+		 * @param nExtendedPoints is the number of ExtendedPoint memory blocks.
+		 * @param nNodes is the number of LeafNode or InnerNode memory blocks. */
 		void init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
 				   const ulong& nExtendedPoints, const ulong& nNodes );
 		
@@ -58,7 +87,7 @@ namespace model
 		MemoryPool m_MediumMortonPool; // 8 bytes block.
 		MemoryPool m_PointPool; // 24 bytes block.
 		MemoryPool m_ExtendedPointPool; // 36 bytes block.
-		MemoryPool m_LeafOrInnerNodePool; // 24 bytes block.
+		MemoryPool m_LeafOrInnerNodePool; // 32 bytes block.
 		
 		static uint SHALLOW_MORTON_SIZE;
 		static uint MEDIUM_MORTON_SIZE;
@@ -127,6 +156,31 @@ namespace model
 	inline void MemoryManager::deallocateNode( void* p )
 	{
 		m_LeafOrInnerNodePool.deAllocate( p );
+	}
+	
+	inline uint MemoryManager::availableShallowMortonBlocks()
+	{
+		return m_ShallowMortonPool.getNumFreeBlocks();
+	}
+
+	inline uint MemoryManager::availableMediumMortonBlocks()
+	{
+		return m_MediumMortonPool.getNumFreeBlocks();
+	}
+
+	inline uint MemoryManager::availablePointBlocks()
+	{
+		return m_PointPool.getNumFreeBlocks();
+	}
+
+	inline uint MemoryManager::availableExtendedPointBlocks()
+	{
+		return m_ExtendedPointPool.getNumFreeBlocks();
+	}
+
+	inline uint MemoryManager::availableNodeBlocks()
+	{
+		return m_LeafOrInnerNodePool.getNumFreeBlocks();
 	}
 	
 	inline void MemoryManager::init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,

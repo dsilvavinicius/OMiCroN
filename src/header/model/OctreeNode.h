@@ -24,6 +24,8 @@ namespace model
 	{
 		using IndexVector = vector< unsigned long >;
 	public:
+		virtual ~OctreeNode() {}
+		
 		/** Indicates the type of the node. */
 		virtual bool isLeaf() const = 0;
 		

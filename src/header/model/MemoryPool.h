@@ -2,6 +2,7 @@
 #define MEMORY_POOL_H
 
 #include <cstdlib>
+#include <iostream>
 #include "BasicTypes.h"
 
 using namespace std;
@@ -80,6 +81,11 @@ namespace model
 				m_next = ( uchar* )p;
 			}
 			++m_numFreeBlocks;
+		}
+		
+		uint getNumFreeBlocks()
+		{
+			return m_numFreeBlocks;
 		}
 		
 	private:
