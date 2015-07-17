@@ -23,7 +23,7 @@ public:
 	{
 		// The default manager allows this setup of allocations. This ammount of memory is enough for any currently
 		// executed test. In case a new test needs more, the values here must be changed.
-		MemoryManager::initInstance( 20709060u, 100, 41418120u, 100, 20709060u );
+		MemoryManager::initInstance( 20709060u, 20709060u, 41418120u, 41418120u, 20709060u );
 	}
 };
 

@@ -3,13 +3,14 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <mutex>
 #include "BasicTypes.h"
 
 using namespace std;
 
 namespace model
 {
-	/** Implementation of Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
+	/** Thread-safe implementation of Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
 	 * http://www.thinkmind.org/index.php?view=article&articleid=computation_tools_2012_1_10_80006. */
 	class MemoryPool
 	{
@@ -19,7 +20,8 @@ namespace model
 		uint	m_numInitialized;	// Num of initialized blocks
 		uchar*	m_memStart;			// Beginning of memory pool
 		uchar*	m_next;				// Num of next free block
-
+		mutex	poolLock;			// Lock to the pool
+		
 		public:
 
 		MemoryPool()
@@ -32,12 +34,21 @@ namespace model
 			m_next = 0;
 		}
 		
-		~MemoryPool() { destroyPool(); }
+		~MemoryPool()
+		{
+			destroyPool();
+		}
 		
 		void createPool( size_t sizeOfEachBlock, uint numOfBlocks )
 		{
 			m_numOfBlocks = numOfBlocks;
 			m_sizeOfEachBlock = sizeOfEachBlock;
+			
+			if( m_memStart )
+			{
+				destroyPool();
+			}
+			
 			m_memStart = new uchar[ m_sizeOfEachBlock * m_numOfBlocks ];
 			m_numFreeBlocks = numOfBlocks;
 			m_next = m_memStart;
@@ -45,6 +56,7 @@ namespace model
 		
 		void* allocate()
 		{
+			lock_guard< mutex > guard( poolLock );
 			if( m_numInitialized < m_numOfBlocks )
 			{
 				uint* p = ( uint* ) addrFromIndex( m_numInitialized );
@@ -70,6 +82,7 @@ namespace model
 		
 		void deAllocate( void* p )
 		{
+			lock_guard< mutex > guard( poolLock );
 			if( m_next != NULL )
 			{
 				( *( uint* )p ) = indexFromAddr( m_next );
@@ -83,7 +96,7 @@ namespace model
 			++m_numFreeBlocks;
 		}
 		
-		uint getNumFreeBlocks()
+		uint getNumFreeBlocks() const
 		{
 			return m_numFreeBlocks;
 		}
@@ -91,6 +104,7 @@ namespace model
 	private:
 		void destroyPool()
 		{
+			lock_guard< mutex > guard( poolLock );
 			delete[] m_memStart;
 			m_memStart = NULL;
 		}

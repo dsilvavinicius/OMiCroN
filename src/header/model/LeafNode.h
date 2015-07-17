@@ -108,6 +108,12 @@ namespace model
 	
 	template< typename Contents >
 	using ShallowLeafNodePtr = shared_ptr< ShallowLeafNode< Contents > >;
+	
+	template< typename Contents >
+	using MediumLeafNode = LeafNode< MediumMortonCode, Contents >;
+	
+	template< typename Contents >
+	using MediumLeafNodePtr = shared_ptr< MediumLeafNode< Contents > >;
 }
 
 #endif

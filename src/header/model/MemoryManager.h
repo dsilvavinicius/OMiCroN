@@ -13,7 +13,8 @@ namespace model
 	{
 	public:
 		/** Initializes the singleton instance with the number of memory blocks for each type specified by the
-		 * parameters.
+		 * parameters. If it is already initialized, early allocated memory is deleted and new allocations are done
+		 * accordingly with parameters.
 		 * @param nShallowMorton is the number of ShallowMortonCode memory blocks.
 		 * @param nMediumMorton is the number of MediumMortonCode memory blocks.
 		 * @param nPoints is the number of Point memory blocks.
@@ -56,19 +57,19 @@ namespace model
 		void deallocateNode( void* p );
 		
 		/** Gets the number of yet available ShallowMortonCode memory blocks. */
-		uint availableShallowMortonBlocks();
+		uint availableShallowMortonBlocks() const;
 		
 		/** Gets the number of yet available MediumMortonCode memory blocks. */
-		uint availableMediumMortonBlocks();
+		uint availableMediumMortonBlocks() const;
 		
 		/** Gets the number of yet available Point memory blocks. */
-		uint availablePointBlocks();
+		uint availablePointBlocks() const;
 		
 		/** Gets the number of yet available ExtendedPoint memory blocks. */
-		uint availableExtendedPointBlocks();
+		uint availableExtendedPointBlocks() const;
 		
 		/** Gets the number of yet available Node blocks available. */
-		uint availableNodeBlocks();
+		uint availableNodeBlocks() const;
 		
 	private:
 		/** Ctor doesn't allocates memory. Use initInstance to initialize it. */
@@ -158,27 +159,27 @@ namespace model
 		m_LeafOrInnerNodePool.deAllocate( p );
 	}
 	
-	inline uint MemoryManager::availableShallowMortonBlocks()
+	inline uint MemoryManager::availableShallowMortonBlocks() const
 	{
 		return m_ShallowMortonPool.getNumFreeBlocks();
 	}
 
-	inline uint MemoryManager::availableMediumMortonBlocks()
+	inline uint MemoryManager::availableMediumMortonBlocks() const
 	{
 		return m_MediumMortonPool.getNumFreeBlocks();
 	}
 
-	inline uint MemoryManager::availablePointBlocks()
+	inline uint MemoryManager::availablePointBlocks() const
 	{
 		return m_PointPool.getNumFreeBlocks();
 	}
 
-	inline uint MemoryManager::availableExtendedPointBlocks()
+	inline uint MemoryManager::availableExtendedPointBlocks() const
 	{
 		return m_ExtendedPointPool.getNumFreeBlocks();
 	}
 
-	inline uint MemoryManager::availableNodeBlocks()
+	inline uint MemoryManager::availableNodeBlocks() const
 	{
 		return m_LeafOrInnerNodePool.getNumFreeBlocks();
 	}
