@@ -101,6 +101,16 @@ namespace model
 			return m_numFreeBlocks;
 		}
 		
+		float getFreeBlockPercentage() const
+		{
+			return ( float ) m_numFreeBlocks / m_numOfBlocks;
+		}
+		
+		uint getNumBlocks() const
+		{
+			return m_numOfBlocks;
+		}
+		
 	private:
 		void destroyPool()
 		{

@@ -57,7 +57,7 @@ namespace model
 	
 	void* Point::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocatePoint();
+		return MemoryManager::instance().allocate( MemoryManager::POINT );
 	}
 	
 	void* Point::operator new[]( size_t size )
@@ -67,7 +67,7 @@ namespace model
 	
 	void Point::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocatePoint( p );
+		MemoryManager::instance().deallocate( MemoryManager::POINT, p );
 	}
 	
 	void Point::operator delete[]( void* p )

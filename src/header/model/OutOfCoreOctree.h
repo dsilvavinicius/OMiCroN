@@ -147,11 +147,11 @@ namespace model
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_TO_RELEASE = 1024 * 1024 * 1024; // 1GB
+	::M_MIN_FREE_MEMORY_TO_RELEASE = 0.1; // 10% of total allocated memory.
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 1.9 * 1024 * 1024 * 1024; // 1,9GB
+	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 0.2; // 20% of total allocated memory.
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >

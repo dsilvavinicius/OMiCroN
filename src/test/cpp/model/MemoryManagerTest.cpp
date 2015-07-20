@@ -15,11 +15,17 @@ namespace model
 		
 		TEST_F( MemoryManagerTest, ShallowPointVectorLeafNodes )
 		{
-			ASSERT_EQ( MemoryManager::instance().availableShallowMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availableMediumMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availablePointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableExtendedPointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableNodeBlocks(), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EXTENDED_POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::NODE ), 20709060u );
+			
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EXTENDED_POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::NODE ), 1.f );
 			
 			ShallowOctreeMap map;
 			
@@ -36,28 +42,46 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( MemoryManager::instance().availableShallowMortonBlocks(), 0u );
-			ASSERT_EQ( MemoryManager::instance().availableMediumMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availablePointBlocks(), 0u );
-			ASSERT_EQ( MemoryManager::instance().availableExtendedPointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableNodeBlocks(), 0u );
-				 
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 0u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::POINT ), 0u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EXTENDED_POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::NODE ), 0u );
+			
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ), 0.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::POINT ), 0.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EXTENDED_POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::NODE ), 0.f );
+			
 			map.clear();
 			
-			ASSERT_EQ( MemoryManager::instance().availableShallowMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availableMediumMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availablePointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableExtendedPointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableNodeBlocks(), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EXTENDED_POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::NODE ), 20709060u );
+			
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EXTENDED_POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::NODE ), 1.f );
 		}
 		
 		TEST_F( MemoryManagerTest, MediumExtendedPointVectorInnerNodes )
 		{
-			ASSERT_EQ( MemoryManager::instance().availableShallowMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availableMediumMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availablePointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableExtendedPointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableNodeBlocks(), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EXTENDED_POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::NODE ), 20709060u );
+			
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EXTENDED_POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::NODE ), 1.f );
 			
 			MediumOctreeMap map;
 			
@@ -74,19 +98,31 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( MemoryManager::instance().availableShallowMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availableMediumMortonBlocks(), 0 );
-			ASSERT_EQ( MemoryManager::instance().availablePointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableExtendedPointBlocks(), 0 );
-			ASSERT_EQ( MemoryManager::instance().availableNodeBlocks(), 0 );
-				 
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 0u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EXTENDED_POINT ), 0u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::NODE ), 0u );
+			
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ), 0.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EXTENDED_POINT ), 0.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::NODE ), 0.f );
+			
 			map.clear();
 			
-			ASSERT_EQ( MemoryManager::instance().availableShallowMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availableMediumMortonBlocks(), 20709060u );
-			ASSERT_EQ( MemoryManager::instance().availablePointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableExtendedPointBlocks(), 41418120u );
-			ASSERT_EQ( MemoryManager::instance().availableNodeBlocks(), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 20709060u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EXTENDED_POINT ), 41418120u );
+			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::NODE ), 20709060u );
+			
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EXTENDED_POINT ), 1.f );
+			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::NODE ), 1.f );
 		}
 	}
 }

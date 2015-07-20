@@ -12,6 +12,16 @@ namespace model
 	class MemoryManager
 	{
 	public:
+		enum MEMORY_POOL_TYPE
+		{
+			SHALLOW_MORTON,	// 4 bytes block.
+			MEDIUM_MORTON,	// 8 bytes block.
+			POINT,			// 24 bytes block.
+			EXTENDED_POINT,	// 36 bytes block.
+			NODE,			// 32 bytes block.
+			COUNT
+		};
+		
 		/** Initializes the singleton instance with the number of memory blocks for each type specified by the
 		 * parameters. If it is already initialized, early allocated memory is deleted and new allocations are done
 		 * accordingly with parameters.
@@ -26,50 +36,21 @@ namespace model
 		/** Gets the MemoryManager singleton instance. */
 		static MemoryManager& instance();
 		
-		/** Allocates memory for a ShallowMortonCode. */
-		void* allocateShallowMorton();
+		/** Allocates memory for a managed type. */
+		void* allocate( const MEMORY_POOL_TYPE& type );
 		
-		/** Allocates memory for a MediumMortonCode. */
-		void* allocateMediumMorton();
+		/** Deallocates memory for a managed type. */
+		void deallocate( const MEMORY_POOL_TYPE& type, void* p );
 		
-		/** Allocates memory for a Point. */
-		void* allocatePoint();
+		/** Gets the number of yet available memory blocks of a managed type. */
+		uint freeBlocks( const MEMORY_POOL_TYPE& type ) const;
 		
-		/** Allocates memory for an ExtendedPoint. */
-		void* allocateExtendedPoint();
+		/** Gets the percentage of yet available memory blocks of a managed type. */
+		float freeBlocksPercentage( const MEMORY_POOL_TYPE& type ) const;
 		
-		/** Allocates memory for a Node. */
-		void* allocateNode();
-		
-		/** Deallocates memory for a ShallowMortonCode. */
-		void deallocateShallowMorton( void* p );
-		
-		/** Deallocates memory for a MediumMortonCode. */
-		void deallocateMediumMorton( void* p );
-		
-		/** Deallocates memory for a Point. */
-		void deallocatePoint( void* p );
-		
-		/** Deallocates memory for an ExtendedPoint. */
-		void deallocateExtendedPoint( void* p );
-		
-		/** Deallocates memory for a Node. */
-		void deallocateNode( void* p );
-		
-		/** Gets the number of yet available ShallowMortonCode memory blocks. */
-		uint availableShallowMortonBlocks() const;
-		
-		/** Gets the number of yet available MediumMortonCode memory blocks. */
-		uint availableMediumMortonBlocks() const;
-		
-		/** Gets the number of yet available Point memory blocks. */
-		uint availablePointBlocks() const;
-		
-		/** Gets the number of yet available ExtendedPoint memory blocks. */
-		uint availableExtendedPointBlocks() const;
-		
-		/** Gets the number of yet available Node blocks available. */
-		uint availableNodeBlocks() const;
+		/** Verifies if all initialized MemoryPools' percentage of free blocks are above the passed percentage
+		 * threshold. */
+		bool hasEnoughMemory( const float& percentageThreshold ) const;
 		
 	private:
 		/** Ctor doesn't allocates memory. Use initInstance to initialize it. */
@@ -84,17 +65,9 @@ namespace model
 		void init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
 				   const ulong& nExtendedPoints, const ulong& nNodes );
 		
-		MemoryPool m_ShallowMortonPool; // 4 bytes block.
-		MemoryPool m_MediumMortonPool; // 8 bytes block.
-		MemoryPool m_PointPool; // 24 bytes block.
-		MemoryPool m_ExtendedPointPool; // 36 bytes block.
-		MemoryPool m_LeafOrInnerNodePool; // 32 bytes block.
+		MemoryPool m_pools[ MEMORY_POOL_TYPE::COUNT ]; // MemoryPools. One for each managed type.
+		static uint SIZES[ MEMORY_POOL_TYPE::COUNT ]; // Sizes of the managed types.
 		
-		static uint SHALLOW_MORTON_SIZE;
-		static uint MEDIUM_MORTON_SIZE;
-		static uint POINT_SIZE;
-		static uint EXTENDED_POINT_SIZE;
-		static uint NODE_SIZE;
 		static MemoryManager m_instance;
 	};
 	
@@ -109,79 +82,43 @@ namespace model
 		return m_instance;
 	}
 
-	inline void* MemoryManager::allocateShallowMorton()
+	inline void* MemoryManager::allocate( const MEMORY_POOL_TYPE& type )
 	{
-		return m_ShallowMortonPool.allocate();
+		return m_pools[ type ].allocate();
 	}
+	
+	inline void MemoryManager::deallocate( const MEMORY_POOL_TYPE& type, void* p )
+	{
+		m_pools[ type ].deAllocate( p );
+	}
+	
+	inline uint MemoryManager::freeBlocks( const MEMORY_POOL_TYPE& type ) const
+	{
+		return m_pools[ type ].getNumFreeBlocks();
+	}
+	
+	inline float MemoryManager::freeBlocksPercentage( const MEMORY_POOL_TYPE& type ) const
+	{
+		return m_pools[ type ].getFreeBlockPercentage();
+	}
+	
+	inline bool MemoryManager::hasEnoughMemory( const float& percentageThreshold ) const
+	{
+		bool hasMemory = true;
 		
-	inline void* MemoryManager::allocateMediumMorton()
-	{
-		return m_MediumMortonPool.allocate();
-	}
-	
-	inline void* MemoryManager::allocatePoint()
-	{
-		return m_PointPool.allocate();
-	}
-	
-	inline void* MemoryManager::allocateExtendedPoint()
-	{
-		return m_ExtendedPointPool.allocate();
-	}
-
-	inline void* MemoryManager::allocateNode()
-	{
-		return m_LeafOrInnerNodePool.allocate();
-	}
-	
-	inline void MemoryManager::deallocateShallowMorton( void* p )
-	{
-		m_ShallowMortonPool.deAllocate( p );
-	}
-	
-	inline void MemoryManager::deallocateMediumMorton( void* p )
-	{
-		m_MediumMortonPool.deAllocate( p );
-	}
-	
-	inline void MemoryManager::deallocatePoint(void* p)
-	{
-		m_PointPool.deAllocate( p );
-	}
-	
-	inline void MemoryManager::deallocateExtendedPoint( void* p )
-	{
-		m_ExtendedPointPool.deAllocate( p );
-	}
-	
-	inline void MemoryManager::deallocateNode( void* p )
-	{
-		m_LeafOrInnerNodePool.deAllocate( p );
-	}
-	
-	inline uint MemoryManager::availableShallowMortonBlocks() const
-	{
-		return m_ShallowMortonPool.getNumFreeBlocks();
-	}
-
-	inline uint MemoryManager::availableMediumMortonBlocks() const
-	{
-		return m_MediumMortonPool.getNumFreeBlocks();
-	}
-
-	inline uint MemoryManager::availablePointBlocks() const
-	{
-		return m_PointPool.getNumFreeBlocks();
-	}
-
-	inline uint MemoryManager::availableExtendedPointBlocks() const
-	{
-		return m_ExtendedPointPool.getNumFreeBlocks();
-	}
-
-	inline uint MemoryManager::availableNodeBlocks() const
-	{
-		return m_LeafOrInnerNodePool.getNumFreeBlocks();
+		for( int memPoolType = SHALLOW_MORTON; memPoolType < COUNT; ++memPoolType )
+		{
+			if( m_pools[ memPoolType ].getNumBlocks() )
+			{
+				if( m_pools[ memPoolType ].getFreeBlockPercentage() < percentageThreshold )
+				{
+					cout << "Pool for type " << memPoolType << " has not enough memory." << endl;
+					return false;
+				}
+			}
+		}
+		
+		return hasMemory;
 	}
 	
 	inline void MemoryManager::init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
@@ -189,23 +126,23 @@ namespace model
 	{
 		if( nShallowMorton )
 		{
-			m_ShallowMortonPool.createPool( SHALLOW_MORTON_SIZE, nShallowMorton );
+			m_pools[ SHALLOW_MORTON ].createPool( SIZES[ SHALLOW_MORTON ], nShallowMorton );
 		}
 		if( nMediumMorton )
 		{
-			m_MediumMortonPool.createPool( MEDIUM_MORTON_SIZE, nMediumMorton );
+			m_pools[ MEDIUM_MORTON ].createPool( SIZES[ MEDIUM_MORTON ], nMediumMorton );
 		}
 		if( nPoints )
 		{
-			m_PointPool.createPool( POINT_SIZE, nPoints );
+			m_pools[ POINT ].createPool( SIZES[ POINT ], nPoints );
 		}
 		if( nExtendedPoints )
 		{
-			m_ExtendedPointPool.createPool( EXTENDED_POINT_SIZE, nExtendedPoints );
+			m_pools[ EXTENDED_POINT ].createPool( SIZES[ EXTENDED_POINT ], nExtendedPoints );
 		}
 		if( nNodes )
 		{
-			m_LeafOrInnerNodePool.createPool( NODE_SIZE, nNodes );
+			m_pools[ NODE ].createPool( SIZES[ NODE ], nNodes );
 		}
 	}
 }

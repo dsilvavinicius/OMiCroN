@@ -25,6 +25,9 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
+	// Init MemoryManager allowing 13GB of data.
+	MemoryManager::initInstance( 939524096u /* 3.5GB */, 0, 268435456u /* 6GB */, 0, 117440512u /* 3.5GB */ );
+	
 	Tucano::QtFreecameraWidget::initialize();
 	
 	setFrameRate( frameRate );
