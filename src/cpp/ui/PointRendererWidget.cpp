@@ -25,8 +25,13 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	// Init MemoryManager allowing 13GB of data.
-	MemoryManager::initInstance( 939524096u /* 3.5GB */, 0, 268435456u /* 6GB */, 0, 117440512u /* 3.5GB */ );
+	// Init MemoryManager allowing 6GB of data.
+	MemoryManager::initInstance( 0ul,
+								 1.5f * 1024ul * 1024ul * 1024ul / sizeof( MediumMortonCode ) /* 1.5GB for MediumMortonCodes */,
+								 3ul * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3GB for Points */,
+							  0ul,
+							  1.5f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 1.5GB for Nodes */ );
+	cout << "MemoryManager initialized: " << endl << MemoryManager::instance() << endl;
 	
 	Tucano::QtFreecameraWidget::initialize();
 	
@@ -246,7 +251,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	string dbFilename = QApplication::applicationDirPath().toStdString() +
 						filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 10, dbFilename );
+	m_octree = new Octree( 1, 15, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
 	
 	cout << "Octree built." << endl;

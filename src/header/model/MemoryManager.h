@@ -52,6 +52,8 @@ namespace model
 		 * threshold. */
 		bool hasEnoughMemory( const float& percentageThreshold ) const;
 		
+		friend ostream& operator<<( ostream& out, const MemoryManager& manager );
+		
 	private:
 		/** Ctor doesn't allocates memory. Use initInstance to initialize it. */
 		MemoryManager() {}
@@ -110,6 +112,13 @@ namespace model
 		{
 			if( m_pools[ memPoolType ].getNumBlocks() )
 			{
+				//
+				if( m_pools[ memPoolType ].getFreeBlockPercentage() < 1.f )
+				{
+					cout << memPoolType << ":" << m_pools[ memPoolType ].getFreeBlockPercentage() << endl;
+				}
+				//
+				
 				if( m_pools[ memPoolType ].getFreeBlockPercentage() < percentageThreshold )
 				{
 					cout << "Pool for type " << memPoolType << " has not enough memory." << endl;
@@ -119,6 +128,16 @@ namespace model
 		}
 		
 		return hasMemory;
+	}
+	
+	inline ostream& operator<<( ostream& out, const MemoryManager& manager )
+	{
+		out << "Free nodes: " << manager.freeBlocksPercentage( MemoryManager::NODE ) << endl
+			<< "Free shallow codes: " << manager.freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ) << endl
+			<< "Free medium codes: " << manager.freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ) << endl
+			<< "Free points: " << manager.freeBlocksPercentage( MemoryManager::POINT ) << endl
+			<< "Free extended points: " << manager.freeBlocksPercentage( MemoryManager::EXTENDED_POINT ) << endl;
+		return out;
 	}
 	
 	inline void MemoryManager::init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,

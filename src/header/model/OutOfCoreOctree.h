@@ -4,7 +4,6 @@
 #include "FrontOctree.h"
 #include "PlyPointReader.h"
 #include "SQLiteManager.h"
-#include <MemoryInfo.h>
 
 using namespace std;
 using namespace util;
@@ -147,11 +146,11 @@ namespace model
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_TO_RELEASE = 0.1; // 10% of total allocated memory.
+	::M_MIN_FREE_MEMORY_TO_RELEASE = 0.8; // 10% of total allocated memory.
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 0.2; // 20% of total allocated memory.
+	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 0.9; // 20% of total allocated memory.
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
@@ -345,17 +344,18 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
 	{
-		if( !MemoryManager::instance().hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
+		MemoryManager& memManager = MemoryManager::instance();
+		if( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
 		{
 			cout << "==== Leaf persistence triggered ====" << endl
 				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION << endl
-				 << "Expected free memory after release: " << M_MIN_FREE_MEMORY_AFTER_RELEASE / ( 1024 * 1024 ) << endl;
+				 << "Expected free memory after release: " << M_MIN_FREE_MEMORY_AFTER_RELEASE << endl;
 			
-			while( !MemoryManager::instance().hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
+			m_nodesUntilLastPersistence = 0;
+			
+			while( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
 			{
-				cout << "Free mem: " << MemoryInfo::getAvailableMemorySize() / ( 1024 * 1024 ) << endl;
-				
-				m_nodesUntilLastPersistence = 0;
+				cout << "MemoryManager: " << endl << memManager << endl;
 				
 				OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 				typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
@@ -390,7 +390,7 @@ namespace model
 				m_sqLite.endTransaction();
 			}
 			
-			cout << "Free mem after release: " << MemoryInfo::getAvailableMemorySize() / ( 1024 * 1024 ) << endl;
+			cout << "Manager after release: " << memManager << endl;
 			cout << "==== Leaf persistence ended ====" << endl << endl;
 		}
 	}
@@ -466,8 +466,9 @@ namespace model
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
 		MortonCodePtr currentCode = nullptr;
+		MemoryManager& memManager = MemoryManager::instance();
 		
-		if( !MemoryManager::instance().hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
+		if( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
 		{
 			cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl;
 			
@@ -475,7 +476,7 @@ namespace model
 			
 			currentCode = nodeIt->first;
 			
-			while( !MemoryManager::instance().hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
+			while( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
 			{
 				MortonCodePtr parentCode = currentCode->traverseUp();
 				
@@ -514,14 +515,15 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodesAtFrontTracking()
 	{
-		if( !MemoryManager::instance().hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
+		MemoryManager& memManager = MemoryManager::instance();
+		if( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
 		{
 			cout << "====== releaseNodesAtFrontTracking:Node release triggered ======" << endl;
 			
 			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 			
 			for( auto it = hierarchy->begin();
-				it != hierarchy->end() && !MemoryManager::instance().hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ); )
+				it != hierarchy->end() && !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ); )
 			{
 				if( !ParentOctree::m_frontBehavior->contains( *it->first ) )
 				{
