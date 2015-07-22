@@ -23,7 +23,7 @@ namespace util
 			using PointVector = vector< PointPtr >;
 			
 			PointVector points;
-			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( make_shared< Point >( point ) ); } );
+			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
 			reader.read( g_appPath + "/data/test.ply", SimplePointReader::SINGLE, COLORS );
 			
 			Point expectedPoint0( vec3( ( float )81 / 255, ( float )63 / 255, ( float )39 / 255 ),
@@ -47,7 +47,7 @@ namespace util
 			using PointVector = vector< PointPtr >;
 			
 			PointVector points;
-			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( make_shared< Point >( point ) ); } );
+			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
 			reader.read( g_appPath + "/data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 			
 			Point expectedPoint0( vec3( 11.321565, 4.658535, 7.163479 ), vec3( 7.163479, 4.658535, 11.321565 ) );
@@ -69,7 +69,7 @@ namespace util
 			using PointVector = vector< PointPtr >;
 			
 			PointVector points;
-			ExtendedPointReader reader( [ & ]( const Point& point ){ points.push_back( make_shared< Point >( point ) ); } );
+			ExtendedPointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
 			reader.read( g_appPath + "/data/test_extended_points.ply", ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 			
 			Point expectedPoint0( vec3( 0.003921569, 0.007843137, 0.011764706 ), vec3( 11.321565, 4.658535, 7.163479 ),

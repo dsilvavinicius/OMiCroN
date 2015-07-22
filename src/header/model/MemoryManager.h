@@ -112,16 +112,8 @@ namespace model
 		{
 			if( m_pools[ memPoolType ].getNumBlocks() )
 			{
-				//
-				if( m_pools[ memPoolType ].getFreeBlockPercentage() < 1.f )
-				{
-					cout << memPoolType << ":" << m_pools[ memPoolType ].getFreeBlockPercentage() << endl;
-				}
-				//
-				
 				if( m_pools[ memPoolType ].getFreeBlockPercentage() < percentageThreshold )
 				{
-					cout << "Pool for type " << memPoolType << " has not enough memory." << endl;
 					return false;
 				}
 			}

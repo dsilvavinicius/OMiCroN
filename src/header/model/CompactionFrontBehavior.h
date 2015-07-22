@@ -41,7 +41,7 @@ namespace model
 				}
 				//erasePrevious = false;
 				
-				MortonCodePtr code = make_shared< MortonCode >( *it );
+				MortonCodePtr code( new MortonCode( *it ) );
 				
 				erasePrevious = octree.trackNode( code, renderingState, projThresh );
 			}

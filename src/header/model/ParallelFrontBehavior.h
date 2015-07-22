@@ -43,7 +43,7 @@ namespace model
 				if( index < frontSize )
 				{
 					advance( it, id );
-					MortonCodePtr code = make_shared< MortonCode >( *it );
+					MortonCodePtr code( new MortonCode( *it ) );
 					FrontBehavior::m_octree.trackNode( code, renderingState, projThresh );
 					index += nThreads;
 				}
@@ -52,7 +52,7 @@ namespace model
 				{
 					advance( it, nThreads);
 					
-					MortonCodePtr code = make_shared< MortonCode >( *it );
+					MortonCodePtr code( new MortonCode( *it ) );
 					FrontBehavior::m_octree.trackNode( code, renderingState, projThresh );
 					
 					index += nThreads;

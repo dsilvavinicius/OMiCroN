@@ -87,9 +87,9 @@ namespace model
 			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
 			PointVector points;
-			points.push_back( make_shared< Point >( p0 ) );
-			points.push_back( make_shared< Point >( p1 ) );
-			points.push_back( make_shared< Point >( p2 ) );
+			points.push_back( PointPtr( new Point( p0 ) ) );
+			points.push_back( PointPtr( new Point( p1 ) ) );
+			points.push_back( PointPtr( new Point( p2 ) ) );
 			
 			LeafNode node;
 			node.setContents( points );
@@ -185,6 +185,7 @@ namespace model
 		TEST_F( SQLiteManagerTest, InsertAndGetExtPointNodes )
 		{
 			using Point = ExtendedPoint;
+			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
 			using OctreeNode = ShallowOctreeNode;
 			using OctreeNodePtr = ShallowOctreeNodePtr;
@@ -196,9 +197,9 @@ namespace model
 			Point p2( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
 			
 			PointVector points;
-			points.push_back( make_shared< Point >( p0 ) );
-			points.push_back( make_shared< Point >( p1 ) );
-			points.push_back( make_shared< Point >( p2 ) );
+			points.push_back( PointPtr( new Point( p0 ) ) );
+			points.push_back( PointPtr( new Point( p1 ) ) );
+			points.push_back( PointPtr( new Point( p2 ) ) );
 			
 			LeafNode node;
 			node.setContents( points );
@@ -227,12 +228,12 @@ namespace model
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, ShallowOctreeNode >;
 			using IdNode = model::IdNode< ShallowMortonCode >;
 			
-			ExtendedPointPtr p0 = make_shared< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-																vec3( 1.f, 15.f ,2.f ) );
-			ExtendedPointPtr p1 = make_shared< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-																vec3( 3.f, -31.f ,4.f ) );
-			ExtendedPointPtr p2 = make_shared< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-																vec3( -14.f, 5.f ,6.f ) );
+			ExtendedPointPtr p0( new ExtendedPoint( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+													vec3( 1.f, 15.f ,2.f ) ) );
+			ExtendedPointPtr p1( new ExtendedPoint( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+													vec3( 3.f, -31.f ,4.f ) ) );
+			ExtendedPointPtr p2( new ExtendedPoint( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+													vec3( -14.f, 5.f ,6.f ) ) );
 			
 			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
 			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
@@ -327,15 +328,16 @@ namespace model
 		{
 			using Contents = ExtendedPointVector;
 			using LeafNode = model::LeafNode< ShallowMortonCode, Contents >;
+			using LeafNodePtr = shared_ptr< LeafNode >;
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, ShallowOctreeNode >;
 			using IdNode = model::IdNode< ShallowMortonCode >;
 			
-			ExtendedPointPtr p0 = make_shared< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-																vec3( 1.f, 15.f ,2.f ) );
-			ExtendedPointPtr p1 = make_shared< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-																vec3( 3.f, -31.f ,4.f ) );
-			ExtendedPointPtr p2 = make_shared< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-																vec3( -14.f, 5.f ,6.f ) );
+			ExtendedPointPtr p0( new ExtendedPoint( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+													vec3( 1.f, 15.f ,2.f ) ) );
+			ExtendedPointPtr p1( new ExtendedPoint( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+													vec3( 3.f, -31.f ,4.f ) ) );
+			ExtendedPointPtr p2( new ExtendedPoint( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+													vec3( -14.f, 5.f ,6.f ) ) );
 			
 			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
 			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
@@ -357,11 +359,11 @@ namespace model
 			sqLite.insertNode< Contents >( code0, node0 );
 			sqLite.insertNode< Contents >( code1, node1 );
 			
-			ShallowMortonCodePtr code0Ptr = make_shared< ShallowMortonCode >( code0 );
-			ShallowMortonCodePtr code1Ptr = make_shared< ShallowMortonCode >( code1 );
+			ShallowMortonCodePtr code0Ptr( new ShallowMortonCode( code0 ) );
+			ShallowMortonCodePtr code1Ptr( new ShallowMortonCode( code1 ) );
 			
-			IdNode idNode0( code0Ptr, make_shared< LeafNode >( node0 ) );
-			IdNode idNode1( code1Ptr, make_shared< LeafNode >( node1 ) );
+			IdNode idNode0( code0Ptr, LeafNodePtr( new LeafNode( node0 ) ) );
+			IdNode idNode1( code1Ptr, LeafNodePtr( new LeafNode( node1 ) ) );
 			
 			default_random_engine generator;
 			uniform_int_distribution< int > boolDistribution( 0, 1 );

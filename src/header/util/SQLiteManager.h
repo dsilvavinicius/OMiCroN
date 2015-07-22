@@ -281,7 +281,7 @@ namespace util
 		if( isPointFound )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_pointQuery, 0 );
-			point = make_shared< Point >( blob );
+			point = PointPtr( new Point( blob ) );
 		}
 		else
 		{
@@ -382,7 +382,7 @@ namespace util
 				if( rowIsFound )
 				{
 					sqlite3_int64 mortonBits = sqlite3_column_int64( m_nodeIntervalIdQuery, 0 );
-					MortonCodePtr code = make_shared< MortonCode >();
+					MortonCodePtr code( new MortonCode() );
 					code->build( mortonBits );
 					
 					byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );

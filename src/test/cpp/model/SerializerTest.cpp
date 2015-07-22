@@ -19,7 +19,7 @@ namespace model
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
 			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
-			PointPtr pointArray[3] = { make_shared< Point >( p0 ), make_shared< Point >( p1 ), make_shared< Point >( p2 ) };
+			PointPtr pointArray[3] = { PointPtr( new Point( p0 ) ), PointPtr( new Point( p1 ) ), PointPtr( new Point( p2 ) ) };
 			PointVector points( pointArray, pointArray + 3 );
 			
 			byte* bytes;
@@ -41,12 +41,9 @@ namespace model
 			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
 			
-			auto p0 = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-											vec3( 1.f, 15.f ,2.f ) );
-			auto p1 = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-											vec3( 3.f, -31.f ,4.f ) );
-			auto p2 = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-											vec3( -14.f, 5.f ,6.f ) );
+			PointPtr p0( new Point( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) ) );
+			PointPtr p1( new Point( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) ) );
+			PointPtr p2( new Point( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) ) );
 			
 			PointPtr pointArray[3] = { p0, p1, p2 };
 			PointVector points( pointArray, pointArray + 3 );
@@ -110,7 +107,7 @@ namespace model
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
 			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
-			PointPtr pointArray[3] = { make_shared< Point >( p0 ), make_shared< Point >( p1 ), make_shared< Point >( p2 ) };
+			PointPtr pointArray[3] = { PointPtr( new Point( p0 ) ), PointPtr( new Point( p1 ) ), PointPtr( new Point( p2 ) ) };
 			PointVector points( pointArray, pointArray + 3 );
 			
 			auto node = new ShallowLeafNode< PointVector >();
@@ -140,12 +137,9 @@ namespace model
 			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
 			
-			auto p0 = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-											vec3( 1.f, 15.f ,2.f ) );
-			auto p1 = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-											vec3( 3.f, -31.f ,4.f ) );
-			auto p2 = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-											vec3( -14.f, 5.f ,6.f ) );
+			PointPtr p0( new Point( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) ) );
+			PointPtr p1( new Point( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) ) );
+			PointPtr p2( new Point( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) ) );
 			PointPtr pointArray[3] = { p0, p1, p2 };
 			PointVector points( pointArray, pointArray + 3 );
 			

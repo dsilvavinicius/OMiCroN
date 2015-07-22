@@ -139,18 +139,18 @@ namespace model
 		
 		// End of octree creation related data.
 		
-		static unsigned long M_MIN_FREE_MEMORY_TO_RELEASE;
-		static unsigned long M_MIN_FREE_MEMORY_AFTER_RELEASE;
+		static float M_MIN_FREE_MEMORY_TO_RELEASE;
+		static float M_MIN_FREE_MEMORY_AFTER_RELEASE;
 		static unsigned int M_NODE_REQUESTS_PER_FRAME;
 	};
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_TO_RELEASE = 0.8; // 10% of total allocated memory.
+	float OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::M_MIN_FREE_MEMORY_TO_RELEASE = 0.1; // 10% of total allocated memory.
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	unsigned long OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 0.9; // 20% of total allocated memory.
+	float OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 0.2; // 20% of total allocated memory.
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
@@ -169,10 +169,9 @@ namespace model
 	::OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename )
 	: ParentOctree( maxPointsPerNode, maxLevel ),
 	m_nodesUntilLastPersistence( 0uL ),
-	m_sqLite( dbFilename )
-	{
-		m_lastDirty = make_shared< MortonCode >( MortonCode::getLvlLast( maxLevel ) );
-	}
+	m_sqLite( dbFilename ),
+	m_lastDirty( new MortonCode( MortonCode::getLvlLast( maxLevel ) ) )
+	{}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build()
@@ -222,7 +221,7 @@ namespace model
 		*reader = PlyPointReader(
 			[ & ]( const Point& point )
 			{
-				insertPointInLeaf( make_shared< Point >( point ) );
+				insertPointInLeaf( PointPtr( new Point( point ) ) );
 			}
 		);
 		
@@ -243,7 +242,7 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
-		MortonCodePtr code = make_shared< MortonCode >( ParentOctree::calcMorton( *point ) );
+		MortonCodePtr code( new MortonCode( ParentOctree::calcMorton( *point ) ) );
 		
 		OctreeNodePtr node = getNode( code );
 		
@@ -256,7 +255,7 @@ namespace model
 			// Creates leaf node.
 			PointVector points;
 			points.push_back( point );
-			auto leafNode = make_shared< LeafNode< MortonCode, PointVector > >();
+			LeafNodePtr< MortonCode, PointVector > leafNode( new LeafNode< MortonCode, PointVector >() );
 			leafNode->setContents( points );
 			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -349,14 +348,13 @@ namespace model
 		{
 			cout << "==== Leaf persistence triggered ====" << endl
 				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION << endl
-				 << "Expected free memory after release: " << M_MIN_FREE_MEMORY_AFTER_RELEASE << endl;
+				 << "Expected free memory after release: " << M_MIN_FREE_MEMORY_AFTER_RELEASE << endl
+				 << memManager << endl;
 			
 			m_nodesUntilLastPersistence = 0;
 			
 			while( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
 			{
-				cout << "MemoryManager: " << endl << memManager << endl;
-				
 				OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 				typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
 				
@@ -547,7 +545,7 @@ namespace model
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
-			MortonCodePtr lvlBoundary = make_shared< MortonCode >( MortonCode::getLvlLast( level + 1 ) );
+			MortonCodePtr lvlBoundary( new MortonCode( MortonCode::getLvlLast( level + 1 ) ) );
 			
 			typename OctreeMap::iterator firstChildIt = hierarchy->begin(); 
 			typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
@@ -651,7 +649,7 @@ namespace model
 			return nullptr;
 		}
 		
-		MortonCodePtr firstLoadedCode = make_shared< MortonCode >( *idNode.first );
+		MortonCodePtr firstLoadedCode( new MortonCode( *idNode.first ) );
 		MortonCodePtr currentCode( idNode.first );
 		MortonCodePtr parentCode = currentCode->traverseUp();
 		

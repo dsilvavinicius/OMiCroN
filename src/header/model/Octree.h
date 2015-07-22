@@ -170,13 +170,13 @@ namespace model
 	
 	template< typename MortonCode, typename Point >
 	OctreeBase< MortonCode, Point >::OctreeBase( const int& maxPointsPerNode, const int& maxLevel )
+	: m_maxLevel( maxLevel ),
+	m_size( new Vec3() ),
+	m_leafSize( new Vec3() ),
+	m_origin( new Vec3() ),
+	m_maxPointsPerNode( maxPointsPerNode ),
+	m_hierarchy( new OctreeMap() )
 	{
-		m_size = make_shared< Vec3 >();
-		m_leafSize = make_shared< Vec3 >();
-		m_origin = make_shared< Vec3 >();
-		m_maxPointsPerNode = maxPointsPerNode;
-		m_hierarchy = make_shared< OctreeMap >();
-		m_maxLevel = maxLevel;
 		m_pointAppender = new PointAppender();
 	}
 	
@@ -201,7 +201,7 @@ namespace model
 		PlyPointReader *reader = new PlyPointReader(
 			[ & ]( const Point& point )
 			{
-				points.push_back( make_shared< Point >( point ) );
+				points.push_back( PointPtr( new Point( point ) ) );
 			}
 		);
 		reader->read( plyFileName, precision, attribs );
@@ -287,13 +287,13 @@ namespace model
 	template< typename MortonCode, typename Point >
 	inline void OctreeBase< MortonCode, Point >::insertPointInLeaf( const PointPtr& point )
 	{
-		MortonCodePtr code = make_shared< MortonCode >( calcMorton( *point ) );
+		MortonCodePtr code( new MortonCode( calcMorton( *point ) ) );
 		typename OctreeMap::iterator genericLeafIt = m_hierarchy->find( code );
 		
 		if( genericLeafIt == m_hierarchy->end() )
 		{
 			// Creates leaf node.
-			auto leafNode = make_shared< LeafNode >();
+			LeafNodePtr leafNode( new LeafNode() );
 			
 			PointVector points;
 			points.push_back( point );
@@ -380,7 +380,7 @@ namespace model
 			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			auto mergedNode = make_shared< LeafNode >();
+			LeafNodePtr mergedNode( new LeafNode() );
 			mergedNode->setContents( childrenPoints );
 			
 			( *m_hierarchy )[ parentCode ] = mergedNode;
@@ -414,8 +414,8 @@ namespace model
 		}
 		accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
 		
-		auto LODNode = make_shared< InnerNode >();
-		LODNode->setContents( make_shared< Point >( accumulated ) );
+		InnerNodePtr LODNode( new InnerNode() );
+		LODNode->setContents( PointPtr( new Point( accumulated ) ) );
 		
 		return LODNode;
 	}
@@ -425,7 +425,7 @@ namespace model
 	{
 		clock_t timing = clock();
 		
-		MortonCodePtr rootCode = make_shared< MortonCode >();
+		MortonCodePtr rootCode( new MortonCode() );
 		rootCode->build( 0x1 );
 		
 		traverse( rootCode, renderingState, projThresh );

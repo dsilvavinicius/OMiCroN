@@ -73,7 +73,7 @@ namespace model
 					m_front.erase( prev );
 				}
 				
-				MortonCodePtr code = make_shared< MortonCode >( *it );
+				MortonCodePtr code( new MortonCode( *it ) );
 				
 				erasePrevious = m_octree.trackNode( code, renderingState, projThresh );
 			}

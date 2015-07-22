@@ -82,7 +82,7 @@ namespace model
 			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			auto mergedNode = make_shared< LeafNode >();
+			shared_ptr< LeafNode > mergedNode( new LeafNode() );
 			mergedNode->setContents( childrenPoints );
 			
 			( *Octree::m_hierarchy )[ parentCode ] = mergedNode;
@@ -102,7 +102,7 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		auto node = make_shared< InnerNode< MortonCode, PointVector > >();
+		InnerNodePtr< MortonCode, PointVector > node( new InnerNode< MortonCode, PointVector > () );
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
 		

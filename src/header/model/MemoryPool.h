@@ -103,8 +103,7 @@ namespace model
 		
 		float getFreeBlockPercentage() const
 		{
-			cout << "free: " << m_numFreeBlocks << ", blocks: " << m_numOfBlocks << endl;
-			
+			//cout << "free: " << m_numFreeBlocks << ", blocks: " << m_numOfBlocks << endl;
 			return  ( float ) m_numFreeBlocks / ( float ) m_numOfBlocks;
 		}
 		

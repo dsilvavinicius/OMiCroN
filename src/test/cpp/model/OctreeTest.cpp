@@ -15,19 +15,19 @@ namespace model
 		void generatePoints( PointVector& points )
 		{
 			// These points should define the boundaries of the octree hexahedron.
-			auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
-			auto down = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-			auto left = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
-			auto right = make_shared< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) );
-			auto front = make_shared< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) );
-			auto back = make_shared< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) );
+			PointPtr up( new Point( vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) ) );
+			PointPtr down( new Point( vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) ) );
+			PointPtr left( new Point( vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) ) );
+			PointPtr right( new Point( vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) ) );
+			PointPtr front( new Point( vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) ) );
+			PointPtr back( new Point( vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) ) );
 			
 			// Additional points inside the hexahedron.
-			auto addPoint0 = make_shared< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) );
-			auto addPoint1 = make_shared< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) );
-			auto addPoint2 = make_shared< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) );
-			auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) );
-			auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) );
+			PointPtr addPoint0( new Point( vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) ) );
+			PointPtr addPoint1( new Point( vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) ) );
+			PointPtr addPoint2( new Point( vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) ) );
+			PointPtr addPoint3( new Point( vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) ) );
+			PointPtr addPoint4( new Point( vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) ) );
 			
 			points.push_back( back );
 			points.push_back( front );
@@ -50,30 +50,19 @@ namespace model
 			using PointVector = ExtendedPointVector;
 			
 			// These points should define the boundaries of the octree hexahedron.
-			auto up = make_shared< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-											vec3( 1.f, 15.f ,2.f ) );
-			auto down = make_shared< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-												vec3( 3.f, -31.f ,4.f ) );
-			auto left = make_shared< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-												vec3( -14.f, 5.f ,6.f ) );
-			auto right = make_shared< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 0.1f, 0.11f, 0.12f ),
-												vec3( 46.f, 7.f ,8.f ) );
-			auto front = make_shared< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 0.13f, 0.14f, 0.15f ),
-												vec3( 9.f, 10.f ,24.f ) );
-			auto back = make_shared< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 0.16f, 0.17f, 0.18f ),
-												vec3( 11.f, 12.f ,-51.f ) );
+			PointPtr up( new Point( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) ) );
+			PointPtr down( new Point( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) ) );
+			PointPtr left( new Point( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) ) );
+			PointPtr right( new Point( vec3( 0.1f, 0.11f, 0.12f ), vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) ) );
+			PointPtr front( new Point( vec3( 0.13f, 0.14f, 0.15f ), vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) ) );
+			PointPtr back( new Point( vec3( 0.16f, 0.17f, 0.18f ), vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) ) );
 			
 			// Additional points inside the hexahedron.
-			auto addPoint0 = make_shared< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 0.19f, 0.2f, 0.21f ),
-													vec3( 13.f, -12.f, 9.f ) );
-			auto addPoint1 = make_shared< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( 0.22f, 0.23f, 0.24f ),
-													vec3( -5.f, -8.f, 1.f ) );
-			auto addPoint2 = make_shared< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 0.25f, 0.26f, 0.27f ),
-													vec3( 14.f, 11.f, -4.f ) );
-			auto addPoint3 = make_shared< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 0.28f, 0.29f, 0.30f ),
-													vec3( 7.f, 3.f, -12.f ) );
-			auto addPoint4 = make_shared< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 0.31f, 0.32f, 0.33f ),
-													vec3( 12.f, 5.f, 0.f ) );
+			PointPtr addPoint0( new Point( vec3( 0.19f, 0.2f, 0.21f ), vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) ) );
+			PointPtr addPoint1( new Point( vec3( 0.22f, 0.23f, 0.24f ), vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) ) );
+			PointPtr addPoint2( new Point( vec3( 0.25f, 0.26f, 0.27f ), vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) ) );
+			PointPtr addPoint3( new Point( vec3( 0.28f, 0.29f, 0.30f ), vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) ) );
+			PointPtr addPoint4( new Point( vec3( 0.31f, 0.32f, 0.33f ), vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) ) );
 			
 			points.push_back( back );
 			points.push_back( front );
@@ -143,7 +132,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -163,7 +152,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -186,7 +175,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -209,7 +198,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -230,7 +219,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -251,7 +240,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -274,7 +263,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -297,7 +286,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -318,7 +307,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -339,7 +328,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -362,7 +351,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -385,7 +374,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -406,7 +395,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -427,7 +416,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -450,7 +439,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 10 );
+				m_octree = OctreePtr( new Octree( 1, 10 ) );
 				m_octree->build( points );
 			}
 			
@@ -473,7 +462,7 @@ namespace model
 			{
 				PointVector points;
 				generatePoints( points );
-				m_octree = make_shared< Octree >( 1, 20 );
+				m_octree = OctreePtr( new Octree( 1, 20 ) );
 				m_octree->build( points );
 			}
 			
@@ -492,7 +481,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 10, g_appPath + "/Octree.db" );
+				m_octree = OctreePtr( new Octree( 1, 10, g_appPath + "/Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
 			}
 			
@@ -511,7 +500,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 20, g_appPath + "/Octree.db" );
+				m_octree = OctreePtr( new Octree( 1, 20, g_appPath + "/Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
 			}
 			
@@ -532,7 +521,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 10, g_appPath + "/Octree.db" );
+				m_octree = OctreePtr( new Octree( 1, 10, g_appPath + "/Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
 			}
 			
@@ -553,7 +542,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = make_shared< Octree >( 1, 20, g_appPath + "/Octree.db" );
+				m_octree = OctreePtr( new Octree( 1, 20, g_appPath + "/Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
 			}
 			
@@ -571,9 +560,9 @@ namespace model
 			vec3 leafSize = *octree.getLeafSize();
 		
 			float epsilon = 10.e-15f;
-			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) ) < epsilon ) ;
+			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) ) < epsilon );
 			ASSERT_TRUE( distance2( size, vec3(60.f, 46.f, 75.f) ) < epsilon );
-			ASSERT_TRUE( distance2( leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f ) ) < epsilon ) ;
+			ASSERT_TRUE( distance2( leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f ) ) < epsilon );
 		}
 		
 		template< typename Octree >
@@ -598,9 +587,9 @@ namespace model
 			stringstream ss;
 			ss << "0x" << hex << bits << dec;
 			SCOPED_TRACE( ss.str() );
-			auto code = make_shared< MortonCode >();
+			shared_ptr< MortonCode > code( new MortonCode( ) );
 			code->build( bits );
-			auto iter = hierarchy->find(code);
+			auto iter = hierarchy->find( code );
 			ASSERT_FALSE( iter == hierarchy->end() );
 			hierarchy->erase( iter );
 		}
@@ -750,20 +739,5 @@ namespace model
 		{
 			testHierarchy( *this->m_octree );
 		}
-		
-		// TODO Make these tests viable again ( typed tests cannot receive value parameters right now ).
-		/** Tests the ShallowOctree created hierarchy, reading from .ply file. */
-		/**TYPED_TEST( OctreeTest, ShallowHierarchyFromFile )
-		{
-			//See ShallowHierarchy for details.
-			auto octree = make_shared< ShallowOctree< float, vec3, TypeParam > >(1, 10);
-			
-			cout << "ShallowHierarchyFromFile filename: " << *( this->m_plyFileName ) << endl;
-			
-			octree->build( *( this->m_plyFileName ), PlyPointReader<float, vec3, TypeParam>::SINGLE,
-						   Attributes::COLORS );
-			
-			checkShallowHierarchy( octree );
-		}*/
 	}
 }

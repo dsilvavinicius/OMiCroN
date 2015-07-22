@@ -20,10 +20,10 @@ namespace model
 			Point p0( vec3( 1.f, 2.f, 3.f ), vec3( 4.f, 5.f, 6.f ) );
 			Point p1( vec3( 7.f, 8.f, 9.f ), vec3( 10.f, 11.f, 12.f ) );
 			PointVector points;
-			points.push_back( make_shared< Point >( p0 ) );
-			points.push_back( make_shared< Point >( p1 ) );
+			points.push_back( PointPtr( new Point( p0 ) ) );
+			points.push_back( PointPtr( new Point( p1 ) ) );
 			
-			ShallowLeafNodePtr< PointVector > node = make_shared< ShallowLeafNode< PointVector > >();
+			ShallowLeafNodePtr< PointVector > node( new ShallowLeafNode< PointVector >() );
 			node->setContents( points );
 			
 			float epsilon = 1.e-15f;

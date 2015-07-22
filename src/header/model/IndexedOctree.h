@@ -19,6 +19,7 @@ namespace model
 		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using LeafNode = model::LeafNode< MortonCode, IndexVector >;
+		using LeafNodePtr = shared_ptr< LeafNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using RandomSampleOctree = model::RandomSampleOctree< MortonCode, Point >;
 		
@@ -84,7 +85,7 @@ namespace model
 	template< typename MortonCode, typename Point >
 	inline void IndexedOctree< MortonCode, Point >::insertPointInLeaf( const PointPtr& point )
 	{
-		MortonCodePtr code = make_shared< MortonCode >( RandomSampleOctree::calcMorton( *point ) );
+		MortonCodePtr code( new MortonCode( RandomSampleOctree::calcMorton( *point ) ) );
 		typename OctreeMap::iterator genericLeafIt = RandomSampleOctree::m_hierarchy->find( code );
 		
 		unsigned long index = m_nPoints++;
@@ -94,7 +95,7 @@ namespace model
 			// Creates leaf node.
 			IndexVector indices;
 			indices.push_back( index );
-			auto leafNode = make_shared< LeafNode >();
+			LeafNodePtr leafNode( new LeafNode() );
 			leafNode->setContents( indices );
 			( *RandomSampleOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -137,7 +138,7 @@ namespace model
 			RandomSampleOctree::eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			auto mergedNode = make_shared< LeafNode >();
+			LeafNodePtr mergedNode( new LeafNode() );
 			mergedNode->setContents( childrenPoints );
 			
 			( *RandomSampleOctree::m_hierarchy )[ parentCode ] = mergedNode;
@@ -158,7 +159,7 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		auto node = make_shared< InnerNode< MortonCode, IndexVector > >();
+		InnerNodePtr< MortonCode, IndexVector > node( new InnerNode< MortonCode, IndexVector >() );
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		IndexVector selectedPoints( numSamplePoints );
 		

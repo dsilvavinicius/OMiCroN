@@ -193,7 +193,7 @@ namespace model
 	{
 		assert( m_bits > 1 );
 		T bits = m_bits >> 3;
-		MortonCodePtr<T> parentMorton = make_shared< MortonCode<T> >();
+		MortonCodePtr<T> parentMorton( new MortonCode<T>() );
 		parentMorton->build(bits);
 		return parentMorton;
 	}
@@ -214,7 +214,7 @@ namespace model
 		
 		for (int i = 0; i < 8; ++i)
 		{
-			MortonCodePtr<T> child = make_shared< MortonCode<T> >();
+			MortonCodePtr<T> child( new MortonCode<T>() );
 			child->build(shifted | i);
 			children[i] = child;
 		}
@@ -225,7 +225,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getFirstChild() const
 	{
-		MortonCodePtr< T > firstChild = make_shared< MortonCode >();
+		MortonCodePtr< T > firstChild( new MortonCode() );
 		firstChild->build( m_bits << 3 );
 		return firstChild;
 	}
@@ -233,7 +233,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getLastChild() const
 	{
-		MortonCodePtr< T > lastChild = make_shared< MortonCode >();
+		MortonCodePtr< T > lastChild( new MortonCode() );
 		lastChild->build( ( m_bits << 3 ) | ( T ) 0x7 );
 		return lastChild;
 	}
@@ -256,7 +256,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getPrevious() const
 	{
-		MortonCodePtr< T > prev = make_shared< MortonCode >();
+		MortonCodePtr< T > prev( new MortonCode() );
 		prev->build( m_bits - ( T )1 );
 		return prev;
 	}
@@ -264,7 +264,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getNext() const
 	{
-		MortonCodePtr< T > next = make_shared< MortonCode >();
+		MortonCodePtr< T > next( new MortonCode() );
 		next->build( m_bits + ( T )1 );
 		return next;
 	}

@@ -92,13 +92,13 @@ namespace model
 		
 		TEST_F(MortonCodeTest, Comparison)
 		{
-			auto morton0 = make_shared< ShallowMortonCode >();
+			ShallowMortonCodePtr morton0( new ShallowMortonCode() );
 			morton0->build( 1, 1, 1, 3 );
 			
-			auto morton1 = make_shared< ShallowMortonCode >();
+			ShallowMortonCodePtr morton1( new ShallowMortonCode() );
 			morton1->build( 1, 1, 1, 2 );
 			
-			auto morton2 = make_shared< ShallowMortonCode >();
+			ShallowMortonCodePtr morton2( new ShallowMortonCode() );
 			morton2->build( 1, 1, 1, 3 );
 			
 			ASSERT_TRUE(*morton0 != *morton1);

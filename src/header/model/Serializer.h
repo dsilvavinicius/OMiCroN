@@ -161,7 +161,7 @@ namespace model
 		for( int i = 0; i < count; ++i )
 		{
 			Point p( tempPtr0, tempPtr1 );
-			out.push_back( make_shared< Point >( p ) );
+			out.push_back( PointPtr( new Point( p ) ) );
 			swap( tempPtr0, tempPtr1 );
 		}
 	}
@@ -179,7 +179,7 @@ namespace model
 		for( int i = 0; i < count; ++i )
 		{
 			ExtendedPoint p( tempPtr0, tempPtr1 );
-			out.push_back( make_shared< ExtendedPoint >( p ) );
+			out.push_back( ExtendedPointPtr( new ExtendedPoint( p ) ) );
 			swap( tempPtr0, tempPtr1 );
 		}
 	}
