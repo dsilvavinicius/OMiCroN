@@ -33,6 +33,8 @@ namespace model
 			{
 				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
 			}
+			
+			Serializer::dispose( bytes );
 		}
 		
 		TEST_F( SerializerTest, ExtendedPointVector )
@@ -59,6 +61,7 @@ namespace model
 			{
 				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
 			}
+			Serializer::dispose( bytes );
 		}
 		
 		TEST_F( SerializerTest, LeafIndexNode )
@@ -78,6 +81,7 @@ namespace model
 			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
+			Serializer::dispose( bytes );
 			delete nodePtr;
 		}
 		
@@ -98,6 +102,7 @@ namespace model
 			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
+			Serializer::dispose( bytes );
 			delete nodePtr;
 		}
 		
@@ -126,6 +131,7 @@ namespace model
 				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
 			}
 			
+			Serializer::dispose( bytes );
 			delete node;
 			cout << "Before node deletion" << endl;
 			delete deserializedNode;
@@ -159,6 +165,7 @@ namespace model
 				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
 			}
 			
+			Serializer::dispose( bytes );
 			delete node;
 			delete deserializedNode;
 		}

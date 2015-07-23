@@ -37,6 +37,7 @@ namespace model
 			{
 				element = nullptr;
 			}
+			vector.clear();
 		}
 		
 		template< typename MortonCode, typename T >
@@ -48,6 +49,7 @@ namespace model
 			{
 				element = nullptr;
 			}
+			vector.clear();
 		}
 	};
 }

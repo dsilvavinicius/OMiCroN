@@ -23,7 +23,9 @@ public:
 	{
 		// The default manager allows this setup of allocations. This ammount of memory is enough for any currently
 		// executed test. In case a new test needs more, the values here must be changed.
-		MemoryManager::initInstance( 20709060u, 20709060u, 41418120u, 41418120u, 20709060u );
+		ulong nNodes = 500000u;
+		ulong nPoints = 2u * nNodes;
+		MemoryManager::initInstance( nNodes, nNodes, nPoints, nPoints, nNodes );
 	}
 };
 

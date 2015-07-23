@@ -27,10 +27,10 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 {
 	// Init MemoryManager allowing 6GB of data.
 	MemoryManager::initInstance( 0ul,
-								 1.5f * 1024ul * 1024ul * 1024ul / sizeof( MediumMortonCode ) /* 1.5GB for MediumMortonCodes */,
-								 3ul * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3GB for Points */,
+								 1ul * 1024ul * 1024ul * 1024ul / sizeof( MediumMortonCode ) /* 1GB for MediumMortonCodes */,
+								 2.5f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 2.5GB for Points */,
 							  0ul,
-							  1.5f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 1.5GB for Nodes */ );
+							  2.5f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 2.5GB for Nodes */ );
 	cout << "MemoryManager initialized: " << endl << MemoryManager::instance() << endl;
 	
 	Tucano::QtFreecameraWidget::initialize();

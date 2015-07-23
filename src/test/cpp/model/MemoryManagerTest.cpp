@@ -15,8 +15,8 @@ namespace model
 		
 		TEST_F( MemoryManagerTest, ShallowPointVectorLeafNodes )
 		{
-			uint nNodes = 20709060u;
-			uint nPoints = 2 * 20709060u;
+			uint nNodes = 500000u;
+			uint nPoints = 2u * nNodes;
 			
 			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), nNodes );
 			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), nNodes );
@@ -32,9 +32,9 @@ namespace model
 			
 			ShallowOctreeMap map;
 			
-			for( unsigned int i = 0u; i < 20709060u; ++i )
+			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				if( i == 0.5 * 20709060 )
+				if( i == 0.5 * nNodes )
 				{
 					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), 0.5 * nNodes );
 					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), nNodes );
@@ -89,8 +89,8 @@ namespace model
 		
 		TEST_F( MemoryManagerTest, MediumExtendedPointVectorInnerNodes )
 		{
-			uint nNodes = 20709060u;
-			uint nPoints = 2 * 20709060u;
+			uint nNodes = 500000u;
+			uint nPoints = 2u * nNodes;
 			
 			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), nNodes );
 			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), nNodes );
@@ -106,9 +106,9 @@ namespace model
 			
 			MediumOctreeMap map;
 			
-			for( unsigned int i = 0u; i < 20709060u; ++i )
+			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				if( i == 0.5 * 20709060 )
+				if( i == 0.5 * nNodes )
 				{
 					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::SHALLOW_MORTON ), nNodes );
 					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::MEDIUM_MORTON ), 0.5 * nNodes );
