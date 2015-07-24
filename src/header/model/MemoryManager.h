@@ -42,6 +42,9 @@ namespace model
 		/** Deallocates memory for a managed type. */
 		void deallocate( const MEMORY_POOL_TYPE& type, void* p );
 		
+		/** Returns the number of blocks for a given managed type. */
+		uint numBlocks( const MEMORY_POOL_TYPE& type ) const;
+		
 		/** Gets the number of yet available memory blocks of a managed type. */
 		uint freeBlocks( const MEMORY_POOL_TYPE& type ) const;
 		
@@ -86,12 +89,19 @@ namespace model
 
 	inline void* MemoryManager::allocate( const MEMORY_POOL_TYPE& type )
 	{
+		//cout << "Alloc " << type << endl << m_pools[ type ] << endl;
 		return m_pools[ type ].allocate();
 	}
 	
 	inline void MemoryManager::deallocate( const MEMORY_POOL_TYPE& type, void* p )
 	{
+		//cout << "Dealloc " << type << endl << m_pools[ type ] << endl;
 		m_pools[ type ].deAllocate( p );
+	}
+	
+	inline uint MemoryManager::numBlocks( const MEMORY_POOL_TYPE& type ) const
+	{
+		return m_pools[ type ].getNumBlocks();
 	}
 	
 	inline uint MemoryManager::freeBlocks( const MEMORY_POOL_TYPE& type ) const

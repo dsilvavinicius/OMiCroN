@@ -41,14 +41,13 @@ namespace model
 		
 		void createPool( size_t sizeOfEachBlock, uint numOfBlocks )
 		{
-			m_numOfBlocks = numOfBlocks;
-			m_sizeOfEachBlock = sizeOfEachBlock;
-			
 			if( m_memStart )
 			{
 				destroyPool();
 			}
 			
+			m_numOfBlocks = numOfBlocks;
+			m_sizeOfEachBlock = sizeOfEachBlock;
 			m_memStart = new uchar[ m_sizeOfEachBlock * m_numOfBlocks ];
 			m_numFreeBlocks = numOfBlocks;
 			m_next = m_memStart;
@@ -103,7 +102,6 @@ namespace model
 		
 		float getFreeBlockPercentage() const
 		{
-			//cout << "free: " << m_numFreeBlocks << ", blocks: " << m_numOfBlocks << endl;
 			return  ( float ) m_numFreeBlocks / ( float ) m_numOfBlocks;
 		}
 		
@@ -112,9 +110,32 @@ namespace model
 			return m_numOfBlocks;
 		}
 		
+		friend ostream& operator<<( ostream& out, const MemoryPool& pool )
+		{
+			out << "num blocks: " << pool.m_numOfBlocks << endl
+				<< "block size: " << pool.m_sizeOfEachBlock << endl
+				<< "free: " << pool.m_numFreeBlocks << endl
+				<< "initialized: " << pool.m_numInitialized << endl
+				<< "mem start: 0x" << hex << ( uint* ) pool.m_memStart << dec << endl
+				<< "next: 0x" << hex << ( uint* ) pool.m_next << dec << endl;
+			
+			if( pool.m_next )
+			{
+				out << "next index: " << *( ( uint* ) pool.m_next ) << endl;
+			}
+			
+			return out;
+		}
+		
 	private:
 		void destroyPool()
 		{
+			m_numOfBlocks = 0;
+			m_sizeOfEachBlock = 0;
+			m_numFreeBlocks = 0;
+			m_numInitialized = 0;
+			m_next = 0;
+			
 			lock_guard< mutex > guard( poolLock );
 			delete[] m_memStart;
 			m_memStart = NULL;

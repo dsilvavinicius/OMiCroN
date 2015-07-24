@@ -32,7 +32,43 @@ namespace model
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 	public:
-		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename );
+		/** Encapsulates memory management setup parameters. */
+		struct MemorySetup
+		{
+			MemorySetup( const float& freeMemPercentThreshToStartRelease, const float& freeMemPercentThreshAfterRelease,
+						 const uint& nNodesCreatedUntilPersistence, const uint& nSiblingGroupsPerLoad,
+				const uint& maxNodeRequestsPerFrame )
+			{
+				if( freeMemPercentThreshToStartRelease <= 0.f || freeMemPercentThreshToStartRelease >= 1.f )
+				{
+					throw logic_error( "MemorySetup expects 0.f < freeMemPercentThreshToStartRelease < 1.f" );
+				}
+				if( freeMemPercentThreshAfterRelease <= 0.f || freeMemPercentThreshAfterRelease >= 1.f )
+				{
+					throw logic_error( "MemorySetup expects 0.f < freeMemPercentThreshAfterRelease < 1.f" );
+				}
+				if( freeMemPercentThreshAfterRelease < freeMemPercentThreshToStartRelease )
+				{
+					throw logic_error( "MemorySetup expects freeMemPercentThreshToStartRelease < "
+										"freeMemPercentThreshAfterRelease < 1.f" );
+				}
+				
+				m_freeMemPercentThreshToStartRelease = freeMemPercentThreshToStartRelease;
+				m_freeMemPercentThreshAfterRelease = freeMemPercentThreshAfterRelease;
+				m_nNodesCreatedUntilPersistence = nNodesCreatedUntilPersistence;
+				m_nSiblingGroupsPerLoad = nSiblingGroupsPerLoad;
+				m_maxNodeRequestsPerFrame = maxNodeRequestsPerFrame;
+			}
+			
+			float m_freeMemPercentThreshToStartRelease; // Memory percentage threshold that triggers node release routine.
+			float m_freeMemPercentThreshAfterRelease; // Memory percentage threshold that triggers node release routine end.
+			uint m_nNodesCreatedUntilPersistence; // Number of created nodes until persistence routine is triggered.
+			uint m_nSiblingGroupsPerLoad; // Number of sibling groups loaded per node loading iteration.
+			uint m_maxNodeRequestsPerFrame; // Maximum number of node requests per frame in traversal.
+		};
+		
+		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename,
+						 const MemorySetup& memSetup = MemorySetup( 0.1f, 0.2f, 200, 100, 100 ) );
 		
 		/** Builds octree using the database. */
 		virtual void build();
@@ -130,47 +166,20 @@ namespace model
 		 * in database before released. */
 		MortonCodePtr m_lastDirty;
 		
-		unsigned long m_nodesUntilLastPersistence; 
+		unsigned long m_nodesUntilLastPersistence;
 		
-		static unsigned int M_NODES_PER_PERSISTENCE_ITERATION;
-		
-		/** Number of sibling groups loaded from database at hierarchy creation. */
-		static unsigned int M_SIBLING_GROUPS_PER_LOAD;
-		
-		// End of octree creation related data.
-		
-		static float M_MIN_FREE_MEMORY_TO_RELEASE;
-		static float M_MIN_FREE_MEMORY_AFTER_RELEASE;
-		static unsigned int M_NODE_REQUESTS_PER_FRAME;
+		MemorySetup m_memSetup;
 	};
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	float OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_TO_RELEASE = 0.1; // 10% of total allocated memory.
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	float OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_MIN_FREE_MEMORY_AFTER_RELEASE = 0.2; // 20% of total allocated memory.
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_NODES_PER_PERSISTENCE_ITERATION = 200;
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_SIBLING_GROUPS_PER_LOAD = 100;
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	unsigned int OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::M_NODE_REQUESTS_PER_FRAME = 100;
-	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
-	::OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename )
+	::OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename,
+					   const MemorySetup& memSetup )
 	: ParentOctree( maxPointsPerNode, maxLevel ),
 	m_nodesUntilLastPersistence( 0uL ),
 	m_sqLite( dbFilename ),
-	m_lastDirty( new MortonCode( MortonCode::getLvlLast( maxLevel ) ) )
+	m_lastDirty( new MortonCode( MortonCode::getLvlLast( maxLevel ) ) ),
+	m_memSetup( memSetup )
 	{}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -221,6 +230,7 @@ namespace model
 		*reader = PlyPointReader(
 			[ & ]( const Point& point )
 			{
+				//cout << "Creating new point to insert in leaf." << endl;
 				insertPointInLeaf( PointPtr( new Point( point ) ) );
 			}
 		);
@@ -268,21 +278,26 @@ namespace model
 			points.push_back( point );
 		}
 		
-		if( m_nodesUntilLastPersistence > M_NODES_PER_PERSISTENCE_ITERATION )
+		if( m_nodesUntilLastPersistence > m_memSetup.m_nNodesCreatedUntilPersistence )
 		{
 			persistAndReleaseLeaves();
 		}
+		
+		//cout << "insertPointInLeaf end" << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline OctreeNodePtr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::getNode( const MortonCodePtr& code )
 	{
+		//cout << "getNode begins" << endl;
+		
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::iterator nodeIt = hierarchy->find( code );
 		
 		if( nodeIt != hierarchy->end() )
 		{
+			//cout << "getNode ends. found in hierarchy." << endl;
 			return nodeIt->second;
 		}
 		else
@@ -291,11 +306,13 @@ namespace model
 			( *hierarchy )[ code ] = node;
 			if( node )
 			{
+				//cout << "getNode ends. found in db." << endl;
 				++m_nodesUntilLastPersistence;
 				return node;
 			}
 			else
 			{
+				//cout << "getNode ends. not found." << endl;
 				return nullptr;
 			}
 		}
@@ -344,16 +361,13 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
 	{
 		MemoryManager& memManager = MemoryManager::instance();
-		if( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
+		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
-			cout << "==== Leaf persistence triggered ====" << endl
-				 << "Nodes per persistence iteration: " << M_NODES_PER_PERSISTENCE_ITERATION << endl
-				 << "Expected free memory after release: " << M_MIN_FREE_MEMORY_AFTER_RELEASE << endl
-				 << memManager << endl;
+			cout << "==== Leaf persistence triggered ====" << endl << memManager << endl;
 			
 			m_nodesUntilLastPersistence = 0;
 			
-			while( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
+			while( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshAfterRelease ) )
 			{
 				OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 				typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
@@ -361,7 +375,7 @@ namespace model
 				m_sqLite.beginTransaction();
 				
 				int i = 0;
-				while( i < M_NODES_PER_PERSISTENCE_ITERATION )
+				while( i < m_memSetup.m_nNodesCreatedUntilPersistence )
 				{
 					MortonCodePtr code = nodeIt->first;
 					OctreeNodePtr node = nodeIt->second;
@@ -410,16 +424,18 @@ namespace model
 		
 		m_sqLite.endTransaction();
 		
-		cout << "Querying leaves" << endl;
+		cout << "==== Querying leaves ====" << endl;
 		
 		// Since leaf creation is unsorted by nature, some sibling groups must be loaded from database to ensure no
 		// "holes" in the in-memory sibling groups.
 		SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastDirty );
 		
+		cout << "==== Clearing up hierarchy ====" << endl;
+		
 		// Clears the hierarchy to eliminate possible sibling groups with holes.
 		hierarchy->clear();
 		
-		cout << "Loading sibling groups" << endl;
+		cout << "==== Loading sibling groups ====" << endl;
 		
 		// Loads a few sibling groups in order to start bottom-up construction.
 		loadSiblingGroups( query );
@@ -466,7 +482,7 @@ namespace model
 		MortonCodePtr currentCode = nullptr;
 		MemoryManager& memManager = MemoryManager::instance();
 		
-		if( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
+		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
 			cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl;
 			
@@ -474,7 +490,7 @@ namespace model
 			
 			currentCode = nodeIt->first;
 			
-			while( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ) )
+			while( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshAfterRelease ) )
 			{
 				MortonCodePtr parentCode = currentCode->traverseUp();
 				
@@ -514,14 +530,14 @@ namespace model
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodesAtFrontTracking()
 	{
 		MemoryManager& memManager = MemoryManager::instance();
-		if( !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_TO_RELEASE ) )
+		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
 			cout << "====== releaseNodesAtFrontTracking:Node release triggered ======" << endl;
 			
 			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 			
 			for( auto it = hierarchy->begin();
-				it != hierarchy->end() && !memManager.hasEnoughMemory( M_MIN_FREE_MEMORY_AFTER_RELEASE ); )
+				it != hierarchy->end() && !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshAfterRelease ); )
 			{
 				if( !ParentOctree::m_frontBehavior->contains( *it->first ) )
 				{
@@ -654,7 +670,7 @@ namespace model
 		MortonCodePtr parentCode = currentCode->traverseUp();
 		
 		int nLoadedSiblingGroups = 0;
-		for( int i = 0; i < M_SIBLING_GROUPS_PER_LOAD; ++i )
+		for( int i = 0; i < m_memSetup.m_nSiblingGroupsPerLoad; ++i )
 		{
 			while( currentCode->isChildOf( *parentCode ) )
 			{
@@ -725,7 +741,7 @@ namespace model
 		releaseNodesAtFrontTracking();
 		
 		// Add requested nodes to hierarchy.
-		vector< IdNodeVector > queries = m_sqLite.getRequestResults( M_NODE_REQUESTS_PER_FRAME );
+		vector< IdNodeVector > queries = m_sqLite.getRequestResults( m_memSetup.m_maxNodeRequestsPerFrame );
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
 		for( IdNodeVector query : queries )
