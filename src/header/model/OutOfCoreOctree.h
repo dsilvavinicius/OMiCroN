@@ -252,6 +252,7 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
+		//cout << "Creating code to query node to insert point." << endl;
 		MortonCodePtr code( new MortonCode( ParentOctree::calcMorton( *point ) ) );
 		
 		OctreeNodePtr node = getNode( code );
@@ -665,6 +666,7 @@ namespace model
 			return nullptr;
 		}
 		
+		//cout << "Creating code to save the first loaded code" << endl;
 		MortonCodePtr firstLoadedCode( new MortonCode( *idNode.first ) );
 		MortonCodePtr currentCode( idNode.first );
 		MortonCodePtr parentCode = currentCode->traverseUp();

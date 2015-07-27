@@ -14,11 +14,11 @@ namespace model
 	public:
 		enum MEMORY_POOL_TYPE
 		{
-			SHALLOW_MORTON,	// 4 bytes block.
-			MEDIUM_MORTON,	// 8 bytes block.
-			POINT,			// 24 bytes block.
-			EXTENDED_POINT,	// 36 bytes block.
-			NODE,			// 32 bytes block.
+			FOUR_BYTES,			// 4 bytes block.
+			EIGHT_BYTES,		// 8 bytes block.
+			TWENTY_FOUR_BYTES,	// 24 bytes block.
+			THIRTY_TWO,			// 32 bytes block.
+			THIRTY_SIX,			// 36 bytes block.
 			COUNT
 		};
 		
@@ -118,7 +118,7 @@ namespace model
 	{
 		bool hasMemory = true;
 		
-		for( int memPoolType = SHALLOW_MORTON; memPoolType < COUNT; ++memPoolType )
+		for( int memPoolType = FOUR_BYTES; memPoolType < COUNT; ++memPoolType )
 		{
 			if( m_pools[ memPoolType ].getNumBlocks() )
 			{
@@ -134,37 +134,22 @@ namespace model
 	
 	inline ostream& operator<<( ostream& out, const MemoryManager& manager )
 	{
-		out << "Free nodes: " << manager.freeBlocksPercentage( MemoryManager::NODE ) << endl
-			<< "Free shallow codes: " << manager.freeBlocksPercentage( MemoryManager::SHALLOW_MORTON ) << endl
-			<< "Free medium codes: " << manager.freeBlocksPercentage( MemoryManager::MEDIUM_MORTON ) << endl
-			<< "Free points: " << manager.freeBlocksPercentage( MemoryManager::POINT ) << endl
-			<< "Free extended points: " << manager.freeBlocksPercentage( MemoryManager::EXTENDED_POINT ) << endl;
+		out << "Free 4 blocks: " << manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ) << endl
+			<< "Free 8 blocks: " << manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ) << endl
+			<< "Free 24 blocks: " << manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ) << endl
+			<< "Free 32 blocks: " << manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ) << endl
+			<< "Free 36 blocks: " << manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ) << endl;
 		return out;
 	}
 	
 	inline void MemoryManager::init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
 									 const ulong& nExtendedPoints, const ulong& nNodes )
 	{
-		if( nShallowMorton )
-		{
-			m_pools[ SHALLOW_MORTON ].createPool( SIZES[ SHALLOW_MORTON ], nShallowMorton );
-		}
-		if( nMediumMorton )
-		{
-			m_pools[ MEDIUM_MORTON ].createPool( SIZES[ MEDIUM_MORTON ], nMediumMorton );
-		}
-		if( nPoints )
-		{
-			m_pools[ POINT ].createPool( SIZES[ POINT ], nPoints );
-		}
-		if( nExtendedPoints )
-		{
-			m_pools[ EXTENDED_POINT ].createPool( SIZES[ EXTENDED_POINT ], nExtendedPoints );
-		}
-		if( nNodes )
-		{
-			m_pools[ NODE ].createPool( SIZES[ NODE ], nNodes );
-		}
+		m_pools[ FOUR_BYTES ].createPool( SIZES[ FOUR_BYTES ], nShallowMorton );
+		m_pools[ EIGHT_BYTES ].createPool( SIZES[ EIGHT_BYTES ], nMediumMorton );
+		m_pools[ TWENTY_FOUR_BYTES ].createPool( SIZES[ TWENTY_FOUR_BYTES ], nPoints );
+		m_pools[ THIRTY_TWO ].createPool( SIZES[ THIRTY_TWO ], nNodes );
+		m_pools[ THIRTY_SIX ].createPool( SIZES[ THIRTY_SIX ], nExtendedPoints );
 	}
 }
 

@@ -4,8 +4,7 @@
 
 namespace model
 {
-	uint MemoryManager::SIZES[] = { sizeof( ShallowMortonCode ), sizeof( MediumMortonCode ), sizeof( Point ),
-									sizeof( ExtendedPoint ), sizeof( ShallowLeafNode< PointVector > ) };
+	uint MemoryManager::SIZES[] = { 4, 8, 24, 32, 36 };
 	
 	MemoryManager MemoryManager::m_instance;
 }

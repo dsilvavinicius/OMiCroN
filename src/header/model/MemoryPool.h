@@ -41,16 +41,21 @@ namespace model
 		
 		void createPool( size_t sizeOfEachBlock, uint numOfBlocks )
 		{
-			if( m_memStart )
+			if( sizeOfEachBlock <= 0 )
 			{
-				destroyPool();
+				throw logic_error( "Cannot create a MemoryPool with size of block <= 0." );
 			}
 			
-			m_numOfBlocks = numOfBlocks;
-			m_sizeOfEachBlock = sizeOfEachBlock;
-			m_memStart = new uchar[ m_sizeOfEachBlock * m_numOfBlocks ];
-			m_numFreeBlocks = numOfBlocks;
-			m_next = m_memStart;
+			destroyPool();
+			
+			if( numOfBlocks > 0 )
+			{
+				m_numOfBlocks = numOfBlocks;
+				m_sizeOfEachBlock = sizeOfEachBlock;
+				m_memStart = new uchar[ m_sizeOfEachBlock * m_numOfBlocks ];
+				m_numFreeBlocks = numOfBlocks;
+				m_next = m_memStart;
+			}
 		}
 		
 		void* allocate()
@@ -130,15 +135,19 @@ namespace model
 	private:
 		void destroyPool()
 		{
+			lock_guard< mutex > guard( poolLock );
+			
 			m_numOfBlocks = 0;
 			m_sizeOfEachBlock = 0;
 			m_numFreeBlocks = 0;
 			m_numInitialized = 0;
 			m_next = 0;
 			
-			lock_guard< mutex > guard( poolLock );
-			delete[] m_memStart;
-			m_memStart = NULL;
+			if( m_memStart != NULL )
+			{
+				delete[] m_memStart;
+				m_memStart = NULL;
+			}
 		}
 		
 		uchar* addrFromIndex( uint i ) const

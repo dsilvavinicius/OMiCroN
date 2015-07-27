@@ -36,7 +36,7 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void* LeafNode< MortonCode, Contents >::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( MemoryManager::NODE );
+		return MemoryManager::instance().allocate( MemoryManager::THIRTY_TWO );
 	}
 	
 	template< typename MortonCode, typename Contents >
@@ -48,7 +48,7 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void LeafNode< MortonCode, Contents >::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( MemoryManager::NODE, p );
+		MemoryManager::instance().deallocate( MemoryManager::THIRTY_TWO, p );
 	}
 	
 	template< typename MortonCode, typename Contents >
