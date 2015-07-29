@@ -75,6 +75,8 @@ namespace model
 
 		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
 		{
+			cout << "Merging child into new Leaf." << endl;
+			
 			// All children are leaves, but they have less points than the threshold and must be merged.
 			auto tempIt = firstChildIt;
 			advance( firstChildIt, numChildren );
@@ -89,6 +91,8 @@ namespace model
 		}
 		else
 		{
+			cout << "Creating Inner LOD." << endl;
+			
 			// No merge or absorption is needed. Just does LOD.
 			advance( firstChildIt, numChildren );
 			
@@ -140,6 +144,8 @@ namespace model
 	inline void RandomSampleOctree< MortonCode, Point >::eraseNodes( const typename OctreeMap::iterator& first,
 																	 const typename OctreeMap::iterator& last )
 	{
+		cout << "RandomSampleOctree::eraseNodes" << endl;
+		
 		Octree::eraseNodes( first, last );
 	}
 	

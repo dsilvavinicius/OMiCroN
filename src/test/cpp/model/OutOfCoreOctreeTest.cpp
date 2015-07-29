@@ -41,7 +41,7 @@ namespace model
 		// Checks if octree creation is correctly using the MemoryManager.
 		TEST_F( OutOfCoreOctreeTest, Creation )
 		{
-			MemoryManager::initInstance( 20, 0, 20, 0, 20 );
+			MemoryManager::initInstance( 10, 0, 20, 0, 10 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
 										   ShallowOutOfCoreOctree::MemorySetup( 0.21f, 0.39f, 1, 1, 1 ) );

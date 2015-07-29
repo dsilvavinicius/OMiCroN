@@ -48,6 +48,7 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void LeafNode< MortonCode, Contents >::operator delete( void* p )
 	{
+		cout << "Deleting leaf" << endl;
 		MemoryManager::instance().deallocate( MemoryManager::THIRTY_TWO, p );
 	}
 	
@@ -60,6 +61,7 @@ namespace model
 	template < typename MortonCode, typename Contents >
 	inline LeafNode< MortonCode, Contents >::~LeafNode()
 	{
+		cout << "Destructing leaf" << endl;
 		NodeReleaser::releaseLeaf( *this );
 	}
 	
