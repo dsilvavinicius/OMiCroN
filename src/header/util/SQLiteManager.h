@@ -73,6 +73,10 @@ namespace util
 		template< typename NodeContents >
 		vector< OctreeNodePtr > getNodes( const MortonCode& a, const MortonCode& b );
 		
+		/** Returns all nodes in database. */
+		template< typename NodeContents >
+		IdNodeVector getIdNodes();
+		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param NodeContents is the type of the contents of the node.
 		 *	@param a is the minor boundary of the morton code closed interval.
@@ -80,6 +84,10 @@ namespace util
 		 *	@returns pairs of acquired nodes and morton id. The ownership of the node pointers is caller's. */
 		template< typename NodeContents >
 		IdNodeVector getIdNodes( const MortonCode& a, const MortonCode& b );
+		
+		/** Returns a query for all nodes in database. Appropriate for big queries. */
+		template< typename NodeContents >
+		SQLiteQuery getIdNodesQuery();
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b]. This version returns
 		 * a query for stepping and should be used for probable big queries or to avoid the performance penalty of
@@ -104,6 +112,9 @@ namespace util
 		 * @param maxResults maximum number of results to be returned.
 		 * @returns a vector which each entry represents the results of one async request. */
 		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults );
+		
+		template< typename P, typename M, typename O  >
+		friend ostream& operator<<( ostream& out, const SQLiteManager< P, M, O >& sqLite );
 		
 	private:
 		/** Release all acquired resources. */
@@ -143,6 +154,10 @@ namespace util
 		/** Resets a prepared sqlite3_stmt. */
 		void safeReset( sqlite3_stmt* statement );
 		
+		/** Method used to step IdNode queries. */
+		template< typename NodeContents >
+		bool stepIdNodeQuery( IdNode* queried, sqlite3_stmt* stmt );
+		
 		sqlite3* m_db;
 		
 		sqlite3_stmt* m_pointInsertion;
@@ -151,6 +166,7 @@ namespace util
 		sqlite3_stmt* m_nodeInsertion;
 		sqlite3_stmt* m_nodeQuery;
 		sqlite3_stmt* m_nodeIntervalQuery;
+		sqlite3_stmt* m_allIdNodesQuery;
 		sqlite3_stmt* m_nodeIntervalIdQuery;
 		sqlite3_stmt* m_nodeIntervalDeletion;
 		sqlite3_stmt* m_beginTransaction;
@@ -192,6 +208,7 @@ namespace util
 	m_nodeInsertion( nullptr ),
 	m_nodeQuery( nullptr ),
 	m_nodeIntervalQuery( nullptr ),
+	m_allIdNodesQuery( nullptr ),
 	m_nodeIntervalIdQuery( nullptr ),
 	m_nodeIntervalDeletion( nullptr ),
 	m_beginTransaction( nullptr ),
@@ -351,10 +368,9 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
 	IdNodeVector< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >
-	::getIdNodes( const MortonCode& a, const MortonCode& b )
+	::getIdNodes()
 	{
-		SQLiteQuery query = getIdNodesQuery< NodeContents >( a, b );
-		
+		SQLiteQuery query = getIdNodesQuery< NodeContents >();
 		IdNodeVector queried;
 		
 		IdNode idNode;
@@ -364,6 +380,39 @@ namespace util
 		}
 		
 		return queried;
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	template< typename NodeContents >
+	IdNodeVector< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >
+	::getIdNodes( const MortonCode& a, const MortonCode& b )
+	{
+		SQLiteQuery query = getIdNodesQuery< NodeContents >( a, b );
+		IdNodeVector queried;
+		
+		IdNode idNode;
+		while( query.step( &idNode ) )
+		{
+			queried.push_back( idNode );
+		}
+		
+		return queried;
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	template< typename NodeContents >
+	SQLiteQuery< IdNode< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
+	::getIdNodesQuery()
+	{
+		SQLiteQuery query(
+			[ & ] ( IdNode* queried )
+			{
+				return stepIdNodeQuery< NodeContents >( queried, m_allIdNodesQuery );
+			},
+			[ & ] () { safeReset( m_allIdNodesQuery ); }
+		);
+		
+		return query;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -379,26 +428,8 @@ namespace util
 		SQLiteQuery query(
 			[ & ] ( IdNode* queried )
 			{
-				bool rowIsFound = safeStep( m_nodeIntervalIdQuery );
-				if( rowIsFound )
-				{
-					sqlite3_int64 mortonBits = sqlite3_column_int64( m_nodeIntervalIdQuery, 0 );
-					MortonCodePtr code( new MortonCode() );
-					code->build( mortonBits );
-					
-					byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalIdQuery, 1 );
-					OctreeNodePtr node( OctreeNode:: template deserialize< NodeContents >( blob ) );
-					
-					*queried = IdNode( code, node );
-				}
-				else
-				{
-					*queried = IdNode( nullptr, nullptr );
-				}
-				
-				return rowIsFound;
-			}
-			,
+				return stepIdNodeQuery< NodeContents >( queried, m_nodeIntervalIdQuery );
+			},
 			[ & ] () { safeReset( m_nodeIntervalIdQuery ); }
 		);
 		
@@ -438,6 +469,17 @@ namespace util
 		}
 		
 		return results;
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	ostream& operator<<( ostream& out, const SQLiteManager< Point, MortonCode, OctreeNode >& sqLite )
+	{
+		IdNodeVector< MortonCode > nodes = sqLite.getIdNodes();
+		cout << "Nodes in DB: " << endl;
+		for( IdNode< MortonCode > node : nodes )
+		{
+			cout << *node.first << endl;
+		}
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -488,6 +530,7 @@ namespace util
 		safePrepare( "SELECT Point FROM Points WHERE Id = ?;", &m_pointQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton = ?;", &m_nodeQuery );
 		safePrepare( "SELECT Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalQuery );
+		safePrepare( "SELECT * FROM Nodes;", &m_allIdNodesQuery );
 		safePrepare( "SELECT Morton, Node FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalIdQuery );
 		safePrepare( "DELETE FROM Nodes WHERE Morton BETWEEN ? AND ?;", &m_nodeIntervalDeletion );
 		safePrepare( "BEGIN TRANSACTION", &m_beginTransaction );
@@ -508,6 +551,7 @@ namespace util
 		unsafeFinalize( m_nodeInsertion );
 		unsafeFinalize( m_nodeQuery );
 		unsafeFinalize( m_nodeIntervalQuery );
+		unsafeFinalize( m_allIdNodesQuery );
 		unsafeFinalize( m_nodeIntervalIdQuery );
 		unsafeFinalize( m_nodeIntervalDeletion );
 		unsafeFinalize( m_beginTransaction );
@@ -586,6 +630,30 @@ namespace util
 	inline void SQLiteManager< Point, MortonCode, OctreeNode >::safeReset( sqlite3_stmt* statement )
 	{
 		checkReturnCode( sqlite3_reset( statement ), SQLITE_OK );
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	template< typename NodeContents >
+	bool SQLiteManager< Point, MortonCode, OctreeNode >::stepIdNodeQuery( IdNode* queried, sqlite3_stmt* stmt )
+	{
+		bool rowIsFound = safeStep( stmt );
+		if( rowIsFound )
+		{
+			sqlite3_int64 mortonBits = sqlite3_column_int64( stmt, 0 );
+			MortonCodePtr code( new MortonCode() );
+			code->build( mortonBits );
+			
+			byte* blob = ( byte* ) sqlite3_column_blob( stmt, 1 );
+			OctreeNodePtr node( OctreeNode:: template deserialize< NodeContents >( blob ) );
+			
+			*queried = IdNode( code, node );
+		}
+		else
+		{
+			*queried = IdNode( nullptr, nullptr );
+		}
+		
+		return rowIsFound;
 	}
 }
 

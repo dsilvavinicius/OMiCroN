@@ -14,7 +14,7 @@ add_subdirectory (gtest/)
 add_executable (Tests
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
 	
-	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/HierarchyTestMethods.cpp
 	${CPP_DIR}/${MODEL_DIR}/MemoryManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrustumTest.cpp
@@ -26,6 +26,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
 	
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp

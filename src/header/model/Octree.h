@@ -604,14 +604,14 @@ namespace model
 			if ( genericNode->isLeaf() )
 			{
 				out << "Node: {" << endl << *code << "," << endl;
-				operator<< < unsigned long long, PointVector >( out, *genericNode );
+				genericNode-> template output< PointVector >( out );
 				out << endl << "}" << endl << endl;
 			}
 			else
 			{
 				out << "Node: {" << endl << *code << "," << endl;
-				operator<< < unsigned long long, Point >( out, *genericNode );
-				out << "}" << endl;
+				genericNode-> template output< shared_ptr< Point > >( out );
+				out << endl << "}" << endl;
 			}
 			
 		}

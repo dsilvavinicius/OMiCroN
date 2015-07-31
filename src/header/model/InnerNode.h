@@ -29,8 +29,7 @@ namespace model
 		Contents& getContents();
 		const Contents& getContents() const;
 		
-		template< typename M, typename C >
-		friend ostream& operator<<( ostream& out, const InnerNode< M, C >& node );
+		ostream& output( ostream& out );
 		
 	private:
 		Contents m_contents;
@@ -91,9 +90,9 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Contents >
-	ostream& operator<<( ostream& out, const InnerNode< MortonCode, Contents >& node )
+	ostream& InnerNode< MortonCode, Contents >::output( ostream& out )
 	{
-		out << "Inner Node: " << endl << *node.getContents();
+		out << "Inner Node: " << endl << getContents();
 		return out;
 	}
 	

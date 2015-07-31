@@ -41,8 +41,9 @@ namespace model
 		template< typename Contents >
 		const Contents& getContents() const;
 		
-		template< typename M, typename C >
-		friend ostream& operator<<( ostream& out, OctreeNode< M >& node );
+		/** Does the same as operator<< (however the compiler has bugs regarding template operator<< and is avoided here) */
+		template< typename Contents >
+		ostream& output( ostream& out );
 		
 		/** Serializes the node. The form is:
 		 *	bool flag true if the node is leaf, false otherwise;
@@ -110,18 +111,19 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Contents >
-	ostream& operator<<( ostream& out, OctreeNode< MortonCode >& node )
+	template< typename MortonCode >
+	template< typename Contents >
+	ostream& OctreeNode< MortonCode >::output( ostream& out )
 	{
-		if( node.isLeaf() )
+		if( isLeaf() )
 		{
-			auto* leaf = reinterpret_cast< LeafNode< MortonCode, Contents >* >( &node );
-			out << *leaf;
+			auto* leaf = reinterpret_cast< LeafNode< MortonCode, Contents >* >( this );
+			leaf->output( out );
 		}
 		else
 		{
-			auto* inner = reinterpret_cast< InnerNode< MortonCode, Contents >* >( &node );
-			out << *inner;
+			auto* inner = reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
+			inner->output( out );
 		}
 		
 		return out;

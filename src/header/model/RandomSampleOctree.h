@@ -158,9 +158,9 @@ namespace model
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		
 		out << endl << "=========== Begin Octree ============" << endl << endl
-			<< "origin: " << glm::to_string(*octree.m_origin) << endl
-			<< "size: " << glm::to_string(*octree.m_size) << endl
-			<< "leaf size: " << glm::to_string(*octree.m_leafSize) << endl
+			<< "origin: " << glm::to_string( *octree.m_origin ) << endl
+			<< "size: " << glm::to_string( *octree.m_size ) << endl
+			<< "leaf size: " << glm::to_string( *octree.m_leafSize ) << endl
 			<< "max points per node: " << octree.m_maxPointsPerNode << endl << endl;
 		
 		/** Maximum level of this octree. */
@@ -172,7 +172,7 @@ namespace model
 			OctreeNodePtr genericNode = nodeIt->second;
 			
 			out << "Node: {" << endl << *code << "," << endl;
-			operator<< < MortonCode, PointVector >( out, *genericNode );
+			genericNode-> template output< PointVector >( out );
 			out << endl << "}" << endl << endl;
 		}
 		out << "=========== End Octree ============" << endl << endl;
