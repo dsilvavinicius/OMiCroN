@@ -48,11 +48,9 @@ namespace model
 		template< typename MortonCode >
 		void checkNode( OctreeMapPtr< MortonCode > hierarchy, const unsigned long long& bits )
 		{
-			stringstream ss;
-			ss << "0x" << hex << bits << dec;
-			SCOPED_TRACE( ss.str() );
 			shared_ptr< MortonCode > code( new MortonCode( ) );
 			code->build( bits );
+			SCOPED_TRACE( code->getPathToRoot( true ) );
 			auto iter = hierarchy->find( code );
 			ASSERT_FALSE( iter == hierarchy->end() );
 			hierarchy->erase( iter );

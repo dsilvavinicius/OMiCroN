@@ -52,16 +52,14 @@ namespace model
 			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
 			SQLiteManager< Point, ShallowMortonCode, ShallowOctreeNode >& sqLite = octree.getSQLiteManager();
 			
-			ShallowMortonCode a; a.build( 0x1 );
-			ShallowMortonCode b = ShallowMortonCode::getLvlLast( 10 );
+			cout << "DB after octree creation: " << endl;
+			sqLite.output< PointVector >( cout );
+			cout << endl;
 			
 			ShallowIdNodeVector nodes = sqLite.getIdNodes< PointVector >();
 			
-			cout << "Nodes in db: " << nodes.size() << endl;
-			
 			for( ShallowIdNode node : nodes )
 			{
-				cout << *node.first << endl;
 				( *hierarchy )[ node.first ] = node.second;
 			}
 			

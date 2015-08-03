@@ -75,7 +75,7 @@ namespace model
 
 		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
 		{
-			cout << "Merging child into new Leaf." << endl;
+			cout << "Merging child into " << endl << parentCode->getPathToRoot( true ) << endl;
 			
 			// All children are leaves, but they have less points than the threshold and must be merged.
 			auto tempIt = firstChildIt;
@@ -91,7 +91,7 @@ namespace model
 		}
 		else
 		{
-			cout << "Creating Inner LOD." << endl;
+			cout << "Creating LOD" << endl << parentCode->getPathToRoot( true )  << endl;
 			
 			// No merge or absorption is needed. Just does LOD.
 			advance( firstChildIt, numChildren );
@@ -171,9 +171,10 @@ namespace model
 			MortonCodePtr code = nodeIt->first;
 			OctreeNodePtr genericNode = nodeIt->second;
 			
-			out << "Node: {" << endl << *code << "," << endl;
-			genericNode-> template output< PointVector >( out );
-			out << endl << "}" << endl << endl;
+			out << code->getPathToRoot( true ) << endl;
+			//out << "Node: {" << endl << code->getPathToRoot( true ) << "," << endl;
+			//genericNode-> template output< PointVector >( out );
+			//out << endl << "}" << endl << endl;
 		}
 		out << "=========== End Octree ============" << endl << endl;
 		return out;

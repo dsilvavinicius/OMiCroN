@@ -43,7 +43,7 @@ namespace model
 		
 		/** Does the same as operator<< (however the compiler has bugs regarding template operator<< and is avoided here) */
 		template< typename Contents >
-		ostream& output( ostream& out );
+		void output( ostream& out );
 		
 		/** Serializes the node. The form is:
 		 *	bool flag true if the node is leaf, false otherwise;
@@ -113,7 +113,7 @@ namespace model
 	
 	template< typename MortonCode >
 	template< typename Contents >
-	ostream& OctreeNode< MortonCode >::output( ostream& out )
+	void OctreeNode< MortonCode >::output( ostream& out )
 	{
 		if( isLeaf() )
 		{
@@ -125,8 +125,6 @@ namespace model
 			auto* inner = reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
 			inner->output( out );
 		}
-		
-		return out;
 	}
 	
 	template< typename MortonCode >

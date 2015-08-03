@@ -113,8 +113,8 @@ namespace util
 		 * @returns a vector which each entry represents the results of one async request. */
 		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults );
 		
-		template< typename P, typename M, typename O  >
-		friend ostream& operator<<( ostream& out, const SQLiteManager< P, M, O >& sqLite );
+		template< typename C >
+		void output( ostream& out );
 		
 	private:
 		/** Release all acquired resources. */
@@ -324,6 +324,10 @@ namespace util
 		safeReset( m_nodeInsertion );
 		
 		delete[] serialization;
+		
+		cout << "Inserted." << morton.getPathToRoot( true ) << endl;
+		output< NodeContents >( cout );
+		cout << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -444,6 +448,9 @@ namespace util
 		
 		safeStep( m_nodeIntervalDeletion );
 		safeReset( m_nodeIntervalDeletion );
+		
+		cout << "Nodes deleted: [" << a.getPathToRoot( true ) << endl << ", " << endl << b.getPathToRoot( true ) << endl
+			 << "]" << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -472,14 +479,16 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	ostream& operator<<( ostream& out, const SQLiteManager< Point, MortonCode, OctreeNode >& sqLite )
+	template< typename Contents >
+	void SQLiteManager< Point, MortonCode, OctreeNode >::output( ostream& out )
 	{
-		IdNodeVector< MortonCode > nodes = sqLite.getIdNodes();
-		cout << "Nodes in DB: " << endl;
-		for( IdNode< MortonCode > node : nodes )
+		IdNodeVector nodes = getIdNodes< Contents >();
+		out << "SQLite: size: " << nodes.size() << endl;
+		for( IdNode node : nodes )
 		{
-			cout << *node.first << endl;
+			out << node.first->getPathToRoot( true ) << endl;
 		}
+		out << "End of SQLite." << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >

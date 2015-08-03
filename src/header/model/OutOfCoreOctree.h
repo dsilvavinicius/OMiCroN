@@ -257,7 +257,8 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
-		//cout << "Creating code to query node to insert point." << endl;
+		cout << "insertPointInLeaf." << endl;
+		
 		MortonCodePtr code( new MortonCode( ParentOctree::calcMorton( *point ) ) );
 		
 		//cout << "Mem entering getNode: " << endl << MemoryManager::instance() << endl;
@@ -268,7 +269,7 @@ namespace model
 		
 		if( node == nullptr )
 		{
-			//cout << "Creating node " << code->getPathToRoot( true ) << endl;
+			cout << "Creating node " << code->getPathToRoot( true ) << endl;
 			
 			++m_nodesUntilLastPersistence;
 			
@@ -281,7 +282,7 @@ namespace model
 		}
 		else
 		{
-			//cout << "Changing node " << code->getPathToRoot( true ) << endl;
+			cout << "Changing node " << code->getPathToRoot( true ) << endl;
 			
 			// Node already exists. Appends the point there.
 			PointVector& points = node-> template getContents< PointVector >();
@@ -297,7 +298,7 @@ namespace model
 			//cout << "Mem exiting leaf persistence: " << endl << MemoryManager::instance() << endl;
 		}
 		
-		//cout << "insertPointInLeaf end" << endl;
+		cout << "insertPointInLeaf end" << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -437,6 +438,8 @@ namespace model
 		
 		// Clears the hierarchy to eliminate possible sibling groups with holes.
 		hierarchy->clear();
+		*m_lastDirty = MortonCode::getLvlLast( ParentOctree::m_maxLevel - 1 );
+		cout << "last dirty after leaves creation: " << m_lastDirty->getPathToRoot( true ) << endl;
 		
 		cout << "==== Loading sibling groups ====" << endl;
 		
@@ -489,7 +492,10 @@ namespace model
 		
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
-			cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl << memManager << endl;
+			cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl
+				 << "last dirty:" << m_lastDirty->getPathToRoot( true )
+				 << "MemManager:" << memManager << endl
+				 << *this << endl;
 			
 			m_sqLite.beginTransaction();
 			
@@ -521,6 +527,7 @@ namespace model
 			if( isDirty( currentCode ) )
 			{
 				*m_lastDirty = *currentCode;
+				cout << "new last dirty (releaseNodesAtCreation): " << m_lastDirty->getPathToRoot( true ) << endl;
 			}
 			
 			m_sqLite.endTransaction();
@@ -564,7 +571,6 @@ namespace model
 		for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
-			cout << *this << endl;
 			
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
@@ -578,7 +584,6 @@ namespace model
 			while( !isLevelEnded )
 			{
 				cout << "Sibling iter start." << endl << MemoryManager::instance() << endl;
-				cout << *this << endl;
 				
 				MortonCodePtr parentCode = firstChildIt->first->traverseUp();
 				
@@ -598,6 +603,11 @@ namespace model
 					cout << "Before inner." << endl;
 					
 					ParentOctree::buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
+					if( !isDirty( parentCode ) )
+					{
+						*m_lastDirty = *parentCode;
+						cout << "new last dirty (buildInnerNode): " << m_lastDirty->getPathToRoot( true ) << endl;
+					}
 				}
 				
 				cout << "After inner" << endl;
@@ -729,6 +739,10 @@ namespace model
 		--prevLast;
 		
 		m_sqLite.deleteNodes( *first->first, *prevLast->first );
+		
+		cout << "DB after deletion:";
+		m_sqLite. template output< PointVector >( cout );
+		
 		Octree< MortonCode, Point >::eraseNodes( first, last );
 	}
 	
@@ -736,7 +750,10 @@ namespace model
 	inline bool OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::isDirty( const MortonCodePtr& code ) const
 	{
-		return *code <= *m_lastDirty;
+		bool isDirty = *code <= *m_lastDirty;
+		cout << code->getPathToRoot( true ) << " is dirty? " << boolalpha << isDirty << endl
+			 << "last dirty: " << m_lastDirty->getPathToRoot( true ) << endl;
+		return isDirty;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

@@ -399,16 +399,6 @@ namespace model
 	inline void OctreeBase< MortonCode, Point >::eraseNodes( const typename OctreeMap::iterator& first,
 															 const typename OctreeMap::iterator& last )
 	{
-		cout << "Octree::eraseNodes :" << first->first->getPathToRoot( true ) << " to ";
-		if( last != m_hierarchy->end() )
-		{
-			cout << last->first->getPathToRoot( true ) << endl;
-		}
-		else
-		{
-			cout << "end" << endl;
-		}
-		
 		m_hierarchy->erase( first, last );
 	}
 	

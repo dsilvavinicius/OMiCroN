@@ -27,7 +27,7 @@ namespace model
 		Contents& getContents();
 		const Contents& getContents() const;
 		
-		ostream& output( ostream& out );
+		void output( ostream& out );
 	private:
 		Contents m_contents;
 	};
@@ -47,7 +47,7 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void LeafNode< MortonCode, Contents >::operator delete( void* p )
 	{
-		cout << "Deleting leaf" << endl;
+		//cout << "Deleting leaf" << endl;
 		MemoryManager::instance().deallocate( MemoryManager::THIRTY_TWO, p );
 	}
 	
@@ -60,7 +60,7 @@ namespace model
 	template < typename MortonCode, typename Contents >
 	inline LeafNode< MortonCode, Contents >::~LeafNode()
 	{
-		cout << "Destructing leaf" << endl;
+		//cout << "Destructing leaf" << endl;
 		NodeReleaser::releaseLeaf( *this );
 	}
 	
@@ -89,10 +89,9 @@ namespace model
 	}
 	
 	template < typename MortonCode, typename Contents >
-	ostream& LeafNode< MortonCode, Contents >::output( ostream& out )
+	void LeafNode< MortonCode, Contents >::output( ostream& out )
 	{
 		out << "Points Leaf Node: " << endl << getContents();
-		return out;
 	}
 	
 	//===========

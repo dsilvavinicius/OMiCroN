@@ -29,7 +29,7 @@ namespace model
 		Contents& getContents();
 		const Contents& getContents() const;
 		
-		ostream& output( ostream& out );
+		void output( ostream& out );
 		
 	private:
 		Contents m_contents;
@@ -90,10 +90,9 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Contents >
-	ostream& InnerNode< MortonCode, Contents >::output( ostream& out )
+	void InnerNode< MortonCode, Contents >::output( ostream& out )
 	{
 		out << "Inner Node: " << endl << getContents();
-		return out;
 	}
 	
 	//===========
