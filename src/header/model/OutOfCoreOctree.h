@@ -433,27 +433,6 @@ namespace model
 		
 		m_sqLite.endTransaction();
 		
-		/*
-		cout << "==== Querying leaves ====" << endl << endl;
-		
-		// Since leaf creation is unsorted by nature, some sibling groups must be loaded from database to ensure no
-		// "holes" in the in-memory sibling groups.
-		SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastDirty );
-		
-		cout << "==== Clearing up hierarchy ====" << endl << endl;
-		
-		// Clears the hierarchy to eliminate possible sibling groups with holes.
-		hierarchy->clear();
-		*m_lastDirty = MortonCode::getLvlLast( ParentOctree::m_maxLevel - 1 );
-		cout << "last dirty after leaves creation: " << m_lastDirty->getPathToRoot( true ) << endl;
-		
-		cout << "==== Loading sibling groups ====" << endl << endl;
-		
-		// Loads a few sibling groups in order to start bottom-up construction.
-		loadSiblingGroups( query );
-		
-		cout << *this << endl;*/
-		
 		cout << "===== Ending leaf persistence =====" << endl << endl;
 	}
 	
@@ -470,11 +449,12 @@ namespace model
 			
 			m_sqLite.beginTransaction();
 			
-			m_lastDirty = firstCode;
-			
 			for( auto elem : *hierarchy )
 			{
 				currentCode = elem.first;
+				
+				cout << "Checking " << currentCode->getPathToRoot( true ) << endl;
+				
 				if( !isDirty( currentCode ) )
 				{
 					break;
@@ -484,6 +464,8 @@ namespace model
 			}
 			
 			m_sqLite.endTransaction();
+			
+			m_lastDirty = firstCode;
 			
 			cout << "===== Persist all dirty method ended =====" << endl << endl;
 		}
@@ -584,8 +566,7 @@ namespace model
 		// Do a bottom-up per-level construction of inner nodes.
 		for( int level = ParentOctree::m_maxLevel - 1; level > -1; --level )
 		{
-			cout << "========== Octree construction, level " << level << " ==========" << endl << endl
-				 << *this << endl;
+			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			
 			{
 				// Query nodes to load.
@@ -602,7 +583,9 @@ namespace model
 				loadSiblingGroups( query );
 				*m_lastDirty = MortonCode::getLvlLast( level );
 			}
-				 
+			
+			cout << *this << endl;
+			
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
 			MortonCodePtr lvlBoundary( new MortonCode( MortonCode::getLvlLast( level + 1 ) ) );
@@ -769,6 +752,8 @@ namespace model
 	inline bool OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::isDirty( const MortonCodePtr& code ) const
 	{
+		cout << "code: " << code->getPathToRoot( true ) << endl << "last dirty: " << m_lastDirty->getPathToRoot( true )
+			 << endl;
 		return *code <= *m_lastDirty;
 	}
 	
