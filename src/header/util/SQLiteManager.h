@@ -114,7 +114,7 @@ namespace util
 		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults );
 		
 		template< typename C >
-		void output( ostream& out );
+		string output();
 		
 	private:
 		/** Release all acquired resources. */
@@ -200,6 +200,7 @@ namespace util
 		bool m_requestsDone;
 	};
 	
+	// TODO: Create indices for node queries.
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager( const string& dbFileName )
 	: m_db( nullptr ),
@@ -326,8 +327,6 @@ namespace util
 		delete[] serialization;
 		
 		cout << "Inserted." << morton.getPathToRoot( true ) << endl;
-		output< NodeContents >( cout );
-		cout << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -448,9 +447,6 @@ namespace util
 		
 		safeStep( m_nodeIntervalDeletion );
 		safeReset( m_nodeIntervalDeletion );
-		
-		cout << "Nodes deleted: [" << a.getPathToRoot( true ) << endl << ", " << endl << b.getPathToRoot( true ) << endl
-			 << "]" << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -480,15 +476,18 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename Contents >
-	void SQLiteManager< Point, MortonCode, OctreeNode >::output( ostream& out )
+	string SQLiteManager< Point, MortonCode, OctreeNode >::output()
 	{
 		IdNodeVector nodes = getIdNodes< Contents >();
-		out << "SQLite: size: " << nodes.size() << endl;
+		stringstream ss;
+		ss  << "=== SQLite ===" << endl << endl
+			<< "Size: " << nodes.size() << endl << endl;
 		for( IdNode node : nodes )
 		{
-			out << node.first->getPathToRoot( true ) << endl;
+			ss << node.first->getPathToRoot( true ) << endl;
 		}
-		out << "End of SQLite." << endl;
+		ss << "=== End of SQLite ===" << endl;
+		return ss.str();
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >

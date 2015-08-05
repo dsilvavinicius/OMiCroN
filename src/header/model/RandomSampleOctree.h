@@ -144,8 +144,6 @@ namespace model
 	inline void RandomSampleOctree< MortonCode, Point >::eraseNodes( const typename OctreeMap::iterator& first,
 																	 const typename OctreeMap::iterator& last )
 	{
-		cout << "RandomSampleOctree::eraseNodes" << endl;
-		
 		Octree::eraseNodes( first, last );
 	}
 	
@@ -157,7 +155,7 @@ namespace model
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		
-		out << endl << "=========== Begin Octree ============" << endl << endl
+		out << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string( *octree.m_origin ) << endl
 			<< "size: " << glm::to_string( *octree.m_size ) << endl
 			<< "leaf size: " << glm::to_string( *octree.m_leafSize ) << endl
@@ -176,7 +174,7 @@ namespace model
 			//genericNode-> template output< PointVector >( out );
 			//out << endl << "}" << endl << endl;
 		}
-		out << "=========== End Octree ============" << endl << endl;
+		out << "=========== End Octree ============" << endl;
 		return out;
 	}
 	

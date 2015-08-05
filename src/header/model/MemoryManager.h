@@ -137,16 +137,18 @@ namespace model
 	
 	inline ostream& operator<<( ostream& out, const MemoryManager& manager )
 	{
-		out << "Free 4 blocks (Shallow Code): " << manager.freeBlocks( MemoryManager::FOUR_BYTES ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ) << " fraction" << endl
+		out << "=== MemManager ===" << endl << endl
+			<< "Free 4 blocks (Shallow Code): " << manager.freeBlocks( MemoryManager::FOUR_BYTES ) << ", "
+			<< manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ) << " fraction" << endl << endl
 			<< "Free 8 blocks (Medium Code): " << manager.freeBlocks( MemoryManager::EIGHT_BYTES ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ) << " fraction" << endl
+			<< manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ) << " fraction" << endl << endl
 			<< "Free 24 blocks (Point): " << manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ) << " fraction" << endl
+			<< manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ) << " fraction" << endl << endl
 			<< "Free 32 blocks (Node): " << manager.freeBlocks( MemoryManager::THIRTY_TWO ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ) << " fraction" << endl
+			<< manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ) << " fraction" << endl << endl
 			<< "Free 36 blocks (Extended Point): " << manager.freeBlocks( MemoryManager::THIRTY_SIX ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ) << " fraction" << endl;
+			<< manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ) << " fraction" << endl << endl
+			<< "=== End of MemManager ===" << endl;
 		return out;
 	}
 	
