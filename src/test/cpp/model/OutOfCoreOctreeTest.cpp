@@ -39,20 +39,14 @@ namespace model
 			uint m_nodeBlocks;
 		};
 		
-		// Checks if octree creation is correctly using the MemoryManager.
-		TEST_F( OutOfCoreOctreeTest, Creation )
+		// Checks if OutOfCoreOctree creation is correct.
+		template< typename OutOfCoreOctree >
+		void testCreation( OutOfCoreOctree& octree )
 		{
-			MemoryManager::initInstance( 40, 0, 40, 0, 40 );
-			
-			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
-										   ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
-			octree.buildFromFile( g_appPath + "/data/simple_point_octree.ply", SimplePointReader::SINGLE,
-								  Attributes::COLORS );
-			
 			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
 			SQLiteManager< Point, ShallowMortonCode, ShallowOctreeNode >& sqLite = octree.getSQLiteManager();
 			
-			cout << "DB after octree creation: " << endl << sqLite.output< PointVector >() << endl;
+			//cout << "DB after octree creation: " << endl << sqLite.output< PointVector >() << endl;
 			
 			ShallowIdNodeVector nodes = sqLite.getIdNodes< PointVector >();
 			
@@ -62,6 +56,54 @@ namespace model
 			}
 			
 			checkHierarchy( hierarchy );
+		}
+		
+		TEST_F( OutOfCoreOctreeTest, Creation0 )
+		{
+			MemoryManager::initInstance( 40, 0, 40, 0, 40 );
+			
+			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
+										   ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
+			octree.buildFromFile( g_appPath + "/data/simple_point_octree.ply", SimplePointReader::SINGLE,
+								  Attributes::COLORS );
+			
+			testCreation( octree );
+		}
+		
+		TEST_F( OutOfCoreOctreeTest, Creation2 )
+		{
+			MemoryManager::initInstance( 40, 0, 40, 0, 40 );
+			
+			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
+										   ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
+			octree.buildFromFile( g_appPath + "/data/simple_point_octree.ply", SimplePointReader::SINGLE,
+								  Attributes::COLORS );
+			
+			testCreation( octree );
+		}
+		
+		TEST_F( OutOfCoreOctreeTest, Creation3 )
+		{
+			MemoryManager::initInstance( 100, 0, 100, 0, 100 );
+			
+			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
+										   ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
+			octree.buildFromFile( g_appPath + "/data/simple_point_octree.ply", SimplePointReader::SINGLE,
+								  Attributes::COLORS );
+			
+			testCreation( octree );
+		}
+		
+		TEST_F( OutOfCoreOctreeTest, Creation4 )
+		{
+			MemoryManager::initInstance( 100, 0, 100, 0, 100 );
+			
+			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
+										   ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 5, 5, 5 ) );
+			octree.buildFromFile( g_appPath + "/data/simple_point_octree.ply", SimplePointReader::SINGLE,
+								  Attributes::COLORS );
+			
+			testCreation( octree );
 		}
 	}
 }

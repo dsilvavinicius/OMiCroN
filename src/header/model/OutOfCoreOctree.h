@@ -260,7 +260,7 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
-		cout << "insertPointInLeaf." << endl << endl;
+		//cout << "insertPointInLeaf." << endl << endl;
 		
 		MortonCodePtr code( new MortonCode( ParentOctree::calcMorton( *point ) ) );
 		
@@ -272,7 +272,7 @@ namespace model
 		
 		if( node == nullptr )
 		{
-			cout << "Creating node " << code->getPathToRoot( true ) << endl;
+			//cout << "Creating node " << code->getPathToRoot( true ) << endl;
 			
 			++m_nodesUntilLastPersistence;
 			
@@ -285,7 +285,7 @@ namespace model
 		}
 		else
 		{
-			cout << "Changing node " << code->getPathToRoot( true ) << endl;
+			//cout << "Changing node " << code->getPathToRoot( true ) << endl;
 			
 			// Node already exists. Appends the point there.
 			PointVector& points = node-> template getContents< PointVector >();
@@ -301,7 +301,7 @@ namespace model
 			//cout << "Mem exiting leaf persistence: " << endl << MemoryManager::instance() << endl;
 		}
 		
-		cout << "insertPointInLeaf end" << endl << endl;
+		//cout << "insertPointInLeaf end" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -379,8 +379,8 @@ namespace model
 		MemoryManager& memManager = MemoryManager::instance();
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
-			cout << "==== Leaf persistence triggered ====" << endl << endl
-				 << memManager << endl;
+			//cout << "==== Leaf persistence triggered ====" << endl << endl
+			//	 << memManager << endl;
 			
 			m_nodesUntilLastPersistence = 0;
 			
@@ -411,8 +411,8 @@ namespace model
 				m_sqLite.endTransaction();
 			}
 			
-			cout << "==== Leaf persistence ended ====" << endl << endl
-				 << memManager << endl;
+			//cout << "==== Leaf persistence ended ====" << endl << endl
+			//	 << memManager << endl;
 		}
 	}
 	
@@ -447,15 +447,13 @@ namespace model
 			
 			if( isDirty( firstCode ) )
 			{
-				cout << "===== Persist all dirty method triggered =====" << endl << endl;
+				//cout << "===== Persist all dirty method triggered =====" << endl << endl;
 				
 				m_sqLite.beginTransaction();
 				
 				for( auto elem : *hierarchy )
 				{
 					currentCode = elem.first;
-					
-					cout << "Checking " << currentCode->getPathToRoot( true ) << endl;
 					
 					if( !isDirty( currentCode ) )
 					{
@@ -469,7 +467,7 @@ namespace model
 				
 				m_lastDirty = firstCode;
 				
-				cout << "===== Persist all dirty method ended =====" << endl << endl;
+				//cout << "===== Persist all dirty method ended =====" << endl << endl;
 			}
 		}
 	}
@@ -485,8 +483,8 @@ namespace model
 		
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
-			cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl << endl
-				 << *this << endl;
+			//cout << "====== releaseNodesAtCreation: Node release triggered ======" << endl << endl
+			//	 << *this << endl;
 			
 			m_sqLite.beginTransaction();
 			
@@ -524,9 +522,9 @@ namespace model
 			
 			m_sqLite.endTransaction();
 			
-			cout << "State at release end: " << endl << endl
-				 << *this << endl
-				 << "====== Node release ended ======" << endl << endl;
+			//cout << "State at release end: " << endl << endl
+			//	 << *this << endl
+			//	 << "====== Node release ended ======" << endl << endl;
 		}
 		
 		return currentCode;
@@ -576,13 +574,11 @@ namespace model
 			
 			{
 				// Query nodes to load.
-				cout << "Query to load siblings: " << endl << endl
-					 << MortonCode::getLvlFirst( level + 1 ).getPathToRoot( true )
-					 << "," << lvlBoundary->getPathToRoot( true ) << endl;
+				//cout << "Query to load siblings: " << endl << endl
+				//	 << MortonCode::getLvlFirst( level + 1 ).getPathToRoot( true )
+				//	 << "," << lvlBoundary->getPathToRoot( true ) << endl;
 				SQLiteQuery query = getRangeInDB( MortonCodePtr( new MortonCode( MortonCode::getLvlFirst( level + 1 ) ) ),
 												  lvlBoundary );
-				
-				cout << "After query" << endl << endl;
 			
 				// Clear up hierarchy to ensure no holes.
 				hierarchy->clear();
@@ -592,7 +588,7 @@ namespace model
 				*m_lastDirty = MortonCode::getLvlLast( level );
 			}
 			
-			cout << *this << endl;
+			//cout << *this << endl;
 			
 			typename OctreeMap::iterator firstChildIt = hierarchy->begin(); 
 			typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
@@ -618,12 +614,12 @@ namespace model
 					
 					ParentOctree::buildInnerNode( firstChildIt, currentChildIt, parentCode, children );
 					
-					cout << "After inner creation" << endl << endl;
+					//cout << "After inner creation" << endl << endl;
 					
 					if( !isDirty( parentCode ) )
 					{
 						*m_lastDirty = *parentCode;
-						cout << "new last dirty (buildInnerNode): " << m_lastDirty->getPathToRoot( true ) << endl;
+						//cout << "new last dirty (buildInnerNode): " << m_lastDirty->getPathToRoot( true ) << endl;
 					}
 				}
 				
@@ -675,8 +671,8 @@ namespace model
 	::loadNodesAndValidateIter( const MortonCodePtr& nextFirstChildCode, const MortonCodePtr& lvlBoundary,
 								typename OctreeMap::iterator& firstChildIt )
 	{
-		cout << "load nodes and validate iter: " << endl << "0x" << hex << nextFirstChildCode->getBits() << dec << ", "
-			 << lvlBoundary->getPathToRoot( true ) << endl;
+		//cout << "load nodes and validate iter: " << endl << "0x" << hex << nextFirstChildCode->getBits() << dec << ", "
+		//	 << lvlBoundary->getPathToRoot( true ) << endl;
 		
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
@@ -755,8 +751,8 @@ namespace model
 		
 		m_sqLite.deleteNodes( *first->first, *prevLast->first );
 		
-		cout << "Deleting: " << endl << first->first->getPathToRoot( true )
-			 << ", " << prevLast->first->getPathToRoot( true ) << endl;
+		//cout << "Deleting: " << endl << first->first->getPathToRoot( true )
+		//	 << ", " << prevLast->first->getPathToRoot( true ) << endl;
 		
 		Octree< MortonCode, Point >::eraseNodes( first, last );
 	}
@@ -765,8 +761,8 @@ namespace model
 	inline bool OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::isDirty( const MortonCodePtr& code ) const
 	{
-		cout << "code: " << code->getPathToRoot( true ) << endl << "last dirty: " << m_lastDirty->getPathToRoot( true )
-			 << endl;
+		//cout << "code: " << code->getPathToRoot( true ) << endl << "last dirty: " << m_lastDirty->getPathToRoot( true )
+		//	 << endl;
 		return *code <= *m_lastDirty;
 	}
 	

@@ -75,7 +75,7 @@ namespace model
 
 		if( numChildren == numLeaves && childrenPoints.size() <= Octree::m_maxPointsPerNode )
 		{
-			cout << "Merging child into " << endl << parentCode->getPathToRoot( true ) << endl;
+			//cout << "Merging child into " << endl << parentCode->getPathToRoot( true ) << endl;
 			
 			// All children are leaves, but they have less points than the threshold and must be merged.
 			auto tempIt = firstChildIt;
@@ -91,7 +91,7 @@ namespace model
 		}
 		else
 		{
-			cout << "Creating LOD" << endl << parentCode->getPathToRoot( true )  << endl;
+			//cout << "Creating LOD" << endl << parentCode->getPathToRoot( true )  << endl;
 			
 			// No merge or absorption is needed. Just does LOD.
 			advance( firstChildIt, numChildren );

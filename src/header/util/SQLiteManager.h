@@ -326,7 +326,7 @@ namespace util
 		
 		delete[] serialization;
 		
-		cout << "Inserted." << morton.getPathToRoot( true ) << endl;
+		//cout << "Inserted." << morton.getPathToRoot( true ) << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
