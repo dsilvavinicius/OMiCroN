@@ -440,34 +440,37 @@ namespace model
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllDirty()
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
- 		MortonCodePtr currentCode = nullptr;
-		MortonCodePtr firstCode = hierarchy->begin()->first;
-		
-		if( isDirty( firstCode ) )
+		if( !hierarchy->empty() )
 		{
-			cout << "===== Persist all dirty method triggered =====" << endl << endl;
+			MortonCodePtr currentCode = nullptr;
+			MortonCodePtr firstCode = hierarchy->begin()->first;
 			
-			m_sqLite.beginTransaction();
-			
-			for( auto elem : *hierarchy )
+			if( isDirty( firstCode ) )
 			{
-				currentCode = elem.first;
+				cout << "===== Persist all dirty method triggered =====" << endl << endl;
 				
-				cout << "Checking " << currentCode->getPathToRoot( true ) << endl;
+				m_sqLite.beginTransaction();
 				
-				if( !isDirty( currentCode ) )
+				for( auto elem : *hierarchy )
 				{
-					break;
+					currentCode = elem.first;
+					
+					cout << "Checking " << currentCode->getPathToRoot( true ) << endl;
+					
+					if( !isDirty( currentCode ) )
+					{
+						break;
+					}
+					
+					m_sqLite. template insertNode< PointVector >( *currentCode, *elem.second );
 				}
 				
-				m_sqLite. template insertNode< PointVector >( *currentCode, *elem.second );
+				m_sqLite.endTransaction();
+				
+				m_lastDirty = firstCode;
+				
+				cout << "===== Persist all dirty method ended =====" << endl << endl;
 			}
-			
-			m_sqLite.endTransaction();
-			
-			m_lastDirty = firstCode;
-			
-			cout << "===== Persist all dirty method ended =====" << endl << endl;
 		}
 	}
 	
@@ -508,7 +511,6 @@ namespace model
 					{
 						currentCode = currentCode->getPrevious();
 						break;
-						//throw runtime_error( "Node release emptied hierarchy. This is not supposed to do." );
 					}
 					
 					currentCode = nodeIt->first;
@@ -568,11 +570,17 @@ namespace model
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			
+			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
+			// the current one.
+			MortonCodePtr lvlBoundary( new MortonCode( MortonCode::getLvlLast( level + 1 ) ) );
+			
 			{
 				// Query nodes to load.
-				cout << "Query to load siblings: " << endl << endl << hierarchy->begin()->first->getPathToRoot( true )
-					<< "," << m_lastDirty->getPathToRoot( true ) << endl;
-				SQLiteQuery query = getRangeInDB( hierarchy->begin()->first, m_lastDirty );
+				cout << "Query to load siblings: " << endl << endl
+					 << MortonCode::getLvlFirst( level + 1 ).getPathToRoot( true )
+					 << "," << lvlBoundary->getPathToRoot( true ) << endl;
+				SQLiteQuery query = getRangeInDB( MortonCodePtr( new MortonCode( MortonCode::getLvlFirst( level + 1 ) ) ),
+												  lvlBoundary );
 				
 				cout << "After query" << endl << endl;
 			
@@ -585,10 +593,6 @@ namespace model
 			}
 			
 			cout << *this << endl;
-			
-			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
-			// the current one.
-			MortonCodePtr lvlBoundary( new MortonCode( MortonCode::getLvlLast( level + 1 ) ) );
 			
 			typename OctreeMap::iterator firstChildIt = hierarchy->begin(); 
 			typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
@@ -671,8 +675,18 @@ namespace model
 	::loadNodesAndValidateIter( const MortonCodePtr& nextFirstChildCode, const MortonCodePtr& lvlBoundary,
 								typename OctreeMap::iterator& firstChildIt )
 	{
+		cout << "load nodes and validate iter: " << endl << "0x" << hex << nextFirstChildCode->getBits() << dec << ", "
+			 << lvlBoundary->getPathToRoot( true ) << endl;
+		
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::iterator hierarchyEnd = hierarchy->end();
+		
+		if( *lvlBoundary < *nextFirstChildCode )
+		{
+			// Next first child is from the lvl below, so the current lvl is ended. End iteration.
+			firstChildIt = hierarchyEnd;
+			return;
+		}
 		
 		SQLiteQuery query = getRangeInDB( nextFirstChildCode, lvlBoundary );
 		MortonCodePtr firstLoadedCode = loadSiblingGroups( query );
@@ -681,12 +695,11 @@ namespace model
 		{
 			//No more nodes in this lvl. Nodes are not needed to be loaded. End iteration.
 			firstChildIt = hierarchyEnd;
+			return;
 		}
-		else
-		{
-			// Revalidating iterator
-			firstChildIt = hierarchy->find( firstLoadedCode );
-		}
+		
+		// Revalidating iterator
+		firstChildIt = hierarchy->find( firstLoadedCode );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

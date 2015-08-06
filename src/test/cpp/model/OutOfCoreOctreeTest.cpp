@@ -42,10 +42,10 @@ namespace model
 		// Checks if octree creation is correctly using the MemoryManager.
 		TEST_F( OutOfCoreOctreeTest, Creation )
 		{
-			MemoryManager::initInstance( 20, 0, 20, 0, 20 );
+			MemoryManager::initInstance( 40, 0, 40, 0, 40 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, g_appPath + "/Octree.db",
-										   ShallowOutOfCoreOctree::MemorySetup( 0.71f, 0.79f, 1, 1, 1 ) );
+										   ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
 			octree.buildFromFile( g_appPath + "/data/simple_point_octree.ply", SimplePointReader::SINGLE,
 								  Attributes::COLORS );
 			

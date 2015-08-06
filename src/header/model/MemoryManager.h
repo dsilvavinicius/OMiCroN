@@ -89,17 +89,17 @@ namespace model
 
 	inline void* MemoryManager::allocate( const MEMORY_POOL_TYPE& type )
 	{
-		//cout << "Alloc " << type << endl;
+		//cout << "Alloc " << type << endl << endl;
 		void* mem = m_pools[ type ].allocate();
-		//cout << "Free: " << freeBlocks( type ) << endl << endl;
+		//cout << *this << endl;
 		return mem;
 	}
 	
 	inline void MemoryManager::deallocate( const MEMORY_POOL_TYPE& type, void* p )
 	{
-		//cout << "Dealloc " << type << endl;
+		//cout << "Dealloc " << type << endl << endl;
 		m_pools[ type ].deAllocate( p );
-		//cout << "Free: " << freeBlocks( type ) << endl << endl;
+		//cout << *this << endl;
 	}
 	
 	inline uint MemoryManager::numBlocks( const MEMORY_POOL_TYPE& type ) const
