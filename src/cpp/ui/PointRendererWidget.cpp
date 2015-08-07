@@ -25,12 +25,13 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	// Init MemoryManager allowing 6GB of data.
-	MemoryManager::initInstance( 0ul,
-								 1ul * 1024ul * 1024ul * 1024ul / sizeof( MediumMortonCode ) /* 1GB for MediumMortonCodes */,
-								 2.5f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 2.5GB for Points */,
+	// Init MemoryManager allowing 8GB of data. 
+	MemoryManager::initInstance( 1.5f * 1024ul * 1024ul * 1024ul / sizeof( ShallowMortonCode ), /* 1.5GB for MortonCodes */
+								 0ul  ,
+								 3.25f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3.25GB for Points */,
 							  0ul,
-							  2.5f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 2.5GB for Nodes */ );
+							  3.25f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 3.25GB for Nodes */ );
+	
 	cout << "MemoryManager initialized: " << endl << MemoryManager::instance() << endl;
 	
 	Tucano::QtFreecameraWidget::initialize();
@@ -38,9 +39,10 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
-	//openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
+	openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
 	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_all.ply" );
-	openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
+	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
+	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_sub_tot.ply" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -251,7 +253,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	string dbFilename = QApplication::applicationDirPath().toStdString() +
 						filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 15, dbFilename );
+	m_octree = new Octree( 1, 10, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
 	
 	cout << "Octree built." << endl;
@@ -270,7 +272,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	cout << "Renderer built." << endl;
 	
 	clock_t timing = clock();
-	m_octree->traverse( *m_renderer, m_projThresh );
+	m_octree->trackFront( *m_renderer, m_projThresh );
 	timing = clock() - timing;
 	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 	

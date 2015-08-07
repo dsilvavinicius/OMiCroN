@@ -541,14 +541,33 @@ namespace model
 			
 			OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 			
-			for( auto it = hierarchy->begin();
+			for( auto it = ++hierarchy->begin(); // Skips root node
 				it != hierarchy->end() && !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshAfterRelease ); )
 			{
-				if( !ParentOctree::m_frontBehavior->contains( *it->first ) )
+				// Loops per siblings in order to avoid holes in hierarchy.
+				auto current = it;
+				MortonCodePtr parent = current->first->traverseUp();
+				
+				int nSiblings = 0;
+				bool hasSiblingInFront = false;
+				
+				while( current != hierarchy->end() && current->first->isChildOf( *parent ) )
 				{
-					hierarchy->erase( it++ );
+					if( ParentOctree::m_frontBehavior->contains( *current->first ) )
+					{
+						hasSiblingInFront = true;
+						break;
+					}
+					++nSiblings;
+					++current;
 				}
-				++it;
+				
+				if( !hasSiblingInFront )
+				{
+					auto postLastSibling = it;
+					advance( postLastSibling, nSiblings );
+					it = hierarchy->erase( it, postLastSibling );
+				}
 			}
 			
 			cout << "====== Node release ended ======" << endl << endl
@@ -767,19 +786,18 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::onPrunningItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
 	{
-		if( it == ParentOctree::m_hierarchy->end() )
-		{
-			m_sqLite.requestNodesAsync( MortonInterval< MortonCode >( code, code ) );
-		}
+		cout << "onPrunningItAcquired" << endl << endl;
+		onBranchingItAcquired( it, code ); // Both cases do the same thing: load the sibling groups related with code.
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::onBranchingItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
 	{
+		cout << "onBranchingItAcquired" << endl << endl;
 		if( it == ParentOctree::m_hierarchy->end() )
 		{
 			m_sqLite.requestNodesAsync( MortonInterval< MortonCode >( code, code->traverseUp()->getLastChild() ) );

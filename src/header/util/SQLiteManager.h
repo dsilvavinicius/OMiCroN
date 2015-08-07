@@ -239,6 +239,8 @@ namespace util
 					
 					for( auto it = m_requests.begin(); it != m_requests.end(); )
 					{
+						cout << "Processing request " << it->first->getPathToRoot( true ) << endl;
+						
 						MortonInterval interval = *it;
 						
 						IdNodeVector idNodes = getIdNodes< PointVector >( *interval.first, *interval.second );

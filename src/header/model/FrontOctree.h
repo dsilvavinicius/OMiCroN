@@ -2,6 +2,7 @@
 #define FRONT_OCTREE_H
 
 #include <unordered_set>
+#include <qabstractitemmodel.h>
 
 #include "FrontBehavior.h"
 #include "RandomSampleOctree.h"
@@ -98,6 +99,9 @@ namespace model
 	: ParentOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
 	{
 		m_frontBehavior = new FrontBehavior( *this );
+		MortonCode root; root.build( 0x1 );
+		m_frontBehavior->insert( root );
+		m_frontBehavior->onFrontTrackingEnd();
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -199,17 +203,24 @@ namespace model
 	{
 		//cout << "Prune: " << code->getPathToRoot( true ) << endl;
 		
-		m_frontBehavior->prune( code );
 		MortonCodePtr parentCode = code->traverseUp();
-			
 		auto nodeIt = ParentOctree::m_hierarchy->find( parentCode );
 		
 		onPrunningItAcquired( nodeIt, parentCode );
 		
 		if( nodeIt != ParentOctree::m_hierarchy->end() )
 		{
+			m_frontBehavior->prune( code );
 			OctreeNodePtr parentNode = nodeIt->second;
 			setupNodeRendering( parentNode, parentCode, renderingState );
+		}
+		else
+		{
+			auto nodeIt = ParentOctree::m_hierarchy->find( code );
+			assert( nodeIt != ParentOctree::m_hierarchy->end() );
+			
+			OctreeNodePtr node = nodeIt->second;
+			ParentOctree::setupNodeRendering( node, renderingState );
 		}
 	}
 	
@@ -235,7 +246,7 @@ namespace model
 		OctreeNodePtr node = nodeIt->second;
 		
 		bool isInner = !node->isLeaf();
-		
+		bool childFound = false;
 		if( isInner )
 		{
 			MortonCodePtr firstChild = code->getFirstChild();
@@ -246,6 +257,8 @@ namespace model
 			//	 << std::prev( pastLastChildIt )->first->getPathToRoot( true ) << endl;
 			
 			onBranchingItAcquired( childIt, firstChild );
+			
+			childFound = childIt != ParentOctree::m_hierarchy->end();
 			
 			while( childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code )
 			{
@@ -259,15 +272,19 @@ namespace model
 				if( !renderingState.isCullable( box ) )
 				{
 					//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
-					OctreeNodePtr node = childIt->second;
-					ParentOctree::setupNodeRendering( node, renderingState );
+					ParentOctree::setupNodeRendering( childIt->second, renderingState );
 				}
 				
 				++childIt;
 			}
 		}
 		
-		return isInner;
+		if( !childFound )
+		{
+			ParentOctree::setupNodeRendering( node, renderingState );
+		}
+		
+		return childFound;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
