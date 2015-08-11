@@ -789,7 +789,7 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::onPrunningItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
 	{
-		cout << "onPrunningItAcquired" << endl << endl;
+		//cout << "onPrunningItAcquired" << endl << endl;
 		onBranchingItAcquired( it, code ); // Both cases do the same thing: load the sibling groups related with code.
 	}
 	
@@ -797,7 +797,7 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::onBranchingItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
 	{
-		cout << "onBranchingItAcquired" << endl << endl;
+		//cout << "onBranchingItAcquired" << endl << endl;
 		if( it == ParentOctree::m_hierarchy->end() )
 		{
 			m_sqLite.requestNodesAsync( MortonInterval< MortonCode >( code, code->traverseUp()->getLastChild() ) );
@@ -821,6 +821,7 @@ namespace model
 			
 			for( IdNode idNode : query )
 			{
+				cout << "Request result: " << endl << endl << idNode << endl; 
 				hierarchy->insert( pastInsertionIt, idNode );
 			}
 		}

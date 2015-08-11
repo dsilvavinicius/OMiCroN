@@ -154,7 +154,7 @@ namespace model
 		}
 		else
 		{
-			//cout << "Still: " << code->getPathToRoot( true ) << endl;
+			cout << "Still: " << code->getPathToRoot( true ) << endl;
 			
 			if( !isCullable )
 			{
@@ -201,10 +201,11 @@ namespace model
 	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::prune( const MortonCodePtr& code, RenderingState& renderingState )
 	{
-		//cout << "Prune: " << code->getPathToRoot( true ) << endl;
-		
 		MortonCodePtr parentCode = code->traverseUp();
 		auto nodeIt = ParentOctree::m_hierarchy->find( parentCode );
+		
+		cout << "Prune: " << code->getPathToRoot( true ) << endl
+			 << "Parent: " << parentCode->getPathToRoot( true ) << endl;
 		
 		onPrunningItAcquired( nodeIt, parentCode );
 		
@@ -239,8 +240,6 @@ namespace model
 	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::branch( const MortonCodePtr& code, RenderingState& renderingState )
 	{
-		//cout << "Branch:" << code->getPathToRoot( true ) << endl;
-		
 		auto nodeIt = ParentOctree::m_hierarchy->find( code );
 		assert( nodeIt != ParentOctree::m_hierarchy->end() );
 		OctreeNodePtr node = nodeIt->second;
@@ -251,10 +250,9 @@ namespace model
 		{
 			MortonCodePtr firstChild = code->getFirstChild();
 			auto childIt = ParentOctree::m_hierarchy->lower_bound( firstChild );
-			//auto pastLastChildIt = ParentOctree::m_hierarchy->upper_bound( code->getLastChild() );
 			
-			//cout << "First child: " << childIt->first->getPathToRoot( true ) << "Last child: "
-			//	 << std::prev( pastLastChildIt )->first->getPathToRoot( true ) << endl;
+			cout << "Branch:" << code->getPathToRoot( true ) << endl
+				 << "First child: " << firstChild->getPathToRoot( true ) << endl;;
 			
 			onBranchingItAcquired( childIt, firstChild );
 			

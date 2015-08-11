@@ -63,6 +63,8 @@ namespace model
 			typename Front::iterator end = m_front.end();
 			typename Front::iterator prev;
 			
+			cout << "Is front empty? " << boolalpha << m_front.empty() << endl << endl;
+			
 			for( typename Front::iterator it = m_front.begin(); it != end; prev = it, ++it,
 				end = m_front.end() )
 			{
