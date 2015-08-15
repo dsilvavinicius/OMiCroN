@@ -76,6 +76,9 @@ public slots:
 	/** Toggle the auxiliary viewports drawing. */
 	void toggleDrawAuxViewports( void );
 	
+	/** Toggles per-node debug info rendering. */
+	void toggleNodeDebugDraw( const int& value );
+	
 	/** Opens a new point cloud. */
 	virtual void openMesh( const string& filename );
 	

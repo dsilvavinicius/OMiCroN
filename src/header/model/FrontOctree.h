@@ -201,6 +201,8 @@ namespace model
 	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::prune( const MortonCodePtr& code, RenderingState& renderingState )
 	{
+		cout << "=== Prunning begins ===" << endl << endl;
+		
 		MortonCodePtr parentCode = code->traverseUp();
 		auto nodeIt = ParentOctree::m_hierarchy->find( parentCode );
 		
@@ -217,12 +219,15 @@ namespace model
 		}
 		else
 		{
+			cout << "Parent not available" << endl << endl;
 			auto nodeIt = ParentOctree::m_hierarchy->find( code );
 			assert( nodeIt != ParentOctree::m_hierarchy->end() );
 			
 			OctreeNodePtr node = nodeIt->second;
 			ParentOctree::setupNodeRendering( node, renderingState );
 		}
+		
+		cout << "=== Prunning ends ===" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -240,6 +245,9 @@ namespace model
 	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::branch( const MortonCodePtr& code, RenderingState& renderingState )
 	{
+		cout << "=== Branching begins ===" << endl << endl;
+		cout << "Branch:" << code->getPathToRoot( true ) << endl;
+		
 		auto nodeIt = ParentOctree::m_hierarchy->find( code );
 		assert( nodeIt != ParentOctree::m_hierarchy->end() );
 		OctreeNodePtr node = nodeIt->second;
@@ -251,18 +259,15 @@ namespace model
 			MortonCodePtr firstChild = code->getFirstChild();
 			auto childIt = ParentOctree::m_hierarchy->lower_bound( firstChild );
 			
-			cout << "Branch:" << code->getPathToRoot( true ) << endl
-				 << "First child: " << firstChild->getPathToRoot( true ) << endl;;
-			
 			onBranchingItAcquired( childIt, firstChild );
 			
-			childFound = childIt != ParentOctree::m_hierarchy->end();
+			childFound = childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code;
 			
 			while( childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code )
 			{
 				MortonCodePtr childCode = childIt->first;
 				
-				//cout << "Inserting: " << childCode->getPathToRoot( true ) << endl;
+				cout << "Into front: " << childCode->getPathToRoot( true ) << endl;
 				
 				m_frontBehavior->insert( *childCode );
 				
@@ -277,10 +282,15 @@ namespace model
 			}
 		}
 		
+		cout << "Child found? " << boolalpha  << childFound << endl << endl;
+		
 		if( !childFound )
 		{
+			cout << "Children not available. Is leaf? " << boolalpha << !isInner << endl << endl;
 			ParentOctree::setupNodeRendering( node, renderingState );
 		}
+		
+		cout << "=== Branching ends ===" << endl << endl;
 		
 		return childFound;
 	}
@@ -307,7 +317,7 @@ namespace model
 	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
-		//cout << "Inserted draw: " << code->getPathToRoot( true ) << endl;
+		cout << "Into front: " << code->getPathToRoot( true ) << endl;
 		m_frontBehavior->insert( *code );
 		
 		ParentOctree::setupNodeRendering( node, renderingState );

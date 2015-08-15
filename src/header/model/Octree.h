@@ -93,6 +93,9 @@ namespace model
 		/** Gets the maximum level that this octree can reach. */
 		virtual unsigned int getMaxLevel() const;
 		
+		/** Calculates the MortonCode of a Point. */
+		MortonCode calcMorton( const Point& point ) const;
+		
 		template <typename M, typename P >
 		friend ostream& operator<<( ostream& out, const OctreeBase< M, P >& octree );
 		
@@ -105,9 +108,6 @@ namespace model
 		
 		/** Creates all leaf nodes and put points inside them. */
 		virtual void buildLeaves( const PointVector& points );
-		
-		/** Calculates the MortonCode of a Point. */
-		MortonCode calcMorton( const Point& point ) const;
 		
 		/** Inserts a point into the octree leaf it belongs. Creates the node in the process if necessary. */
 		virtual void insertPointInLeaf( const PointPtr& point );

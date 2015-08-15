@@ -47,6 +47,16 @@ namespace model
 		//cout << "New frustum: " << endl << *m_frustum << endl << endl;
 	}
 	
+	void TucanoRenderingState::setupRendering()
+	{
+		glClearColor(1.0, 1.0, 1.0, 0.0);
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		clearAttribs();
+		//clearIndices();
+		updateFrustum();
+	}
+	
 	inline unsigned int TucanoRenderingState::render()
 	{
 		// TODO: This code is inefficient with all these copies among vectors. Need to fix that.

@@ -37,8 +37,6 @@ void MainWindow::initialize()
 	connect( ui->spinbox_first_max_distance,
 			 static_cast< void ( QDoubleSpinBox::* )( double )>( &QDoubleSpinBox::valueChanged ), ui->pointRendererWidget,
 			 &PointRendererWidget::setJFPBRFirstMaxDistance );
-//    connect(ui->slider_ssao_blur, &QSlider::valueChanged, ui->glwidget, &GLWidget::setSSAOBlur);
-//    connect(ui->slider_toon_level, &QSlider::valueChanged, ui->glwidget, &GLWidget::setToonQuantLevel);
     
 	connect( ui->check_trackball, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleDrawTrackball );
 	
@@ -46,6 +44,8 @@ void MainWindow::initialize()
 			 &PointRendererWidget::toggleDrawAuxViewports );
 	
 	connect( ui->bt_write_frames, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleWriteFrames );
+	
+	connect( ui->bt_draw_node_debug, &QCheckBox::stateChanged, ui->pointRendererWidget, &PointRendererWidget::toggleNodeDebugDraw );
 	
 	connect( ui->pointRendererWidget, &PointRendererWidget::debugInfoDefined, ui->debug_info, &QTextBrowser::setText);
 }

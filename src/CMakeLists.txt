@@ -58,6 +58,7 @@ setup_package(GLM)
 setup_package(GLEW)
 setup_package(Eigen3)
 setup_package(SQLite3)
+setup_package(Freetype)
 
 # Set Qt dirs.
 find_package (Qt5Core REQUIRED)
@@ -116,8 +117,9 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/TucanoRenderingState.cpp
 	
-	# Tucano related code
-	include/tucano/src/utils/qtflycamerawidget.hpp #ugly hack to use qmake in this file.
+	# Tucano related code ( ugly hacks to use qmake in these files ).
+	include/tucano/src/utils/qtflycamerawidget.hpp
+	include/tucano/src/utils/qtplainwidget.hpp 
 	
 	# Jump-flooding related code.
 	${JUMP_FLOODING_DIR}/imgSpacePBR.hpp	${JUMP_FLOODING_DIR}/imgSpacePBR.cpp
@@ -134,6 +136,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${SQLITE3_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
+	${FREETYPE_LIBRARIES}
 	RPly)
 
 # Creates renderer program and links with the renderer library.

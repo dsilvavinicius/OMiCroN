@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-
 #include <QApplication>
 #include <string>
 #include "MemoryManager.h"

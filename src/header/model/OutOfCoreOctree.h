@@ -69,7 +69,7 @@ namespace model
 		};
 		
 		OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename,
-						 const MemorySetup& memSetup = MemorySetup( 0.1f, 0.2f, 200, 100, 100 ) );
+						 const MemorySetup& memSetup = MemorySetup( 0.1f, 0.2f, 200, 100, 1000 ) );
 		
 		/** Builds octree using the database. */
 		virtual void build();
@@ -815,8 +815,13 @@ namespace model
 		vector< IdNodeVector > queries = m_sqLite.getRequestResults( m_memSetup.m_maxNodeRequestsPerFrame );
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
+		cout << "Queries processed: " << queries.size() << endl << endl
+			 << "Max allowed: " << m_memSetup.m_maxNodeRequestsPerFrame << endl << endl;
+		
 		for( IdNodeVector query : queries )
 		{
+			cout << "Query vector size: " << query.size()  << endl << endl;
+			
 			auto pastInsertionIt = hierarchy->upper_bound( query[ 0 ].first );
 			
 			for( IdNode idNode : query )

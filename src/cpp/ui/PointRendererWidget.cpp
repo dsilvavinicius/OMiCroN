@@ -1,4 +1,5 @@
 #include "PointRendererWidget.h"
+#include "TucanoDebugRenderer.h"
 #include <QDebug>
 #include <QTimer>
 
@@ -79,21 +80,15 @@ void PointRendererWidget::adaptProjThresh( float desiredRenderTime )
 
 void PointRendererWidget::paintGL (void)
 {
+	cout << "=== Painting starts ===" << endl << endl;
+	
 	clock_t startOfFrameTime = clock();
 	clock_t totalTiming = startOfFrameTime;
 	makeCurrent();
 
-	glClearColor(1.0, 1.0, 1.0, 0.0);
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-	//cout << "STARTING PAINTING!" << endl;
-	//m_octree->drawBoundaries(painter, true);
-	
 	adaptProjThresh( m_desiredRenderTime );
 	
-	m_renderer->clearAttribs();
-	//m_renderer->clearIndices();
-	m_renderer->updateFrustum();
+	m_renderer->setupRendering();
 	
 	// Render the scene.
 	clock_t timing = clock();
@@ -103,6 +98,8 @@ void PointRendererWidget::paintGL (void)
 	
 	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
 
+	m_renderer->afterRendering();
+	
 	totalTiming = clock() - totalTiming;
 	
 	// Render debug data.
@@ -139,6 +136,8 @@ void PointRendererWidget::paintGL (void)
 		renderAuxViewport( TOP );
 		glDisable( GL_SCISSOR_TEST );
 	}
+	
+	cout << "=== Painting ends ===" << endl << endl;
 }
 
 void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
@@ -225,6 +224,40 @@ void PointRendererWidget::toggleDrawTrackball( void )
 void PointRendererWidget::toggleDrawAuxViewports( void )
 {
 	m_drawAuxViewports = !m_drawAuxViewports;
+	updateGL();
+}
+
+void PointRendererWidget::toggleNodeDebugDraw( const int& value )
+{
+	Attributes vertAttribs = model::NORMALS;
+	
+	if( value )
+	{
+		cout << "Activating node debug" << endl << endl;
+		
+		delete m_renderer;
+		auto pointHandler = [ & ]( const PointVector& points )
+		{
+			stringstream ss;
+			const Point& p = *points[ 0 ];
+			ss << "0x" << hex << m_octree->calcMorton( p ).getBits();
+			const Vec3& pos = p.getPos();
+			renderText( pos.x, pos.y, pos.z, ss.str().c_str(), QFont( "Helvetica", 7 ) );
+		};
+		m_renderer = new TucanoDebugRenderer< Point >( pointHandler, camera, &light_trackball, &mesh, vertAttribs,
+											  QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+		
+		cout << "Debug renderer activated" << endl << endl;
+	}
+	else
+	{
+		cout << "Deactivating node debug" << endl << endl;
+		
+		delete m_renderer;
+		m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, vertAttribs,
+									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+	}
+	
 	updateGL();
 }
 

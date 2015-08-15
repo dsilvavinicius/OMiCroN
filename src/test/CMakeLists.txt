@@ -29,10 +29,15 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
 	
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
-	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
-	${CPP_DIR}/${MODEL_DIR}/ScanTest.cpp
-	${HEADER_DIR}/${MODEL_DIR}/CompactionQGLView.h	${CPP_DIR}/${MODEL_DIR}/CompactionQGLView.cpp
-	${CPP_DIR}/${MODEL_DIR}/CompactionTest.cpp
+	${HEADER_DIR}/${MODEL_DIR}/TextTestWidget.h		${CPP_DIR}/${MODEL_DIR}/TextTestWidget.cpp
+	${CPP_DIR}/${MODEL_DIR}/TextTest.cpp
+
+#	The tests below are not compatible with glew and Tucano, since are using new Qt only.
+
+#	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
+#	${CPP_DIR}/${MODEL_DIR}/ScanTest.cpp
+#	${HEADER_DIR}/${MODEL_DIR}/CompactionQGLView.h	${CPP_DIR}/${MODEL_DIR}/CompactionQGLView.cpp
+#	${CPP_DIR}/${MODEL_DIR}/CompactionTest.cpp
 	
 	${CPP_DIR}/main.cpp)
 

@@ -32,6 +32,10 @@ namespace model
 		/** Updates the frustum after changes on camera. */
 		void updateFrustum();
 		
+		/** This implementation clears up color and depth buffers, the attributes of the vertices and updates the viewing
+		 * frustum data. */
+		virtual void setupRendering() override;
+		
 		virtual unsigned int render();
 		
 		virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const;

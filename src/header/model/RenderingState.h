@@ -28,10 +28,17 @@ namespace model
 	public:
 		RenderingState( const Attributes& attribs );
 		
+		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
+		 * Default implementation does nothing. */
+		virtual void setupRendering(){};
+		
 		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
 		 * been already handled.
 		 * @returns the number of rendered points. */
 		virtual unsigned int render() = 0;
+		
+		/** Event ocurring to setup rendering. Must be called after render() call. Default implementation does nothing. */
+		virtual void afterRendering(){};
 		
 		/** Checks if the axis-aligned box is culled by camera frustum.
 		 * @returns true if the box should be culled and false otherwise. */
@@ -42,12 +49,20 @@ namespace model
 		 * rendered. False otherwise (indicating that the traversal should proceed deeper in the hierarchy). */
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const = 0;
 		
-		/** Indicates that the node contents passed should be rendered. A static method was used to overcome C++ limitation of
-		* class member specializations.
-		* @param NodeContents is the type of nodes' contents. The octree is aware of this type.
-		*/
-		template< typename NodeContents >
-		void handleNodeRendering( const NodeContents& contents );
+		/** Indicates that the node contents passed should be rendered. */
+		virtual void handleNodeRendering( const PointPtr& point );
+		
+		/** Indicates that the node contents passed should be rendered. */
+		virtual void handleNodeRendering( const PointVector& points );
+		
+		/** Indicates that the node contents passed should be rendered. */
+		virtual void handleNodeRendering( const ExtendedPointPtr& point );
+		
+		/** Indicates that the node contents passed should be rendered. */
+		virtual void handleNodeRendering( const ExtendedPointVector& points );
+		
+		/** Indicates that the node contents passed should be rendered. */
+		virtual void handleNodeRendering( const vector< unsigned int >& points );
 		
 		vector< Vec3 >& getPositions() { return m_positions; }
 		vector< Vec3 >& getColors() { return m_colors; }
@@ -69,67 +84,48 @@ namespace model
 		Attributes m_attribs;
 	};
 	
-	namespace NodeRenderingHandler
+	inline void RenderingState::handleNodeRendering( const PointPtr& point )
 	{
-		template< typename NodeContents >
-		void handle( RenderingState& state, const NodeContents& contents );
-		
-		template<>
-		inline void handle< PointPtr >( RenderingState& state, const PointPtr& point )
+		m_positions.push_back( point->getPos() );
+		if( m_attribs == COLORS )
 		{
-			state.getPositions().push_back( point->getPos() );
-			if( state.getAttribs() == COLORS )
-			{
-				state.getColors().push_back( point->getColor() );
-			}
-			else
-			{
-				state.getNormals().push_back( point->getColor() );
-			}
+			m_colors.push_back( point->getColor() );
 		}
-	
-		template<>
-		inline void handle< PointVector >( RenderingState& state, const PointVector& points )
+		else
 		{
-			for( PointPtr point : points )
-			{
-				handle( state, point );
-			}
-		}
-	
-		template<>
-		inline void handle< ExtendedPointPtr >( RenderingState& state, const ExtendedPointPtr& point )
-		{
-			state.getPositions().push_back( point->getPos() );
-			state.getColors().push_back( point->getColor() );
-			state.getNormals().push_back( point->getNormal() );
-		}
-	
-		template<>
-		inline void handle< ExtendedPointVector >(
-			RenderingState& state, const ExtendedPointVector& points )
-		{
-			for( ExtendedPointPtr point : points )
-			{
-				handle( state, point );
-			}
-		}
-		
-		template<>
-		inline void handle< vector< unsigned int > >(
-			RenderingState& state, const vector< unsigned int >& points )
-		{
-			for( unsigned int index : points )
-			{
-				state.getIndices().push_back( index );
-			}
+			m_normals.push_back( point->getColor() );
 		}
 	}
 	
-	template< typename NodeContents >
-	inline void RenderingState::handleNodeRendering( const NodeContents& contents )
+	inline void RenderingState::handleNodeRendering( const PointVector& points )
 	{
-		NodeRenderingHandler::handle< NodeContents >( *this, contents );
+		for( PointPtr point : points )
+		{
+			handleNodeRendering( point );
+		}
+	}
+	
+	inline void RenderingState::handleNodeRendering( const ExtendedPointPtr& point )
+	{
+		m_positions.push_back( point->getPos() );
+		m_colors.push_back( point->getColor() );
+		m_normals.push_back( point->getNormal() );
+	}
+	
+	inline void RenderingState::handleNodeRendering( const ExtendedPointVector& points )
+	{
+		for( ExtendedPointPtr point : points )
+		{
+			handleNodeRendering( point );
+		}
+	}
+		
+	inline void RenderingState::handleNodeRendering( const vector< unsigned int >& points )
+	{
+		for( unsigned int index : points )
+		{
+			m_indices.push_back( index );
+		}
 	}
 }
 

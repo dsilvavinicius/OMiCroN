@@ -48,7 +48,7 @@ namespace model
 		PointVectorPtr points = node-> template getContents< PointVector >();
 		
 		#pragma omp critical (FrontRendering)
-			renderingState.handleNodeRendering( points );
+			renderingState.handleNodeRendering( *points );
 	}
 	
 	//=====================================================================
