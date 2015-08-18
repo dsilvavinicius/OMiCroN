@@ -22,7 +22,7 @@ namespace model
 	template< typename T >
 	ostream& operator<<( ostream& out, const vector< T >& v )
 	{
-		out << "{" << endl;
+		out << "size: " << v.size() << endl << "{" << endl;
 		bool first = true;
 		for( T element : v )
 		{
@@ -44,7 +44,7 @@ namespace model
 	template< typename T >
 	ostream& operator<<( ostream& out, const vector< T* >& v )
 	{
-		out << "{" << endl;
+		out << "size: " << v.size() << endl << "{" << endl;
 		bool first = true;
 		for( T* element : v )
 		{
@@ -66,7 +66,7 @@ namespace model
 	template< typename T >
 	ostream& operator<<( ostream& out, const set< T >& s )
 	{
-		out << "{" << endl;
+		out << "size: " << s.size() << endl << "{" << endl;
 		bool first = true;
 		for( T element : s )
 		{
@@ -89,6 +89,9 @@ namespace model
 	ostream& operator<<( ostream& out, const vector< vec3 >& v );
 	
 	template<>
+	ostream& operator<<( ostream& out, const vector< vec4 >& v );
+	
+	template<>
 	ostream& operator<<( ostream& out, const vector< PointPtr >& v );
 	
 	template<>
@@ -101,6 +104,8 @@ namespace model
 	ostream& operator<<( ostream& out, const QRect& rect );
 	
 	ostream& operator<<( ostream& out, const vec3& vec );
+	
+	ostream& operator<<( ostream& out, const vec4& vec );
 }
 
 #endif

@@ -18,6 +18,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include "Stream.h"
+
 using namespace Tucano;
 using namespace Eigen;
 
@@ -141,7 +143,13 @@ namespace model
 				ox += g->bitmap.width + 1;
 			}
 
-			fprintf( stderr, "Generated a %d x %d (%d kb) texture atlas\n", w, h, w * h / 1024 );
+			cout << "Generated a " << w << " x " << h << " ( " << w * h / 1024 << " kb ) texture atlas" << endl;
+		}
+		
+		~Atlas()
+		{
+			tex.unbind();
+			tex.destroy();
 		}
 	};
 	
@@ -224,7 +232,8 @@ namespace model
 		const uint8_t *p;
 		Atlas* a = m_a12;
 
-		vector< Vector4f > coords( 6 * strlen(text) );
+		vector< Vector4f > coords;
+		vector< GLuint > indices;
 		int c = 0;
 
 		/* Loop through all characters */
@@ -244,22 +253,63 @@ namespace model
 			if( !w || !h )
 				continue;
 
-			coords[ c++ ] = Vector4f( x2,		-y2,	 a->c[ *p ].tx,							a->c[ *p ].ty );
-			coords[ c++ ] = Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty );
-			coords[ c++ ] = Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h );
-			coords[ c++ ] = Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty );
-			coords[ c++ ] = Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h );
-			coords[ c++ ] = Vector4f( x2 + w,	-y2 - h, a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty + a->c[ *p ].bh / a->h );
+			indices.push_back( c++ );
+			coords.push_back( Vector4f( x2,		-y2,	 a->c[ *p ].tx,							a->c[ *p ].ty ) );
+			
+			indices.push_back( c++ );
+			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
+			
+			indices.push_back( c++ );
+			coords.push_back( Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			
+			indices.push_back( c++ );
+			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
+			
+			indices.push_back( c++ );
+			coords.push_back( Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			
+			indices.push_back( c++ );
+			coords.push_back( Vector4f( x2 + w,	-y2 - h, a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
 		}
-
+		
 		m_textShader.bind();
 		/* Use the texture containing the atlas */
 		m_textShader.setUniform( "tex", a->tex.bind() );
 		
+		//
+		/*GLuint buffer;
+		glGenBuffers( 1, &buffer );
+		glBindBuffer( GL_TRANSFORM_FEEDBACK_BUFFER, buffer );
+		
+		GLuint id;
+		int bufferSize = coords.size() * sizeof( vec4 );
+		glGenTransformFeedbacks( 1, &id );
+		glBufferData( GL_TRANSFORM_FEEDBACK_BUFFER, bufferSize, NULL, GL_DYNAMIC_COPY );
+		glBindBufferRange( GL_TRANSFORM_FEEDBACK_BUFFER, 0, buffer, 0, bufferSize );
+		
+		const char* vars[] = { "feedCoord" };
+		glTransformFeedbackVaryings( m_textShader.getShaderProgram(), 1, vars, GL_INTERLEAVED_ATTRIBS );
+		m_textShader.linkProgram();
+		glBeginTransformFeedback( GL_TRIANGLES );*/
+		//
+		
 		Mesh mesh;
 		mesh.loadVertices( coords );
+		mesh.loadIndices( indices );
 		mesh.setAttributeLocation( m_textShader );
 		mesh.render();
+		
+		//
+		/*vector< vec4 > feedbackData( coords.size() );
+		glEndTransformFeedback();
+		glFlush();
+		glGetBufferSubData( GL_TRANSFORM_FEEDBACK_BUFFER, 0, bufferSize, feedbackData.data() );
+		
+		glInvalidateBufferData( buffer );
+		glDeleteTransformFeedbacks( 1, &id );
+		
+		cout << "Feedback data:" << endl << endl << feedbackData << endl;*/
+		//
 	}
 	
 	inline void TextEffect::setColor( const Vector4f& color )

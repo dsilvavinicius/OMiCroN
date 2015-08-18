@@ -13,6 +13,8 @@ namespace model
 		{
 			cout << "=== Starting paint ===" << endl << endl;
 			
+			glViewport( 0, 0, this->width(), this->height() );
+			
 			float sx = 2.0 / width();
 			float sy = 2.0 / height();
 
