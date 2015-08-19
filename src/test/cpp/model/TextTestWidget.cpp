@@ -44,25 +44,25 @@ namespace model
 			cout << "Rendering texts" << endl << endl;
 			
 			/* Effects of alignment */
-			effect.render("The Quick Brown Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 50 * sy, sx, sy);
-			effect.render("The Misaligned Fox Jumps Over The Lazy Dog", -1 + 8.5 * sx, 1 - 100.5 * sy, sx, sy);
+			effect.render( "The Quick Brown Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT , -1 + 8 * sx, 1 - 50 * sy, sx, sy );
+			effect.render( "The Misaligned Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT , -1 + 8.5 * sx, 1 - 100.5 * sy, sx, sy );
 
 			/* Scaling the texture versus changing the font size */
-			effect.render("The Small Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 175 * sy, sx * 0.5, sy * 0.5);
-			effect.render("The Small Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 200 * sy, sx, sy);
-			effect.render("The Tiny Texture Scaled Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 235 * sy, sx * 0.25, sy * 0.25);
-			effect.render("The Tiny Font Sized Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 250 * sy, sx, sy);
+			effect.render( "The Small Texture Scaled Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT , -1 + 8 * sx, 1 - 175 * sy, sx * 0.5, sy * 0.5 );
+			effect.render( "The Small Font Sized Fox Jumps Over The Lazy Dog", TextEffect::TWENTY_FOUT_PT, -1 + 8 * sx, 1 - 200 * sy, sx, sy );
+			effect.render( "The Tiny Texture Scaled Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT, -1 + 8 * sx, 1 - 235 * sy, sx * 0.25, sy * 0.25 );
+			effect.render( "The Tiny Font Sized Fox Jumps Over The Lazy Dog", TextEffect::TWELVE_PT, -1 + 8 * sx, 1 - 250 * sy, sx, sy );
 
 			/* Colors and transparency */
-			effect.render("The Solid Black Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 430 * sy, sx, sy);
+			effect.render( "The Solid Black Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT, -1 + 8 * sx, 1 - 430 * sy, sx, sy );
 
 			effect.setColor( red );
-			effect.render("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 330 * sy, sx, sy);
-			effect.render("The Solid Red Fox Jumps Over The Lazy Dog", -1 + 28 * sx, 1 - 450 * sy, sx, sy);
+			effect.render( "The Solid Red Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT, -1 + 8 * sx, 1 - 330 * sy, sx, sy );
+			effect.render( "The Solid Red Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT, -1 + 28 * sx, 1 - 450 * sy, sx, sy );
 
 			effect.setColor( transparent_green );
-			effect.render("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 8 * sx, 1 - 380 * sy, sx, sy);
-			effect.render("The Transparent Green Fox Jumps Over The Lazy Dog", -1 + 18 * sx, 1 - 440 * sy, sx, sy);
+			effect.render( "The Transparent Green Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT, -1 + 8 * sx, 1 - 380 * sy, sx, sy );
+			effect.render( "The Transparent Green Fox Jumps Over The Lazy Dog", TextEffect::FORTY_EIGHT_PT, -1 + 18 * sx, 1 - 440 * sy, sx, sy );
 			
 			cout << "=== Ending paint ===" << endl << endl;
 		}

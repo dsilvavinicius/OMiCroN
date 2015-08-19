@@ -10,10 +10,10 @@
 #include <cmath>
 #include <algorithm>
 
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+//#define GLM_FORCE_RADIANS
+//#include <glm/glm.hpp>
+//#include <glm/gtc/matrix_transform.hpp>
+//#include <glm/gtc/type_ptr.hpp>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -160,6 +160,15 @@ namespace model
 	: public Effect
 	{
 	public:
+		enum ATLAS_SIZE
+		{
+			FORTY_EIGHT_PT,	/** 48pt atlas */
+			TWENTY_FOUT_PT,	/** 24pt atlas */
+			TWELVE_PT,		/** 12pt atlas */
+			SIX_PT,			/** 6pt atlas */
+			COUNT
+		};
+		
 		TextEffect( string shadersDir = "shaders/" );
 		
 		~TextEffect();
@@ -169,22 +178,23 @@ namespace model
 		virtual void initialize( const string& fontFilename );
 		
 		/**
-		* Render text using the currently loaded font and currently set font size.
+		* Render text in the position in window coordinates using the currently loaded font and currently set font size.
 		* Rendering starts at coordinates (x, y), z is always 0.
 		* The pixel coordinates that the FreeType2 library uses are scaled by (sx, sy).
 		*/
-		virtual void render( const char *text, float x, float y, float sx, float sy );
+		virtual void render( const char *text, const ATLAS_SIZE& size, float x, float y, float sx, float sy );
+		
+		/** Render text in the 3D coordinate, with a given model-view-project matrix being applyed to the coordinate.
+		* The pixel coordinates that the FreeType2 library uses are scaled by (sx, sy). */
+		virtual void render( const char *text, const Vector4f& pos, const Matrix4f& mvp, float sx, float sy );
 		
 		/** Sets the text color. Supports alpha channel. */
 		void setColor( const Vector4f& color );
 		
 	protected:
-		Atlas* m_a48;	/** 48pt atlas */
-		Atlas* m_a24;	/** 24pt atlas */
-		Atlas* m_a12;	/** 12pt atlas */
-		Atlas* m_a6;	/** 6pt atlas */
+		Atlas* m_atlases[ 4 ];
 		
-		Shader m_textShader;
+		Shader m_text2DShader;
 	};
 	
 	inline TextEffect::TextEffect( string shadersDir )
@@ -193,10 +203,10 @@ namespace model
 	
 	inline TextEffect::~TextEffect()
 	{
-		delete m_a48;
-		delete m_a24;
-		delete m_a12;
-		delete m_a6;
+		for( int i = 0; i < ATLAS_SIZE::COUNT; ++i )
+		{
+			delete m_atlases[ i ];
+		}
 	}
 	
 	inline void TextEffect::initialize( const string& fontFilename )
@@ -218,19 +228,20 @@ namespace model
 			throw logic_error( ss.str() );
 		}
 
-		loadShader( m_textShader, "Text" );
+		loadShader( m_text2DShader, "Text2D" );
 
 		/* Create texture atlasses for several font sizes */
-		m_a48 = new Atlas( face, 48 );
-		m_a24 = new Atlas( face, 24 );
-		m_a12 = new Atlas( face, 12 );
-		m_a6 = new Atlas( face, 6 );
+		m_atlases[ FORTY_EIGHT_PT ] = new Atlas( face, 48 );
+		m_atlases[ TWENTY_FOUT_PT ] = new Atlas( face, 24 );
+		m_atlases[ TWELVE_PT ] = new Atlas( face, 12 );
+		m_atlases[ SIX_PT ] = new Atlas( face, 6 );
 	}
 	
-	inline void TextEffect::render( const char *text, float x, float y, float sx, float sy )
+	inline void TextEffect::render( const char *text, const ATLAS_SIZE& size, float x, float y, float sx, float sy )
 	{
 		const uint8_t *p;
-		Atlas* a = m_a12;
+		
+		Atlas* a = m_atlases[ size ];
 
 		vector< Vector4f > coords;
 		vector< GLuint > indices;
@@ -272,9 +283,9 @@ namespace model
 			coords.push_back( Vector4f( x2 + w,	-y2 - h, a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
 		}
 		
-		m_textShader.bind();
+		m_text2DShader.bind();
 		/* Use the texture containing the atlas */
-		m_textShader.setUniform( "tex", a->tex.bind() );
+		m_text2DShader.setUniform( "tex", a->tex.bind() );
 		
 		//
 		/*GLuint buffer;
@@ -296,7 +307,7 @@ namespace model
 		Mesh mesh;
 		mesh.loadVertices( coords );
 		mesh.loadIndices( indices );
-		mesh.setAttributeLocation( m_textShader );
+		mesh.setAttributeLocation( m_text2DShader );
 		mesh.render();
 		
 		//
@@ -312,10 +323,40 @@ namespace model
 		//
 	}
 	
+	inline void TextEffect::render( const char *text, const Vector4f& pos, const Matrix4f& mvp, float sx, float sy )
+	{
+		Vector4f projPos = mvp * pos;
+		projPos = projPos / projPos[ 3 ];
+		
+		ATLAS_SIZE size = TWELVE_PT;
+		
+		float depth = projPos[ 2 ];
+		if( depth > 0.5 )
+		{
+			size = ATLAS_SIZE::FORTY_EIGHT_PT;
+		}
+		else if( depth > 0.f )
+		{
+			size = ATLAS_SIZE::TWENTY_FOUT_PT;
+		}
+		else if( depth > -0.5f )
+		{
+			size = ATLAS_SIZE::TWELVE_PT;
+		}
+		else if( depth > -1.f )
+		{
+			size = ATLAS_SIZE::SIX_PT;
+		}
+		
+		cout << "ProjPos:" << projPos << endl << endl << "Atlas:" << size << endl << endl;
+		
+		render( text, size, projPos[ 0 ], projPos[ 1 ], sx, sy );
+	}
+	
 	inline void TextEffect::setColor( const Vector4f& color )
 	{
-		m_textShader.bind();
-		m_textShader.setUniform( "color", color );
+		m_text2DShader.bind();
+		m_text2DShader.setUniform( "color", color );
 	}
 }
 
