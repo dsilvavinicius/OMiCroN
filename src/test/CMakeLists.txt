@@ -31,6 +31,8 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TextTestWidget.h		${CPP_DIR}/${MODEL_DIR}/TextTestWidget.cpp
 	${CPP_DIR}/${MODEL_DIR}/TextTest.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Text3DTestWidget.h		${CPP_DIR}/${MODEL_DIR}/Text3DTestWidget.cpp
+	${CPP_DIR}/${MODEL_DIR}/Text3DTest.cpp
 
 #	The tests below are not compatible with glew and Tucano, since are using new Qt only.
 

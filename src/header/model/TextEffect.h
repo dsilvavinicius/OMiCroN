@@ -4,6 +4,7 @@
 #include <effect.hpp>
 #include <texture.hpp>
 #include <mesh.hpp>
+#include <camera.hpp>
 
 #include <cstdio>
 #include <cstdlib>
@@ -38,7 +39,8 @@ namespace model
 
 		unsigned int w;	// width of texture in pixels
 		unsigned int h;	// height of texture in pixels
-
+		unsigned int lineh; // height of one line of text = height of the tallest char in the map.
+		
 		struct {
 			float ax;	// advance.x
 			float ay;	// advance.y
@@ -65,7 +67,8 @@ namespace model
 			unsigned int rowh = 0;
 			w = 0;
 			h = 0;
-
+			lineh = 0;
+			
 			memset( c, 0, sizeof c );
 
 			/* Find minimum size for a texture holding all visible ASCII characters */
@@ -81,6 +84,7 @@ namespace model
 				{
 					w = std::max( w, roww );
 					h += rowh;
+					lineh = std::max( rowh, lineh );
 					roww = 0;
 					rowh = 0;
 				}
@@ -90,6 +94,7 @@ namespace model
 
 			w = std::max( w, roww );
 			h += rowh;
+			lineh = std::max( rowh, lineh );
 
 			/* Create a texture that will be used to hold all ASCII glyphs */
 			tex.create( GL_TEXTURE_2D, GL_ALPHA, w, h, GL_ALPHA, GL_UNSIGNED_BYTE );
@@ -162,10 +167,10 @@ namespace model
 	public:
 		enum ATLAS_SIZE
 		{
-			FORTY_EIGHT_PT,	/** 48pt atlas */
-			TWENTY_FOUT_PT,	/** 24pt atlas */
-			TWELVE_PT,		/** 12pt atlas */
-			SIX_PT,			/** 6pt atlas */
+			VERY_LARGE,	/** 24pt atlas */
+			LARGE,		/** 18pt atlas */
+			MEDIUM,		/** 12pt atlas */
+			SMALL,		/** 6pt atlas */
 			COUNT
 		};
 		
@@ -182,11 +187,10 @@ namespace model
 		* Rendering starts at coordinates (x, y), z is always 0.
 		* The pixel coordinates that the FreeType2 library uses are scaled by (sx, sy).
 		*/
-		virtual void render( const char *text, const ATLAS_SIZE& size, float x, float y, float sx, float sy );
+		virtual void render( const string& text, const ATLAS_SIZE& size, float x, float y, float sx, float sy );
 		
-		/** Render text in the 3D coordinate, with a given model-view-project matrix being applyed to the coordinate.
-		* The pixel coordinates that the FreeType2 library uses are scaled by (sx, sy). */
-		virtual void render( const char *text, const Vector4f& pos, const Matrix4f& mvp, float sx, float sy );
+		/** Render text in the 3D coordinate, with a given Camera. */
+		virtual void render( const string& text, const Vector4f& pos, Camera& cam );
 		
 		/** Sets the text color. Supports alpha channel. */
 		void setColor( const Vector4f& color );
@@ -231,13 +235,14 @@ namespace model
 		loadShader( m_text2DShader, "Text2D" );
 
 		/* Create texture atlasses for several font sizes */
-		m_atlases[ FORTY_EIGHT_PT ] = new Atlas( face, 48 );
-		m_atlases[ TWENTY_FOUT_PT ] = new Atlas( face, 24 );
-		m_atlases[ TWELVE_PT ] = new Atlas( face, 12 );
-		m_atlases[ SIX_PT ] = new Atlas( face, 6 );
+		m_atlases[ VERY_LARGE ] = new Atlas( face, 24 );
+		m_atlases[ LARGE ] = new Atlas( face, 18 );
+		m_atlases[ MEDIUM ] = new Atlas( face, 12 );
+		m_atlases[ SMALL ] = new Atlas( face, 6 );
 	}
 	
-	inline void TextEffect::render( const char *text, const ATLAS_SIZE& size, float x, float y, float sx, float sy )
+	inline void TextEffect::render( const string& text, const ATLAS_SIZE& size, float origX, float origY, float sx,
+									float sy )
 	{
 		const uint8_t *p;
 		
@@ -247,8 +252,11 @@ namespace model
 		vector< GLuint > indices;
 		int c = 0;
 
+		float x = origX;
+		float y = origY;
+		
 		/* Loop through all characters */
-		for( p = ( const uint8_t * )text; *p; p++ )
+		for( p = ( const uint8_t * )text.c_str(); *p; p++ )
 		{
 			/* Calculate the vertex and texture coordinates */
 			float x2 = x + a->c[ *p ].bl * sx;
@@ -262,7 +270,14 @@ namespace model
 
 			/* Skip glyphs that have no pixels */
 			if( !w || !h )
+			{
+				if( *( char* )p == '\n' )
+				{
+					x = origX;
+					y -= a->lineh * sy;
+				}
 				continue;
+			}
 
 			indices.push_back( c++ );
 			coords.push_back( Vector4f( x2,		-y2,	 a->c[ *p ].tx,							a->c[ *p ].ty ) );
@@ -323,34 +338,41 @@ namespace model
 		//
 	}
 	
-	inline void TextEffect::render( const char *text, const Vector4f& pos, const Matrix4f& mvp, float sx, float sy )
+	inline void TextEffect::render( const string& text, const Vector4f& pos, Camera& cam )
 	{
+		
+		Matrix4f mvp = *cam.projectionMatrix() * cam.viewMatrix()->matrix();
+		Vector4f viewport = cam.getViewport();
+		
+		float sx = 2.0 / viewport[ 2 ];
+		float sy = 2.0 / viewport[ 3 ];
+		
 		Vector4f projPos = mvp * pos;
 		projPos = projPos / projPos[ 3 ];
 		
-		ATLAS_SIZE size = TWELVE_PT;
-		
-		float depth = projPos[ 2 ];
-		if( depth > 0.5 )
+		if( projPos[ 2 ] >= -1.f && projPos[ 2 ] <= 1.f )
 		{
-			size = ATLAS_SIZE::FORTY_EIGHT_PT;
+			// The position is inside frustum.
+			ATLAS_SIZE size = SMALL;
+			
+			float depth = abs( ( cam.viewMatrix()->matrix() * pos )[ 2 ] );
+			float frustumZ = cam.getFarPlane() - cam.getNearPlane();
+			
+			if( depth > frustumZ * 0.5f )
+			{
+				size = ATLAS_SIZE::MEDIUM;
+			}
+			else if( depth > frustumZ * 0.25f )
+			{
+				size = ATLAS_SIZE::LARGE;
+			}
+			else
+			{
+				size = ATLAS_SIZE::VERY_LARGE;
+			}
+			
+			render( text, size, projPos[ 0 ], projPos[ 1 ], sx, sy );
 		}
-		else if( depth > 0.f )
-		{
-			size = ATLAS_SIZE::TWENTY_FOUT_PT;
-		}
-		else if( depth > -0.5f )
-		{
-			size = ATLAS_SIZE::TWELVE_PT;
-		}
-		else if( depth > -1.f )
-		{
-			size = ATLAS_SIZE::SIX_PT;
-		}
-		
-		cout << "ProjPos:" << projPos << endl << endl << "Atlas:" << size << endl << endl;
-		
-		render( text, size, projPos[ 0 ], projPos[ 1 ], sx, sy );
 	}
 	
 	inline void TextEffect::setColor( const Vector4f& color )
