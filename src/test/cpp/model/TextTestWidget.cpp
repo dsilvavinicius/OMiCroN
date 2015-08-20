@@ -20,9 +20,9 @@ namespace model
 
 			cout << "Initializing effect" << endl << endl;
 			
-			TextEffect effect( QGuiApplication::applicationDirPath().toStdString() + "/../shaders/" );
+			TextEffect effect( "../shaders/" );
 			
-			effect.initialize( QGuiApplication::applicationDirPath().toStdString() + "/../shaders/Inconsolata.otf" );
+			effect.initialize( "../shaders/Inconsolata.otf" );
 
 			cout << "Effect initialized" << endl << endl;
 			

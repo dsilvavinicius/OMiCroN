@@ -2,6 +2,7 @@
 #define TUCANO_DEBUG_RENDERER_H
 
 #include "TucanoRenderingState.h"
+#include "TextEffect.h"
 
 namespace model
 {
@@ -13,8 +14,7 @@ namespace model
 		using PointVector = vector< shared_ptr< Point > >;
 		
 	public:
-		/** @param pointHandler is a function that takes the contents of a node, generate debug info and renders it. */
-		TucanoDebugRenderer( const function< void( const PointVector& ) >& pointHandler, Camera* camera, Camera* lightCam ,
+		TucanoDebugRenderer( const function< string( PointVector ) >& nodeContentHandler, Camera* camera, Camera* lightCam,
 							 Mesh* mesh, const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip = 1,
 					   const Effect& effect = PHONG );
 		
@@ -29,17 +29,20 @@ namespace model
 		
 		virtual void handleNodeRendering( const PointVector& points );
 		
-		function< void( const PointVector& ) > m_pointHandler;
+		TextEffect m_textEffect;
+		
+		function< string( PointVector ) > m_nodeContentHandler;
 	};
 	
 	template< typename Point >
-	TucanoDebugRenderer< Point >::TucanoDebugRenderer( const function< void( const PointVector& ) >& pointHandler,
+	TucanoDebugRenderer< Point >::TucanoDebugRenderer( const function< string( PointVector ) >& nodeContentHandler,
 													   Camera* camera, Camera* lightCam , Mesh* mesh,
 													const Attributes& attribs, const string& shaderPath,
 													const int& jfpbrFrameskip, const Effect& effect )
-	: TucanoRenderingState( camera, lightCam, mesh, attribs, shaderPath, jfpbrFrameskip, effect )
+	: TucanoRenderingState( camera, lightCam, mesh, attribs, shaderPath, jfpbrFrameskip, effect ),
+	m_nodeContentHandler( nodeContentHandler )
 	{
-		m_pointHandler = pointHandler;
+		m_textEffect.initialize( shaderPath + "/../Inconsolata.otf" );
 	}
 	
 	template< typename Point >
@@ -77,7 +80,9 @@ namespace model
 	template< typename Point >
 	inline void TucanoDebugRenderer< Point >::handleNodeRendering( const PointVector& points )
 	{
-		m_pointHandler( points );
+		string debugStr = m_nodeContentHandler( points );
+		const Vec3& pos = points[ 0 ]->getPos();
+		m_textEffect.render( debugStr, Vector4f( pos.x, pos.y, pos.z, 1.f ), *m_camera );
 		
 		TucanoRenderingState::handleNodeRendering( points );
 	}

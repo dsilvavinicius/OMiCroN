@@ -40,10 +40,10 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
-	openMesh( QApplication::applicationDirPath().toStdString() + "/data/example/staypuff.ply" );
-	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_all.ply" );
-	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/filippini1-4.ply" );
-	//openMesh( QApplication::applicationDirPath().toStdString() + "/../../src/data/real/tempietto_sub_tot.ply" );
+	openMesh( "data/example/staypuff.ply" );
+	//openMesh( "../../src/data/real/tempietto_all.ply" );
+	//openMesh( "../../src/data/real/filippini1-4.ply" );
+	//openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -80,7 +80,7 @@ void PointRendererWidget::adaptProjThresh( float desiredRenderTime )
 
 void PointRendererWidget::paintGL (void)
 {
-	cout << "=== Painting starts ===" << endl << endl;
+	//cout << "=== Painting starts ===" << endl << endl;
 	
 	clock_t startOfFrameTime = clock();
 	clock_t totalTiming = startOfFrameTime;
@@ -137,7 +137,7 @@ void PointRendererWidget::paintGL (void)
 		glDisable( GL_SCISSOR_TEST );
 	}
 	
-	cout << "=== Painting ends ===" << endl << endl;
+	//cout << "=== Painting ends ===" << endl << endl;
 }
 
 void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
@@ -235,17 +235,16 @@ void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 	{
 		cout << "Activating node debug" << endl << endl;
 		
-		delete m_renderer;
-		auto pointHandler = [ & ]( const PointVector& points )
+		auto handler = [ & ]( PointVector points )
 		{
 			stringstream ss;
-			const Point& p = *points[ 0 ];
-			ss << "0x" << hex << m_octree->calcMorton( p ).getBits();
-			const Vec3& pos = p.getPos();
-			renderText( pos.x, pos.y, pos.z, ss.str().c_str(), QFont( "Helvetica", 7 ) );
+			ss << "0x" << hex << m_octree->calcMorton( *points[ 0 ] ).getBits();
+			return ss.str();
 		};
-		m_renderer = new TucanoDebugRenderer< Point >( pointHandler, camera, &light_trackball, &mesh, vertAttribs,
-											  QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+		
+		delete m_renderer;
+		m_renderer = new TucanoDebugRenderer< Point >( handler, camera, &light_trackball, &mesh, vertAttribs,
+											  "shaders/tucano/" );
 		
 		cout << "Debug renderer activated" << endl << endl;
 	}
@@ -255,7 +254,7 @@ void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 		
 		delete m_renderer;
 		m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, vertAttribs,
-									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+										 "shaders/tucano/" );
 	}
 	
 	updateGL();
@@ -281,10 +280,9 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	//m_octree = new Octree( 1, 10 );
 	
-	int nameBeginning = filename.find_last_of( "/" );
+	int nameBeginning = filename.find_last_of( "/" ) + 1;
 	int nameEnding = filename.find_last_of( "." );
-	string dbFilename = QApplication::applicationDirPath().toStdString() +
-						filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
+	string dbFilename = filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
 	m_octree = new Octree( 1, 10, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
@@ -300,7 +298,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
 	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, vertAttribs,
-									 QApplication::applicationDirPath().toStdString() + "/shaders/tucano/" );
+									 "shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;
 	

@@ -25,6 +25,8 @@ int main(int argc, char **argv)
 	// Use this code to run with PointRendererWidget ( Legacy Qt and Tucano )
 	QApplication app( argc, argv );
 
+	QDir::setCurrent( QApplication::applicationDirPath() );
+	
 	MainWindow window;
 
     window.show();

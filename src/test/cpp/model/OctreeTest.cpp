@@ -7,8 +7,6 @@
 #include <OutOfCoreOctree.h>
 #include "Stream.h"
 
-extern "C" string g_appPath;
-
 namespace model
 {
 	namespace test
@@ -85,7 +83,7 @@ namespace model
 		public:
 			static void SetUpTestCase()
 			{
-				m_plyFileName = new string( g_appPath + "/data/simple_point_octree.ply" );
+				m_plyFileName = new string( "data/simple_point_octree.ply" );
 			}
 		
 			static void TearDownTestCase()
@@ -104,7 +102,7 @@ namespace model
 		public:
 			static void SetUpTestCase()
 			{
-				m_plyFileName = new string( g_appPath + "/data/extended_point_octree.ply" );
+				m_plyFileName = new string( "data/extended_point_octree.ply" );
 			}
 			
 			static void TearDownTestCase()
@@ -482,7 +480,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = OctreePtr( new Octree( 1, 10, g_appPath + "/Octree.db" ) );
+				m_octree = OctreePtr( new Octree( 1, 10, "Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
 			}
 			
@@ -501,7 +499,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = OctreePtr( new Octree( 1, 20, g_appPath + "/Octree.db" ) );
+				m_octree = OctreePtr( new Octree( 1, 20, "Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, SimplePointReader::SINGLE, Attributes::COLORS );
 			}
 			
@@ -522,7 +520,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = OctreePtr( new Octree( 1, 10, g_appPath + "/Octree.db" ) );
+				m_octree = OctreePtr( new Octree( 1, 10, "Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
 			}
 			
@@ -543,7 +541,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				m_octree = OctreePtr( new Octree( 1, 20, g_appPath + "/Octree.db" ) );
+				m_octree = OctreePtr( new Octree( 1, 20, "Octree.db" ) );
 				m_octree->buildFromFile( *m_plyFileName, ExtendedPointReader::SINGLE, Attributes::COLORS_AND_NORMALS );
 			}
 			

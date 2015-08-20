@@ -15,9 +15,8 @@ namespace model
 			Vector4f viewPort = camera->getViewport();
 			glViewport( viewPort[ 0 ], viewPort[ 1 ], viewPort[ 2 ], viewPort[ 3 ] );
 			
-			TextEffect effect( QGuiApplication::applicationDirPath().toStdString() + "/../shaders/" );
-			
-			effect.initialize( QGuiApplication::applicationDirPath().toStdString() + "/../shaders/Inconsolata.otf" );
+			TextEffect effect( "../shaders/" );
+			effect.initialize( "../shaders/Inconsolata.otf" );
 			
 			/* White background */
 			glClearColor( 1, 1, 1, 1 );

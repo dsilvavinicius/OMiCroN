@@ -178,7 +178,7 @@ namespace model
 		
 		~TextEffect();
 		
-		virtual void initialize() {};
+		virtual void initialize();
 		
 		virtual void initialize( const string& fontFilename );
 		
@@ -211,6 +211,11 @@ namespace model
 		{
 			delete m_atlases[ i ];
 		}
+	}
+	
+	inline void TextEffect::initialize()
+	{
+		initialize( "shaders/Inconsolata.otf" );
 	}
 	
 	inline void TextEffect::initialize( const string& fontFilename )
@@ -336,6 +341,9 @@ namespace model
 		
 		cout << "Feedback data:" << endl << endl << feedbackData << endl;*/
 		//
+		
+		m_text2DShader.unbind();
+		a->tex.unbind();
 	}
 	
 	inline void TextEffect::render( const string& text, const Vector4f& pos, Camera& cam )

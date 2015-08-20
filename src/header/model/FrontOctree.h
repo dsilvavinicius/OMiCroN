@@ -154,7 +154,7 @@ namespace model
 		}
 		else
 		{
-			cout << "Still: " << code->getPathToRoot( true ) << endl;
+			//cout << "Still: " << code->getPathToRoot( true ) << endl;
 			
 			if( !isCullable )
 			{
@@ -201,13 +201,13 @@ namespace model
 	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::prune( const MortonCodePtr& code, RenderingState& renderingState )
 	{
-		cout << "=== Prunning begins ===" << endl << endl;
+		//cout << "=== Prunning begins ===" << endl << endl;
 		
 		MortonCodePtr parentCode = code->traverseUp();
 		auto nodeIt = ParentOctree::m_hierarchy->find( parentCode );
 		
-		cout << "Prune: " << code->getPathToRoot( true ) << endl
-			 << "Parent: " << parentCode->getPathToRoot( true ) << endl;
+		//cout << "Prune: " << code->getPathToRoot( true ) << endl
+		//	 << "Parent: " << parentCode->getPathToRoot( true ) << endl;
 		
 		onPrunningItAcquired( nodeIt, parentCode );
 		
@@ -219,7 +219,7 @@ namespace model
 		}
 		else
 		{
-			cout << "Parent not available" << endl << endl;
+			//cout << "Parent not available" << endl << endl;
 			auto nodeIt = ParentOctree::m_hierarchy->find( code );
 			assert( nodeIt != ParentOctree::m_hierarchy->end() );
 			
@@ -227,7 +227,7 @@ namespace model
 			ParentOctree::setupNodeRendering( node, renderingState );
 		}
 		
-		cout << "=== Prunning ends ===" << endl << endl;
+		//cout << "=== Prunning ends ===" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -245,8 +245,8 @@ namespace model
 	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::branch( const MortonCodePtr& code, RenderingState& renderingState )
 	{
-		cout << "=== Branching begins ===" << endl << endl;
-		cout << "Branch:" << code->getPathToRoot( true ) << endl;
+		//cout << "=== Branching begins ===" << endl << endl;
+		//cout << "Branch:" << code->getPathToRoot( true ) << endl;
 		
 		auto nodeIt = ParentOctree::m_hierarchy->find( code );
 		assert( nodeIt != ParentOctree::m_hierarchy->end() );
@@ -267,7 +267,7 @@ namespace model
 			{
 				MortonCodePtr childCode = childIt->first;
 				
-				cout << "Into front: " << childCode->getPathToRoot( true ) << endl;
+				//cout << "Into front: " << childCode->getPathToRoot( true ) << endl;
 				
 				m_frontBehavior->insert( *childCode );
 				
@@ -282,15 +282,15 @@ namespace model
 			}
 		}
 		
-		cout << "Child found? " << boolalpha  << childFound << endl << endl;
+		//cout << "Child found? " << boolalpha  << childFound << endl << endl;
 		
 		if( !childFound )
 		{
-			cout << "Children not available. Is leaf? " << boolalpha << !isInner << endl << endl;
+			//cout << "Children not available. Is leaf? " << boolalpha << !isInner << endl << endl;
 			ParentOctree::setupNodeRendering( node, renderingState );
 		}
 		
-		cout << "=== Branching ends ===" << endl << endl;
+		//cout << "=== Branching ends ===" << endl << endl;
 		
 		return childFound;
 	}
