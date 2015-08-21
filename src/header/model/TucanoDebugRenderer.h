@@ -48,6 +48,8 @@ namespace model
 		glEnable( GL_BLEND );
 		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 		
+		glEnable( GL_DEPTH_TEST );
+		
 		m_textEffect.setColor( Vector4f( 0.f, 0.f, 0.f, 1.f ) );
 	}
 	

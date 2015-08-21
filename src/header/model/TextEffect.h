@@ -183,11 +183,11 @@ namespace model
 		virtual void initialize( const string& fontFilename );
 		
 		/**
-		* Render text in the position in window coordinates using the currently loaded font and currently set font size.
-		* Rendering starts at coordinates (x, y), z is always 0.
-		* The pixel coordinates that the FreeType2 library uses are scaled by (sx, sy).
+		* Render text in the position projCoords in normalized device coordinates using the currently loaded font and
+		* currently set font size.
+		* The pixel coordinates that the FreeType2 library uses are scaled by scale( first component for x and second for y).
 		*/
-		virtual void render( const string& text, const ATLAS_SIZE& size, float x, float y, float sx, float sy );
+		virtual void render( const string& text, const ATLAS_SIZE& size, const Vector3f& projCoords, const Vector2f& scale );
 		
 		/** Render text in the 3D coordinate, with a given Camera. */
 		virtual void render( const string& text, const Vector4f& pos, Camera& cam );
@@ -240,25 +240,30 @@ namespace model
 		loadShader( m_text2DShader, "Text2D" );
 
 		/* Create texture atlasses for several font sizes */
-		m_atlases[ VERY_LARGE ] = new Atlas( face, 18 );
-		m_atlases[ LARGE ] = new Atlas( face, 12 );
-		m_atlases[ MEDIUM ] = new Atlas( face, 8 );
-		m_atlases[ SMALL ] = new Atlas( face, 6 );
+		m_atlases[ VERY_LARGE ] = new Atlas( face, 72 );
+		m_atlases[ LARGE ] = new Atlas( face, 48 );
+		m_atlases[ MEDIUM ] = new Atlas( face, 24 );
+		m_atlases[ SMALL ] = new Atlas( face, 12 );
 	}
 	
-	inline void TextEffect::render( const string& text, const ATLAS_SIZE& size, float origX, float origY, float sx,
-									float sy )
+	inline void TextEffect::render(  const string& text, const ATLAS_SIZE& size, const Vector3f& projCoords,
+									 const Vector2f& scale )
 	{
 		const uint8_t *p;
 		
 		Atlas* a = m_atlases[ size ];
 
 		vector< Vector4f > coords;
+		vector< Vector2f > texCoords;
 		vector< GLuint > indices;
 		int c = 0;
 
-		float x = origX;
-		float y = origY;
+		float x = projCoords[ 0 ];
+		float y = projCoords[ 1 ];
+		float z = projCoords[ 2 ];
+		
+		float sx = scale[ 0 ];
+		float sy = scale[ 1 ];
 		
 		/* Loop through all characters */
 		for( p = ( const uint8_t * )text.c_str(); *p; p++ )
@@ -278,29 +283,36 @@ namespace model
 			{
 				if( *( char* )p == '\n' )
 				{
-					x = origX;
+					x = projCoords[ 0 ];
 					y -= a->lineh * sy;
 				}
 				continue;
 			}
 
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2,		-y2,	 a->c[ *p ].tx,							a->c[ *p ].ty ) );
+			coords.push_back( Vector4f( x2, -y2, z, 1.f ) );
+			texCoords.push_back( Vector2f( a->c[ *p ].tx, a->c[ *p ].ty ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			coords.push_back( Vector4f( x2, -y2 - h, z, 1.f ) );
+			texCoords.push_back( Vector2f( a->c[ *p ].tx, a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
+			coords.push_back( Vector4f( x2 + w, -y2, z, 1.f ) );
+			texCoords.push_back( Vector2f( a->c[ *p ].tx + a->c[ *p ].bw / a->w, a->c[ *p ].ty ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
+			coords.push_back( Vector4f( x2 + w, -y2, z, 1.f ) );
+			texCoords.push_back( Vector2f( a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			coords.push_back( Vector4f( x2, -y2 - h, z, 1.f ) );
+			texCoords.push_back( Vector2f( a->c[ *p ].tx, a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2 + w,	-y2 - h, a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			coords.push_back( Vector4f( x2 + w, -y2 - h, z, 1.f ) );
+			texCoords.push_back( Vector2f( a->c[ *p ].tx + a->c[ *p ].bw / a->w, a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			
 		}
 		
 		m_text2DShader.bind();
@@ -326,6 +338,7 @@ namespace model
 		
 		Mesh mesh;
 		mesh.loadVertices( coords );
+		mesh.loadTexCoords( texCoords );
 		mesh.loadIndices( indices );
 		mesh.setAttributeLocation( m_text2DShader );
 		mesh.render();
@@ -352,34 +365,16 @@ namespace model
 		Matrix4f mvp = *cam.projectionMatrix() * cam.viewMatrix()->matrix();
 		Vector4f viewport = cam.getViewport();
 		
-		float sx = 2.0 / viewport[ 2 ];
-		float sy = 2.0 / viewport[ 3 ];
-		
 		Vector4f projPos = mvp * pos;
 		projPos = projPos / projPos[ 3 ];
 		
 		if( projPos[ 2 ] >= -1.f && projPos[ 2 ] <= 1.f )
 		{
 			// The position is inside frustum.
-			ATLAS_SIZE size = SMALL;
 			
-			float depth = abs( ( cam.viewMatrix()->matrix() * pos )[ 2 ] );
-			float frustumZ = cam.getFarPlane() - cam.getNearPlane();
+			Vector2f scale( 2.0 / viewport[ 2 ], 2.0 / viewport[ 3 ] );
 			
-			if( depth > frustumZ * 0.5f )
-			{
-				size = ATLAS_SIZE::MEDIUM;
-			}
-			else if( depth > frustumZ * 0.25f )
-			{
-				size = ATLAS_SIZE::LARGE;
-			}
-			else
-			{
-				size = ATLAS_SIZE::VERY_LARGE;
-			}
-			
-			render( text, size, projPos[ 0 ], projPos[ 1 ], sx, sy );
+			render( text, SMALL, projPos.head< 3 >(), scale );
 		}
 	}
 	

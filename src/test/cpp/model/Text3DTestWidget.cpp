@@ -22,6 +22,8 @@ namespace model
 			glCullFace( GL_BACK );
 			glEnable( GL_CULL_FACE );
 			
+			glEnable( GL_DEPTH_TEST );
+			
 			m_textEffect.initialize( "../shaders/Inconsolata.otf" );
 		}
 		
@@ -32,7 +34,7 @@ namespace model
 			
 			/* White background */
 			glClearColor( 1, 1, 1, 1 );
-			glClear( GL_COLOR_BUFFER_BIT );
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 			
 			Vector4f black( 0.f, 0.f, 0.f, 1.f );
 
@@ -52,7 +54,8 @@ namespace model
 			stringstream ss;
 			ss << "Camera pos: " << endl << camera->getTranslationMatrix();
 			Vector4f viewport = camera->getViewport();
-			m_textEffect.render( ss.str(), TextEffect::MEDIUM, -0.95f, -0.75f, 2.0 / viewport[ 2 ], 2.0 / viewport[ 3 ] );
+			m_textEffect.render( ss.str(), TextEffect::SMALL, Vector3f( -0.95f, -0.75f, 0.f ),
+								 Vector2f( 2.0 / viewport[ 2 ], 2.0 / viewport[ 3 ] ) );
 		}
 	}
 }
