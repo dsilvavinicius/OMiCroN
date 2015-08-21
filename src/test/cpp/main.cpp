@@ -9,9 +9,6 @@
 using namespace std;
 using namespace model;
 
-int g_argc;
-char** g_argv;
-
 class MemoryManagedEnvironment
 : public testing::Environment
 {
@@ -28,11 +25,11 @@ public:
 
 int main(int argc, char** argv)
 {
-	g_argc = argc;
-	g_argv = argv;
-	
-	string exeFilename = string( g_argv[ 0 ] );
+	string exeFilename = string( argv[ 0 ] );
 	QDir::setCurrent( exeFilename.substr( 0, exeFilename.find_last_of( "/" ) ).c_str() );
+	
+	// QApplication to be used in any Qt-based tests.
+	QApplication app( argc, argv );
 	
 	testing::InitGoogleTest( &argc, argv );
 	MemoryManagedEnvironment* environment = new MemoryManagedEnvironment();

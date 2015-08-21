@@ -7,16 +7,20 @@ namespace model
 	namespace test
 	{
 		Text3DTestWidget::Text3DTestWidget( QWidget *parent )
-		: QtFreecameraWidget( parent )
+		: QtFreecameraWidget( parent ),
+		m_textEffect( "../shaders/" )
 		{}
+		
+		void Text3DTestWidget::initializeGL()
+		{
+			QtFreecameraWidget::initializeGL();
+			m_textEffect.initialize( "../shaders/Inconsolata.otf" );
+		}
 		
 		void Text3DTestWidget::paintGL()
 		{
 			Vector4f viewPort = camera->getViewport();
 			glViewport( viewPort[ 0 ], viewPort[ 1 ], viewPort[ 2 ], viewPort[ 3 ] );
-			
-			TextEffect effect( "../shaders/" );
-			effect.initialize( "../shaders/Inconsolata.otf" );
 			
 			/* White background */
 			glClearColor( 1, 1, 1, 1 );
@@ -29,22 +33,22 @@ namespace model
 			Vector4f black( 0.f, 0.f, 0.f, 1.f );
 
 			/* Set color to black */
-			effect.setColor( black );
+			m_textEffect.setColor( black );
 			
 			/* Effects of alignment */
-			effect.render( "Origin", Vector4f( 0.f, 0.f, 0.f, 1.f ), *camera );
-			effect.render( "XZ=20", Vector4f( 20.f, 0.f, 20.f, 1.f ), *camera );
-			effect.render( "YZ=20", Vector4f( 0.f, 20.f, 20.f, 1.f ), *camera );
-			effect.render( "XYZ=20", Vector4f( 20.f, 20.f, 20.f, 1.f ), *camera );
-			effect.render( "Z=80", Vector4f( 0.f, 0.f, 80.f, 1.f ), *camera );
-			effect.render( "Z=-80", Vector4f( 0.f, 0.f, -80.f, 1.f ), *camera );
-			effect.render( "X=80", Vector4f( 80.f, 0.f, 0.f, 1.f ), *camera );
-			effect.render( "Y=80", Vector4f( 0.f, 80.f, 0.f, 1.f ), *camera );
+			m_textEffect.render( "Origin", Vector4f( 0.f, 0.f, 0.f, 1.f ), *camera );
+			m_textEffect.render( "XZ=20", Vector4f( 20.f, 0.f, 20.f, 1.f ), *camera );
+			m_textEffect.render( "YZ=20", Vector4f( 0.f, 20.f, 20.f, 1.f ), *camera );
+			m_textEffect.render( "XYZ=20", Vector4f( 20.f, 20.f, 20.f, 1.f ), *camera );
+			m_textEffect.render( "Z=80", Vector4f( 0.f, 0.f, 80.f, 1.f ), *camera );
+			m_textEffect.render( "Z=-80", Vector4f( 0.f, 0.f, -80.f, 1.f ), *camera );
+			m_textEffect.render( "X=80", Vector4f( 80.f, 0.f, 0.f, 1.f ), *camera );
+			m_textEffect.render( "Y=80", Vector4f( 0.f, 80.f, 0.f, 1.f ), *camera );
 			
 			stringstream ss;
 			ss << "Camera pos: " << endl << camera->getTranslationMatrix();
 			Vector4f viewport = camera->getViewport();
-			effect.render( ss.str(), TextEffect::MEDIUM, -0.95f, -0.75f, 2.0 / viewport[ 2 ], 2.0 / viewport[ 3 ] );
+			m_textEffect.render( ss.str(), TextEffect::MEDIUM, -0.95f, -0.75f, 2.0 / viewport[ 2 ], 2.0 / viewport[ 3 ] );
 		}
 	}
 }

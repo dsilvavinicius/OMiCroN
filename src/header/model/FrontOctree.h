@@ -317,7 +317,7 @@ namespace model
 	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
-		cout << "Into front: " << code->getPathToRoot( true ) << endl;
+		//cout << "Into front: " << code->getPathToRoot( true ) << endl;
 		m_frontBehavior->insert( *code );
 		
 		ParentOctree::setupNodeRendering( node, renderingState );

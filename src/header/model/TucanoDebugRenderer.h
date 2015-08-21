@@ -19,14 +19,6 @@ namespace model
 					   const Effect& effect = PHONG );
 		
 	protected:
-		/** This implementation does the same as TucanoRenderingState plus change opengl matrices to camera's matrices
-		 * in order to render texts later. */
-		virtual void setupRendering();
-		
-		/** This implementation does the same as TucanoRenderingState plus restore the matrices changed by setupRendering
-		 * to original state. */
-		virtual void afterRendering();
-		
 		virtual void handleNodeRendering( const PointVector& points );
 		
 		TextEffect m_textEffect;
@@ -43,38 +35,6 @@ namespace model
 	m_nodeContentHandler( nodeContentHandler )
 	{
 		m_textEffect.initialize( shaderPath + "/../Inconsolata.otf" );
-	}
-	
-	template< typename Point >
-	void TucanoDebugRenderer< Point >::setupRendering()
-	{
-		TucanoRenderingState::setupRendering();
-		
-		glColor3f( 0.f, 0.f, 0.f );
-		
-		GLdouble matrix[ 16 ];
-		m_camera->getViewMatrix( matrix );
-		
-		glMatrixMode( GL_MODELVIEW );
-		glPushMatrix();
-		glLoadMatrixd( matrix );
-		
-		m_camera->getProjectionMatrix( matrix );
-		glMatrixMode( GL_PROJECTION );
-		glPushMatrix();
-		glLoadMatrixd( matrix );
-	}
-	
-	template< typename Point >
-	void TucanoDebugRenderer< Point >::afterRendering()
-	{
-		glMatrixMode( GL_PROJECTION );
-		glPopMatrix();
-		
-		glMatrixMode( GL_MODELVIEW );
-		glPopMatrix();
-		
-		TucanoRenderingState::afterRendering();
 	}
 	
 	template< typename Point >

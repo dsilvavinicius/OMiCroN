@@ -3,9 +3,6 @@
 #include "Text3DTestWidget.h"
 #include <QApplication>
 
-extern "C" int g_argc;
-extern "C" char** g_argv;
-
 namespace model
 {
 	namespace test
@@ -21,13 +18,11 @@ namespace model
 		 * window is closed, the test finishes. */
 		TEST_F( Text3DTest, Rendering )
 		{
-			QApplication app( g_argc, g_argv );
-			
 			Text3DTestWidget widget;
 			widget.resize( 640, 480 );
 			widget.show();
 
-			app.exec();
+			QApplication::exec();
 		}
 	}
 }

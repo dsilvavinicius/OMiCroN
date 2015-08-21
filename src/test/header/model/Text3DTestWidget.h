@@ -18,7 +18,12 @@ namespace model
 		public:
 			Text3DTestWidget( QWidget *parent = 0 );
 			
+			void initializeGL();
+			
 			void paintGL();
+		
+		private:
+			TextEffect m_textEffect;
 		};
 	}
 }
