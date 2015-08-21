@@ -18,8 +18,10 @@ namespace model
 							 Mesh* mesh, const Attributes& attribs, const string& shaderPath, const int& jfpbrFrameskip = 1,
 					   const Effect& effect = PHONG );
 		
+		virtual void setupRendering() override;
+		
 	protected:
-		virtual void handleNodeRendering( const PointVector& points );
+		virtual void handleNodeRendering( const PointVector& points ) override;
 		
 		TextEffect m_textEffect;
 		
@@ -35,6 +37,18 @@ namespace model
 	m_nodeContentHandler( nodeContentHandler )
 	{
 		m_textEffect.initialize( shaderPath + "/../Inconsolata.otf" );
+	}
+	
+	template< typename Point >
+	void TucanoDebugRenderer< Point >::setupRendering()
+	{
+		TucanoRenderingState::setupRendering();
+		
+		// Alpha is needed for text rendering
+		glEnable( GL_BLEND );
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		
+		m_textEffect.setColor( Vector4f( 0.f, 0.f, 0.f, 1.f ) );
 	}
 	
 	template< typename Point >

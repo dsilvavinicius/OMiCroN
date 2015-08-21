@@ -14,6 +14,14 @@ namespace model
 		void Text3DTestWidget::initializeGL()
 		{
 			QtFreecameraWidget::initializeGL();
+			
+			/* Enable blending, necessary for our alpha texture */
+			glEnable( GL_BLEND );
+			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			
+			glCullFace( GL_BACK );
+			glEnable( GL_CULL_FACE );
+			
 			m_textEffect.initialize( "../shaders/Inconsolata.otf" );
 		}
 		
@@ -25,11 +33,7 @@ namespace model
 			/* White background */
 			glClearColor( 1, 1, 1, 1 );
 			glClear( GL_COLOR_BUFFER_BIT );
-
-			/* Enable blending, necessary for our alpha texture */
-			glEnable( GL_BLEND );
-			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-
+			
 			Vector4f black( 0.f, 0.f, 0.f, 1.f );
 
 			/* Set color to black */

@@ -167,10 +167,10 @@ namespace model
 	public:
 		enum ATLAS_SIZE
 		{
-			VERY_LARGE,	/** 24pt atlas */
-			LARGE,		/** 18pt atlas */
-			MEDIUM,		/** 12pt atlas */
-			SMALL,		/** 6pt atlas */
+			VERY_LARGE,
+			LARGE,
+			MEDIUM,
+			SMALL,
 			COUNT
 		};
 		
@@ -240,9 +240,9 @@ namespace model
 		loadShader( m_text2DShader, "Text2D" );
 
 		/* Create texture atlasses for several font sizes */
-		m_atlases[ VERY_LARGE ] = new Atlas( face, 24 );
-		m_atlases[ LARGE ] = new Atlas( face, 18 );
-		m_atlases[ MEDIUM ] = new Atlas( face, 12 );
+		m_atlases[ VERY_LARGE ] = new Atlas( face, 18 );
+		m_atlases[ LARGE ] = new Atlas( face, 12 );
+		m_atlases[ MEDIUM ] = new Atlas( face, 8 );
 		m_atlases[ SMALL ] = new Atlas( face, 6 );
 	}
 	
@@ -288,10 +288,10 @@ namespace model
 			coords.push_back( Vector4f( x2,		-y2,	 a->c[ *p ].tx,							a->c[ *p ].ty ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
+			coords.push_back( Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
 			
 			indices.push_back( c++ );
-			coords.push_back( Vector4f( x2,		-y2 - h, a->c[ *p ].tx,							a->c[ *p ].ty + a->c[ *p ].bh / a->h ) );
+			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
 			
 			indices.push_back( c++ );
 			coords.push_back( Vector4f( x2 + w,	-y2,	 a->c[ *p ].tx + a->c[ *p ].bw / a->w,	a->c[ *p ].ty ) );
