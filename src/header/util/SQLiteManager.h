@@ -241,13 +241,6 @@ namespace util
 					{
 						MortonInterval interval = *it;
 						
-						//
-						if( interval.first->traverseUp()->getBits() == 0x7d72c331 )
-						{
-							cout << "Processing request for 0x7d72c331 children" << endl << endl;
-						}
-						//
-						
 						IdNodeVector idNodes = getIdNodes< PointVector >( *interval.first, *interval.second );
 						{
 							lock_guard< mutex > resultLock( m_resultLock );
@@ -332,8 +325,6 @@ namespace util
 		safeReset( m_nodeInsertion );
 		
 		delete[] serialization;
-		
-		//cout << "Inserted." << morton.getPathToRoot( true ) << endl;
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >

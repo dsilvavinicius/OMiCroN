@@ -262,9 +262,14 @@ namespace model
 			MortonCodePtr firstChild = code->getFirstChild();
 			auto childIt = ParentOctree::m_hierarchy->lower_bound( firstChild );
 			
-			onBranchingItAcquired( childIt, firstChild );
-			
 			childFound = childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code;
+			
+			if( !childFound )
+			{
+				childIt = ParentOctree::m_hierarchy->end();
+			}
+			
+			onBranchingItAcquired( childIt, firstChild );
 			
 			while( childIt != ParentOctree::m_hierarchy->end() && *childIt->first->traverseUp() == *code )
 			{
