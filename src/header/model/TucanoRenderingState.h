@@ -5,6 +5,7 @@
 #include <phongshader.hpp>
 #include <imgSpacePBR.hpp>
 #include "RenderingState.h"
+#include "TextEffect.h"
 #include <utils/frustum.hpp>
 
 using namespace Tucano;
@@ -45,6 +46,8 @@ namespace model
 		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
 	
+		virtual void renderText( const Vec3& pos, const string& str );
+		
 		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
 		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
 		
@@ -81,6 +84,8 @@ namespace model
 		ImgSpacePBR *m_jfpbr;
 		
 		Effect m_effect;
+		
+		TextEffect m_textEffect;
 		
 		/** Frameskip for the Jump Flooding effect. */
 		int m_jfpbrFrameskip;

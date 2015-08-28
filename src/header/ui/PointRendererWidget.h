@@ -6,10 +6,10 @@
 //#include <imgSpacePBR.hpp>
 #include <utils/qtfreecamerawidget.hpp>
 #include <point_model.hpp>
-#include "IndexedTucanoRenderer.h"
+#include "TucanoRenderingState.h"
 //#include "FrontOctree.h"
 //#include "ParallelOctree.h"
-#include "OutOfCoreOctree.h"
+#include "OutOfCoreDebugOctree.h"
 #include <QApplication>
 
 using namespace std;
@@ -29,7 +29,7 @@ class PointRendererWidget
 	//using Octree = model::ShallowRandomSampleOctree< Point >;
 	//using Octree = model::ShallowFrontOctree;
 	//using Octree = model::ShallowParallelOctree< Point >;
-	using Octree = model::ShallowOutOfCoreOctree;
+	using Octree = model::ShallowOutOfCoreDebugOctree;
 	//using Octree = model::MediumOutOfCoreOctree;
 	//using RenderingState = model::IndexedTucanoRenderer< Point >;
 	using RenderingState = model::TucanoRenderingState;

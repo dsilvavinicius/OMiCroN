@@ -27,8 +27,7 @@ namespace model
 		m_jfpbr->setShadersDir( shaderPath );
 		m_jfpbr->initialize();
 		
-		glCullFace( GL_BACK );
-		glEnable( GL_CULL_FACE );
+		m_textEffect.initialize( shaderPath + "/../Inconsolata.otf" );
 	}
 	
 	TucanoRenderingState::~TucanoRenderingState()
@@ -51,6 +50,17 @@ namespace model
 	{
 		glClearColor(1.0, 1.0, 1.0, 0.0);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		
+		glCullFace( GL_BACK );
+		glEnable( GL_CULL_FACE );
+		
+		// Alpha is needed for text rendering
+		glEnable( GL_BLEND );
+		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+		
+		glEnable( GL_DEPTH_TEST );
+		
+		m_textEffect.setColor( Vector4f( 0.f, 0.f, 0.f, 1.f ) );
 		
 		clearAttribs();
 		//clearIndices();
@@ -147,6 +157,11 @@ namespace model
 		Float maxDiagLength = glm::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
 		
 		return maxDiagLength < projThresh;
+	}
+	
+	inline void TucanoRenderingState::renderText( const Vec3& pos, const string& str )
+	{
+		m_textEffect.render( str, Vector4f( pos.x, pos.y, pos.z, 1.f ), *m_camera );
 	}
 	
 	inline Matrix4f TucanoRenderingState::getViewProjection() const

@@ -42,6 +42,10 @@ namespace model
 		return maxDiagLength < projThresh;
 	}
 	
+	void QtRenderingState::renderText( const Vec3& pos, const string& str )
+	{
+		throw logic_error( "renderText() is unsupported." );
+	}
 	
 	void QtRenderingState::setPainter( QGLPainter* painter, const QSize& viewportSize )
 	{

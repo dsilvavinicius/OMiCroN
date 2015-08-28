@@ -30,6 +30,9 @@ namespace model
 	// TODO: Make an implementation using set< MortonCode > as front, profile results and compare with
 	// unordered_set< MortonCode >.
 	
+	// TODO: Make front use MortonCodePtr instead of MortonCode so it can save cicles for MortonCodePtr creation and
+	// also memory.
+	
 	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
 	 * should be tightly coupled with the class that it is "specializing". */
 	template< typename MortonCode, typename Point, typename Front, typename InsertionContainer >
@@ -76,6 +79,10 @@ namespace model
 				}
 				
 				MortonCodePtr code( new MortonCode( *it ) );
+				
+				//
+				//cout << "Track: " << code->getPathToRoot( true ) << endl << endl;
+				//
 				
 				erasePrevious = m_octree.trackNode( code, renderingState, projThresh );
 			}

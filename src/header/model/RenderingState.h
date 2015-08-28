@@ -52,6 +52,10 @@ namespace model
 		/** Indicates that the node contents passed should be rendered. */
 		virtual void handleNodeRendering( const PointPtr& point );
 		
+		/** Indicates that the passed string should be rendered at the position also passed as parameter. Useful for
+		 * debugging and labelling. */
+		virtual void renderText( const Vec3& pos, const string& str ) = 0;
+		
 		/** Indicates that the node contents passed should be rendered. */
 		virtual void handleNodeRendering( const PointVector& points );
 		

@@ -239,9 +239,14 @@ namespace util
 					
 					for( auto it = m_requests.begin(); it != m_requests.end(); )
 					{
-						//cout << "Processing request " << it->first->getPathToRoot( true ) << endl;
-						
 						MortonInterval interval = *it;
+						
+						//
+						if( interval.first->traverseUp()->getBits() == 0x7d72c331 )
+						{
+							cout << "Processing request for 0x7d72c331 children" << endl << endl;
+						}
+						//
 						
 						IdNodeVector idNodes = getIdNodes< PointVector >( *interval.first, *interval.second );
 						{

@@ -826,7 +826,13 @@ namespace model
 			
 			for( IdNode idNode : query )
 			{
-				//cout << "Request result: " << endl << endl << idNode << endl; 
+				//
+				if( idNode.first->traverseUp()->getBits() == 0x7d72c331 )
+				{
+					cout << "Inserting 0x7d72c331 children into hierarchy" << endl << endl; 
+				}
+				//
+				
 				hierarchy->insert( pastInsertionIt, idNode );
 			}
 		}

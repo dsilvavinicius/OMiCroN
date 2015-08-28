@@ -86,8 +86,12 @@ namespace model
 		/** Overriden to push the front addition list to the front itself. */
 		virtual void onTraversalEnd();
 		
-		/** Rendering setup method for both leaf and inner node cases. Adds the node into the front. */
-		void setupNodeRendering( OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState );
+		/** Rendering setup method for both leaf and inner node cases. Inserts the node into the front. */
+		virtual void setupNodeRendering( OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState );
+		
+		/** Rendering setup method for both leaf and inner node cases. Doesn't insert the node into the front, assuming it
+		 * is inserted. */
+		virtual void setupNodeRenderingNoFront( OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState );
 		
 		/** Object with data related behavior of the front. */
 		FrontBehavior* m_frontBehavior;
@@ -163,7 +167,7 @@ namespace model
 				assert( nodeIt != ParentOctree::m_hierarchy->end() );
 				
 				OctreeNodePtr node = nodeIt->second;
-				ParentOctree::setupNodeRendering( node, renderingState );
+				setupNodeRenderingNoFront( node, code, renderingState );
 			}
 		}
 		
@@ -224,7 +228,7 @@ namespace model
 			assert( nodeIt != ParentOctree::m_hierarchy->end() );
 			
 			OctreeNodePtr node = nodeIt->second;
-			ParentOctree::setupNodeRendering( node, renderingState );
+			setupNodeRenderingNoFront( node, code, renderingState );
 		}
 		
 		//cout << "=== Prunning ends ===" << endl << endl;
@@ -246,7 +250,6 @@ namespace model
 	::branch( const MortonCodePtr& code, RenderingState& renderingState )
 	{
 		//cout << "=== Branching begins ===" << endl << endl;
-		//cout << "Branch:" << code->getPathToRoot( true ) << endl;
 		
 		auto nodeIt = ParentOctree::m_hierarchy->find( code );
 		assert( nodeIt != ParentOctree::m_hierarchy->end() );
@@ -275,7 +278,7 @@ namespace model
 				if( !renderingState.isCullable( box ) )
 				{
 					//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
-					ParentOctree::setupNodeRendering( childIt->second, renderingState );
+					setupNodeRenderingNoFront( childIt->second, childCode, renderingState );
 				}
 				
 				++childIt;
@@ -287,7 +290,7 @@ namespace model
 		if( !childFound )
 		{
 			//cout << "Children not available. Is leaf? " << boolalpha << !isInner << endl << endl;
-			ParentOctree::setupNodeRendering( node, renderingState );
+			setupNodeRenderingNoFront( node, code, renderingState );
 		}
 		
 		//cout << "=== Branching ends ===" << endl << endl;
@@ -319,7 +322,13 @@ namespace model
 	{
 		//cout << "Into front: " << code->getPathToRoot( true ) << endl;
 		m_frontBehavior->insert( *code );
-		
+		ParentOctree::setupNodeRendering( node, renderingState );
+	}
+	
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRenderingNoFront(
+		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
+	{
 		ParentOctree::setupNodeRendering( node, renderingState );
 	}
 	

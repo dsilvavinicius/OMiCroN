@@ -229,34 +229,7 @@ void PointRendererWidget::toggleDrawAuxViewports( void )
 
 void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 {
-	Attributes vertAttribs = model::NORMALS;
-	
-	if( value )
-	{
-		cout << "Activating node debug" << endl << endl;
-		
-		auto handler = [ & ]( PointVector points )
-		{
-			stringstream ss;
-			ss << "0x" << hex << m_octree->calcMorton( *points[ 0 ] ).getBits();
-			return ss.str();
-		};
-		
-		delete m_renderer;
-		m_renderer = new TucanoDebugRenderer< Point >( handler, camera, &light_trackball, &mesh, vertAttribs,
-											  "shaders/tucano/" );
-		
-		cout << "Debug renderer activated" << endl << endl;
-	}
-	else
-	{
-		cout << "Deactivating node debug" << endl << endl;
-		
-		delete m_renderer;
-		m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, vertAttribs,
-										 "shaders/tucano/" );
-	}
-	
+	m_octree->toggleDebug( value );
 	updateGL();
 }
 

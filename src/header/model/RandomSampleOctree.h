@@ -137,6 +137,7 @@ namespace model
 																			 RenderingState& renderingState )
 	{
 		PointVector points = node-> template getContents< PointVector >();
+		
 		renderingState.handleNodeRendering( points );
 	}
 	

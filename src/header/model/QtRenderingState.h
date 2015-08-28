@@ -30,6 +30,8 @@ namespace model
 		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
 		
+		virtual void renderText( const Vec3& pos, const string& str ) override;
+		
 		/** Draws the boundaries of the octree nodes.
 		 * @param passProjTestOnly indicates if only the nodes that pass the projection test should be rendered. */
 		template< typename Octree, typename MortonCode >
