@@ -256,6 +256,7 @@ namespace model
 	::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code( new MortonCode( ParentOctree::calcMorton( *point ) ) );
+			
 		OctreeNodePtr node = getNode( code );
 		
 		if( node == nullptr )
@@ -354,6 +355,10 @@ namespace model
 		MemoryManager& memManager = MemoryManager::instance();
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
+			// Debug
+			//cout << "Manager before release: " << endl << memManager << endl;
+			//
+			
 			m_nodesUntilLastPersistence = 0;
 			
 			while( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshAfterRelease ) )
@@ -382,6 +387,10 @@ namespace model
 				
 				m_sqLite.endTransaction();
 			}
+			
+			// Debug
+			//cout << "Manager after release: " << endl << memManager << endl;
+			//
 		}
 	}
 	
@@ -549,6 +558,7 @@ namespace model
 			// the current one.
 			MortonCodePtr lvlBoundary( new MortonCode( MortonCode::getLvlLast( level + 1 ) ) );
 			
+			//cout << "Acquiring nodes for current lvl." << endl << endl;
 			{
 				// Query nodes to load.
 				SQLiteQuery query = getRangeInDB( MortonCodePtr( new MortonCode( MortonCode::getLvlFirst( level + 1 ) ) ),
@@ -569,7 +579,13 @@ namespace model
 			// Loops per siblings in a level.
 			while( !isLevelEnded )
 			{
+				//cout << "Processing a sibling group." << endl << endl;
+				
 				MortonCodePtr parentCode = firstChildIt->first->traverseUp();
+				
+				//cout << "Node: " << firstChildIt->first->toString() << endl << endl;
+				//cout << "Parent: " << parentCode->toString() << endl << endl;
+				//cout << "Parent path: " << parentCode->getPathToRoot( true ) << endl;
 				
 				{
 					auto children = vector< OctreeNodePtr >();
@@ -594,6 +610,7 @@ namespace model
 					}
 				}
 				
+				//cout << "Releasing nodes if needed" << endl << endl;
 				// Release node if memory pressure is high enough.
 				MortonCodePtr lastReleased = releaseNodesAtCreation();
 				
@@ -628,6 +645,8 @@ namespace model
 					isLevelEnded = !( *firstChildIt->first <= *lvlBoundary );
 				}
 			}
+			
+			//cout << "Persisting all dirty after at lvl ending." << endl << endl;
 			
 			// TODO: Instead of persisting all dirty nodes, I could persist only the nodes dirty in the current lvl.
 			// Persists all nodes in left dirty in this lvl before proceeding one lvl up.

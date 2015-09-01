@@ -93,7 +93,10 @@ namespace model
 		bool operator< ( const MortonCode& other ) const;
 		bool operator<=( const MortonCode& other ) const;
 		
-		/** Prints the nodes in the path from this node to the root node.
+		/** Returns a string with the code hexadecimal representation. */
+		string toString() const;
+		
+		/** Returns a string indicating the path to the root code from this code.
 		 * @param simple indicates that the node should be printed in a simpler representation. */
 		string getPathToRoot( bool simple ) const;
 		
@@ -291,6 +294,14 @@ namespace model
 	inline bool MortonCode< T >::operator<=( const MortonCode& other ) const
 	{
 		return m_bits <= other.m_bits;
+	}
+	
+	template <typename T>
+	string MortonCode< T >::toString() const
+	{
+		stringstream ss;
+		ss << "0x" << hex << m_bits;
+		return ss.str();
 	}
 	
 	template <typename T>
