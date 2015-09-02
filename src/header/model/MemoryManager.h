@@ -2,6 +2,7 @@
 #define MEMORY_MANAGER_H
 
 #include "MemoryPool.h"
+#include "IMemoryManager.h"
 #include <vector>
 
 namespace model
@@ -10,6 +11,7 @@ namespace model
 	 * memory chunk to be served for each type. Reuses deallocated memory for next allocations. Also provides API to
 	 * the number of current available memory blocks for each type. */
 	class MemoryManager
+	: public IMemoryManager
 	{
 	public:
 		enum MEMORY_POOL_TYPE
@@ -37,10 +39,10 @@ namespace model
 		static MemoryManager& instance();
 		
 		/** Allocates memory for a managed type. */
-		void* allocate( const MEMORY_POOL_TYPE& type );
+		void* allocate( const size_t& size ) override;
 		
 		/** Deallocates memory for a managed type. */
-		void deallocate( const MEMORY_POOL_TYPE& type, void* p );
+		void deallocate( void* p ) override;
 		
 		/** Returns the number of blocks for a given managed type. */
 		uint numBlocks( const MEMORY_POOL_TYPE& type ) const;
@@ -53,7 +55,7 @@ namespace model
 		
 		/** Verifies if all initialized MemoryPools' percentage of free blocks are above the passed percentage
 		 * threshold. */
-		bool hasEnoughMemory( const float& percentageThreshold ) const;
+		bool hasEnoughMemory( const float& percentageThreshold ) const override;
 		
 		friend ostream& operator<<( ostream& out, const MemoryManager& manager );
 		
@@ -71,7 +73,7 @@ namespace model
 				   const ulong& nExtendedPoints, const ulong& nNodes );
 		
 		MemoryPool m_pools[ MEMORY_POOL_TYPE::COUNT ]; // MemoryPools. One for each managed type.
-		static uint SIZES[ MEMORY_POOL_TYPE::COUNT ]; // Sizes of the managed types.
+		static uint M_SIZES[ MEMORY_POOL_TYPE::COUNT ]; // Sizes of the managed types.
 		
 		static MemoryManager m_instance;
 	};
@@ -87,18 +89,33 @@ namespace model
 		return m_instance;
 	}
 
-	inline void* MemoryManager::allocate( const MEMORY_POOL_TYPE& type )
+	inline void* MemoryManager::allocate( const size_t& size )
 	{
-		//cout << "Alloc " << type << endl << endl;
-		void* mem = m_pools[ type ].allocate();
-		//cout << *this << endl;
-		return mem;
+		for( int poolType = 0; poolType < MEMORY_POOL_TYPE::COUNT; ++poolType )
+		{
+			if( M_SIZES[ poolType ] == size )
+			{
+				return m_pools[ poolType ].allocate();
+			}
+		}
+		
+		assert( false && "Cannot allocate requested bytes." );
 	}
 	
-	inline void MemoryManager::deallocate( const MEMORY_POOL_TYPE& type, void* p )
+	inline void MemoryManager::deallocate( void* p )
 	{
+		uchar* charP = static_cast< uchar* >( p );
 		//cout << "Dealloc " << type << endl << endl;
-		m_pools[ type ].deAllocate( p );
+		for( int poolType = 0; poolType < MEMORY_POOL_TYPE::COUNT; ++poolType )
+		{
+			if( m_pools[ poolType ].isPointerIn( charP ) )
+			{
+				m_pools[ poolType ].deAllocate( charP );
+				return;
+			}
+		}
+		
+		assert( false && "Cannot deallocate p." );
 		//cout << *this << endl;
 	}
 	
@@ -155,11 +172,11 @@ namespace model
 	inline void MemoryManager::init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
 									 const ulong& nExtendedPoints, const ulong& nNodes )
 	{
-		m_pools[ FOUR_BYTES ].createPool( SIZES[ FOUR_BYTES ], nShallowMorton );
-		m_pools[ EIGHT_BYTES ].createPool( SIZES[ EIGHT_BYTES ], nMediumMorton );
-		m_pools[ TWENTY_FOUR_BYTES ].createPool( SIZES[ TWENTY_FOUR_BYTES ], nPoints );
-		m_pools[ THIRTY_TWO ].createPool( SIZES[ THIRTY_TWO ], nNodes );
-		m_pools[ THIRTY_SIX ].createPool( SIZES[ THIRTY_SIX ], nExtendedPoints );
+		m_pools[ FOUR_BYTES ].createPool( M_SIZES[ FOUR_BYTES ], nShallowMorton );
+		m_pools[ EIGHT_BYTES ].createPool( M_SIZES[ EIGHT_BYTES ], nMediumMorton );
+		m_pools[ TWENTY_FOUR_BYTES ].createPool( M_SIZES[ TWENTY_FOUR_BYTES ], nPoints );
+		m_pools[ THIRTY_TWO ].createPool( M_SIZES[ THIRTY_TWO ], nNodes );
+		m_pools[ THIRTY_SIX ].createPool( M_SIZES[ THIRTY_SIX ], nExtendedPoints );
 	}
 }
 

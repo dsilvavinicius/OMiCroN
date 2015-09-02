@@ -373,25 +373,25 @@ namespace model
 	template<>
 	inline void* MortonCode< unsigned int >::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( MemoryManager::FOUR_BYTES );
+		return MemoryManager::instance().allocate( size );
 	}
 	
 	template<>
 	inline void* MortonCode< unsigned long >::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( MemoryManager::EIGHT_BYTES );
+		return MemoryManager::instance().allocate( size );
 	}
 	
 	template<>
 	inline void MortonCode< unsigned int >::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( MemoryManager::FOUR_BYTES, p );
+		MemoryManager::instance().deallocate( p );
 	}
 	
 	template<>
 	inline void MortonCode< unsigned long >::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( MemoryManager::EIGHT_BYTES, p );
+		MemoryManager::instance().deallocate( p );
 	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:

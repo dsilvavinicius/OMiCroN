@@ -100,6 +100,12 @@ namespace model
 			++m_numFreeBlocks;
 		}
 		
+		/** Checks if a pointer is in this memory pool. */
+		bool isPointerIn( const uchar* p ) const
+		{
+			return p >= m_memStart && p < m_memStart + m_sizeOfEachBlock * m_numOfBlocks;
+		}
+		
 		uint getNumFreeBlocks() const
 		{
 			return m_numFreeBlocks;

@@ -122,6 +122,13 @@ namespace model
 		
 		m_frontBehavior->clearMarkedNodes();
 		
+		// TODO: Amortize front tracking cost by doing it in several frames instead of just one. This can be done using
+		// auxiliary array buffers in addition of the main one. Each one of the auxiliary buffers will have vertex data
+		// related with one part of the front. Whenever the current frame needs to update the front part associated with
+		// an auxiliary buffer, it sends data to the buffer itself and copies its contents to the main buffer afterwards.
+		// Otherwise, if the buffer don't need to be updated in the current frame, it is just copied to the main buffer.
+		// Care is necessary however, that the auxiliary buffers don't have nodes in sibling groups that need to be pruned
+		// in current frame.
 		m_frontBehavior->trackFront( renderer, projThresh );
 		
 		onTraversalEnd();
