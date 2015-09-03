@@ -2,5 +2,5 @@
 
 namespace model
 {
-	IMemoryManager* SingletonMemoryManager::m_instance = nullptr;
+	unique_ptr< IMemoryManager> SingletonMemoryManager::m_instance = nullptr;
 }

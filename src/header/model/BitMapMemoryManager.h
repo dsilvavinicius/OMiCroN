@@ -1,6 +1,7 @@
 #ifndef BITMAP_MEMORY_MANAGER_H
 #define BITMAP_MEMORY_MANAGER_H
 
+#include <cstring>
 #include <vector>
 #include <set>
 #include <map>
@@ -30,11 +31,9 @@ namespace model
 
 	typedef struct BitMapEntry
 	{
-		int      Index;
-		int      BlocksAvailable;
-		int      BitMap[ BIT_MAP_SIZE ];
 	public:
-		BitMapEntry():BlocksAvailable( BIT_MAP_SIZE )
+		BitMapEntry()
+		: BlocksAvailable( BIT_MAP_SIZE )
 		{
 			memset( BitMap, 0xff, BIT_MAP_SIZE / sizeof( char ) ); 
 			// initially all blocks are free and bit value 1 in the map denotes 
@@ -43,9 +42,13 @@ namespace model
 		void SetBit( int position, bool flag );
 		void SetMultipleBits( int position, bool flag, int count );
 		void SetRangeOfInt( int* element, int msb, int lsb, bool flag );
-		Complex* FirstFreeBlock( size_t size );
-		Complex* ComplexObjectAddress( int pos );
+		void* FirstFreeBlock( size_t size );
+		void* objectAddress( int pos );
 		void* Head();
+	
+		int Index;
+		int BlocksAvailable;
+		int BitMap[ BIT_MAP_SIZE ];
 	}
 	BitMapEntry;
 
@@ -58,14 +61,17 @@ namespace model
 	ArrayMemoryInfo;
 
 	class BitMapMemoryManager
-	: public IMemoryManager 
+	: public SingletonMemoryManager 
 	{
 	public: 
-		MemoryManager( ) {}
-		~MemoryManager( ) {}
+		BitMapMemoryManager( int objSize )
+		: objectSize( objSize )
+		{}
+		~BitMapMemoryManager( ) {}
 		void* allocate( const size_t& size ) override;
 		void deallocate( void* p ) override;
 		vector< void* >& GetMemoryPoolList(); 
+		int getObjectSize(){ return objectSize; }
 		
 	private:
 		void* AllocateArrayMemory( size_t size );
@@ -79,6 +85,7 @@ namespace model
 		//should be of same  size.
 		set< BitMapEntry* > FreeMapEntries;
 		map< void*, ArrayMemoryInfo > ArrayMemoryList;
+		int objectSize;
 	};
 }
 

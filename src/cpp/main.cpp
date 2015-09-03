@@ -32,6 +32,6 @@ int main(int argc, char **argv)
     window.show();
 
     window.initialize();
-
-    return app.exec();
+	
+	return app.exec();
 }

@@ -22,7 +22,6 @@ PointRendererWidget::~PointRendererWidget()
 	delete m_renderer;
 	delete m_octree;
 	delete m_timer;
-	MemoryManager::deleteInstance();
 }
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )

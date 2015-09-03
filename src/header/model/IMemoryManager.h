@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <memory>
 
 using namespace std;
 
@@ -37,10 +38,9 @@ namespace model
 	{
 	public:
 		static IMemoryManager& instance(){ return *m_instance; }
-		static void deleteInstance(){ delete m_instance; }
 	
 	protected:
-		static IMemoryManager* m_instance;
+		static unique_ptr< IMemoryManager > m_instance;
 	};
 }
 

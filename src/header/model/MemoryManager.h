@@ -70,11 +70,8 @@ namespace model
 	inline void MemoryManager::initInstance( const ulong& nShallowMorton, const ulong& nMediumMorton,
 											 const ulong& nPoints, const ulong& nExtendedPoints, const ulong& nNodes )
 	{
-		if( m_instance != nullptr )
-		{
-			deleteInstance();
-		}
-		m_instance = new MemoryManager( nShallowMorton, nMediumMorton, nPoints, nExtendedPoints, nNodes );
+		m_instance = unique_ptr< IMemoryManager >( new MemoryManager( nShallowMorton, nMediumMorton, nPoints,
+																	  nExtendedPoints, nNodes ) );
 	}
 
 	inline void* MemoryManager::allocate( const size_t& size )
@@ -122,6 +119,8 @@ namespace model
 			<< "Free 36 blocks (Extended Point): " << freeBlocks( MemoryManager::THIRTY_SIX ) << ", "
 			<< freeBlocksPercentage( MemoryManager::THIRTY_SIX ) << " fraction" << endl << endl
 			<< "=== End of MemManager ===" << endl;
+		
+		return ss.str();
 	}
 	
 	inline bool MemoryManager::hasEnoughMemory( const float& percentageThreshold ) const
