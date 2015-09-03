@@ -21,6 +21,12 @@ public:
 		ulong nPoints = 2u * nNodes;
 		MemoryManager::initInstance( nNodes, nNodes, nPoints, nPoints, nNodes );
 	}
+	
+	void TearDown()
+	{
+		cout << "Global tear down. Deleting MemoryManagerInstance." << endl << endl;
+		MemoryManager::deleteInstance();
+	}
 };
 
 int main(int argc, char** argv)

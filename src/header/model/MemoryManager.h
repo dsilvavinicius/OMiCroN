@@ -1,9 +1,10 @@
 #ifndef MEMORY_MANAGER_H
 #define MEMORY_MANAGER_H
 
+#include <vector>
+#include <sstream>
 #include "MemoryPool.h"
 #include "IMemoryManager.h"
-#include <vector>
 
 namespace model
 {
@@ -11,7 +12,7 @@ namespace model
 	 * memory chunk to be served for each type. Reuses deallocated memory for next allocations. Also provides API to
 	 * the number of current available memory blocks for each type. */
 	class MemoryManager
-	: public IMemoryManager
+	: public SingletonMemoryManager
 	{
 	public:
 		enum MEMORY_POOL_TYPE
@@ -35,14 +36,13 @@ namespace model
 		static void initInstance( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
 								  const ulong& nExtendedPoints, const ulong& nNodes );
 		
-		/** Gets the MemoryManager singleton instance. */
-		static MemoryManager& instance();
-		
-		/** Allocates memory for a managed type. */
 		void* allocate( const size_t& size ) override;
 		
-		/** Deallocates memory for a managed type. */
 		void deallocate( void* p ) override;
+		
+		string toString() const override;
+		
+		bool hasEnoughMemory( const float& percentageThreshold ) const override;
 		
 		/** Returns the number of blocks for a given managed type. */
 		uint numBlocks( const MEMORY_POOL_TYPE& type ) const;
@@ -53,40 +53,28 @@ namespace model
 		/** Gets the percentage of yet available memory blocks of a managed type. */
 		float freeBlocksPercentage( const MEMORY_POOL_TYPE& type ) const;
 		
-		/** Verifies if all initialized MemoryPools' percentage of free blocks are above the passed percentage
-		 * threshold. */
-		bool hasEnoughMemory( const float& percentageThreshold ) const override;
-		
-		friend ostream& operator<<( ostream& out, const MemoryManager& manager );
-		
 	private:
-		/** Ctor doesn't allocates memory. Use initInstance to initialize it. */
-		MemoryManager() {}
-		
 		/** Initializes instance with the number of memory blocks for each type specified by the parameters.
 		 * @param nShallowMorton is the number of ShallowMortonCode memory blocks.
 		 * @param nMediumMorton is the number of MediumMortonCode memory blocks.
 		 * @param nPoints is the number of Point memory blocks.
 		 * @param nExtendedPoints is the number of ExtendedPoint memory blocks.
 		 * @param nNodes is the number of LeafNode or InnerNode memory blocks. */
-		void init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
-				   const ulong& nExtendedPoints, const ulong& nNodes );
+		MemoryManager( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
+					   const ulong& nExtendedPoints, const ulong& nNodes );
 		
 		MemoryPool m_pools[ MEMORY_POOL_TYPE::COUNT ]; // MemoryPools. One for each managed type.
 		static uint M_SIZES[ MEMORY_POOL_TYPE::COUNT ]; // Sizes of the managed types.
-		
-		static MemoryManager m_instance;
 	};
 	
 	inline void MemoryManager::initInstance( const ulong& nShallowMorton, const ulong& nMediumMorton,
 											 const ulong& nPoints, const ulong& nExtendedPoints, const ulong& nNodes )
 	{
-		m_instance.init( nShallowMorton, nMediumMorton, nPoints, nExtendedPoints, nNodes );
-	}
-	
-	inline MemoryManager& MemoryManager::instance()
-	{
-		return m_instance;
+		if( m_instance != nullptr )
+		{
+			deleteInstance();
+		}
+		m_instance = new MemoryManager( nShallowMorton, nMediumMorton, nPoints, nExtendedPoints, nNodes );
 	}
 
 	inline void* MemoryManager::allocate( const size_t& size )
@@ -119,19 +107,21 @@ namespace model
 		//cout << *this << endl;
 	}
 	
-	inline uint MemoryManager::numBlocks( const MEMORY_POOL_TYPE& type ) const
+	inline string MemoryManager::toString() const
 	{
-		return m_pools[ type ].getNumBlocks();
-	}
-	
-	inline uint MemoryManager::freeBlocks( const MEMORY_POOL_TYPE& type ) const
-	{
-		return m_pools[ type ].getNumFreeBlocks();
-	}
-	
-	inline float MemoryManager::freeBlocksPercentage( const MEMORY_POOL_TYPE& type ) const
-	{
-		return m_pools[ type ].getFreeBlockPercentage();
+		stringstream ss;
+		ss	<< "=== MemManager ===" << endl << endl
+			<< "Free 4 blocks (Shallow Code): " << freeBlocks( MemoryManager::FOUR_BYTES ) << ", "
+			<< freeBlocksPercentage( MemoryManager::FOUR_BYTES ) << " fraction" << endl << endl
+			<< "Free 8 blocks (Medium Code): " << freeBlocks( MemoryManager::EIGHT_BYTES ) << ", "
+			<< freeBlocksPercentage( MemoryManager::EIGHT_BYTES ) << " fraction" << endl << endl
+			<< "Free 24 blocks (Point): " << freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ) << ", "
+			<< freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ) << " fraction" << endl << endl
+			<< "Free 32 blocks (Node): " << freeBlocks( MemoryManager::THIRTY_TWO ) << ", "
+			<< freeBlocksPercentage( MemoryManager::THIRTY_TWO ) << " fraction" << endl << endl
+			<< "Free 36 blocks (Extended Point): " << freeBlocks( MemoryManager::THIRTY_SIX ) << ", "
+			<< freeBlocksPercentage( MemoryManager::THIRTY_SIX ) << " fraction" << endl << endl
+			<< "=== End of MemManager ===" << endl;
 	}
 	
 	inline bool MemoryManager::hasEnoughMemory( const float& percentageThreshold ) const
@@ -152,25 +142,23 @@ namespace model
 		return hasMemory;
 	}
 	
-	inline ostream& operator<<( ostream& out, const MemoryManager& manager )
+	inline uint MemoryManager::numBlocks( const MEMORY_POOL_TYPE& type ) const
 	{
-		out << "=== MemManager ===" << endl << endl
-			<< "Free 4 blocks (Shallow Code): " << manager.freeBlocks( MemoryManager::FOUR_BYTES ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ) << " fraction" << endl << endl
-			<< "Free 8 blocks (Medium Code): " << manager.freeBlocks( MemoryManager::EIGHT_BYTES ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ) << " fraction" << endl << endl
-			<< "Free 24 blocks (Point): " << manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ) << " fraction" << endl << endl
-			<< "Free 32 blocks (Node): " << manager.freeBlocks( MemoryManager::THIRTY_TWO ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ) << " fraction" << endl << endl
-			<< "Free 36 blocks (Extended Point): " << manager.freeBlocks( MemoryManager::THIRTY_SIX ) << ", "
-			<< manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ) << " fraction" << endl << endl
-			<< "=== End of MemManager ===" << endl;
-		return out;
+		return m_pools[ type ].getNumBlocks();
 	}
 	
-	inline void MemoryManager::init( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
-									 const ulong& nExtendedPoints, const ulong& nNodes )
+	inline uint MemoryManager::freeBlocks( const MEMORY_POOL_TYPE& type ) const
+	{
+		return m_pools[ type ].getNumFreeBlocks();
+	}
+	
+	inline float MemoryManager::freeBlocksPercentage( const MEMORY_POOL_TYPE& type ) const
+	{
+		return m_pools[ type ].getFreeBlockPercentage();
+	}
+	
+	inline MemoryManager::MemoryManager( const ulong& nShallowMorton, const ulong& nMediumMorton, const ulong& nPoints,
+										 const ulong& nExtendedPoints, const ulong& nNodes )
 	{
 		m_pools[ FOUR_BYTES ].createPool( M_SIZES[ FOUR_BYTES ], nShallowMorton );
 		m_pools[ EIGHT_BYTES ].createPool( M_SIZES[ EIGHT_BYTES ], nMediumMorton );

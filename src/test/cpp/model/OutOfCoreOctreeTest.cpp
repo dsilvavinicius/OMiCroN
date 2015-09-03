@@ -14,7 +14,7 @@ namespace model
 			void SetUp()
 			{
 				// Save MemoryManager setup.
-				MemoryManager& manager = MemoryManager::instance();
+				MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
 				
 				m_shallowBlocks = manager.numBlocks( MemoryManager::FOUR_BYTES );
 				m_mediumBlocks = manager.numBlocks( MemoryManager::EIGHT_BYTES );

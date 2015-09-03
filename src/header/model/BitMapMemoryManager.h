@@ -32,52 +32,53 @@ namespace model
 	{
 		int      Index;
 		int      BlocksAvailable;
-		int      BitMap[BIT_MAP_SIZE];
+		int      BitMap[ BIT_MAP_SIZE ];
 	public:
-		BitMapEntry():BlocksAvailable(BIT_MAP_SIZE)
+		BitMapEntry():BlocksAvailable( BIT_MAP_SIZE )
 		{
-		memset(BitMap,0xff,BIT_MAP_SIZE / sizeof(char)); 
-		// initially all blocks are free and bit value 1 in the map denotes 
-		// available block
+			memset( BitMap, 0xff, BIT_MAP_SIZE / sizeof( char ) ); 
+			// initially all blocks are free and bit value 1 in the map denotes 
+			// available block
 		}
-		void SetBit(int position, bool flag);
-		void SetMultipleBits(int position, bool flag, int count);
-		void SetRangeOfInt(int* element, int msb, int lsb, bool flag);
-		Complex* FirstFreeBlock(size_t size);
-		Complex* ComplexObjectAddress(int pos);
+		void SetBit( int position, bool flag );
+		void SetMultipleBits( int position, bool flag, int count );
+		void SetRangeOfInt( int* element, int msb, int lsb, bool flag );
+		Complex* FirstFreeBlock( size_t size );
+		Complex* ComplexObjectAddress( int pos );
 		void* Head();
 	}
 	BitMapEntry;
 
 	typedef struct ArrayInfo
 	{
-	int   MemPoolListIndex;
-	int   StartPosition;
-	int   Size;
+		int   MemPoolListIndex;
+		int   StartPosition;
+		int   Size;
 	}
 	ArrayMemoryInfo;
 
-	class BitMapMemoryManager : public IMemoryManager 
+	class BitMapMemoryManager
+	: public IMemoryManager 
 	{
 	public: 
 		MemoryManager( ) {}
 		~MemoryManager( ) {}
-		void* allocate( const size_t& size );
-		void deallocate( void* p );
+		void* allocate( const size_t& size ) override;
+		void deallocate( void* p ) override;
 		vector< void* >& GetMemoryPoolList(); 
 		
 	private:
-		void* AllocateArrayMemory(size_t size);
+		void* AllocateArrayMemory( size_t size );
 		void* AllocateChunkAndInitBitMap();
-		void SetBlockBit(void* object, bool flag);
-		void SetMultipleBlockBits(ArrayMemoryInfo* info, bool flag);
+		void SetBlockBit( void* object, bool flag );
+		void SetMultipleBlockBits( ArrayMemoryInfo* info, bool flag );
 		
-		vector<void*> MemoryPoolList;
-		vector<BitMapEntry> BitMapEntryList;
+		vector< void* > MemoryPoolList;
+		vector< BitMapEntry > BitMapEntryList;
 		//the above two lists will maintain one-to-one correpondence and hence 
 		//should be of same  size.
-		set<BitMapEntry*> FreeMapEntries;
-		map<void*, ArrayMemoryInfo> ArrayMemoryList;
+		set< BitMapEntry* > FreeMapEntries;
+		map< void*, ArrayMemoryInfo > ArrayMemoryList;
 	};
 }
 

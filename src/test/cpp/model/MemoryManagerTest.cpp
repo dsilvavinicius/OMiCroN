@@ -18,17 +18,19 @@ namespace model
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
+			MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
+			
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
 			
 			ShallowOctreeMap map;
 			
@@ -36,17 +38,17 @@ namespace model
 			{
 				if( i == 0.5 * nNodes )
 				{
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), 0.5 * nNodes );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), 0.5 * nPoints );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), 0.5 * nNodes );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), 0.5 * nNodes );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), 0.5 * nPoints );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), 0.5 * nNodes );
 					
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 0.5f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 0.5f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.5f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 0.5f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 0.5f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.5f );
 				}
 				
 				ShallowMortonCodePtr mortonCode( new ShallowMortonCode() );
@@ -60,31 +62,31 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), 0u );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), 0u );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), 0u );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), 0u );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), 0u );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), 0u );
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 0.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 0.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 0.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 0.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.f );
 			
 			map.clear();
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
 		}
 		
 		TEST_F( MemoryManagerTest, MediumExtendedPointVectorInnerNodes )
@@ -92,17 +94,19 @@ namespace model
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
+			MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
+			
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
 			
 			MediumOctreeMap map;
 			
@@ -110,17 +114,17 @@ namespace model
 			{
 				if( i == 0.5 * nNodes )
 				{
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), 0.5 * nNodes );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), 0.5 * nPoints );
-					ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), 0.5 * nNodes );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), 0.5 * nNodes );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), 0.5 * nPoints );
+					ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), 0.5 * nNodes );
 					
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 0.5f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 0.5f );
-					ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.5f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 0.5f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 0.5f );
+					ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.5f );
 				}
 				
 				MediumMortonCodePtr mortonCode( new MediumMortonCode() );
@@ -134,31 +138,31 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), 0u );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), 0u );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), 0u );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), 0u );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), 0u );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), 0u );
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 0.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 0.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 0.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 0.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 0.f );
 			
 			map.clear();
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
-			ASSERT_EQ( MemoryManager::instance().freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::FOUR_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::EIGHT_BYTES ), nNodes );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::TWENTY_FOUR_BYTES ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_SIX ), nPoints );
+			ASSERT_EQ( manager.freeBlocks( MemoryManager::THIRTY_TWO ), nNodes );
 			
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
-			ASSERT_EQ( MemoryManager::instance().freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::EIGHT_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::TWENTY_FOUR_BYTES ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_SIX ), 1.f );
+			ASSERT_EQ( manager.freeBlocksPercentage( MemoryManager::THIRTY_TWO ), 1.f );
 		}
 	}
 }
