@@ -107,6 +107,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h					${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
 	${HEADER_DIR}/${MODEL_DIR}/IMemoryManager.h				${CPP_DIR}/${MODEL_DIR}/IMemoryManager.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MemoryManager.h				${CPP_DIR}/${MODEL_DIR}/MemoryManager.cpp
+	${HEADER_DIR}/${MODEL_DIR}/BitMapMemoryPool.h			${CPP_DIR}/${MODEL_DIR}/BitMapMemoryPool.cpp
 	${HEADER_DIR}/${MODEL_DIR}/BitMapMemoryManager.h		${CPP_DIR}/${MODEL_DIR}/BitMapMemoryManager.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h						${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h						${CPP_DIR}/${MODEL_DIR}/Camera.cpp
