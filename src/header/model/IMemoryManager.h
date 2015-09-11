@@ -37,11 +37,13 @@ namespace model
 	: public IMemoryManager
 	{
 	public:
-		static IMemoryManager& instance(){ return *m_instance; }
+		static IMemoryManager& instance();
 	
 	protected:
 		static unique_ptr< IMemoryManager > m_instance;
 	};
+	
+	inline IMemoryManager& SingletonMemoryManager::instance(){ return *m_instance; }
 }
 
 #endif

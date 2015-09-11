@@ -197,6 +197,8 @@ namespace model
 	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
 					 const Attributes& attribs )
 	{
+		clock_t buildStart = clock();
+		
 		// Octree boundary variables.
 		Float negInf = -numeric_limits< Float >::max();
 		Float posInf = numeric_limits< Float >::max();
@@ -249,6 +251,8 @@ namespace model
 		persistAllLeaves();
 		
 		build();
+		
+		cout << "Hierarchy construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >

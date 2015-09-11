@@ -3,66 +3,83 @@
 
 namespace model
 {
-	void* BitMapMemoryManager::allocate( const size_t& size )
+	static void BitMapMemoryManager::initInstance( const size_t& maxAllowedMem )
 	{
-		if( size < m_maxObjectSize )
+		m_instance = unique_ptr< IMemoryManager >( new BitMapMemoryManager( maxAllowedMem ) );
+	}
+	
+	template< typename T >
+	inline void* BitMapMemoryManager::allocate( const size_t& size )
+	{
+		if( size == sizeof( T ) )
 		{
-			// Non-array version.
-			for( BitMapMemoryPool pool : m_pools )
-			{
-				if( pool.getObjectSize() == size )
-				{
-					return pool.allocate();
-				}
-			}
-			
-			// Create a new pool for this request size
-			BitMapMemoryPool pool( size );
-			m_pools.push_back( pool );
-			return pool.allocate();
+			return getPool< T >().allocate();
 		}
 		else
 		{
-			// Array version.
-			for( BitMapMemoryPool pool : m_pools )
-			{
-				if( pool.getObjectSize() % size == 0 )
-				{
-					return pool.allocateArray( size );
-				}
-			}
-			
-			stringstream ss;
-			ss << "Cannot allocate array with size " << size;
-			throw logic_error( ss.str() );
+			return getPool< T >().allocateArray( size );
 		}
 	}
 	
-	void BitMapMemoryManager::deallocate( void* p )
+	template< typename T >
+	inline void BitMapMemoryManager::deallocate( void* p )
 	{
-		bool deallocated = false;
-		for( BitMapMemoryPool pool : m_pools )
-		{
-			if( pool.deallocate( p ) )
-			{
-				deallocated = true;
-				break;
-			}
-		}
-		
-		if( !deallocated )
-		{
-			throw logic_error( "Couldn't deallocate memory." );
-		}
+		getPool< T >().deallocate( p );
 	}
-
-	bool BitMapMemoryManager::hasEnoughMemory(const float& percentageThreshold) const
+	
+	
+	inline bool BitMapMemoryManager::hasEnoughMemory( const float& percentageThreshold ) const
 	{
-		
+		return ( m_maxAllowedMem - usedMemory() ) > float( m_maxAllowedMem * percentageThreshold );
 	}
 	
 	string BitMapMemoryManager::toString() const
 	{
-		
+		cout << "ShallowMorton used blocks: " << m_shallowMortonPool.usedBlocks() << " Used memory: "
+			 << m_shallowMortonPool.usedBlocks() << endl
+			 << "MediumMorton used blocks: " << m_mediumMortonPool.usedBlocks() << " Used memory: "
+			 << m_mediumMortonPool.usedBlocks() << endl
+			 << "Point used blocks: " << m_pointPool.usedBlocks() << " Used memory: "
+			 << m_pointPool.usedBlocks() << endl
+			 << "ExtendedPoint used blocks: " << m_extendedPointPool.usedBlocks() << " Used memory: "
+			 << m_extendedPointPool.usedBlocks() << endl
+			 << "Node used blocks: " << m_nodePool.usedBlocks() << " Used memory: "
+			 << m_nodePool.usedBlocks() << endl << endl;
+	}
+	
+	inline size_t BitMapMemoryManager::usedMemory() const
+	{
+		return 	m_shallowMortonPool.calcMemoryUsage() + m_mediumMortonPool.calcMemoryUsage()
+				+ m_pointPool.calcMemoryUsage() + m_extendedPointPool.calcMemoryUsage() + m_nodePool.calcMemoryUsage();
+	}
+	
+	template<>
+	inline BitMemoryPool< ShallowMortonCode >& BitMapMemoryManager::getPool()
+	{
+		return m_shallowMortonPool;
+	}
+	
+	template<>
+	inline BitMemoryPool< MediumMortonCode >& BitMapMemoryManager::getPool()
+	{
+		return m_mediumMortonPool;
+	}
+	
+	template<>
+	inline BitMemoryPool< Point >& BitMapMemoryManager::getPool()
+	{
+		return m_pointPool;
+	}
+	
+	template<>
+	inline BitMemoryPool< ExtendedPoint >& BitMapMemoryManager::getPool()
+	{
+		return m_extendedPointPool;
+	}
+	
+	template<>
+	inline BitMemoryPool< ShallowLeafNode >& BitMapMemoryManager::getPool()
+	{
+		return m_nodePool;
 	}
 }
