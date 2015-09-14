@@ -16,11 +16,11 @@ namespace model
 				// Save MemoryManager setup.
 				MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
 				
-				m_shallowBlocks = manager.numBlocks( MemoryManager::FOUR_BYTES );
-				m_mediumBlocks = manager.numBlocks( MemoryManager::EIGHT_BYTES );
-				m_pointBlocks = manager.numBlocks( MemoryManager::TWENTY_FOUR_BYTES );
-				m_extendedBlocks = manager.numBlocks( MemoryManager::THIRTY_SIX );
-				m_nodeBlocks = manager.numBlocks( MemoryManager::THIRTY_TWO );
+				m_shallowBlocks = manager.numBlocks( IMemoryManager::SHALLOW_MORTON );
+				m_mediumBlocks = manager.numBlocks( IMemoryManager::MEDIUM_MORTON );
+				m_pointBlocks = manager.numBlocks( IMemoryManager::POINT );
+				m_extendedBlocks = manager.numBlocks( IMemoryManager::EXTENDED_POINT );
+				m_nodeBlocks = manager.numBlocks( IMemoryManager::NODE );
 			}
 			
 			void TearDown()

@@ -57,7 +57,7 @@ namespace model
 	
 	void* ExtendedPoint::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( size );
+		return MemoryManager::instance().allocate( IMemoryManager::EXTENDED_POINT );
 	}
 	
 	void* ExtendedPoint::operator new[]( size_t size )
@@ -67,7 +67,7 @@ namespace model
 	
 	void ExtendedPoint::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( p );
+		MemoryManager::instance().deallocate( p, IMemoryManager::EXTENDED_POINT );
 	}
 	
 	void ExtendedPoint::operator delete[]( void* p )

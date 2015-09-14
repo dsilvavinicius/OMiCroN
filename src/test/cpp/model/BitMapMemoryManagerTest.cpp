@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "BitMapMemoryManager.h"
+#include "OctreeMapTypes.h"
 
 namespace model
 {
@@ -17,11 +18,11 @@ namespace model
 			uint nPoints = 2u * nNodes;
 			size_t maxMemToUse = nNodes * sizeof( ShallowMortonCode ) + nPoints * sizeof( Point )
 									+ nNodes * sizeof( ShallowLeafNodePtr< PointVector > );
+			
 			BitMapMemoryManager::initInstance( maxMemToUse );
+			BitMapMemoryManager& manager = dynamic_cast< BitMapMemoryManager& >( BitMapMemoryManager::instance() );
 			
 			ASSERT_EQ( 0, manager.usedMemory() );
-			
-			BitMapMemoryManager& manager = dynamic_cast< BitMapMemoryManager& >( BitMapMemoryManager::instance() );
 			
 			ShallowOctreeMap map;
 			

@@ -13,11 +13,26 @@ namespace model
 	class IMemoryManager
 	{
 	public:
+		enum MANAGED_TYPE_FLAG
+		{
+			SHALLOW_MORTON,
+			MEDIUM_MORTON,
+			POINT,
+			EXTENDED_POINT,
+			NODE,
+			COUNT
+		};
+		
 		/** Allocates memory for a managed type. */
-		virtual void* allocate( const size_t& size ) = 0;
+		virtual void* allocate( const MANAGED_TYPE_FLAG& type ) = 0;
+		
+		/** Allocates memory for a managed type array. */
+		virtual void* allocateArray( const size_t& size, const MANAGED_TYPE_FLAG& type ) = 0;
 		
 		/** Deallocates memory for a managed type. */
-		virtual void deallocate( void* p ) = 0;
+		virtual void deallocate( void* p, const MANAGED_TYPE_FLAG& type ) = 0;
+		
+		virtual void deallocateArray( void* p, const MANAGED_TYPE_FLAG& type ) = 0;
 		
 		/** Verifies if the free memory is above the passed percentage threshold. */
 		virtual bool hasEnoughMemory( const float& percentageThreshold ) const = 0;
