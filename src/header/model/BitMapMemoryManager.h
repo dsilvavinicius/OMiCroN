@@ -46,7 +46,7 @@ namespace model
 		void SetRangeOfInt( int* element, int msb, int lsb, bool flag );
 		T* FirstFreeBlock();
 		T* objectAddress( int pos );
-		void* Head();
+		T* Head();
 	
 		int Index;
 		int BlocksAvailable;
@@ -69,11 +69,11 @@ namespace model
 	public: 
 		BitMapMemoryPool() {}
 		~BitMapMemoryPool();
-		void* allocate();
-		void* allocateArray( const size_t& size );
-		void deallocate( void* p );
-		void deallocateArray( void* p);
-		vector< void* >& GetMemoryPoolList();
+		T* allocate();
+		T* allocateArray( const size_t& size );
+		void deallocate( T* p );
+		void deallocateArray( T* p);
+		vector< T* >& GetMemoryPoolList();
 		
 		/** Calculates how much memory blocks are currently used. */
 		size_t usedBlocks() const;
@@ -82,18 +82,18 @@ namespace model
 		size_t memoryUsage() const;
 		
 	private:
-		void* AllocateArrayMemory( size_t size );
-		void* AllocateChunkAndInitBitMap();
+		T* AllocateArrayMemory( size_t size );
+		T* AllocateChunkAndInitBitMap();
 		/** Sets the bit related with the given pointer. */
-		void SetBlockBit( void* object, bool flag );
+		void SetBlockBit( T* object, bool flag );
 		void SetMultipleBlockBits( ArrayMemoryInfo* info, bool flag );
 		
-		vector< void* > MemoryPoolList;
+		vector< T* > MemoryPoolList;
 		vector< BitMapEntry > BitMapEntryList;
 		//the above two lists will maintain one-to-one correpondence and hence 
 		//should be of same  size.
 		set< BitMapEntry* > FreeMapEntries;
-		map< void*, ArrayMemoryInfo > ArrayMemoryList;
+		map< T*, ArrayMemoryInfo > ArrayMemoryList;
 	};
 	
 	class BitMapMemoryManager
@@ -202,7 +202,6 @@ namespace model
 			
 			int result = BitMap[ i ] & -( BitMap[ i ] ); // this expression yields the first 
 														// bit position which is 1 in an int from right.
-			void* address = 0;
 			int basePos = ( INT_SIZE * i );
 			switch( result )
 			{
@@ -256,11 +255,11 @@ namespace model
 		
 		//cout << "Pos: "<< pos << ", elemIdx: " << elementIdx << ", bitIdx: " << bitIdx << endl << endl;
 		
-		return &( ( static_cast< T* >( Head() ) + elementIdx * INT_SIZE )[ bitIdx ] );
+		return &( ( Head() + elementIdx * INT_SIZE )[ bitIdx ] );
 	} 
 
 	template< typename T >
-	void* BitMapEntry< T >::Head()
+	T* BitMapEntry< T >::Head()
 	{
 		return static_cast< BitMapMemoryManager& >( BitMapMemoryManager::instance() ).getPool< T >()
 				.GetMemoryPoolList()[ Index ];
@@ -276,14 +275,14 @@ namespace model
 	}
 	
 	template< typename T >
-	void* BitMapMemoryPool< T >::allocate()
+	T* BitMapMemoryPool< T >::allocate()
 	{
 		typename std::set< BitMapEntry* >::iterator freeMapI = FreeMapEntries.begin();
 		if( freeMapI != FreeMapEntries.end() )
 		{
 			//cout << "Free entry found." << endl << endl;
 			BitMapEntry* mapEntry = *freeMapI;
-			void* block = mapEntry->FirstFreeBlock();
+			T* block = mapEntry->FirstFreeBlock();
 			
 			//cout << "Blocks available: " << mapEntry->BlocksAvailable << endl << endl;
 			if( mapEntry->BlocksAvailable == 0 )
@@ -303,7 +302,7 @@ namespace model
 	}
 
 	template< typename T >
-	void* BitMapMemoryPool< T >::allocateArray( const size_t& size )
+	T* BitMapMemoryPool< T >::allocateArray( const size_t& size )
 	{
 		if( ArrayMemoryList.empty() )
 		{
@@ -311,8 +310,8 @@ namespace model
 		}
 		else 
 		{
-			std::map< void*, ArrayMemoryInfo >::iterator infoI = ArrayMemoryList.begin();
-			std::map< void*, ArrayMemoryInfo >::iterator infoEndI = ArrayMemoryList.end();
+			typename std::map< T*, ArrayMemoryInfo >::iterator infoI = ArrayMemoryList.begin();
+			typename std::map< T*, ArrayMemoryInfo >::iterator infoEndI = ArrayMemoryList.end();
 			while( infoI != infoEndI )
 			{
 				ArrayMemoryInfo info = ( *infoI ).second;
@@ -327,8 +326,7 @@ namespace model
 					{
 						info.StartPosition = BIT_MAP_SIZE - entry->BlocksAvailable;
 						info.Size = size / sizeof( T );
-						T* baseAddress = static_cast< T* >( MemoryPoolList[ info.MemPoolListIndex ] ) +
-											info.StartPosition;
+						T* baseAddress = MemoryPoolList[ info.MemPoolListIndex ] + info.StartPosition;
 
 						ArrayMemoryList[ baseAddress ] = info;
 						SetMultipleBlockBits( &info, false );
@@ -341,9 +339,9 @@ namespace model
 	}
 	
 	template< typename T >
-	void* BitMapMemoryPool< T >::AllocateArrayMemory( size_t size )
+	T* BitMapMemoryPool< T >::AllocateArrayMemory( size_t size )
 	{
-		void* chunkAddress = AllocateChunkAndInitBitMap();
+		T* chunkAddress = AllocateChunkAndInitBitMap();
 		ArrayMemoryInfo info;
 		info.MemPoolListIndex = MemoryPoolList.size() - 1;
 		info.StartPosition = 0;
@@ -354,21 +352,21 @@ namespace model
 	}
 
 	template< typename T >
-	void BitMapMemoryPool< T >::deallocate( void* object )
+	void BitMapMemoryPool< T >::deallocate( T* object )
 	{
 		//cout << "Deallocate" << endl << endl;
 		SetBlockBit( object, true );
 	}
 	
 	template< typename T >
-	void BitMapMemoryPool< T >::deallocateArray( void* object )
+	void BitMapMemoryPool< T >::deallocateArray( T* object )
 	{
 		ArrayMemoryInfo *info = &ArrayMemoryList[ object ];
 		SetMultipleBlockBits( info, true );
 	}
 	
 	template< typename T >
-	std::vector< void* >& BitMapMemoryPool< T >::GetMemoryPoolList()
+	std::vector< T* >& BitMapMemoryPool< T >::GetMemoryPoolList()
 	{ 
 		return MemoryPoolList;
 	}
@@ -392,7 +390,7 @@ namespace model
 	}
 	
 	template< typename T >
-	void* BitMapMemoryPool< T >::AllocateChunkAndInitBitMap()
+	T* BitMapMemoryPool< T >::AllocateChunkAndInitBitMap()
 	{
 		//cout << "Allocating chunk." << endl << endl;
 		BitMapEntry mapEntry;
@@ -404,7 +402,7 @@ namespace model
 	}
 
 	template< typename T >
-	void BitMapMemoryPool< T >::SetBlockBit( void* object, bool flag )
+	void BitMapMemoryPool< T >::SetBlockBit( T* object, bool flag )
 	{
 		//cout << "SetBlockBit " << flag << endl << endl;
 		
@@ -412,10 +410,9 @@ namespace model
 		for( ; i >= 0 ; i-- )
 		{
 			BitMapEntry* bitMap = &BitMapEntryList[ i ];
-			if( ( bitMap->Head() <= object ) && 
-				( &( static_cast< T* >( bitMap->Head() ) )[ BIT_MAP_SIZE-1 ] >= object ) )
+			if( ( bitMap->Head() <= object ) && ( bitMap->Head() + BIT_MAP_SIZE - 1 >= object ) )
 			{
-				int position = static_cast< T* >( object ) - static_cast< T* >( bitMap->Head() );
+				int position = object - bitMap->Head();
 				bitMap->SetBit( position, flag );
 				flag ? bitMap->BlocksAvailable++ : bitMap->BlocksAvailable--;
 				

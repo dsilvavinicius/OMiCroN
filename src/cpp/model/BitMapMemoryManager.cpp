@@ -41,11 +41,11 @@ namespace model
 		
 		switch( type )
 		{
-			case SHALLOW_MORTON		: return m_shallowMortonPool.deallocate( p );
-			case MEDIUM_MORTON		: return m_mediumMortonPool.deallocate( p );
-			case POINT				: return m_pointPool.deallocate( p );
-			case EXTENDED_POINT		: return m_extendedPointPool.deallocate( p );
-			case NODE				: return m_nodePool.deallocate( p );
+			case SHALLOW_MORTON		: return m_shallowMortonPool.deallocate( static_cast< ShallowMortonCode* >( p ) );
+			case MEDIUM_MORTON		: return m_mediumMortonPool.deallocate( static_cast< MediumMortonCode* >( p ) );
+			case POINT				: return m_pointPool.deallocate( static_cast< Point* >( p ) );
+			case EXTENDED_POINT		: return m_extendedPointPool.deallocate( static_cast< ExtendedPoint* >( p ) );
+			case NODE				: return m_nodePool.deallocate( static_cast< ShallowLeafNode< PointVector >* >( p ) );
 			default					: throw logic_error( "Unknowm nanaged type" );
 		}
 	}
@@ -56,11 +56,11 @@ namespace model
 		
 		switch( type )
 		{
-			case SHALLOW_MORTON		: return m_shallowMortonPool.deallocateArray( p );
-			case MEDIUM_MORTON		: return m_mediumMortonPool.deallocateArray( p );
-			case POINT				: return m_pointPool.deallocateArray( p );
-			case EXTENDED_POINT		: return m_extendedPointPool.deallocateArray( p );
-			case NODE				: return m_nodePool.deallocateArray( p );
+			case SHALLOW_MORTON		: return m_shallowMortonPool.deallocateArray( static_cast< ShallowMortonCode* >( p ) );
+			case MEDIUM_MORTON		: return m_mediumMortonPool.deallocateArray( static_cast< MediumMortonCode* >( p ) );
+			case POINT				: return m_pointPool.deallocateArray( static_cast< Point* >( p ) );
+			case EXTENDED_POINT		: return m_extendedPointPool.deallocateArray( static_cast< ExtendedPoint* >( p ) );
+			case NODE				: return m_nodePool.deallocateArray( static_cast< ShallowLeafNode< PointVector >* >( p ) );
 			default					: throw logic_error( "Unknowm nanaged type" );
 		}
 	}
