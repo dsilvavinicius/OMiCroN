@@ -405,7 +405,6 @@ namespace model
 	void BitMapMemoryPool< T >::SetBlockBit( T* object, bool flag )
 	{
 		//cout << "SetBlockBit " << flag << endl << endl;
-		
 		int i = BitMapEntryList.size() - 1;
 		for( ; i >= 0 ; i-- )
 		{
@@ -414,7 +413,8 @@ namespace model
 			{
 				int position = object - bitMap->Head();
 				bitMap->SetBit( position, flag );
-				flag ? bitMap->BlocksAvailable++ : bitMap->BlocksAvailable--;
+				
+				//cout << "New available: " << bitMap->BlocksAvailable << endl << endl;
 				
 				if( bitMap->BlocksAvailable == 1 && flag )
 				{
