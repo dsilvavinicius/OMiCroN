@@ -16,8 +16,10 @@ namespace model
 			
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
-			size_t maxMemToUse = nNodes * sizeof( ShallowMortonCode ) + nPoints * sizeof( Point )
-									+ nNodes * sizeof( ShallowLeafNodePtr< PointVector > );
+			size_t totalMortonsSize = nNodes * sizeof( ShallowMortonCode );
+			size_t totalPointsSize = nPoints * sizeof( Point );
+			size_t totalNodesSize = nNodes * sizeof( ShallowLeafNode< PointVector > );
+			size_t maxMemToUse = totalMortonsSize + totalPointsSize + totalNodesSize;
 			
 			BitMapMemoryManager::initInstance( maxMemToUse );
 			BitMapMemoryManager& manager = dynamic_cast< BitMapMemoryManager& >( BitMapMemoryManager::instance() );
@@ -35,14 +37,6 @@ namespace model
 				PointPtr p0( new Point() );
 				PointPtr p1( new Point() );
 				node->setContents( PointVector( { p0, p1 } ) );
-				
-				//cout << "Index " << i << " Node: " << mortonCode->toString() << endl << endl;
-				//cout << "Map: " << endl;
-				//for( auto it = map.begin(); it != map.end(); it++ )
-				//{
-				//	cout << it->first->toString() << endl;
-				//}
-				//cout << endl;
 				
 				map[ mortonCode ] = node;
 			}

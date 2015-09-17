@@ -18,7 +18,7 @@ namespace model
 			case POINT				: return m_pointPool.allocate();
 			case EXTENDED_POINT		: return m_extendedPointPool.allocate();
 			case NODE				: return m_nodePool.allocate();
-			default					: throw logic_error( "Unknowm nanaged type" );
+			default					: throw logic_error( "Unknowm managed type" );
 		}
 	}
 	
@@ -31,7 +31,7 @@ namespace model
 			case POINT				: return m_pointPool.allocateArray( size );
 			case EXTENDED_POINT		: return m_extendedPointPool.allocateArray( size );
 			case NODE				: return m_nodePool.allocateArray( size );
-			default					: throw logic_error( "Unknowm nanaged type" );
+			default					: throw logic_error( "Unknowm managed type" );
 		}
 	}
 	
@@ -72,16 +72,18 @@ namespace model
 	
 	string BitMapMemoryManager::toString() const
 	{
-		cout << "ShallowMorton used blocks: " << m_shallowMortonPool.usedBlocks() << " Used memory: "
-			 << m_shallowMortonPool.usedBlocks() << endl
-			 << "MediumMorton used blocks: " << m_mediumMortonPool.usedBlocks() << " Used memory: "
-			 << m_mediumMortonPool.usedBlocks() << endl
-			 << "Point used blocks: " << m_pointPool.usedBlocks() << " Used memory: "
-			 << m_pointPool.usedBlocks() << endl
-			 << "ExtendedPoint used blocks: " << m_extendedPointPool.usedBlocks() << " Used memory: "
-			 << m_extendedPointPool.usedBlocks() << endl
-			 << "Node used blocks: " << m_nodePool.usedBlocks() << " Used memory: "
-			 << m_nodePool.usedBlocks() << endl << endl;
+		stringstream ss;
+		ss 	<< "ShallowMorton used blocks: " << m_shallowMortonPool.usedBlocks() << " Used memory: "
+			<< m_shallowMortonPool.memoryUsage() << endl
+			<< "MediumMorton used blocks: " << m_mediumMortonPool.usedBlocks() << " Used memory: "
+			<< m_mediumMortonPool.memoryUsage() << endl
+			<< "Point used blocks: " << m_pointPool.usedBlocks() << " Used memory: "
+			<< m_pointPool.memoryUsage() << endl
+			<< "ExtendedPoint used blocks: " << m_extendedPointPool.usedBlocks() << " Used memory: "
+			<< m_extendedPointPool.memoryUsage() << endl
+			<< "Node used blocks: " << m_nodePool.usedBlocks() << " Used memory: "
+			<< m_nodePool.memoryUsage() << endl << endl;
+		return ss.str();
 	}
 	
 	template<>

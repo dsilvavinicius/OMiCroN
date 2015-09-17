@@ -130,7 +130,7 @@ namespace model
 		BitMapMemoryPool< Point > m_pointPool;
 		BitMapMemoryPool< ExtendedPoint > m_extendedPointPool;
 		BitMapMemoryPool< ShallowLeafNode< PointVector > > m_nodePool; 	// All nodes require the same memory amount, since
-																		//the contents are a vector of smart pointers.
+																		// the contents are a vector of smart pointers.
 	};
 	
 	template< typename T >
