@@ -35,14 +35,16 @@ namespace model
 		BitMapEntry()
 		: BlocksAvailable( BIT_MAP_SIZE )
 		{
-			memset( BitMap, 0xff, BIT_MAP_ELEMENTS / sizeof( char ) ); 
+			memset( BitMap, 0xff, BIT_MAP_ELEMENTS * sizeof( int ) ); 
 			// initially all blocks are free and bit value 1 in the map denotes 
 			// available block
 		}
+		/** Sets a bit, given a position in the bitmap. */
 		void SetBit( int position, bool flag );
+		/** Same as SetBit, but for more than one consecutive bits. */
 		void SetMultipleBits( int position, bool flag, int count );
 		void SetRangeOfInt( int* element, int msb, int lsb, bool flag );
-		T* FirstFreeBlock( size_t size );
+		T* FirstFreeBlock();
 		T* objectAddress( int pos );
 		void* Head();
 	
@@ -82,6 +84,7 @@ namespace model
 	private:
 		void* AllocateArrayMemory( size_t size );
 		void* AllocateChunkAndInitBitMap();
+		/** Sets the bit related with the given pointer. */
 		void SetBlockBit( void* object, bool flag );
 		void SetMultipleBlockBits( ArrayMemoryInfo* info, bool flag );
 		
@@ -133,6 +136,7 @@ namespace model
 	template< typename T >
 	void BitMapEntry< T >::SetBit( int position, bool flag )
 	{
+		//cout << "SetBit " << flag << endl << endl;
 		BlocksAvailable += flag ? 1 : -1;
 		int elementNo = position / INT_SIZE;
 		int bitNo = position % INT_SIZE;
@@ -145,6 +149,8 @@ namespace model
 	template< typename T >
 	void BitMapEntry< T >::SetMultipleBits( int position, bool flag, int count )
 	{
+		//cout << "SetMultipleBits " << flag << endl << endl;
+		
 		BlocksAvailable += flag ? count : -count;
 		int elementNo = position / INT_SIZE;
 		int bitNo = position % INT_SIZE;
@@ -185,15 +191,17 @@ namespace model
 	}
 
 	template< typename T >
-	T* BitMapEntry< T >::FirstFreeBlock( size_t size )
+	T* BitMapEntry< T >::FirstFreeBlock()
 	{
 		for( int i = 0 ; i < BIT_MAP_ELEMENTS; ++i )
 		{
+			//cout << "Bitmap " << i << ": " << BitMap[ i ] << endl << endl;
+			
 			if( BitMap[ i ] == 0 )
 				continue;            // no free bit was found 
 			
 			int result = BitMap[ i ] & -( BitMap[ i ] ); // this expression yields the first 
-			// bit position which is 1 in an int from right.
+														// bit position which is 1 in an int from right.
 			void* address = 0;
 			int basePos = ( INT_SIZE * i );
 			switch( result )
@@ -231,9 +239,11 @@ namespace model
 				case 0x20000000: return objectAddress( basePos + 29 );
 				case 0x40000000: return objectAddress( basePos + 30 );
 				case 0x80000000: return objectAddress( basePos + 31 );
-				default : break;      
+				default : throw logic_error( "Unexpected bit position for allocation." );
 			}
 		}
+		
+		throw logic_error( "Cannot allocate memory." );
 		return 0;
 	}
 
@@ -241,7 +251,12 @@ namespace model
 	T* BitMapEntry< T >::objectAddress( int pos )
 	{
 		SetBit( pos, false ); 
-		return &( ( static_cast< T* >( Head() ) + ( pos / INT_SIZE ) )[ INT_SIZE - ( ( pos % INT_SIZE ) + 1 ) ] );
+		int elementIdx = pos / INT_SIZE;
+		int bitIdx = INT_SIZE - ( ( pos % INT_SIZE ) + 1 );
+		
+		//cout << "Pos: "<< pos << ", elemIdx: " << elementIdx << ", bitIdx: " << bitIdx << endl << endl;
+		
+		return &( ( static_cast< T* >( Head() ) + elementIdx * INT_SIZE )[ bitIdx ] );
 	} 
 
 	template< typename T >
@@ -263,18 +278,27 @@ namespace model
 	template< typename T >
 	void* BitMapMemoryPool< T >::allocate()
 	{
-		size_t size = sizeof( T );
 		typename std::set< BitMapEntry* >::iterator freeMapI = FreeMapEntries.begin();
 		if( freeMapI != FreeMapEntries.end() )
 		{
+			//cout << "Free entry found." << endl << endl;
 			BitMapEntry* mapEntry = *freeMapI;
-			return mapEntry->FirstFreeBlock( size );
+			void* block = mapEntry->FirstFreeBlock();
+			
+			//cout << "Blocks available: " << mapEntry->BlocksAvailable << endl << endl;
+			if( mapEntry->BlocksAvailable == 0 )
+			{
+				//cout << "Block is not free anymore" << endl << endl;
+				FreeMapEntries.erase( freeMapI );
+			}
+			return block;
 		}
 		else
 		{
+			//cout << "Free entry NOT found." << endl << endl;
 			AllocateChunkAndInitBitMap();
 			FreeMapEntries.insert( &( BitMapEntryList[ BitMapEntryList.size() - 1 ] ) );
-			return BitMapEntryList[ BitMapEntryList.size() - 1 ].FirstFreeBlock( size );
+			return BitMapEntryList[ BitMapEntryList.size() - 1 ].FirstFreeBlock();
 		}
 	}
 
@@ -292,8 +316,8 @@ namespace model
 			while( infoI != infoEndI )
 			{
 				ArrayMemoryInfo info = ( *infoI ).second;
-				if( info.StartPosition != 0 )  // search only in those mem blocks  
-					continue;             // where allocation is done from first byte
+				if( info.StartPosition != 0 )	// search only in those mem blocks  
+					continue;             		// where allocation is done from first byte
 				else 
 				{
 					BitMapEntry* entry = &BitMapEntryList[ info.MemPoolListIndex ];
@@ -332,6 +356,7 @@ namespace model
 	template< typename T >
 	void BitMapMemoryPool< T >::deallocate( void* object )
 	{
+		//cout << "Deallocate" << endl << endl;
 		SetBlockBit( object, true );
 	}
 	
@@ -369,6 +394,7 @@ namespace model
 	template< typename T >
 	void* BitMapMemoryPool< T >::AllocateChunkAndInitBitMap()
 	{
+		//cout << "Allocating chunk." << endl << endl;
 		BitMapEntry mapEntry;
 		T* memoryBeginAddress = reinterpret_cast< T* >( new char [ sizeof( T ) * BIT_MAP_SIZE ] );
 		MemoryPoolList.push_back( memoryBeginAddress );
@@ -380,6 +406,8 @@ namespace model
 	template< typename T >
 	void BitMapMemoryPool< T >::SetBlockBit( void* object, bool flag )
 	{
+		//cout << "SetBlockBit " << flag << endl << endl;
+		
 		int i = BitMapEntryList.size() - 1;
 		for( ; i >= 0 ; i-- )
 		{
@@ -390,6 +418,11 @@ namespace model
 				int position = static_cast< T* >( object ) - static_cast< T* >( bitMap->Head() );
 				bitMap->SetBit( position, flag );
 				flag ? bitMap->BlocksAvailable++ : bitMap->BlocksAvailable--;
+				
+				if( bitMap->BlocksAvailable == 1 && flag )
+				{
+					FreeMapEntries.insert( bitMap );
+				}
 			}
 		}
 	}
@@ -399,6 +432,11 @@ namespace model
 	{
 		BitMapEntry* mapEntry = &BitMapEntryList[ info->MemPoolListIndex ];
 		mapEntry->SetMultipleBits( info->StartPosition, flag, info->Size );
+		
+		if( mapEntry->BlocksAvailable == info->Size && flag )
+		{
+			FreeMapEntries.insert( mapEntry );
+		}
 	}
 	
 	inline size_t BitMapMemoryManager::usedMemory() const

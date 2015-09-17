@@ -10,6 +10,7 @@ namespace model
 	
 	inline void* BitMapMemoryManager::allocate( const MANAGED_TYPE_FLAG& type )
 	{
+		//cout << "Allocating " << type << endl << endl;
 		switch( type )
 		{
 			case SHALLOW_MORTON		: return m_shallowMortonPool.allocate();
@@ -36,6 +37,8 @@ namespace model
 	
 	inline void BitMapMemoryManager::deallocate( void* p, const MANAGED_TYPE_FLAG& type )
 	{
+		//cout << "Dealloc" << type << endl << endl;
+		
 		switch( type )
 		{
 			case SHALLOW_MORTON		: return m_shallowMortonPool.deallocate( p );
@@ -49,6 +52,8 @@ namespace model
 	
 	inline void BitMapMemoryManager::deallocateArray( void* p, const MANAGED_TYPE_FLAG& type )
 	{
+		//cout << "Dealloc array " << type << endl << endl;
+		
 		switch( type )
 		{
 			case SHALLOW_MORTON		: return m_shallowMortonPool.deallocateArray( p );

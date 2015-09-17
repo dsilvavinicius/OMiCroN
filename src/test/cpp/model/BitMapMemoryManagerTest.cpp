@@ -36,6 +36,14 @@ namespace model
 				PointPtr p1( new Point() );
 				node->setContents( PointVector( { p0, p1 } ) );
 				
+				//cout << "Index " << i << " Node: " << mortonCode->toString() << endl << endl;
+				//cout << "Map: " << endl;
+				//for( auto it = map.begin(); it != map.end(); it++ )
+				//{
+				//	cout << it->first->toString() << endl;
+				//}
+				//cout << endl;
+				
 				map[ mortonCode ] = node;
 			}
 			
