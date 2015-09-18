@@ -6,6 +6,7 @@
 #include "Point.h"
 #include "MortonCode.h"
 #include "OctreeNode.h"
+#include "IMemoryPool.h"
 
 namespace model
 {
@@ -63,23 +64,24 @@ namespace model
 	
 	template< typename T >
 	class BitMapMemoryPool
+	: IMemoryPool< T >
 	{
 		using BitMapEntry = model::BitMapEntry< T >;
 		
 	public: 
 		BitMapMemoryPool() {}
 		~BitMapMemoryPool();
-		T* allocate();
-		T* allocateArray( const size_t& size );
-		void deallocate( T* p );
-		void deallocateArray( T* p);
+		T* allocate() override;
+		T* allocateArray( const size_t& size ) override;
+		void deallocate( T* p ) override;
+		void deallocateArray( T* p) override;
 		vector< T* >& GetMemoryPoolList();
 		
 		/** Calculates how much memory blocks are currently used. */
-		size_t usedBlocks() const;
+		size_t usedBlocks() const override;
 		
 		/** Calculates how much memory is currently used in this pool in bytes. */
-		size_t memoryUsage() const;
+		size_t memoryUsage() const override;
 		
 	private:
 		T* AllocateArrayMemory( size_t size );
@@ -114,9 +116,11 @@ namespace model
 		
 		bool hasEnoughMemory( const float& percentageThreshold ) const override;
 		
-		string toString() const override;
+		size_t usedMemory() const override;
 		
-		size_t usedMemory() const;
+		size_t maxAllowedMem() const override { return m_maxAllowedMem; }
+		
+		string toString() const override;
 		
 		template< typename T > BitMapMemoryPool< T >& getPool();
 	

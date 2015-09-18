@@ -104,15 +104,15 @@ add_library (Point_Based_Renderer_Lib
 	${UI_HDRS}
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h						${CPP_DIR}/${UTIL_DIR}/Stream.cpp
+	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h					${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Point.h						${CPP_DIR}/${MODEL_DIR}/Point.cpp
+	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h				${CPP_DIR}/${MODEL_DIR}/ExtendedPoint.cpp
 	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h					${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
 	${HEADER_DIR}/${MODEL_DIR}/IMemoryManager.h				${CPP_DIR}/${MODEL_DIR}/IMemoryManager.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MemoryManager.h				${CPP_DIR}/${MODEL_DIR}/MemoryManager.cpp
 	${HEADER_DIR}/${MODEL_DIR}/BitMapMemoryManager.h		${CPP_DIR}/${MODEL_DIR}/BitMapMemoryManager.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h						${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h						${CPP_DIR}/${MODEL_DIR}/Camera.cpp
-	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h					${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Point.h						${CPP_DIR}/${MODEL_DIR}/Point.cpp
-	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h				${CPP_DIR}/${MODEL_DIR}/ExtendedPoint.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h				${CPP_DIR}/${MODEL_DIR}/RenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/TransientRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp

@@ -5,21 +5,23 @@
 #include <iostream>
 #include <mutex>
 #include "BasicTypes.h"
+#include "IMemoryPool.h"
 
 using namespace std;
 
 namespace model
 {
-	/** Thread-safe implementation of Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
+	/** Thread-safe template implementation of Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
 	 * http://www.thinkmind.org/index.php?view=article&articleid=computation_tools_2012_1_10_80006. */
+	template< typename T >
 	class MemoryPool
+	: IMemoryPool< T >
 	{
 		uint	m_numOfBlocks;		// Num of blocks
-		uint	m_sizeOfEachBlock; 	// Size of each block
 		uint	m_numFreeBlocks;	// Num of remaining blocks
 		uint	m_numInitialized;	// Num of initialized blocks
-		uchar*	m_memStart;			// Beginning of memory pool
-		uchar*	m_next;				// Num of next free block
+		T*		m_memStart;			// Beginning of memory pool
+		T*		m_next;				// Num of next free block
 		mutex	poolLock;			// Lock to the pool
 		
 		public:
@@ -27,7 +29,6 @@ namespace model
 		MemoryPool()
 		{
 			m_numOfBlocks = 0;
-			m_sizeOfEachBlock = 0;
 			m_numFreeBlocks = 0;
 			m_numInitialized = 0;
 			m_memStart = NULL;
@@ -39,26 +40,20 @@ namespace model
 			destroyPool();
 		}
 		
-		void createPool( size_t sizeOfEachBlock, uint numOfBlocks )
+		void createPool( uint numOfBlocks )
 		{
-			if( sizeOfEachBlock <= 0 )
-			{
-				throw logic_error( "Cannot create a MemoryPool with size of block <= 0." );
-			}
-			
 			destroyPool();
 			
 			if( numOfBlocks > 0 )
 			{
 				m_numOfBlocks = numOfBlocks;
-				m_sizeOfEachBlock = sizeOfEachBlock;
-				m_memStart = new uchar[ m_sizeOfEachBlock * m_numOfBlocks ];
+				m_memStart = reinterpret_cast< T* >( new uchar[ sizeof( T ) * m_numOfBlocks ] );
 				m_numFreeBlocks = numOfBlocks;
 				m_next = m_memStart;
 			}
 		}
 		
-		void* allocate()
+		T* allocate() override
 		{
 			lock_guard< mutex > guard( poolLock );
 			if( m_numInitialized < m_numOfBlocks )
@@ -67,10 +62,10 @@ namespace model
 				*p = m_numInitialized + 1;
 				m_numInitialized++;
 			}
-			void* ret = NULL;
+			T* ret = NULL;
 			if( m_numFreeBlocks > 0 )
 			{
-				ret = ( void* ) m_next;
+				ret = m_next;
 				--m_numFreeBlocks;
 				if( m_numFreeBlocks != 0 )
 				{
@@ -84,27 +79,39 @@ namespace model
 			return ret;
 		}
 		
-		void deAllocate( void* p )
+		/** UNSUPORTED. */
+		T* allocateArray( const size_t& size ) override
+		{
+			throw logic_error( "MemoryPool::allocateArray() is unsuported." );
+		}
+		
+		void deallocate( T* p ) override
 		{
 			lock_guard< mutex > guard( poolLock );
 			if( m_next != NULL )
 			{
 				( *( uint* )p ) = indexFromAddr( m_next );
-				m_next = ( uchar* )p;
+				m_next = p;
 			}
 			else
 			{
 				*( ( uint* )p ) = m_numOfBlocks;
-				m_next = ( uchar* )p;
+				m_next = p;
 			}
 			++m_numFreeBlocks;
 		}
 		
-		/** Checks if a pointer is in this memory pool. */
-		bool isPointerIn( const uchar* p ) const
+		void deallocateArray( T* p ) override
 		{
-			return p >= m_memStart && p < m_memStart + m_sizeOfEachBlock * m_numOfBlocks;
+			throw logic_error( "MemoryPool::deallocateArray() is unsuported." );
 		}
+		
+		size_t usedBlocks() const override
+		{
+			return m_numOfBlocks - m_numFreeBlocks;
+		}
+		
+		size_t memoryUsage() const override;
 		
 		uint getNumFreeBlocks() const
 		{
@@ -144,7 +151,6 @@ namespace model
 			lock_guard< mutex > guard( poolLock );
 			
 			m_numOfBlocks = 0;
-			m_sizeOfEachBlock = 0;
 			m_numFreeBlocks = 0;
 			m_numInitialized = 0;
 			m_next = 0;
@@ -156,16 +162,22 @@ namespace model
 			}
 		}
 		
-		uchar* addrFromIndex( uint i ) const
+		T* addrFromIndex( uint i ) const
 		{
-			return m_memStart + ( i * m_sizeOfEachBlock );
+			return m_memStart + i;
 		}
 		
-		uint indexFromAddr( const uchar* p ) const
+		uint indexFromAddr( const T* p ) const
 		{
-			return ( ( ( uint )( p - m_memStart )) / m_sizeOfEachBlock );
+			return ( uint )( p - m_memStart );
 		}
 	};
+	
+	template< typename T >
+	size_t MemoryPool< T >::memoryUsage() const
+	{
+		return usedBlocks() * sizeof( T );
+	}
 }
 
 #endif

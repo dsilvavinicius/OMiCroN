@@ -32,11 +32,19 @@ namespace model
 		/** Deallocates memory for a managed type. */
 		virtual void deallocate( void* p, const MANAGED_TYPE_FLAG& type ) = 0;
 		
+		/** Deallocates an array of a managed type. */
 		virtual void deallocateArray( void* p, const MANAGED_TYPE_FLAG& type ) = 0;
+		
+		/** Reports all memory currently being used. */
+		virtual size_t usedMemory() const = 0;
+		
+		/** Reports the maximum amount of allowed memory. */
+		virtual size_t maxAllowedMem() const = 0;
 		
 		/** Verifies if the free memory is above the passed percentage threshold. */
 		virtual bool hasEnoughMemory( const float& percentageThreshold ) const = 0;
 		
+		/** Outputs a string info representing the state of the manager. */
 		virtual string toString() const = 0;
 	};
 	

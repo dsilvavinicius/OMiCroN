@@ -107,6 +107,12 @@ namespace model
 	
 	template< typename Contents >
 	using ShallowInnerNodePtr = shared_ptr< ShallowInnerNode< Contents > >;
+	
+	template< typename Contents >
+	using MediumInnerNode = InnerNode< MediumMortonCode, Contents >;
+	
+	template< typename Contents >
+	using MediumInnerNodePtr = shared_ptr< MediumInnerNode< Contents > >;
 }
 	
 #endif

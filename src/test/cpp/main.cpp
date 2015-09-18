@@ -5,6 +5,7 @@
 #include "MemoryManager.h"
 #include <Point.h>
 #include <LeafNode.h>
+#include <BitMapMemoryManager.h>
 
 using namespace std;
 using namespace model;
@@ -20,6 +21,9 @@ public:
 		ulong nNodes = 500000u;
 		ulong nPoints = 2u * nNodes;
 		MemoryManager::initInstance( nNodes, nNodes, nPoints, nPoints, nNodes );
+		//BitMapMemoryManager::initInstance( nNodes * sizeof( ShallowMortonCode ) + nNodes * sizeof( MediumMortonCode )
+		//									+ nPoints * sizeof( Point ) + nPoints * sizeof( ExtendedPoint )
+		//									+ nNodes * sizeof( ShallowLeafNode< PointVector > ) );
 	}
 };
 

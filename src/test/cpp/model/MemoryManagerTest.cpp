@@ -18,19 +18,9 @@ namespace model
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
 			
-			MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
+			IMemoryManager& manager = MemoryManager::instance();
 			
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), nNodes );
-			
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 1.f );
+			ASSERT_EQ( manager.usedMemory(), ( size_t ) 0 );
 			
 			ShallowOctreeMap map;
 			
@@ -38,17 +28,10 @@ namespace model
 			{
 				if( i == 0.5 * nNodes )
 				{
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), 0.5 * nNodes );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), nNodes );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), 0.5 * nPoints );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), nPoints );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), 0.5 * nNodes );
-					
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 0.5f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 1.f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 0.5f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 1.f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 0.5f );
+					size_t expectedHalfSize = 	0.5 * nNodes * sizeof( ShallowMortonCode )
+												+ 0.5 * nPoints * sizeof( Point )
+												+ 0.5 * nNodes * sizeof( ShallowLeafNode< PointVector > );
+					ASSERT_EQ( manager.usedMemory(), expectedHalfSize );
 				}
 				
 				ShallowMortonCodePtr mortonCode( new ShallowMortonCode() );
@@ -62,31 +45,13 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), 0u );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), 0u );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), 0u );
-			
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 0.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 0.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 0.f );
+			size_t expectedFullSize = 	nNodes * sizeof( ShallowMortonCode ) + nPoints * sizeof( Point )
+										+ nNodes * sizeof( ShallowLeafNode< PointVector > );
+			ASSERT_EQ( manager.usedMemory(), expectedFullSize );
 			
 			map.clear();
 			
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), nNodes );
-			
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 1.f );
+			ASSERT_EQ( manager.usedMemory(), ( size_t ) 0 );
 		}
 		
 		TEST_F( MemoryManagerTest, MediumExtendedPointVectorInnerNodes )
@@ -94,19 +59,9 @@ namespace model
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
 			
-			MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
+			IMemoryManager& manager = MemoryManager::instance();
 			
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), nNodes );
-			
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 1.f );
+			ASSERT_EQ( manager.usedMemory(), ( size_t ) 0 );
 			
 			MediumOctreeMap map;
 			
@@ -114,17 +69,10 @@ namespace model
 			{
 				if( i == 0.5 * nNodes )
 				{
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), nNodes );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), 0.5 * nNodes );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), nPoints );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), 0.5 * nPoints );
-					ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), 0.5 * nNodes );
-					
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 1.f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 0.5f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 1.f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 0.5f );
-					ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 0.5f );
+					size_t expectedHalfSize = 	0.5 * nNodes * sizeof( MediumMortonCode )
+												+ 0.5 * nPoints * sizeof( ExtendedPoint )
+												+ 0.5 * nNodes * sizeof( MediumLeafNode< ExtendedPointVector > );
+					ASSERT_EQ( manager.usedMemory(), expectedHalfSize );
 				}
 				
 				MediumMortonCodePtr mortonCode( new MediumMortonCode() );
@@ -138,31 +86,13 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), 0u );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), 0u );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), 0u );
-			
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 0.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 0.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 0.f );
+			size_t expectedFullSize = 	nNodes * sizeof( MediumMortonCode ) + nPoints * sizeof( ExtendedPoint )
+										+ nNodes * sizeof( MediumLeafNode< ExtendedPointVector > );
+			ASSERT_EQ( manager.usedMemory(), expectedFullSize );
 			
 			map.clear();
 			
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::SHALLOW_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::MEDIUM_MORTON ), nNodes );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::EXTENDED_POINT ), nPoints );
-			ASSERT_EQ( manager.freeBlocks( IMemoryManager::NODE ), nNodes );
-			
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::SHALLOW_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::MEDIUM_MORTON ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::EXTENDED_POINT ), 1.f );
-			ASSERT_EQ( manager.freeBlocksPercentage( IMemoryManager::NODE ), 1.f );
+			ASSERT_EQ( manager.usedMemory(), ( size_t ) 0 );
 		}
 	}
 }
