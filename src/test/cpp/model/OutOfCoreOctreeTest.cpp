@@ -30,11 +30,11 @@ namespace model
 											 m_nodeBlocks );
 			}
 			
-			uint m_shallowBlocks;
-			uint m_mediumBlocks;
-			uint m_pointBlocks;
-			uint m_extendedBlocks;
-			uint m_nodeBlocks;
+			size_t m_shallowBlocks;
+			size_t m_mediumBlocks;
+			size_t m_pointBlocks;
+			size_t m_extendedBlocks;
+			size_t m_nodeBlocks;
 		};
 		
 		// Checks if OutOfCoreOctree creation is correct.

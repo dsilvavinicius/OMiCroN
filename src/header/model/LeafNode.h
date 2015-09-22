@@ -35,26 +35,25 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void* LeafNode< MortonCode, Contents >::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( IMemoryManager::NODE );
+		return SingletonMemoryManager::instance().allocLeaf();
 	}
 	
 	template< typename MortonCode, typename Contents >
 	void* LeafNode< MortonCode, Contents >::operator new[]( size_t size )
 	{
-		throw logic_error( "LeafNode::operator new[] is unsupported." );
+		return SingletonMemoryManager::instance().allocLeafArray( size );
 	}
 	
 	template< typename MortonCode, typename Contents >
 	void LeafNode< MortonCode, Contents >::operator delete( void* p )
 	{
-		//cout << "Deleting leaf" << endl;
-		MemoryManager::instance().deallocate( p, IMemoryManager::NODE );
+		SingletonMemoryManager::instance().deallocLeaf( p );
 	}
 	
 	template< typename MortonCode, typename Contents >
 	void LeafNode< MortonCode, Contents >::operator delete[]( void* p )
 	{
-		throw logic_error( "LeafNode::operator delete[] is unsupported." );
+		SingletonMemoryManager::instance().deallocLeafArray( p );
 	}
 	
 	template < typename MortonCode, typename Contents >

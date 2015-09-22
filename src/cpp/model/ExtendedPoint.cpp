@@ -57,22 +57,22 @@ namespace model
 	
 	void* ExtendedPoint::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( IMemoryManager::EXTENDED_POINT );
+		return SingletonMemoryManager::instance().allocPoint();
 	}
 	
 	void* ExtendedPoint::operator new[]( size_t size )
 	{
-		throw logic_error( "ExtendedPoint::operator new[] is unsupported." );
+		return SingletonMemoryManager::instance().allocPointArray( size );
 	}
 	
 	void ExtendedPoint::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( p, IMemoryManager::EXTENDED_POINT );
+		SingletonMemoryManager::instance().deallocPoint( p );
 	}
 	
 	void ExtendedPoint::operator delete[]( void* p )
 	{
-		throw logic_error( "ExtendedPoint::operator delete[] is unsupported." );
+		SingletonMemoryManager::instance().deallocPointArray( p );
 	}
 	
 	Vec3& ExtendedPoint::getNormal() { return m_normal; }

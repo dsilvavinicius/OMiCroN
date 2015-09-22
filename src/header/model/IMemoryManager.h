@@ -9,31 +9,58 @@ using namespace std;
 
 namespace model
 {
-	/** Interface for MemoryManagers. */
+	/** Interface for MemoryManagers. It defines an API for octree morton code, point and node allocation, deallocation
+	 * and usage statistics. */
 	class IMemoryManager
 	{
 	public:
-		enum MANAGED_TYPE_FLAG
-		{
-			SHALLOW_MORTON,
-			MEDIUM_MORTON,
-			POINT,
-			EXTENDED_POINT,
-			NODE,
-			COUNT
-		};
+		/** Allocates memory for morton code type. */
+		virtual void* allocMorton() = 0;
 		
-		/** Allocates memory for a managed type. */
-		virtual void* allocate( const MANAGED_TYPE_FLAG& type ) = 0;
+		/** Allocates memory for point type. */
+		virtual void* allocPoint() = 0;
 		
-		/** Allocates memory for a managed type array. */
-		virtual void* allocateArray( const size_t& size, const MANAGED_TYPE_FLAG& type ) = 0;
+		/** Allocates memory for inner node type. */
+		virtual void* allocInner() = 0;
 		
-		/** Deallocates memory for a managed type. */
-		virtual void deallocate( void* p, const MANAGED_TYPE_FLAG& type ) = 0;
+		/** Allocates memory for leaf node type. */
+		virtual void* allocLeaf() = 0;
 		
-		/** Deallocates an array of a managed type. */
-		virtual void deallocateArray( void* p, const MANAGED_TYPE_FLAG& type ) = 0;
+		/** Allocates memory for morton code type array. */
+		virtual void* allocMortonArray( const size_t& size ) = 0;
+		
+		/** Allocates memory for point type array. */
+		virtual void* allocPointArray( const size_t& size ) = 0;
+		
+		/** Allocates memory for inner node type array. */
+		virtual void* allocInnerArray( const size_t& size ) = 0;
+		
+		/** Allocates memory for leaf node type array. */
+		virtual void* allocLeafArray( const size_t& size ) = 0;
+		
+		/** Deallocates memory for morton code type. */
+		virtual void deallocMorton( void* p ) = 0;
+		
+		/** Deallocates memory for point type. */
+		virtual void deallocPoint( void* p ) = 0;
+		
+		/** Deallocates memory for inner node type. */
+		virtual void deallocInner( void* p ) = 0;
+		
+		/** Deallocates memory for leaf node type. */
+		virtual void deallocLeaf( void* p ) = 0;
+		
+		/** Deallocates an array of morton code type. */
+		virtual void deallocMortonArray( void* p ) = 0;
+		
+		/** Deallocates an array of point type. */
+		virtual void deallocPointArray( void* p ) = 0;
+		
+		/** Deallocates an array of inner node type. */
+		virtual void deallocInnerArray( void* p ) = 0;
+		
+		/** Deallocates an array of leaf node type. */
+		virtual void deallocLeafArray( void* p ) = 0;
 		
 		/** Reports all memory currently being used. */
 		virtual size_t usedMemory() const = 0;

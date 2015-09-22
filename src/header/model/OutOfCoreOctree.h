@@ -356,7 +356,7 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
 	{
-		IMemoryManager& memManager = MemoryManager::instance();
+		IMemoryManager& memManager = SingletonMemoryManager::instance();
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
 			// Debug
@@ -457,7 +457,7 @@ namespace model
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		typename OctreeMap::reverse_iterator nodeIt = hierarchy->rbegin();
 		MortonCodePtr currentCode = nullptr;
-		IMemoryManager& memManager = MemoryManager::instance();
+		IMemoryManager& memManager = SingletonMemoryManager::instance();
 		
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
@@ -504,7 +504,7 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodesAtFrontTracking()
 	{
-		IMemoryManager& memManager = MemoryManager::instance();
+		IMemoryManager& memManager = SingletonMemoryManager::instance();
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
 			cout << "====== releaseNodesAtFrontTracking:Node release triggered ======" << endl << endl
@@ -798,7 +798,7 @@ namespace model
 		out << "====== OutOfCoreOctree ======" << endl << endl
 			<< "Last Dirty: " << octree.m_lastDirty->getPathToRoot( true ) << endl
 			<< octree.m_sqLite. template output< PointVector >() << endl
-			<< MemoryManager::instance() << endl
+			<< SingletonMemoryManager::instance() << endl
 			<< ( FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >& ) octree << endl
 			<< "====== End of OutOfCoreOctree ======" << endl;
 		return out;

@@ -14,8 +14,8 @@ namespace model
 	/** Thread-safe template implementation of Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
 	 * http://www.thinkmind.org/index.php?view=article&articleid=computation_tools_2012_1_10_80006. */
 	template< typename T >
-	class MemoryPool
-	: IMemoryPool< T >
+	class Ken12MemoryPool
+	: public IMemoryPool< T >
 	{
 		uint	m_numOfBlocks;		// Num of blocks
 		uint	m_numFreeBlocks;	// Num of remaining blocks
@@ -26,7 +26,7 @@ namespace model
 		
 		public:
 
-		MemoryPool()
+		Ken12MemoryPool()
 		{
 			m_numOfBlocks = 0;
 			m_numFreeBlocks = 0;
@@ -35,7 +35,7 @@ namespace model
 			m_next = 0;
 		}
 		
-		~MemoryPool()
+		~Ken12MemoryPool()
 		{
 			destroyPool();
 		}
@@ -128,7 +128,7 @@ namespace model
 			return m_numOfBlocks;
 		}
 		
-		friend ostream& operator<<( ostream& out, const MemoryPool& pool )
+		friend ostream& operator<<( ostream& out, const Ken12MemoryPool& pool )
 		{
 			out << "num blocks: " << pool.m_numOfBlocks << endl
 				<< "block size: " << pool.m_sizeOfEachBlock << endl
@@ -174,7 +174,7 @@ namespace model
 	};
 	
 	template< typename T >
-	size_t MemoryPool< T >::memoryUsage() const
+	size_t Ken12MemoryPool< T >::memoryUsage() const
 	{
 		return usedBlocks() * sizeof( T );
 	}

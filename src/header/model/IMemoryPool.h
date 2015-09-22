@@ -8,6 +8,7 @@ namespace model
 	template< typename T >
 	class IMemoryPool
 	{
+	public:
 		/** Allocates memory for T */
 		virtual T* allocate() = 0;
 		

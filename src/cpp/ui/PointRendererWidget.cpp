@@ -1,5 +1,6 @@
 #include "PointRendererWidget.h"
 #include "TucanoDebugRenderer.h"
+#include <Ken12MemoryManager.h>
 #include <QDebug>
 #include <QTimer>
 
@@ -27,20 +28,14 @@ PointRendererWidget::~PointRendererWidget()
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
 	// Init MemoryManager allowing 8GB of data. 
-	MemoryManager::initInstance( 1.5f * 1024ul * 1024ul * 1024ul / sizeof( ShallowMortonCode ) /* 1.5GB for MortonCodes */,
-								 0ul,
-								 3.25f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3.25GB for Points */,
-							  0ul,
-							  3.25f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 3.25GB for Nodes */ );
+	Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
+		1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,
+		3.25f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3.25GB for Points */,
+		1.625f * 1024ul * 1024ul * 1024ul / sizeof( InnerNode ) /* 1.625GB for Nodes */,
+		1.625f * 1024ul * 1024ul * 1024ul / sizeof( LeafNode ) /* 1.625GB for Nodes */
+	);
 	
-	// Init MemoryManager allowing 4GB of data. 
-	//MemoryManager::initInstance( 0ul,
-	//							 0.8f * 1024ul * 1024ul * 1024ul / sizeof( MediumMortonCode ) /* 0.8GB for MortonCodes */,
-	//							 1.6f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 1.6GB for Points */,
-	//						  0ul,
-	//						  1.6f * 1024ul * 1024ul * 1024ul / sizeof( ShallowLeafNode< PointVector > ) /* 1.6GB for Nodes */ );
-	
-	cout << "MemoryManager initialized: " << endl << MemoryManager::instance() << endl;
+	cout << "MemoryManager initialized: " << endl << SingletonMemoryManager::instance() << endl;
 	
 	Tucano::QtFreecameraWidget::initialize();
 	

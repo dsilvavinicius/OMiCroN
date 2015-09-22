@@ -2,11 +2,9 @@
 #define BITMAP_MEMORY_MANAGER_H
 
 #include <map>
-#include "IMemoryManager.h"
-#include "Point.h"
-#include "MortonCode.h"
-#include "OctreeNode.h"
+#include <mutex>
 #include "IMemoryPool.h"
+#include "MemoryManager.h"
 
 namespace model
 {
@@ -14,21 +12,25 @@ namespace model
 	const int INT_SIZE = sizeof( int ) * 8;
 	const int BIT_MAP_ELEMENTS = BIT_MAP_SIZE / INT_SIZE;
 
-	//Memory Allocation Pattern
-	//11111111 11111111 11111111
-	//11111110 11111111 11111111
-	//11111100 11111111 11111111
-	//if all bits for 1st section become 0 proceed to next section
-
-	//...
-	//00000000 11111111 11111111
-	//00000000 11111110 11111111
-	//00000000 11111100 11111111
-	//00000000 11111000 11111111
-
-	//The reason for this strategy is that lookup becomes O(1) inside the map 
-	//for the first available free block
-	
+	/**
+	 * Type-safe implementation of http://www.ibm.com/developerworks/aix/tutorials/au-memorymanager/ BitMapEntry.
+	 * Any 1 bit indicates a free block. 0 bits indicate the contrary.
+	 * 
+	 * Memory Allocation Pattern
+	 * 11111111 11111111 11111111
+	 * 11111110 11111111 11111111
+	 * 11111100 11111111 11111111
+	 * if all bits for 1st section become 0 proceed to next section
+	 *
+	 *...
+	 * 00000000 11111111 11111111
+	 * 00000000 11111110 11111111
+	 * 00000000 11111100 11111111
+	 * 00000000 11111000 11111111
+	 *
+	 * The reason for this strategy is that lookup becomes O(1) inside the map 
+	 * for the first available free block
+	 */
 	template< typename T >
 	class BitMapEntry
 	{
@@ -62,9 +64,14 @@ namespace model
 	}
 	ArrayMemoryInfo;
 	
+	/**
+	 * BitMapMemoryPool, which provides a thread-safe type-safe implementation of
+	 * http://www.ibm.com/developerworks/aix/tutorials/au-memorymanager/.
+	 * @param T is the managed type.
+	 */
 	template< typename T >
 	class BitMapMemoryPool
-	: IMemoryPool< T >
+	: public IMemoryPool< T >
 	{
 		using BitMapEntry = model::BitMapEntry< T >;
 		
@@ -96,51 +103,25 @@ namespace model
 		//should be of same  size.
 		set< BitMapEntry* > FreeMapEntries;
 		map< T*, ArrayMemoryInfo > ArrayMemoryList;
+		mutex poolLock; // Lock to the pool
 	};
 	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	class BitMapMemoryManager
-	: public SingletonMemoryManager 
+	: public MemoryManager< Morton, Point, Inner, Leaf >
 	{
 	public:
 		static void initInstance( const size_t& maxAllowedMem );
-		
-		~BitMapMemoryManager() {}
-		
-		void* allocate( const MANAGED_TYPE_FLAG& type ) override;
-		
-		void* allocateArray( const size_t& size, const MANAGED_TYPE_FLAG& type ) override;
-		
-		void deallocate( void* p, const MANAGED_TYPE_FLAG& type ) override;
-		
-		void deallocateArray( void* p, const MANAGED_TYPE_FLAG& type ) override;
-		
-		bool hasEnoughMemory( const float& percentageThreshold ) const override;
-		
-		size_t usedMemory() const override;
-		
-		size_t maxAllowedMem() const override { return m_maxAllowedMem; }
-		
-		string toString() const override;
-		
-		template< typename T > BitMapMemoryPool< T >& getPool();
 	
 	private:
-		BitMapMemoryManager( const size_t& maxAllowedMem )
-		: m_maxAllowedMem( maxAllowedMem ){}
-		
-		size_t m_maxAllowedMem;
-		BitMapMemoryPool< ShallowMortonCode > m_shallowMortonPool;
-		BitMapMemoryPool< MediumMortonCode > m_mediumMortonPool;
-		BitMapMemoryPool< Point > m_pointPool;
-		BitMapMemoryPool< ExtendedPoint > m_extendedPointPool;
-		BitMapMemoryPool< ShallowLeafNode< PointVector > > m_nodePool; 	// All nodes require the same memory amount, since
-																		// the contents are a vector of smart pointers.
+		BitMapMemoryManager( const size_t& maxAllowedMem );
 	};
 	
 	template< typename T >
 	void BitMapEntry< T >::SetBit( int position, bool flag )
 	{
-		//cout << "SetBit " << flag << endl << endl;
+		//cout << "SetBit " << flag << " pos " << position << endl << endl;
+		
 		BlocksAvailable += flag ? 1 : -1;
 		int elementNo = position / INT_SIZE;
 		int bitNo = position % INT_SIZE;
@@ -257,15 +238,13 @@ namespace model
 		int elementIdx = pos / INT_SIZE;
 		int bitIdx = INT_SIZE - ( ( pos % INT_SIZE ) + 1 );
 		
-		//cout << "Pos: "<< pos << ", elemIdx: " << elementIdx << ", bitIdx: " << bitIdx << endl << endl;
-		
 		return &( ( Head() + elementIdx * INT_SIZE )[ bitIdx ] );
 	} 
 
 	template< typename T >
 	T* BitMapEntry< T >::Head()
 	{
-		return static_cast< BitMapMemoryManager& >( BitMapMemoryManager::instance() ).getPool< T >()
+		return dynamic_cast< BitMapMemoryManager& >( SingletonMemoryManager::instance() ).getPool< T >()
 				.GetMemoryPoolList()[ Index ];
 	}
 	
@@ -281,10 +260,14 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::allocate()
 	{
+		lock_guard< mutex > guard( poolLock );
+		
 		typename std::set< BitMapEntry* >::iterator freeMapI = FreeMapEntries.begin();
 		if( freeMapI != FreeMapEntries.end() )
 		{
-			//cout << "Free entry found." << endl << endl;
+			//cout << "Free entries found: " << FreeMapEntries.size() << endl << endl
+			//	 << "Blocks available: " << ( *freeMapI )->BlocksAvailable << endl << endl;
+			
 			BitMapEntry* mapEntry = *freeMapI;
 			T* block = mapEntry->FirstFreeBlock();
 			
@@ -308,6 +291,8 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::allocateArray( const size_t& size )
 	{
+		lock_guard< mutex > guard( poolLock );
+		
 		if( ArrayMemoryList.empty() )
 		{
 			return AllocateArrayMemory( size );
@@ -358,6 +343,8 @@ namespace model
 	template< typename T >
 	void BitMapMemoryPool< T >::deallocate( T* object )
 	{
+		lock_guard< mutex > guard( poolLock );
+		
 		//cout << "Deallocate" << endl << endl;
 		SetBlockBit( object, true );
 	}
@@ -365,6 +352,8 @@ namespace model
 	template< typename T >
 	void BitMapMemoryPool< T >::deallocateArray( T* object )
 	{
+		lock_guard< mutex > guard( poolLock );
+		
 		ArrayMemoryInfo *info = &ArrayMemoryList[ object ];
 		SetMultipleBlockBits( info, true );
 	}
@@ -416,6 +405,9 @@ namespace model
 			if( ( bitMap->Head() <= object ) && ( bitMap->Head() + BIT_MAP_SIZE - 1 >= object ) )
 			{
 				int position = object - bitMap->Head();
+				
+				//cout << "SetBlockBit pos:" << position << endl << endl;
+				
 				bitMap->SetBit( position, flag );
 				
 				//cout << "New available: " << bitMap->BlocksAvailable << endl << endl;
@@ -440,10 +432,20 @@ namespace model
 		}
 	}
 	
-	inline size_t BitMapMemoryManager::usedMemory() const
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	void BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( const size_t& maxAllowedMem )
 	{
-		return 	m_shallowMortonPool.memoryUsage() + m_mediumMortonPool.memoryUsage() + m_pointPool.memoryUsage()
-				+ m_extendedPointPool.memoryUsage() + m_nodePool.memoryUsage();
+		m_instance = unique_ptr< IMemoryManager >( new BitMapMemoryManager< Morton, Point, Node >( maxAllowedMem ) );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	BitMapMemoryManager< Morton, Point, Inner, Leaf >( const size_t& maxAllowedMem )
+	: m_maxAllowedMem( maxAllowedMem )
+	{
+		m_mortonPool = new BitMapMemoryPool< Morton >();
+		m_pointPool = new BitMapMemoryPool< Point >();
+		m_innerPool = new BitMapMemoryPool< Inner >();
+		m_leafPool = new BitMapMemoryPool< Leaf >();
 	}
 }
 

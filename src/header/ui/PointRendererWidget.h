@@ -20,16 +20,18 @@ class PointRendererWidget
 {
 	Q_OBJECT
 	
+	using MortonCode = ShallowMortonCode;
 	using Point = model::Point;
 	//using Point = model::ExtendedPoint;
 	using PointVector = vector< shared_ptr< Point > >;
-	using PointReader = util::SimplePointReader;
-	//using PointReader = util::ExtendedPointReader;
+	using LeafNode = model::LeafNode< MortonCode, PointVector >;
+	using InnerNode = model::InnerNode< MortonCode, PointVector >;
+	using PointReader = util::PlyPointReader< Point >;
 	//using Octree = model::ShallowIndexedOctree< Point >;
 	//using Octree = model::ShallowRandomSampleOctree< Point >;
 	//using Octree = model::ShallowFrontOctree;
 	//using Octree = model::ShallowParallelOctree< Point >;
-	using Octree = model::ShallowOutOfCoreDebugOctree;
+	using Octree = model::DefaultOutOfCoreDebugOctree< MortonCode, Point >;
 	//using Octree = model::MediumOutOfCoreOctree;
 	//using RenderingState = model::IndexedTucanoRenderer< Point >;
 	using RenderingState = model::TucanoRenderingState;

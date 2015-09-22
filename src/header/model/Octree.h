@@ -316,6 +316,11 @@ namespace model
 		for( int level = m_maxLevel - 1; level > -1; --level )
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
+			
+			// DEBUG
+			cout << *this << endl << endl;
+			//
+			
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
 			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
 			// below the current one. 
@@ -574,7 +579,7 @@ namespace model
 	ostream& operator<<( ostream& out, const OctreeBase< MortonCode, Point >& octree )
 	{
 		using PointVector = model::PointVector;
-		using MortonCodePtr = model::MortonCodePtr< MortonCode >;
+		using MortonCodePtr = shared_ptr< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		
@@ -593,15 +598,11 @@ namespace model
 			OctreeNodePtr genericNode = nodeIt->second;
 			if ( genericNode->isLeaf() )
 			{
-				out << "Node: {" << endl << *code << "," << endl;
-				genericNode-> template output< PointVector >( out );
-				out << endl << "}" << endl << endl;
+				out << code->getPathToRoot( true ) << endl;
 			}
 			else
 			{
-				out << "Node: {" << endl << *code << "," << endl;
-				genericNode-> template output< shared_ptr< Point > >( out );
-				out << endl << "}" << endl;
+				out << code->getPathToRoot( true ) << endl;
 			}
 			
 		}

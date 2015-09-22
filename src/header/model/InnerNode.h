@@ -38,25 +38,25 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void* InnerNode< MortonCode, Contents >::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( IMemoryManager::NODE );
+		return SingletonMemoryManager::instance().allocInner();
 	}
 	
 	template< typename MortonCode, typename Contents >
 	void* InnerNode< MortonCode, Contents >::operator new[]( size_t size )
 	{
-		throw logic_error( "InnerNode::operator new[] is unsupported." );
+		throw SingletonMemoryManager::instance().allocInnerArray( size );
 	}
 	
 	template< typename MortonCode, typename Contents >
 	void InnerNode< MortonCode, Contents >::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( p, IMemoryManager::NODE );
+		SingletonMemoryManager::instance().deallocInner( p );
 	}
 	
 	template< typename MortonCode, typename Contents >
 	void InnerNode< MortonCode, Contents >::operator delete[]( void* p )
 	{
-		throw logic_error( "InnerNode::operator delete[] is unsupported." );
+		SingletonMemoryManager::instance().deallocInnerArray( p );
 	}
 	
 	template < typename MortonCode, typename Contents>

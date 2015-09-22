@@ -20,10 +20,10 @@ public:
 		// executed test. In case a new test needs more, the values here must be changed.
 		ulong nNodes = 500000u;
 		ulong nPoints = 2u * nNodes;
-		MemoryManager::initInstance( nNodes, nNodes, nPoints, nPoints, nNodes );
-		//BitMapMemoryManager::initInstance( nNodes * sizeof( ShallowMortonCode ) + nNodes * sizeof( MediumMortonCode )
-		//									+ nPoints * sizeof( Point ) + nPoints * sizeof( ExtendedPoint )
-		//									+ nNodes * sizeof( ShallowLeafNode< PointVector > ) );
+		//MemoryManager::initInstance( nNodes, nNodes, nPoints, nPoints, nNodes );
+		BitMapMemoryManager::initInstance( nNodes * sizeof( ShallowMortonCode ) + nNodes * sizeof( MediumMortonCode )
+											+ nPoints * sizeof( Point ) + nPoints * sizeof( ExtendedPoint )
+											+ nNodes * sizeof( ShallowLeafNode< PointVector > ) );
 	}
 };
 

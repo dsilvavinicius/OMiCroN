@@ -57,22 +57,22 @@ namespace model
 	
 	void* Point::operator new( size_t size )
 	{
-		return MemoryManager::instance().allocate( IMemoryManager::POINT );
+		return SingletonMemoryManager::instance().allocPoint();
 	}
 	
 	void* Point::operator new[]( size_t size )
 	{
-		throw logic_error( "Point::operator new[] is unsupported." );
+		return SingletonMemoryManager::instance().allocPointArray( size );
 	}
 	
 	void Point::operator delete( void* p )
 	{
-		MemoryManager::instance().deallocate( p, IMemoryManager::POINT );
+		SingletonMemoryManager::instance().deallocPoint( p );
 	}
 	
 	void Point::operator delete[]( void* p )
 	{
-		throw logic_error( "Point::operator delete[] is unsupported." );
+		SingletonMemoryManager::instance().deallocPointArray( p );
 	}
 	
 	Vec3& Point::getColor() { return m_color; }
