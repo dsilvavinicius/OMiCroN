@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "RandomSampleOctree.h"
+#include <MemoryManagerTypes.h>
 
 namespace model
 {
@@ -17,7 +18,10 @@ namespace model
 		{
 		protected:
 			
-			void SetUp(){}
+			void SetUp()
+			{
+				SPV_BitMapMemoryManager::initInstance( 1000000 );
+			}
 		};
 		
 		template<>
@@ -26,7 +30,10 @@ namespace model
 		{
 		protected:
 			
-			void SetUp(){}
+			void SetUp()
+			{
+				SEV_BitMapMemoryManager::initInstance( 1000000 );
+			}
 		};
 
 		void generatePointsInInterval( const int& numPoints, const vec2& xInterval, const vec2& yInterval,

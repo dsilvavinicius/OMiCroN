@@ -2,6 +2,7 @@
 #include "Stream.h"
 #include <LeafNode.h>
 #include <MortonCode.h>
+#include <MemoryManagerTypes.h>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <QApplication>
@@ -19,6 +20,8 @@ namespace util
 		{
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
+			
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			PointVector points;
 			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
@@ -44,6 +47,8 @@ namespace util
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
 			
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			PointVector points;
 			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
 			reader.read( "data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
@@ -65,6 +70,8 @@ namespace util
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
+			
+			SEV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			PointVector points;
 			ExtendedPointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );

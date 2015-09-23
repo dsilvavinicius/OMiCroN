@@ -1,5 +1,7 @@
 #include "MortonInterval.h"
 #include <MortonComparator.h>
+#include <BitMapMemoryManager.h>
+#include <MemoryManagerTypes.h>
 
 #include <gtest/gtest.h>
 
@@ -13,7 +15,7 @@ namespace model
 			void SetUp() {}
 		};
 
-		TEST_F(MortonCodeTest, Creation)
+		TEST_F( MortonCodeTest, CreationShallow )
 		{
 			ShallowMortonCode shallowMorton;
 			
@@ -43,8 +45,10 @@ namespace model
 			ASSERT_EQ( mediumMorton.getBits(), 0x80000078BF396A00ul );
 		}
 		
-		TEST_F( MortonCodeTest, Traversal )
+		TEST_F( MortonCodeTest, TraversalShallow )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode shallowMorton;
 			
 			shallowMorton.build(7, 5, 0, 3); // 10 1100 1011
@@ -66,6 +70,11 @@ namespace model
 			// TODO: Need to fix the next line.
 			//EXPECT_EXIT( shallowMorton.traverseDown(), ::testing::ExitedWithCode( 6 ),
 			//			 "shifted > bits && ""MortonCode traversal overflow.""" );
+		}
+		
+		TEST_F( MortonCodeTest, TraversalMedium )
+		{
+			MPV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			MediumMortonCode mediumMorton;
 			
@@ -92,6 +101,8 @@ namespace model
 		
 		TEST_F(MortonCodeTest, Comparison)
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCodePtr morton0( new ShallowMortonCode() );
 			morton0->build( 1, 1, 1, 3 );
 			
@@ -108,8 +119,10 @@ namespace model
 			ASSERT_FALSE(comp(morton0, morton1)) << morton0 << " should be greater than " << morton1;
 		}
 		
-		TEST_F(MortonCodeTest, Decoding)
-		{	
+		TEST_F( MortonCodeTest, DecodingShallow )
+		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			// Root node
 			unsigned int level = 0;
 			ShallowMortonCode shallowMorton;
@@ -134,9 +147,14 @@ namespace model
 			ASSERT_EQ( decoded[ 0 ], coords[ 0 ] );
 			ASSERT_EQ( decoded[ 1 ], coords[ 1 ] );
 			ASSERT_EQ( decoded[ 2 ], coords[ 2 ] );
+		}
+		
+		TEST_F( MortonCodeTest, DecodingMedium )
+		{
+			MPV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			// Leaf (medium).
-			level = 21;
+			unsigned int level = 21;
 			unsigned int coordsL[ 3 ] = { 5000, 6000, 7000 };
 			MediumMortonCode mediumMorton;
 			mediumMorton.build( coordsL[0], coordsL[1], coordsL[2], level );
@@ -155,6 +173,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, isChild )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code0;
 			code0.build( 0xF );
 			
@@ -170,6 +190,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getFirstChild )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ASSERT_EQ( code.getFirstChild()->getBits(), 0x8 );
@@ -177,6 +199,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getLastChild )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ASSERT_EQ( code.getLastChild()->getBits(), 0xF );
@@ -184,6 +208,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getChildInterval )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ShallowMortonInterval interval = code.getChildInterval();
@@ -194,6 +220,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getPrevious )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ShallowMortonCode next = *code.getNext();
@@ -203,6 +231,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getNext )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ShallowMortonCode next = *code.getNext();
@@ -212,6 +242,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, lessThan )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ShallowMortonCode next = *code.getNext();
@@ -223,6 +255,8 @@ namespace model
 		
 		TEST_F( MortonCodeTest, lessOrEqual )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code;
 			code.build( 0x1 );
 			ShallowMortonCode next = *code.getNext();
@@ -234,15 +268,24 @@ namespace model
 		
 		TEST_F( MortonCodeTest, getLvlFirst )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode code = ShallowMortonCode::getLvlFirst( 7 );
 			
 			ASSERT_EQ( code.getBits(), 0x200000 );
 		}
 		
-		TEST_F( MortonCodeTest, getLvlLast )
+		TEST_F( MortonCodeTest, getLvlLastShallow )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode shallowCode = ShallowMortonCode::getLvlLast( 7 );
 			ASSERT_EQ( shallowCode.getBits(), 0x3FFFFF );
+		}
+		
+		TEST_F( MortonCodeTest, getLvlLastMedium )
+		{
+			MPV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			MediumMortonCode mediumCode = MediumMortonCode::getLvlLast( 20 );
 			ASSERT_EQ( mediumCode.getBits(), 0x1FFFFFFFFFFFFFFFul );

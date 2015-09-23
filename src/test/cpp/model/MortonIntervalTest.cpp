@@ -1,4 +1,5 @@
 #include "MortonInterval.h"
+#include <MemoryManagerTypes.h>
 
 #include <gtest/gtest.h>
 #include <unordered_set>
@@ -17,6 +18,8 @@ namespace model
 
 		TEST_F( MortonIntervalTest, EqualityAndHash )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode a; a.build( 0x3 );
 			ShallowMortonCode b; a.build( 0x4 );
 			ShallowMortonInterval interval0( ShallowMortonCodePtr( new ShallowMortonCode( a ) ),
@@ -40,6 +43,8 @@ namespace model
 		
 		TEST_F( MortonIntervalTest, UnorderedSet )
 		{
+			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			
 			ShallowMortonCode a; a.build( 0x3 );
 			ShallowMortonCode b; a.build( 0x4 );
 			

@@ -44,18 +44,22 @@ namespace model
 		}
 		/** Sets a bit, given a position in the bitmap. */
 		void SetBit( int position, bool flag );
+		
 		/** Same as SetBit, but for more than one consecutive bits. */
 		void SetMultipleBits( int position, bool flag, int count );
+		
+		/** Same as SetBit, but should be used in case of the bits span in more than one BitMap element. */
 		void SetRangeOfInt( int* element, int msb, int lsb, bool flag );
-		T* FirstFreeBlock();
-		T* objectAddress( int pos );
-		T* Head();
+		
+		/** @returns the position of the first free block associated with this BitMapEntry. */
+		int FirstFreeBlockPos();
 	
 		int Index;
 		int BlocksAvailable;
 		int BitMap[ BIT_MAP_ELEMENTS ];
 	};
 
+	/** Contains info of array allocation requests. */
 	typedef struct ArrayInfo
 	{
 		int   MemPoolListIndex;
@@ -77,25 +81,38 @@ namespace model
 		
 	public: 
 		BitMapMemoryPool() {}
-		~BitMapMemoryPool();
-		T* allocate() override;
-		T* allocateArray( const size_t& size ) override;
-		void deallocate( T* p ) override;
-		void deallocateArray( T* p) override;
-		vector< T* >& GetMemoryPoolList();
 		
-		/** Calculates how much memory blocks are currently used. */
+		~BitMapMemoryPool();
+		
+		T* allocate() override;
+		
+		T* allocateArray( const size_t& size ) override;
+		
+		void deallocate( T* p ) override;
+		
+		void deallocateArray( T* p) override;
+		
 		size_t usedBlocks() const override;
 		
-		/** Calculates how much memory is currently used in this pool in bytes. */
 		size_t memoryUsage() const override;
+		
+		vector< T* >& GetMemoryPoolList();
 		
 	private:
 		T* AllocateArrayMemory( size_t size );
 		T* AllocateChunkAndInitBitMap();
+		
 		/** Sets the bit related with the given pointer. */
 		void SetBlockBit( T* object, bool flag );
+		
+		/** Sets all bits associated with a given array described by the given ArrayMemoryInfo. */
 		void SetMultipleBlockBits( ArrayMemoryInfo* info, bool flag );
+		
+		/** @returns the first free block of the given BitMapEntry. */
+		T* firstFreeBlock( BitMapEntry* bitmap );
+		
+		/** @returns the object address of the given position in the memory chunk associated with the given BitMapEntry. */
+		T* objectAddress( BitMapEntry* bitmap, int pos );
 		
 		vector< T* > MemoryPoolList;
 		vector< BitMapEntry > BitMapEntryList;
@@ -110,6 +127,7 @@ namespace model
 	class BitMapMemoryManager
 	: public MemoryManager< Morton, Point, Inner, Leaf >
 	{
+		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf >;
 	public:
 		static void initInstance( const size_t& maxAllowedMem );
 	
@@ -176,7 +194,7 @@ namespace model
 	}
 
 	template< typename T >
-	T* BitMapEntry< T >::FirstFreeBlock()
+	int BitMapEntry< T >::FirstFreeBlockPos()
 	{
 		for( int i = 0 ; i < BIT_MAP_ELEMENTS; ++i )
 		{
@@ -191,61 +209,44 @@ namespace model
 			switch( result )
 			{
 				//make the corresponding bit 0 meaning block is no longer free
-				case 0x00000001: return objectAddress( basePos + 0 );
-				case 0x00000002: return objectAddress( basePos + 1 );
-				case 0x00000004: return objectAddress( basePos + 2 );
-				case 0x00000008: return objectAddress( basePos + 3 );
-				case 0x00000010: return objectAddress( basePos + 4 );
-				case 0x00000020: return objectAddress( basePos + 5 );
-				case 0x00000040: return objectAddress( basePos + 6 );
-				case 0x00000080: return objectAddress( basePos + 7 );
-				case 0x00000100: return objectAddress( basePos + 8 );
-				case 0x00000200: return objectAddress( basePos + 9 );
-				case 0x00000400: return objectAddress( basePos + 10 );
-				case 0x00000800: return objectAddress( basePos + 11 );
-				case 0x00001000: return objectAddress( basePos + 12 );
-				case 0x00002000: return objectAddress( basePos + 13 );
-				case 0x00004000: return objectAddress( basePos + 14 );
-				case 0x00008000: return objectAddress( basePos + 15 );
-				case 0x00010000: return objectAddress( basePos + 16 );
-				case 0x00020000: return objectAddress( basePos + 17 );
-				case 0x00040000: return objectAddress( basePos + 18 );
-				case 0x00080000: return objectAddress( basePos + 19 );
-				case 0x00100000: return objectAddress( basePos + 20 );
-				case 0x00200000: return objectAddress( basePos + 21 );
-				case 0x00400000: return objectAddress( basePos + 22 );
-				case 0x00800000: return objectAddress( basePos + 23 );
-				case 0x01000000: return objectAddress( basePos + 24 );
-				case 0x02000000: return objectAddress( basePos + 25 );
-				case 0x04000000: return objectAddress( basePos + 26 );
-				case 0x08000000: return objectAddress( basePos + 27 );
-				case 0x10000000: return objectAddress( basePos + 28 );
-				case 0x20000000: return objectAddress( basePos + 29 );
-				case 0x40000000: return objectAddress( basePos + 30 );
-				case 0x80000000: return objectAddress( basePos + 31 );
+				case 0x00000001: return basePos + 0;
+				case 0x00000002: return basePos + 1;
+				case 0x00000004: return basePos + 2;
+				case 0x00000008: return basePos + 3;
+				case 0x00000010: return basePos + 4;
+				case 0x00000020: return basePos + 5;
+				case 0x00000040: return basePos + 6;
+				case 0x00000080: return basePos + 7;
+				case 0x00000100: return basePos + 8;
+				case 0x00000200: return basePos + 9;
+				case 0x00000400: return basePos + 10;
+				case 0x00000800: return basePos + 11;
+				case 0x00001000: return basePos + 12;
+				case 0x00002000: return basePos + 13;
+				case 0x00004000: return basePos + 14;
+				case 0x00008000: return basePos + 15;
+				case 0x00010000: return basePos + 16;
+				case 0x00020000: return basePos + 17;
+				case 0x00040000: return basePos + 18;
+				case 0x00080000: return basePos + 19;
+				case 0x00100000: return basePos + 20;
+				case 0x00200000: return basePos + 21;
+				case 0x00400000: return basePos + 22;
+				case 0x00800000: return basePos + 23;
+				case 0x01000000: return basePos + 24;
+				case 0x02000000: return basePos + 25;
+				case 0x04000000: return basePos + 26;
+				case 0x08000000: return basePos + 27;
+				case 0x10000000: return basePos + 28;
+				case 0x20000000: return basePos + 29;
+				case 0x40000000: return basePos + 30;
+				case 0x80000000: return basePos + 31;
 				default : throw logic_error( "Unexpected bit position for allocation." );
 			}
 		}
 		
 		throw logic_error( "Cannot allocate memory." );
 		return 0;
-	}
-
-	template< typename T >
-	T* BitMapEntry< T >::objectAddress( int pos )
-	{
-		SetBit( pos, false ); 
-		int elementIdx = pos / INT_SIZE;
-		int bitIdx = INT_SIZE - ( ( pos % INT_SIZE ) + 1 );
-		
-		return &( ( Head() + elementIdx * INT_SIZE )[ bitIdx ] );
-	} 
-
-	template< typename T >
-	T* BitMapEntry< T >::Head()
-	{
-		return dynamic_cast< BitMapMemoryManager& >( SingletonMemoryManager::instance() ).getPool< T >()
-				.GetMemoryPoolList()[ Index ];
 	}
 	
 	template< typename T >
@@ -269,7 +270,7 @@ namespace model
 			//	 << "Blocks available: " << ( *freeMapI )->BlocksAvailable << endl << endl;
 			
 			BitMapEntry* mapEntry = *freeMapI;
-			T* block = mapEntry->FirstFreeBlock();
+			T* block = firstFreeBlock( mapEntry );
 			
 			//cout << "Blocks available: " << mapEntry->BlocksAvailable << endl << endl;
 			if( mapEntry->BlocksAvailable == 0 )
@@ -283,8 +284,10 @@ namespace model
 		{
 			//cout << "Free entry NOT found." << endl << endl;
 			AllocateChunkAndInitBitMap();
-			FreeMapEntries.insert( &( BitMapEntryList[ BitMapEntryList.size() - 1 ] ) );
-			return BitMapEntryList[ BitMapEntryList.size() - 1 ].FirstFreeBlock();
+			BitMapEntry* mapEntry = &( BitMapEntryList[ BitMapEntryList.size() - 1 ] );
+			FreeMapEntries.insert( mapEntry );
+			
+			return firstFreeBlock( mapEntry );
 		}
 	}
 
@@ -383,6 +386,23 @@ namespace model
 	}
 	
 	template< typename T >
+	T* BitMapMemoryPool< T >::objectAddress( BitMapEntry* bitmap, int pos )
+	{
+		bitmap->SetBit( pos, false ); 
+		int elementIdx = pos / INT_SIZE;
+		int bitIdx = INT_SIZE - ( ( pos % INT_SIZE ) + 1 );
+		
+		return &( ( MemoryPoolList[ bitmap->Index ] + elementIdx * INT_SIZE )[ bitIdx ] );
+	}
+	
+	template< typename T >
+	T* BitMapMemoryPool< T >::firstFreeBlock( BitMapEntry* bitmap )
+	{
+		int pos = bitmap->FirstFreeBlockPos();
+		return objectAddress( bitmap, pos );
+	}
+	
+	template< typename T >
 	T* BitMapMemoryPool< T >::AllocateChunkAndInitBitMap()
 	{
 		//cout << "Allocating chunk." << endl << endl;
@@ -402,9 +422,10 @@ namespace model
 		for( ; i >= 0 ; i-- )
 		{
 			BitMapEntry* bitMap = &BitMapEntryList[ i ];
-			if( ( bitMap->Head() <= object ) && ( bitMap->Head() + BIT_MAP_SIZE - 1 >= object ) )
+			T* head = MemoryPoolList[ bitMap->Index ];
+			if( ( head <= object ) && ( head + BIT_MAP_SIZE - 1 >= object ) )
 			{
-				int position = object - bitMap->Head();
+				int position = object - head;
 				
 				//cout << "SetBlockBit pos:" << position << endl << endl;
 				
@@ -426,26 +447,28 @@ namespace model
 		BitMapEntry* mapEntry = &BitMapEntryList[ info->MemPoolListIndex ];
 		mapEntry->SetMultipleBits( info->StartPosition, flag, info->Size );
 		
-		if( mapEntry->BlocksAvailable == info->Size && flag )
-		{
-			FreeMapEntries.insert( mapEntry );
-		}
+		//if( mapEntry->BlocksAvailable == info->Size && flag )
+		//{
+		//	FreeMapEntries.insert( mapEntry );
+		//}
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	void BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( const size_t& maxAllowedMem )
 	{
-		m_instance = unique_ptr< IMemoryManager >( new BitMapMemoryManager< Morton, Point, Node >( maxAllowedMem ) );
+		MemoryManager::m_instance = unique_ptr< IMemoryManager >(
+			new BitMapMemoryManager< Morton, Point, Inner, Leaf >( maxAllowedMem )
+		);
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	BitMapMemoryManager< Morton, Point, Inner, Leaf >( const size_t& maxAllowedMem )
-	: m_maxAllowedMem( maxAllowedMem )
+	BitMapMemoryManager< Morton, Point, Inner, Leaf >::BitMapMemoryManager( const size_t& maxAllowedMem )
 	{
-		m_mortonPool = new BitMapMemoryPool< Morton >();
-		m_pointPool = new BitMapMemoryPool< Point >();
-		m_innerPool = new BitMapMemoryPool< Inner >();
-		m_leafPool = new BitMapMemoryPool< Leaf >();
+		MemoryManager::m_mortonPool = new BitMapMemoryPool< Morton >();
+		MemoryManager::m_pointPool = new BitMapMemoryPool< Point >();
+		MemoryManager::m_innerPool = new BitMapMemoryPool< Inner >();
+		MemoryManager::m_leafPool = new BitMapMemoryPool< Leaf >();
+		MemoryManager::m_maxAllowedMem = maxAllowedMem;
 	}
 }
 

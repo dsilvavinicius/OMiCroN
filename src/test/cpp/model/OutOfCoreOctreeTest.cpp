@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "OutOfCoreOctree.h"
+#include <Ken12MemoryManager.h>
 #include "HierarchyTestMethods.h"
 
 namespace model
@@ -9,33 +10,7 @@ namespace model
 	{
         class OutOfCoreOctreeTest
         : public ::testing::Test
-		{
-		protected:
-			void SetUp()
-			{
-				// Save MemoryManager setup.
-				MemoryManager& manager = dynamic_cast< MemoryManager& >( MemoryManager::instance() );
-				
-				m_shallowBlocks = manager.numBlocks( IMemoryManager::SHALLOW_MORTON );
-				m_mediumBlocks = manager.numBlocks( IMemoryManager::MEDIUM_MORTON );
-				m_pointBlocks = manager.numBlocks( IMemoryManager::POINT );
-				m_extendedBlocks = manager.numBlocks( IMemoryManager::EXTENDED_POINT );
-				m_nodeBlocks = manager.numBlocks( IMemoryManager::NODE );
-			}
-			
-			void TearDown()
-			{
-				// Restore MemoryManager setup.
-				MemoryManager::initInstance( m_shallowBlocks, m_mediumBlocks, m_pointBlocks, m_extendedBlocks,
-											 m_nodeBlocks );
-			}
-			
-			size_t m_shallowBlocks;
-			size_t m_mediumBlocks;
-			size_t m_pointBlocks;
-			size_t m_extendedBlocks;
-			size_t m_nodeBlocks;
-		};
+		{};
 		
 		// Checks if OutOfCoreOctree creation is correct.
 		template< typename OutOfCoreOctree >
@@ -56,48 +31,48 @@ namespace model
 			checkHierarchy( hierarchy );
 		}
 		
-		TEST_F( OutOfCoreOctreeTest, Creation0 )
+		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager0 )
 		{
-			MemoryManager::initInstance( 40, 0, 40, 0, 40 );
+			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+				::initInstance( 40, 40, 15, 25 );
 			
-			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db",
-										   ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
+			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
 								  Attributes::COLORS );
 			
 			testCreation( octree );
 		}
 		
-		TEST_F( OutOfCoreOctreeTest, Creation2 )
+		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager2 )
 		{
-			MemoryManager::initInstance( 40, 0, 40, 0, 40 );
+			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+				::initInstance( 40, 40, 15, 25 );
 			
-			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db",
-										   ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
+			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
 								  Attributes::COLORS );
 			
 			testCreation( octree );
 		}
 		
-		TEST_F( OutOfCoreOctreeTest, Creation3 )
+		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager3 )
 		{
-			MemoryManager::initInstance( 100, 0, 100, 0, 100 );
+			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+				::initInstance( 100, 100, 40, 60 );
 			
-			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db",
-										   ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
+			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
 								  Attributes::COLORS );
 			
 			testCreation( octree );
 		}
 		
-		TEST_F( OutOfCoreOctreeTest, Creation4 )
+		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager4 )
 		{
-			MemoryManager::initInstance( 100, 0, 100, 0, 100 );
+			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+				::initInstance( 100, 100, 40, 60 );
 			
-			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db",
-										   ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 5, 5, 5 ) );
+			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 5, 5, 5 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
 								  Attributes::COLORS );
 			
