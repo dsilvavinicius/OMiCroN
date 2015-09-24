@@ -101,24 +101,32 @@ namespace model
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void* MemoryManager< Morton, Point, Inner, Leaf >::allocMorton()
 	{
+		//cout << "allocMorton" << endl << endl;
+		
 		return m_mortonPool->allocate();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void* MemoryManager< Morton, Point, Inner, Leaf >::allocPoint()
 	{
+		//cout << "allocPoint" << endl << endl;
+		
 		return m_pointPool->allocate();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void* MemoryManager< Morton, Point, Inner, Leaf >::allocInner()
 	{
+		//cout << "allocInner" << endl << endl;
+		
 		return m_innerPool->allocate();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void* MemoryManager< Morton, Point, Inner, Leaf >::allocLeaf()
 	{
+		//cout << "allocLeaf" << endl << endl;
+		
 		return m_leafPool->allocate();
 	}
 	
@@ -149,24 +157,32 @@ namespace model
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void MemoryManager< Morton, Point, Inner, Leaf >::deallocMorton( void* p )
 	{
+		//cout << "deallocMorton" << endl << endl;
+		
 		m_mortonPool->deallocate( static_cast< Morton* >( p ) );
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void MemoryManager< Morton, Point, Inner, Leaf >::deallocPoint( void* p )
 	{
+		//cout << "deallocPoint" << endl << endl;
+		
 		m_pointPool->deallocate( static_cast< Point* >( p ) );
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void MemoryManager< Morton, Point, Inner, Leaf >::deallocInner( void* p )
 	{
+		//cout << "deallocInner" << endl << endl;
+		
 		m_innerPool->deallocate( static_cast< Inner* >( p ) );
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline void MemoryManager< Morton, Point, Inner, Leaf >::deallocLeaf( void* p )
 	{
+		//cout << "deallocLeaf" << endl << endl;
+		
 		m_leafPool->deallocate( static_cast< Leaf* >( p ) );
 	}
 	

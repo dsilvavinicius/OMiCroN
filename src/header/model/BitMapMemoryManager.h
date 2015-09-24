@@ -96,8 +96,6 @@ namespace model
 		
 		size_t memoryUsage() const override;
 		
-		vector< T* >& GetMemoryPoolList();
-		
 	private:
 		T* AllocateArrayMemory( size_t size );
 		T* AllocateChunkAndInitBitMap();
@@ -113,6 +111,8 @@ namespace model
 		
 		/** @returns the object address of the given position in the memory chunk associated with the given BitMapEntry. */
 		T* objectAddress( BitMapEntry* bitmap, int pos );
+		
+		vector< T* >& GetMemoryPoolList();
 		
 		vector< T* > MemoryPoolList;
 		vector< BitMapEntry > BitMapEntryList;
@@ -203,8 +203,13 @@ namespace model
 			if( BitMap[ i ] == 0 )
 				continue;            // no free bit was found 
 			
+			//cout << "Bitmap: 0x" << hex << BitMap[ i ] << dec << endl << endl;
+			
 			int result = BitMap[ i ] & -( BitMap[ i ] ); // this expression yields the first 
 														// bit position which is 1 in an int from right.
+			
+			//cout << "first bit from right: " << result << endl << endl;
+			
 			int basePos = ( INT_SIZE * i );
 			switch( result )
 			{
@@ -294,6 +299,8 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::allocateArray( const size_t& size )
 	{
+		//cout << "allocateArray" << endl << endl;
+		
 		lock_guard< mutex > guard( poolLock );
 		
 		if( ArrayMemoryList.empty() )
@@ -388,11 +395,14 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::objectAddress( BitMapEntry* bitmap, int pos )
 	{
-		bitmap->SetBit( pos, false ); 
+		bitmap->SetBit( pos, false );
 		int elementIdx = pos / INT_SIZE;
-		int bitIdx = INT_SIZE - ( ( pos % INT_SIZE ) + 1 );
+		int bitIdx = INT_SIZE - ( ( pos % INT_SIZE ) + 1);
 		
-		return &( ( MemoryPoolList[ bitmap->Index ] + elementIdx * INT_SIZE )[ bitIdx ] );
+		T* address = MemoryPoolList[ bitmap->Index ] + elementIdx * INT_SIZE + bitIdx;
+		//cout << "Free pos: " << bitIdx << " address: " << address << endl << endl;
+		
+		return address;
 	}
 	
 	template< typename T >
@@ -417,7 +427,7 @@ namespace model
 	template< typename T >
 	void BitMapMemoryPool< T >::SetBlockBit( T* object, bool flag )
 	{
-		//cout << "SetBlockBit " << flag << endl << endl;
+		//cout << "BitMapEntryList size " << BitMapEntryList.size() << endl << endl;
 		int i = BitMapEntryList.size() - 1;
 		for( ; i >= 0 ; i-- )
 		{
@@ -426,12 +436,11 @@ namespace model
 			if( ( head <= object ) && ( head + BIT_MAP_SIZE - 1 >= object ) )
 			{
 				int position = object - head;
+				position = ( position / INT_SIZE ) * INT_SIZE + ( INT_SIZE - ( position % INT_SIZE ) - 1 );
 				
-				//cout << "SetBlockBit pos:" << position << endl << endl;
+				//cout << "dealloc ptr: " << object << " pos:" << position << endl << endl;
 				
 				bitMap->SetBit( position, flag );
-				
-				//cout << "New available: " << bitMap->BlocksAvailable << endl << endl;
 				
 				if( bitMap->BlocksAvailable == 1 && flag )
 				{
@@ -446,11 +455,6 @@ namespace model
 	{
 		BitMapEntry* mapEntry = &BitMapEntryList[ info->MemPoolListIndex ];
 		mapEntry->SetMultipleBits( info->StartPosition, flag, info->Size );
-		
-		//if( mapEntry->BlocksAvailable == info->Size && flag )
-		//{
-		//	FreeMapEntries.insert( mapEntry );
-		//}
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >

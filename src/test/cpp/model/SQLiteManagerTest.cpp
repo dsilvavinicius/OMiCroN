@@ -346,6 +346,7 @@ namespace model
 			using IdNode = model::IdNode< ShallowMortonCode >;
 			
 			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			//SEV_Ken12MemoryManager::initInstance( 100000, 100000, 100000, 100000 );
 			
 			ExtendedPointPtr p0( new ExtendedPoint( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
 													vec3( 1.f, 15.f ,2.f ) ) );
@@ -354,16 +355,18 @@ namespace model
 			ExtendedPointPtr p2( new ExtendedPoint( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
 													vec3( -14.f, 5.f ,6.f ) ) );
 			
+			//cout << "p1 ptr: " << p1.get() << endl << endl;
+			
 			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
 			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
 			
 			Contents vec0( rawPoints0, rawPoints0 + 3 );
 			Contents vec1( rawPoints1, rawPoints1 + 3 );
 			
-			LeafNode node0;
-			LeafNode node1;
-			node0.setContents( vec0 );
-			node1.setContents( vec1 );
+			LeafNodePtr node0( new LeafNode() );
+			LeafNodePtr node1( new LeafNode() );
+			node0->setContents( vec0 );
+			node1->setContents( vec1 );
 			
 			ShallowMortonCode code0;
 			code0.build( 1, 2, 3, 4 );
@@ -371,14 +374,17 @@ namespace model
 			code1.build( 7, 7, 7, 10 );
 			
 			SQLiteManager sqLite( "Octree.db" );
-			sqLite.insertNode< Contents >( code0, node0 );
-			sqLite.insertNode< Contents >( code1, node1 );
+			sqLite.insertNode< Contents >( code0, *node0 );
+			sqLite.insertNode< Contents >( code1, *node1 );
 			
 			ShallowMortonCodePtr code0Ptr( new ShallowMortonCode( code0 ) );
 			ShallowMortonCodePtr code1Ptr( new ShallowMortonCode( code1 ) );
 			
-			IdNode idNode0( code0Ptr, LeafNodePtr( new LeafNode( node0 ) ) );
-			IdNode idNode1( code1Ptr, LeafNodePtr( new LeafNode( node1 ) ) );
+			IdNode idNode0( code0Ptr, node0 );
+			IdNode idNode1( code1Ptr, node1 );
+			
+			//cout << "idNode0: " << endl;
+			//idNode0.second->output< Contents >( cout );
 			
 			default_random_engine generator;
 			uniform_int_distribution< int > boolDistribution( 0, 1 );
@@ -387,12 +393,22 @@ namespace model
 			int nRequests = 100;
 			for( int i = 0; i < nRequests; ++i )
 			{
+				//cout << "Iter " << i << endl << endl;
+				
+				// Debug
+				//cout << "idNode0: " << endl;
+				//idNode0.second->output< Contents >( cout );
+				//cout << endl << endl;
+				//
+				
 				if( boolDistribution( generator ) )
 				{
+					//cout << "request 0" << endl << endl;
 					sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code0Ptr ) );
 				}
 				else
 				{
+					//cout << "request 1" << endl << endl;
 					sqLite.requestNodesAsync( ShallowMortonInterval( code0Ptr, code1Ptr ) );
 				}
 				
@@ -400,6 +416,13 @@ namespace model
 				
 				if( boolDistribution( generator ) )
 				{
+					// Debug
+					//cout << "check results" << endl << endl;
+					//cout << "idNode0: " << endl;
+					//idNode0.second->output< Contents >( cout );
+					//cout << endl << endl;
+					//
+					
 					checkRequestResults( sqLite, idNode0, idNode1 );
 				}
 			}

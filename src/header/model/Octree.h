@@ -317,10 +317,6 @@ namespace model
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			
-			// DEBUG
-			cout << *this << endl << endl;
-			//
-			
 			// The idea behind this boundary is to get the minimum morton code that is from lower levels than
 			// the current. This is the same of the morton code filled with just one 1 bit from the level immediately
 			// below the current one. 

@@ -4,6 +4,7 @@
 #include "MortonCode.h"
 #include "InnerNode.h"
 #include "LeafNode.h"
+#include "Ken12MemoryManager.h"
 
 namespace model
 {
@@ -64,6 +65,64 @@ namespace model
 
 	/** Medium, ExtendedPoint, Index inner. */
 	using MEI_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, ExtendedPoint,
+															MediumInnerNode< vector< uint > >,
+															MediumLeafNode< vector< uint > > >;
+
+	// ===================
+	// Ken12MemoryManager
+	// ===================
+	
+	/** Shallow, Point, Vector inner. */
+	using SPV_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, Point, ShallowInnerNode< PointVector >,
+														ShallowLeafNode< PointVector > >;
+
+	/** Shallow, Point, Point inner. */
+	using SPP_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, Point, ShallowInnerNode< PointPtr >,
+															ShallowLeafNode< PointVector > >;
+
+	/** Shallow, Point, Index inner. */
+	using SPI_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, Point, ShallowInnerNode< vector< uint > >,
+															ShallowLeafNode< vector< uint > > >;
+															
+	/** Shallow, ExtendedPoint, Vector inner. */
+	using SEV_Ken12MemoryManager = Ken12MemoryManager< 	ShallowMortonCode, ExtendedPoint,
+															ShallowInnerNode< ExtendedPointVector >,
+															ShallowLeafNode< ExtendedPointVector > >;
+	
+	/** Shallow, ExtendedPoint, Point inner. */
+	using SEP_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, ExtendedPoint,
+															ShallowInnerNode< ExtendedPointPtr >,
+															ShallowLeafNode< PointVector > >;
+	
+	/** Shallow, ExtendedPoint, Index inner. */
+	using SEI_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, ExtendedPoint,
+															ShallowInnerNode< vector< uint > >,
+															ShallowLeafNode< vector< uint > > >;
+	
+	/** Medium, Point, Vector inner. */
+	using MPV_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, Point, MediumInnerNode< PointVector >,
+															MediumLeafNode< PointVector > >;
+
+	/** Medium, Point, Point inner. */
+	using MPP_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, Point, MediumInnerNode< PointPtr >,
+															MediumLeafNode< PointVector > >;
+															
+	/** Medium, Point, Index inner. */
+	using MPI_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, Point, MediumInnerNode< vector< uint > >,
+															MediumLeafNode< vector< uint > > >;
+
+	/** Medium, ExtendedPoint, Vector inner. */
+	using MEV_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, ExtendedPoint,
+															MediumInnerNode< ExtendedPointVector >,
+															MediumLeafNode< ExtendedPointVector > >;
+	
+	/** Medium, ExtendedPoint, Point inner. */
+	using MEP_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, ExtendedPoint,
+															MediumInnerNode< ExtendedPointPtr >,
+															MediumLeafNode< PointVector > >;
+
+	/** Medium, ExtendedPoint, Index inner. */
+	using MEI_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, ExtendedPoint,
 															MediumInnerNode< vector< uint > >,
 															MediumLeafNode< vector< uint > > >;
 }

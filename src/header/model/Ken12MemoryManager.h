@@ -56,7 +56,7 @@ namespace model
 		auto innerPool = new Ken12MemoryPool< Inner >(); innerPool->createPool( nInners );
 		MemoryManager::m_innerPool = innerPool;
 		
-		auto leafPool = new Ken12MemoryPool< Leaf >(); leafPool->createPool( nInners );
+		auto leafPool = new Ken12MemoryPool< Leaf >(); leafPool->createPool( nLeaves );
 		MemoryManager::m_leafPool = leafPool;
 		
 		MemoryManager::m_maxAllowedMem = 	nMorton * sizeof( Morton ) + nPoints * sizeof( Point )

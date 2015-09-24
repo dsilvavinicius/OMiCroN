@@ -34,7 +34,7 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager0 )
 		{
 			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
-				::initInstance( 40, 40, 15, 25 );
+				::initInstance( 40, 40, 40, 40 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
@@ -46,7 +46,7 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager2 )
 		{
 			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
-				::initInstance( 40, 40, 15, 25 );
+				::initInstance( 40, 40, 40, 40 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
@@ -58,7 +58,7 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager3 )
 		{
 			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
-				::initInstance( 100, 100, 40, 60 );
+				::initInstance( 100, 100, 100, 100 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
@@ -70,7 +70,7 @@ namespace model
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager4 )
 		{
 			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
-				::initInstance( 100, 100, 40, 60 );
+				::initInstance( 100, 100, 100, 100 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 5, 5, 5 ) );
 			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
