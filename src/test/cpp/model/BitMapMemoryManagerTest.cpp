@@ -2,6 +2,7 @@
 #include "BitMapMemoryManager.h"
 #include "OctreeMapTypes.h"
 #include <InnerNode.h>
+#include <MemoryManagerTypes.h>
 
 namespace model
 {
@@ -175,6 +176,62 @@ namespace model
 			map.clear();
 			
 			ASSERT_EQ( 0, manager.usedMemory() );
+		}
+		
+		TEST_F( BitMapMemoryManagerTest, SimpleArrays )
+		{
+			using Morton = ShallowMortonCode;
+			using Point = model::Point;
+			using PointPtr = shared_ptr< Point >;
+			using PointVector = vector< PointPtr >;
+			using Inner = ShallowInnerNode< PointVector >;
+			using Leaf = ShallowLeafNode< PointVector >;
+			
+			uint nMortonCodes = 1000000u;
+			uint nPoints = 500000u;
+			uint nNodes = 700000u;
+			
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance(
+				nMortonCodes * sizeof( Morton ) + nPoints * sizeof( Point ) + nNodes * sizeof( Inner )
+				+ nNodes * sizeof( Leaf ) );
+			
+			Morton* codes = new Morton[ nMortonCodes ];
+			Point* points = new Point[ nPoints ];
+			Inner* inners = new Inner[ nNodes ];
+			Leaf* leaf = new Leaf[ nNodes ];
+			
+			delete[] leaf;
+			delete[] points;
+			delete[] codes;
+			delete[] inners;
+		}
+		
+		TEST_F( BitMapMemoryManagerTest, ComplexArrays )
+		{
+			using Morton = MediumMortonCode;
+			using Point = model::ExtendedPoint;
+			using PointPtr = shared_ptr< Point >;
+			using PointVector = vector< PointPtr >;
+			using Inner = MediumInnerNode< PointVector >;
+			using Leaf = MediumLeafNode< PointVector >;
+			
+			uint nMortonCodes = 1000000u;
+			uint nPoints = 500000u;
+			uint nNodes = 700000u;
+			
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance(
+				nMortonCodes * sizeof( Morton ) + nPoints * sizeof( Point ) + nNodes * sizeof( Inner )
+				+ nNodes * sizeof( Leaf ) );
+			
+			Morton* codes = new Morton[ nMortonCodes ];
+			Point* points = new Point[ nPoints ];
+			Inner* inners = new Inner[ nNodes ];
+			Leaf* leaf = new Leaf[ nNodes ];
+			
+			delete[] leaf;
+			delete[] points;
+			delete[] codes;
+			delete[] inners;
 		}
 	}
 }

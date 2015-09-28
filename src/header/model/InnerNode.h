@@ -44,7 +44,7 @@ namespace model
 	template< typename MortonCode, typename Contents >
 	void* InnerNode< MortonCode, Contents >::operator new[]( size_t size )
 	{
-		throw SingletonMemoryManager::instance().allocInnerArray( size );
+		return SingletonMemoryManager::instance().allocInnerArray( size );
 	}
 	
 	template< typename MortonCode, typename Contents >

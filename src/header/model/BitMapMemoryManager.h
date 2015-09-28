@@ -8,7 +8,7 @@
 
 namespace model
 {
-	const int BIT_MAP_SIZE = 1024;
+	const int BIT_MAP_SIZE = 1048576; // 1024 ^ 2
 	const int INT_SIZE = sizeof( int ) * 8;
 	const int BIT_MAP_ELEMENTS = BIT_MAP_SIZE / INT_SIZE;
 
@@ -299,9 +299,13 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::allocateArray( const size_t& size )
 	{
-		//cout << "allocateArray" << endl << endl;
-		
 		lock_guard< mutex > guard( poolLock );
+		
+		if( size > BIT_MAP_SIZE * sizeof( T ) )
+		{
+			throw logic_error( "Array allocation: size greater than maximum allowed." );
+		}
+		//cout << "allocateArray" << endl << endl;
 		
 		if( ArrayMemoryList.empty() )
 		{
@@ -364,8 +368,14 @@ namespace model
 	{
 		lock_guard< mutex > guard( poolLock );
 		
-		ArrayMemoryInfo *info = &ArrayMemoryList[ object ];
+		auto it = ArrayMemoryList.find( object );
+		ArrayMemoryInfo *info = &it->second;
 		SetMultipleBlockBits( info, true );
+		
+		if( info->StartPosition != 0 )
+		{
+			ArrayMemoryList.erase( it );
+		}
 	}
 	
 	template< typename T >
