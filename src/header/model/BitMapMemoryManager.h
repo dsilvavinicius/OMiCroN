@@ -100,6 +100,10 @@ namespace model
 		T* AllocateArrayMemory( size_t size );
 		T* AllocateChunkAndInitBitMap();
 		
+		/** Creates an ArrayMemoryInfo, setting all necessary bits in the associated bitmap entry, inserting it into the
+		 * array info map and returning the pointer to the allocated array. */
+		T* createArrayInfo( int index, int start, int size );
+		
 		/** Sets the bit related with the given pointer. */
 		void SetBlockBit( T* object, bool flag );
 		
@@ -307,38 +311,69 @@ namespace model
 		}
 		//cout << "allocateArray" << endl << endl;
 		
-		if( ArrayMemoryList.empty() )
+		typename std::map< T*, ArrayMemoryInfo >::iterator infoI = ArrayMemoryList.begin();
+		typename std::map< T*, ArrayMemoryInfo >::iterator infoEndI = ArrayMemoryList.end();
+		
+		while( infoI != infoEndI )
 		{
-			return AllocateArrayMemory( size );
-		}
-		else 
-		{
-			typename std::map< T*, ArrayMemoryInfo >::iterator infoI = ArrayMemoryList.begin();
-			typename std::map< T*, ArrayMemoryInfo >::iterator infoEndI = ArrayMemoryList.end();
-			while( infoI != infoEndI )
-			{
-				ArrayMemoryInfo info = ( *infoI ).second;
-				if( info.StartPosition != 0 )	// search only in those mem blocks  
-					continue;             		// where allocation is done from first byte
-				else 
-				{
-					BitMapEntry* entry = &BitMapEntryList[ info.MemPoolListIndex ];
-					if( entry->BlocksAvailable < ( size / sizeof( T ) ) ) 
-						return AllocateArrayMemory( size );
-					else 
-					{
-						info.StartPosition = BIT_MAP_SIZE - entry->BlocksAvailable;
-						info.Size = size / sizeof( T );
-						T* baseAddress = MemoryPoolList[ info.MemPoolListIndex ] + info.StartPosition;
-
-						ArrayMemoryList[ baseAddress ] = info;
-						SetMultipleBlockBits( &info, false );
+			ArrayMemoryInfo info = ( *infoI ).second;
+			BitMapEntry* entry = &BitMapEntryList[ info.MemPoolListIndex ];
 			
-						return baseAddress;
-					} 
+			size_t neededBlocks = size / sizeof( T );
+			
+			if( entry->BlocksAvailable < neededBlocks ) 
+				continue;
+			else 
+			{
+				if( info.StartPosition != 0 )
+				{
+					// Check if have space behind current array.
+					if( info.StartPosition >= neededBlocks )
+					{
+						return createArrayInfo( info.MemPoolListIndex, 0, neededBlocks );
+					}
+				}
+				else
+				{
+					while( infoI != infoEndI )
+					{
+						info = infoI->second;
+						auto nextI = std::next( infoI, 1 );
+						if( nextI == infoEndI || nextI->second.MemPoolListIndex != info.MemPoolListIndex )
+						{
+							return createArrayInfo( info.MemPoolListIndex, info.StartPosition + info.Size, neededBlocks );
+						}
+						else
+						{
+							ArrayMemoryInfo nextInfo = nextI->second;
+							if( info.StartPosition + info.Size - nextInfo.StartPosition >= neededBlocks )
+							{
+								return createArrayInfo( info.MemPoolListIndex, info.StartPosition + info.Size, neededBlocks );
+							}
+						}
+						
+						infoI++;
+					}
 				}
 			}
 		}
+		
+		return AllocateArrayMemory( size );
+	}
+	
+	template< typename T >
+	T* BitMapMemoryPool< T >::createArrayInfo( int index, int start, int size )
+	{
+		ArrayInfo info;
+		info.MemPoolListIndex = index;
+		info.StartPosition = start;
+		info.Size = size;
+		
+		T* baseAddress = MemoryPoolList[ info.MemPoolListIndex ] + start;
+		ArrayMemoryList[ baseAddress ] = info;
+		SetMultipleBlockBits( &info, false );
+		
+		return baseAddress;
 	}
 	
 	template< typename T >
@@ -371,11 +406,7 @@ namespace model
 		auto it = ArrayMemoryList.find( object );
 		ArrayMemoryInfo *info = &it->second;
 		SetMultipleBlockBits( info, true );
-		
-		if( info->StartPosition != 0 )
-		{
-			ArrayMemoryList.erase( it );
-		}
+		ArrayMemoryList.erase( it );
 	}
 	
 	template< typename T >
