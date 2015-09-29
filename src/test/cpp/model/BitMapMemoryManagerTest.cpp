@@ -199,22 +199,12 @@ namespace model
 			Inner* innerArrays[ 5 ];
 			Leaf* leafArrays[ 5 ];
 			
-			Morton* expectedMortonArrays[ 5 ];
-			Point* expectedPointArrays[ 5 ];
-			Inner* expectedInnerArrays[ 5 ];
-			Leaf* expectedLeafArrays[ 5 ];
-			
 			for( int i = 0; i < 5; ++i )
 			{
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
 				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
-				
-				expectedMortonArrays[ i ] = mortonArrays[ i ];
-				expectedPointArrays[ i ] = pointArrays[ i ];
-				expectedInnerArrays[ i ] = innerArrays[ i ];
-				expectedLeafArrays[ i ] = leafArrays[ i ];
 			}
 			
 			// Checking if arrays are being allocated to pointers as expected.
@@ -233,6 +223,20 @@ namespace model
 					ASSERT_EQ( innerArrays[ i ], innerArrays[ i - 1 ] + arraySizes[ i - 1 ] );
 					ASSERT_EQ( leafArrays[ i ], leafArrays[ i - 1 ] + arraySizes[ i - 1 ] );
 				}
+			}
+			
+			// After validation, the acquired pointers are set as the expected value for allocation return.
+			Morton* expectedMortonArrays[ 5 ];
+			Point* expectedPointArrays[ 5 ];
+			Inner* expectedInnerArrays[ 5 ];
+			Leaf* expectedLeafArrays[ 5 ];
+			
+			for( int i = 0; i < 5; ++i )
+			{
+				expectedMortonArrays[ i ] = mortonArrays[ i ];
+				expectedPointArrays[ i ] = pointArrays[ i ];
+				expectedInnerArrays[ i ] = innerArrays[ i ];
+				expectedLeafArrays[ i ] = leafArrays[ i ];
 			}
 			
 			// Deleting some arrays in order to check if remaining pointers are correct afterwards.
@@ -265,6 +269,37 @@ namespace model
 				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
 				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
 				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+			}
+			
+			// Deleting all arrays to setup the case where the pool could be lost because all ArrayMemoryInfo are erased.
+			for( int i = 0; i < 5; ++i )
+			{
+				delete[] mortonArrays[ i ];
+				delete[] pointArrays[ i ];
+				delete[] innerArrays[ i ];
+				delete[] leafArrays[ i ];
+			}
+			
+			// Alloc again to check if the case aforementioned is not occurring and the pool is indeed being reused.
+			for( int i = 0; i < 5; ++i )
+			{
+				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
+				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
+				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
+				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
+				
+				ASSERT_EQ( mortonArrays[ i ], expectedMortonArrays[ i ] );
+				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
+				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
+				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+			}
+			
+			for( int i = 0; i < 5; ++i )
+			{
+				delete[] mortonArrays[ i ];
+				delete[] pointArrays[ i ];
+				delete[] innerArrays[ i ];
+				delete[] leafArrays[ i ];
 			}
 		}
 		
@@ -289,22 +324,12 @@ namespace model
 			Inner* innerArrays[ 5 ];
 			Leaf* leafArrays[ 5 ];
 			
-			Morton* expectedMortonArrays[ 5 ];
-			Point* expectedPointArrays[ 5 ];
-			Inner* expectedInnerArrays[ 5 ];
-			Leaf* expectedLeafArrays[ 5 ];
-			
 			for( int i = 0; i < 5; ++i )
 			{
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
 				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
-				
-				expectedMortonArrays[ i ] = mortonArrays[ i ];
-				expectedPointArrays[ i ] = pointArrays[ i ];
-				expectedInnerArrays[ i ] = innerArrays[ i ];
-				expectedLeafArrays[ i ] = leafArrays[ i ];
 			}
 			
 			// Checking if arrays are being allocated to pointers as expected.
@@ -323,6 +348,20 @@ namespace model
 					ASSERT_EQ( innerArrays[ i ], innerArrays[ i - 1 ] + arraySizes[ i - 1 ] );
 					ASSERT_EQ( leafArrays[ i ], leafArrays[ i - 1 ] + arraySizes[ i - 1 ] );
 				}
+			}
+			
+			// After validation, the acquired pointers are set as the expected value for allocation return.
+			Morton* expectedMortonArrays[ 5 ];
+			Point* expectedPointArrays[ 5 ];
+			Inner* expectedInnerArrays[ 5 ];
+			Leaf* expectedLeafArrays[ 5 ];
+			
+			for( int i = 0; i < 5; ++i )
+			{
+				expectedMortonArrays[ i ] = mortonArrays[ i ];
+				expectedPointArrays[ i ] = pointArrays[ i ];
+				expectedInnerArrays[ i ] = innerArrays[ i ];
+				expectedLeafArrays[ i ] = leafArrays[ i ];
 			}
 			
 			// Deleting some arrays in order to check if remaining pointers are correct afterwards.
@@ -355,6 +394,37 @@ namespace model
 				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
 				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
 				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+			}
+			
+			// Deleting all arrays to setup the case where the pool could be lost because all ArrayMemoryInfo are erased.
+			for( int i = 0; i < 5; ++i )
+			{
+				delete[] mortonArrays[ i ];
+				delete[] pointArrays[ i ];
+				delete[] innerArrays[ i ];
+				delete[] leafArrays[ i ];
+			}
+			
+			// Alloc again to check if the case aforementioned is not occurring and the pool is indeed being reused.
+			for( int i = 0; i < 5; ++i )
+			{
+				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
+				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
+				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
+				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
+				
+				ASSERT_EQ( mortonArrays[ i ], expectedMortonArrays[ i ] );
+				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
+				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
+				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+			}
+			
+			for( int i = 0; i < 5; ++i )
+			{
+				delete[] mortonArrays[ i ];
+				delete[] pointArrays[ i ];
+				delete[] innerArrays[ i ];
+				delete[] leafArrays[ i ];
 			}
 		}
 	}

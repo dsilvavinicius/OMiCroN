@@ -122,8 +122,10 @@ namespace model
 		vector< BitMapEntry > BitMapEntryList;
 		//the above two lists will maintain one-to-one correpondence and hence 
 		//should be of same  size.
-		set< BitMapEntry* > FreeMapEntries;
-		map< T*, ArrayMemoryInfo > ArrayMemoryList;
+		set< BitMapEntry* > FreeMapEntries; // Bitmaps that currently have free entries.
+		
+		map< T*, ArrayMemoryInfo > ArrayMemoryList; // List of currently allocated arrays.
+		set< int > freeArrayPoolIndices; // Indices for array memory pools that currently have no arrays allocated.
 		mutex poolLock; // Lock to the pool
 	};
 	
@@ -309,7 +311,17 @@ namespace model
 		{
 			throw logic_error( "Array allocation: size greater than maximum allowed." );
 		}
-		//cout << "allocateArray" << endl << endl;
+
+		size_t neededBlocks = size / sizeof( T );
+		
+		// Checks if there is free array pools.
+		if( freeArrayPoolIndices.size() != 0 )
+		{
+			auto freeArrayPoolIdxIt = freeArrayPoolIndices.begin();
+			int index = *freeArrayPoolIdxIt;
+			freeArrayPoolIndices.erase( freeArrayPoolIdxIt );
+			return createArrayInfo( index, 0, neededBlocks );
+		}
 		
 		typename std::map< T*, ArrayMemoryInfo >::iterator infoI = ArrayMemoryList.begin();
 		typename std::map< T*, ArrayMemoryInfo >::iterator infoEndI = ArrayMemoryList.end();
@@ -318,8 +330,6 @@ namespace model
 		{
 			ArrayMemoryInfo info = ( *infoI ).second;
 			BitMapEntry* entry = &BitMapEntryList[ info.MemPoolListIndex ];
-			
-			size_t neededBlocks = size / sizeof( T );
 			
 			if( entry->BlocksAvailable < neededBlocks ) 
 				continue;
@@ -406,6 +416,18 @@ namespace model
 		auto it = ArrayMemoryList.find( object );
 		ArrayMemoryInfo *info = &it->second;
 		SetMultipleBlockBits( info, true );
+		
+		auto prevIt = std::prev( it );
+		auto nextIt = std::next( it );
+		
+		// In case of all ArrayMemoryInfo of the pool being dealloc, the pool index is inserted into freeArrayPoolIndices
+		// for fast alloc later on.
+		if( ( prevIt == ArrayMemoryList.begin() || prevIt->second.MemPoolListIndex != info->MemPoolListIndex )
+			&& ( nextIt == ArrayMemoryList.end() || nextIt->second.MemPoolListIndex != info->MemPoolListIndex ) )
+		{
+			freeArrayPoolIndices.insert( info->MemPoolListIndex );
+		}
+		
 		ArrayMemoryList.erase( it );
 	}
 	
