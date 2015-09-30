@@ -417,13 +417,9 @@ namespace model
 		ArrayMemoryInfo *info = &it->second;
 		SetMultipleBlockBits( info, true );
 		
-		auto prevIt = std::prev( it );
-		auto nextIt = std::next( it );
-		
 		// In case of all ArrayMemoryInfo of the pool being dealloc, the pool index is inserted into freeArrayPoolIndices
 		// for fast alloc later on.
-		if( ( prevIt == ArrayMemoryList.begin() || prevIt->second.MemPoolListIndex != info->MemPoolListIndex )
-			&& ( nextIt == ArrayMemoryList.end() || nextIt->second.MemPoolListIndex != info->MemPoolListIndex ) )
+		if( BitMapEntryList[ info->MemPoolListIndex ].BlocksAvailable == BIT_MAP_SIZE )
 		{
 			freeArrayPoolIndices.insert( info->MemPoolListIndex );
 		}

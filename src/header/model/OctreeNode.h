@@ -22,7 +22,7 @@ namespace model
 	template< typename MortonCode >
 	class OctreeNode
 	{
-		using IndexVector = vector< unsigned long >;
+		using IndexVector = vector< unsigned int >;
 	public:
 		virtual ~OctreeNode() {}
 		

@@ -4,16 +4,68 @@
 #include <cstdlib>
 #include <string>
 #include <memory>
+#include <vector>
+#include "BasicTypes.h"
 
 using namespace std;
 
 namespace model
 {
+
+	class Point;
+	using PointPtr = shared_ptr< Point >;
+	using PointVector = vector< PointPtr >;
+	
+	class ExtendedPoint;
+	using ExtendedPointPtr = shared_ptr< ExtendedPoint >;
+	using ExtendedPointVector = vector< ExtendedPointPtr >;
+	
+	using IndexVector = vector< uint >;
+	
+	template< typename T >
+	class MortonCode;
+	using ShallowMortonCode = MortonCode< unsigned int >;
+	using MediumMortonCode = MortonCode< unsigned long >;
+	
+	template< typename M, typename C >
+	class InnerNode;
+	
+	template< typename C >
+	using ShallowInnerNode = InnerNode< ShallowMortonCode, C >;
+	
+	template< typename C >
+	using MediumInnerNode = InnerNode< MediumMortonCode, C >;
+	
+	template< typename M, typename C >
+	class LeafNode;
+	
+	template< typename C >
+	using ShallowLeafNode = LeafNode< ShallowMortonCode, C >;
+	
+	template< typename C >
+	using MediumLeafNode = LeafNode< MediumMortonCode, C >;
+	
 	/** Interface for MemoryManagers. It defines an API for octree morton code, point and node allocation, deallocation
 	 * and usage statistics. */
 	class IMemoryManager
 	{
 	public:
+		/** Generic allocation method that chooses what allocation method to call based on type. */
+		template< typename T >
+		T* alloc();
+		
+		/** Generic array allocation method that chooses what allocation method to call based on type. */
+		template< typename T >
+		T* allocArray( const size_t& size );
+		
+		/** Generic deallocation method that chooses what allocation method to call based on type. */
+		template< typename T >
+		void dealloc( T* p );
+		
+		/** Generic array deallocation method that chooses what allocation method to call based on type. */
+		template< typename T >
+		void deallocArray( T* p );
+		
 		/** Allocates memory for morton code type. */
 		virtual void* allocMorton() = 0;
 		
@@ -80,6 +132,96 @@ namespace model
 		out << manager.toString();
 		return out;
 	}
+	
+	// Macro to create all alloc dealloc methods for a given type.
+	#define SPECIALIZE_ALLOC_DEALLOC(TYPE,METHOD_ID) \
+	template<> \
+	inline TYPE* IMemoryManager::alloc< TYPE >() \
+	{ \
+		return static_cast< TYPE* >( alloc##METHOD_ID() ); \
+	} \
+	\
+	template<> \
+	inline TYPE* IMemoryManager::allocArray< TYPE >( const size_t& size ) \
+	{ \
+		return static_cast< TYPE* >( alloc##METHOD_ID##Array( size ) ); \
+	} \
+	\
+	template<> \
+	inline void IMemoryManager::dealloc< TYPE >( TYPE* p ) \
+	{ \
+		dealloc##METHOD_ID( p ); \
+	} \
+	\
+	template<> \
+	inline void IMemoryManager::deallocArray< TYPE >( TYPE* p ) \
+	{ \
+		dealloc##METHOD_ID##Array( p ); \
+	}
+	
+	// =========================
+	// MortonCode specializations
+	// =========================
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowMortonCode,Morton)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumMortonCode,Morton)
+	
+	// =========================
+	// Point specializations
+	// =========================
+	
+	SPECIALIZE_ALLOC_DEALLOC(Point,Point)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ExtendedPoint,Point)
+	
+	// =========================
+	// InnerNode specializations
+	// =========================
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< IndexVector >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< PointPtr >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< ExtendedPointPtr >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< PointVector >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< ExtendedPointVector >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< IndexVector >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< PointPtr >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< ExtendedPointPtr >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< PointVector >,Inner)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< ExtendedPointVector >,Inner)
+	
+	// ========================
+	// LeafNode specializations
+	// ========================
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< IndexVector >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< PointPtr >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< ExtendedPointPtr >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< PointVector >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< ExtendedPointVector >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< IndexVector >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< PointPtr >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< ExtendedPointPtr >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< PointVector >,Leaf)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< ExtendedPointVector >,Leaf)
 	
 	/** Provides suport for a singleton IMemoryManager. The derived class has the responsibility of initializing the
 	 * singleton instance. */
