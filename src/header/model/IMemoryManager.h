@@ -11,7 +11,9 @@ using namespace std;
 
 namespace model
 {
-
+	template< typename T >
+	class BitMapAllocator;
+	
 	class Point;
 	using PointPtr = shared_ptr< Point >;
 	using PointVector = vector< PointPtr >;
@@ -45,6 +47,10 @@ namespace model
 	template< typename C >
 	using MediumLeafNode = LeafNode< MediumMortonCode, C >;
 	
+	// shared_ptr< Point > internal allocated type.
+	template< typename Point >
+	using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
+	
 	/** Interface for MemoryManagers. It defines an API for octree morton code, point and node allocation, deallocation
 	 * and usage statistics. */
 	class IMemoryManager
@@ -72,6 +78,12 @@ namespace model
 		/** Allocates memory for point type. */
 		virtual void* allocPoint() = 0;
 		
+		/** Allocates memory for shared_ptr< point type > */
+		virtual void* allocPointPtr() = 0;
+		
+		/** Allocates memory for shared_ptr< point type > internal data structure. */
+		virtual void* allocPtrInternals() = 0;
+		
 		/** Allocates memory for inner node type. */
 		virtual void* allocInner() = 0;
 		
@@ -83,6 +95,12 @@ namespace model
 		
 		/** Allocates memory for point type array. */
 		virtual void* allocPointArray( const size_t& size ) = 0;
+		
+		/** Allocates memory for shared_ptr< point type > array. */
+		virtual void* allocPointPtrArray( const size_t& size ) = 0;
+		
+		/** Allocates memory for shared_ptr< point type > interl data structure array. */
+		virtual void* allocPtrInternalsArray( const size_t& size ) = 0;
 		
 		/** Allocates memory for inner node type array. */
 		virtual void* allocInnerArray( const size_t& size ) = 0;
@@ -96,6 +114,12 @@ namespace model
 		/** Deallocates memory for point type. */
 		virtual void deallocPoint( void* p ) = 0;
 		
+		/** Deallocates memory for shared_ptr< point type >. */
+		virtual void deallocPointPtr( void* p ) = 0;
+		
+		/** Deallocates memory for shared_ptr< point type > internal data structure. */
+		virtual void deallocPtrInternals( void* p ) = 0;
+		
 		/** Deallocates memory for inner node type. */
 		virtual void deallocInner( void* p ) = 0;
 		
@@ -107,6 +131,12 @@ namespace model
 		
 		/** Deallocates an array of point type. */
 		virtual void deallocPointArray( void* p ) = 0;
+		
+		/** Deallocates an array of shared_ptr< point type >. */
+		virtual void deallocPointPtrArray( void* p ) = 0;
+		
+		/** Deallocates an array of shared_ptr< point type > internal data structures. */
+		virtual void deallocPtrInternalsArray( void* p ) = 0;
 		
 		/** Deallocates an array of inner node type. */
 		virtual void deallocInnerArray( void* p ) = 0;
@@ -174,6 +204,22 @@ namespace model
 	SPECIALIZE_ALLOC_DEALLOC(Point,Point)
 	
 	SPECIALIZE_ALLOC_DEALLOC(ExtendedPoint,Point)
+	
+	// ==================================
+	// PointPtr specializations
+	// ==================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(PointPtr,PointPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(ExtendedPointPtr,PointPtr)
+	
+	// ==================================
+	// PointPtr internals specializations
+	// ==================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< Point >,PtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< ExtendedPoint >,PtrInternals)
 	
 	// =========================
 	// InnerNode specializations

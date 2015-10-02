@@ -5,6 +5,7 @@
 #include <sstream>
 #include "IMemoryPool.h"
 #include "IMemoryManager.h"
+#include "BitMapAllocator.h"
 
 namespace model
 {
@@ -19,12 +20,21 @@ namespace model
 	class MemoryManager
 	: public SingletonMemoryManager
 	{
+		using PointPtr = shared_ptr< Point >;
+		
+		// shared_ptr< Point > internal allocated type.
+		using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
+		
 	public:
 		virtual ~MemoryManager() = 0;
 		
 		void* allocMorton() override;
 		
 		void* allocPoint() override;
+		
+		void* allocPointPtr() override;
+		
+		void* allocPtrInternals() override;
 		
 		void* allocInner() override;
 		
@@ -34,6 +44,10 @@ namespace model
 		
 		void* allocPointArray( const size_t& size ) override;
 		
+		void* allocPointPtrArray( const size_t& size ) override;
+		
+		void* allocPtrInternalsArray( const size_t& size ) override;
+		
 		void* allocInnerArray( const size_t& size ) override;
 		
 		void* allocLeafArray( const size_t& size ) override;
@@ -42,6 +56,10 @@ namespace model
 		
 		void deallocPoint( void* p ) override;
 		
+		void deallocPointPtr( void* p ) override;
+		
+		void deallocPtrInternals( void* p ) override;
+		
 		void deallocInner( void* p ) override;
 		
 		void deallocLeaf( void* p ) override;
@@ -49,6 +67,10 @@ namespace model
 		void deallocMortonArray( void* p ) override;
 		
 		void deallocPointArray( void* p ) override;
+		
+		void deallocPointPtrArray( void* p ) override;
+		
+		void deallocPtrInternalsArray( void* p ) override;
 		
 		void deallocInnerArray( void* p ) override;
 		
@@ -63,19 +85,27 @@ namespace model
 		template< typename T >
 		struct TypeWrapper{};
 		
-		IMemoryPool< Morton >& getPool( const struct TypeWrapper< Morton >& type );
+		IMemoryPool< Morton >& getPool( const struct TypeWrapper< Morton >& );
 		
-		IMemoryPool< Point >& getPool( const struct TypeWrapper< Point >& type );
+		IMemoryPool< Point >& getPool( const struct TypeWrapper< Point >& );
 		
-		IMemoryPool< Inner >& getPool( const struct TypeWrapper< Inner >& type );
+		IMemoryPool< PointPtr >& getPool( const struct TypeWrapper< PointPtr >& );
 		
-		IMemoryPool< Leaf >& getPool( const struct TypeWrapper< Leaf >& type );
+		IMemoryPool< PtrInternals >& getPool( const struct TypeWrapper< PtrInternals >& );
+		
+		IMemoryPool< Inner >& getPool( const struct TypeWrapper< Inner >& );
+		
+		IMemoryPool< Leaf >& getPool( const struct TypeWrapper< Leaf >& );
 		
 		string toString() const override;
 		
 		size_t numMortonBlocks() const;
 		
 		size_t numPointBlocks() const;
+		
+		size_t numPointPtrBlocks() const;
+		
+		size_t numPtrInternalsBlocks() const;
 		
 		size_t numInnerBlocks() const;
 		
@@ -84,6 +114,8 @@ namespace model
 	protected:
 		IMemoryPool< Morton >* m_mortonPool;
 		IMemoryPool< Point >* m_pointPool;
+		IMemoryPool< PointPtr >* m_pointPtrPool;
+		IMemoryPool< PtrInternals >* m_ptrInternalsPool;
 		IMemoryPool< Inner >* m_innerPool;
 		IMemoryPool< Leaf >* m_leafPool;
 		size_t m_maxAllowedMem;
@@ -94,6 +126,8 @@ namespace model
 	{
 		delete m_mortonPool;
 		delete m_pointPool;
+		delete m_pointPtrPool;
+		delete m_ptrInternalsPool;
 		delete m_innerPool;
 		delete m_leafPool;
 	}
@@ -112,6 +146,18 @@ namespace model
 		//cout << "allocPoint" << endl << endl;
 		
 		return m_pointPool->allocate();
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	inline void* MemoryManager< Morton, Point, Inner, Leaf >::allocPointPtr()
+	{
+		return m_pointPtrPool->allocate();
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	inline void* MemoryManager< Morton, Point, Inner, Leaf >::allocPtrInternals()
+	{
+		return m_ptrInternalsPool->allocate();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
@@ -143,6 +189,18 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	void* MemoryManager< Morton, Point, Inner, Leaf >::allocPointPtrArray( const size_t& size )
+	{
+		return m_pointPtrPool->allocateArray( size );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	void* MemoryManager< Morton, Point, Inner, Leaf >::allocPtrInternalsArray( const size_t& size )
+	{
+		return m_ptrInternalsPool->allocateArray( size );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	void* MemoryManager< Morton, Point, Inner, Leaf >::allocInnerArray( const size_t& size )
 	{
 		return m_innerPool->allocateArray( size );
@@ -168,6 +226,18 @@ namespace model
 		//cout << "deallocPoint" << endl << endl;
 		
 		m_pointPool->deallocate( static_cast< Point* >( p ) );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	inline void MemoryManager< Morton, Point, Inner, Leaf >::deallocPointPtr( void* p )
+	{
+		m_pointPtrPool->deallocate( static_cast< PointPtr* >( p ) );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	inline void MemoryManager< Morton, Point, Inner, Leaf >::deallocPtrInternals( void* p )
+	{
+		m_ptrInternalsPool->deallocate( static_cast< PtrInternals* >( p ) );
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
@@ -199,6 +269,18 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	void MemoryManager< Morton, Point, Inner, Leaf >::deallocPointPtrArray( void* p )
+	{
+		m_pointPtrPool->deallocateArray( static_cast< PointPtr* >( p ) );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	void MemoryManager< Morton, Point, Inner, Leaf >::deallocPtrInternalsArray( void* p )
+	{
+		m_ptrInternalsPool->deallocateArray( static_cast< PtrInternals* >( p ) );
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	void MemoryManager< Morton, Point, Inner, Leaf >::deallocInnerArray( void* p )
 	{
 		m_innerPool->deallocateArray( static_cast< Inner* >( p ) );
@@ -213,8 +295,8 @@ namespace model
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline size_t MemoryManager< Morton, Point, Inner, Leaf >::usedMemory() const
 	{
-		return 	m_mortonPool->memoryUsage() + m_pointPool->memoryUsage() + m_innerPool->memoryUsage()
-				+ m_leafPool->memoryUsage();
+		return 	m_mortonPool->memoryUsage() + m_pointPool->memoryUsage() + m_pointPtrPool->memoryUsage()
+				+ m_ptrInternalsPool->memoryUsage() + m_innerPool->memoryUsage() + m_leafPool->memoryUsage();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
@@ -231,30 +313,44 @@ namespace model
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline IMemoryPool< Morton >& MemoryManager< Morton, Point, Inner, Leaf >
-	::getPool( const struct TypeWrapper< Morton >& type )
+	::getPool( const struct TypeWrapper< Morton >& )
 	{
-		return m_mortonPool;
+		return *m_mortonPool;
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline IMemoryPool< Point >& MemoryManager< Morton, Point, Inner, Leaf >
-	::getPool( const struct TypeWrapper< Point >& type )
+	::getPool( const struct TypeWrapper< Point >& )
 	{
-		return m_pointPool;
+		return *m_pointPool;
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	inline IMemoryPool< shared_ptr< Point > >& MemoryManager< Morton, Point, Inner, Leaf >
+	::getPool( const struct TypeWrapper< PointPtr >& )
+	{
+		return *m_pointPtrPool;
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	inline IMemoryPool< std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 > >&
+	MemoryManager< Morton, Point, Inner, Leaf >::getPool( const struct TypeWrapper< PtrInternals >& )
+	{
+		return *m_ptrInternalsPool;
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline IMemoryPool< Inner >& MemoryManager< Morton, Point, Inner, Leaf >
-	::getPool( const struct TypeWrapper< Inner >& type )
+	::getPool( const struct TypeWrapper< Inner >& )
 	{
-		return m_innerPool;
+		return *m_innerPool;
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	inline IMemoryPool< Leaf >& MemoryManager< Morton, Point, Inner, Leaf >
-	::getPool( const struct TypeWrapper< Leaf >& type )
+	::getPool( const struct TypeWrapper< Leaf >& )
 	{
-		return m_leafPool;
+		return *m_leafPool;
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
@@ -263,6 +359,8 @@ namespace model
 		stringstream ss;
 		ss 	<< "Morton used blocks: " << m_mortonPool->usedBlocks() << " Used memory: " << m_mortonPool->memoryUsage() << endl
 			<< "Point used blocks: " << m_pointPool->usedBlocks() << " Used memory: " << m_pointPool->memoryUsage() << endl
+			<< "PointPtr used blocks: " << m_pointPtrPool->usedBlocks() << " Used memory: " << m_pointPtrPool->memoryUsage() << endl
+			<< "PtrInternals used blocks: " << m_ptrInternalsPool->usedBlocks() << " Used memory: " << m_ptrInternalsPool->memoryUsage() << endl
 			<< "Inner used blocks: " << m_innerPool->usedBlocks() << " Used memory: " << m_innerPool->memoryUsage() << endl
 			<< "Leaf used blocks: " << m_leafPool->usedBlocks() << " Used memory: " << m_leafPool->memoryUsage() << endl << endl;
 		return ss.str();
@@ -278,6 +376,18 @@ namespace model
 	size_t MemoryManager< Morton, Point, Inner, Leaf >::numPointBlocks() const
 	{
 		return m_pointPool->getNumBlocks();
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	size_t MemoryManager< Morton, Point, Inner, Leaf >::numPointPtrBlocks() const
+	{
+		return m_pointPtrPool->getNumBlocks();
+	}
+	
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	size_t MemoryManager< Morton, Point, Inner, Leaf >::numPtrInternalsBlocks() const
+	{
+		return m_ptrInternalsPool->getNumBlocks();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >

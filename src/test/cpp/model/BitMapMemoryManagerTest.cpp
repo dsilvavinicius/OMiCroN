@@ -3,6 +3,9 @@
 #include "OctreeMapTypes.h"
 #include <InnerNode.h>
 #include <MemoryManagerTypes.h>
+#include <BitMapAllocator.h>
+#include <MemoryUtils.h>
+#include <qabstractitemmodel.h>
 
 namespace model
 {
@@ -427,5 +430,41 @@ namespace model
 				delete[] leafArrays[ i ];
 			}
 		}
+		
+		TEST_F( BitMapMemoryManagerTest, AllocatorShallowPointVector )
+		{
+			using Morton = ShallowMortonCode;
+			using Point = model::Point;
+			using PointPtr = shared_ptr< Point >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using Inner = ShallowInnerNode< PointVector >;
+			using Leaf = ShallowLeafNode< PointVector >;
+			
+			int nPoints = 10000;
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( nPoints * sizeof( Point ) );
+			
+			PointVector points( nPoints );
+			for( int i = 0; i < nPoints; ++i )
+			{
+				PointPtr point = makeManaged< Point >();
+				points.push_back( point );
+			}
+			
+			Inner inner;
+			inner.setContents( points );
+			
+			ASSERT_EQ( 	SingletonMemoryManager::instance().usedMemory(), nPoints * sizeof( Point )
+						+ nPoints * sizeof( PointPtr ) );
+		}
+		
+		/*TEST_F( BitMapMemoryManagerTest, AllocatorsShallowPointPtr )
+		{
+			
+		}
+		
+		TEST_F( BitMapMemoryManagerTest, AllocatorsMediumExtendedIndex )
+		{
+			
+		}*/
 	}
 }

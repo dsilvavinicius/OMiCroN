@@ -1,5 +1,6 @@
 #ifndef BITMAP_ALLOCATOR_H
 #define BITMAP_ALLOCATOR_H
+
 #include "IMemoryManager.h"
 
 namespace model
@@ -15,19 +16,28 @@ namespace model
 		template< typename U >
 		struct rebind{ using other = BitMapAllocator< U >; };
 		
+		BitMapAllocator(){}
+		BitMapAllocator( const BitMapAllocator< T >& ){}
+		
+		template< typename U >
+		BitMapAllocator( const BitMapAllocator< U >& ){}
+		
 		pointer allocate( size_type n );
 		void deallocate( pointer p, size_type n );
+		
+		bool operator==( const BitMapAllocator& ){ return true; }
+		bool operator!=( const BitMapAllocator& ){ return false; }
 	};
 	
 	template< typename T >
-	inline T* BitMapAllocator::allocate( size_type n )
+	inline T* BitMapAllocator< T >::allocate( size_type n )
 	{
 		IMemoryManager& manager = SingletonMemoryManager::instance();
-		return  n == 1 ? manager.alloc< T >() : manager.allocArray< T >(  n * sizeof( Type ) );
+		return  n == 1 ? manager.alloc< T >() : manager.allocArray< T >(  n * sizeof( T ) );
 	}
 
 	template< typename T >
-	inline T* BitMapAllocator::deallocate( pointer p, size_type n )
+	inline void BitMapAllocator< T >::deallocate( pointer p, size_type n )
 	{
 		IMemoryManager& manager = SingletonMemoryManager::instance();
 		n == 1 ? manager.dealloc< T >( p ) : manager.deallocArray< T >( p );

@@ -134,6 +134,8 @@ namespace model
 	: public MemoryManager< Morton, Point, Inner, Leaf >
 	{
 		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf >;
+		using PointPtr = shared_ptr< Point >;
+		using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
 	public:
 		static void initInstance( const size_t& maxAllowedMem );
 	
@@ -529,6 +531,8 @@ namespace model
 	{
 		MemoryManager::m_mortonPool = new BitMapMemoryPool< Morton >();
 		MemoryManager::m_pointPool = new BitMapMemoryPool< Point >();
+		MemoryManager::m_pointPtrPool = new BitMapMemoryPool< PointPtr >();
+		MemoryManager::m_ptrInternalsPool = new BitMapMemoryPool< PtrInternals >();
 		MemoryManager::m_innerPool = new BitMapMemoryPool< Inner >();
 		MemoryManager::m_leafPool = new BitMapMemoryPool< Leaf >();
 		MemoryManager::m_maxAllowedMem = maxAllowedMem;
