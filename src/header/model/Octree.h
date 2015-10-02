@@ -39,11 +39,10 @@ namespace model
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
-		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using InnerNode = model::InnerNode< MortonCode, PointPtr >;
+		using InnerNode = model::InnerNode< PointPtr >;
 		using InnerNodePtr = shared_ptr< InnerNode >;
-		using LeafNode = model::LeafNode< MortonCode, PointVector >;
+		using LeafNode = model::LeafNode< PointVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
 		using Precision = typename PlyPointReader< Point >::Precision;
 		using PointAppender = model::PointAppender< MortonCode, Point >;
@@ -404,7 +403,7 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point >
-	inline OctreeNodePtr< MortonCode > OctreeBase< MortonCode, Point >::buildInnerNode( const PointVector& childrenPoints )
+	inline OctreeNodePtr OctreeBase< MortonCode, Point >::buildInnerNode( const PointVector& childrenPoints )
 	const
 	{	
 		// Accumulate points for LOD.
@@ -577,7 +576,6 @@ namespace model
 		using PointVector = model::PointVector;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		
 		out << endl << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string(*octree.m_origin) << endl

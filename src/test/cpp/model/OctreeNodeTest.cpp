@@ -26,7 +26,7 @@ namespace model
 			points.push_back( PointPtr( new Point( p0 ) ) );
 			points.push_back( PointPtr( new Point( p1 ) ) );
 			
-			ShallowLeafNodePtr< PointVector > node( new ShallowLeafNode< PointVector >() );
+			LeafNodePtr< PointVector > node( new LeafNode< PointVector >() );
 			node->setContents( points );
 			
 			float epsilon = 1.e-15f;

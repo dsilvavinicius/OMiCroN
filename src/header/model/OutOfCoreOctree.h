@@ -21,7 +21,6 @@ namespace model
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
@@ -270,7 +269,7 @@ namespace model
 			// Creates leaf node.
 			PointVector points;
 			points.push_back( point );
-			LeafNodePtr< MortonCode, PointVector > leafNode( new LeafNode< MortonCode, PointVector >() );
+			LeafNodePtr< PointVector > leafNode( new LeafNode< PointVector >() );
 			leafNode->setContents( points );
 			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -288,7 +287,7 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline OctreeNodePtr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	inline OctreeNodePtr OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::getNode( const MortonCodePtr& code )
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
@@ -315,7 +314,7 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline vector< OctreeNodePtr< MortonCode > > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	inline vector< OctreeNodePtr > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::getChildren( const MortonCodePtr& parent )
 	{
 		MortonCodePtr firstChildCode = parent->getFirstChild();

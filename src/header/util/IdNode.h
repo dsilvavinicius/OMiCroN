@@ -3,13 +3,14 @@
 
 #include <utility>
 #include "OctreeNode.h"
+#include "MortonCode.h"
 
 using namespace std;
 
 namespace model
 {
 	template< typename MortonCode >
-	using IdNode = pair< shared_ptr< MortonCode >, model::OctreeNodePtr< MortonCode > >;
+	using IdNode = pair< shared_ptr< MortonCode >, model::OctreeNodePtr >;
 	
 	using ShallowIdNode = IdNode< ShallowMortonCode >;
 	

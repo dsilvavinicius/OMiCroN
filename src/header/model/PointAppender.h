@@ -16,7 +16,7 @@ namespace model
 		using IndexVector = vector< unsigned int >;
 		
 	public:
-		virtual void appendPoints( OctreeNodePtr< MortonCode > node, PointVector& vec, int& numChildren, int& numLeaves )
+		virtual void appendPoints( OctreeNodePtr node, PointVector& vec, int& numChildren, int& numLeaves )
 		const
 		{
 			++numChildren;
@@ -34,7 +34,7 @@ namespace model
 		}
 		
 		/** API for appending points as indices for a point array. */
-		virtual void appendPoints( OctreeNodePtr< MortonCode > node, IndexVector& vec, int& numChildren,
+		virtual void appendPoints( OctreeNodePtr node, IndexVector& vec, int& numChildren,
 								   int& numLeaves ) const {}
 		
 	};
@@ -50,7 +50,7 @@ namespace model
 		using IndexVectorPtr = shared_ptr< IndexVector >;
 		
 	public:
-		virtual void appendPoints( OctreeNodePtr< MortonCode > node, PointVector& vec, int& numChildren, int& numLeaves )
+		virtual void appendPoints( OctreeNodePtr node, PointVector& vec, int& numChildren, int& numLeaves )
 		const
 		{
 			++numChildren;
@@ -63,7 +63,7 @@ namespace model
 			vec.insert( vec.end(), childPoints.begin(), childPoints.end() );
 		}
 		
-		virtual void appendPoints( OctreeNodePtr< MortonCode > node, IndexVector& vec, int& numChildren, int& numLeaves )
+		virtual void appendPoints( OctreeNodePtr node, IndexVector& vec, int& numChildren, int& numLeaves )
 		const
 		{
 			++numChildren;

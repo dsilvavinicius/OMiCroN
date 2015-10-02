@@ -3,8 +3,6 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include "InnerNode.h"
-#include "LeafNode.h"
 #include "Serializer.h"
 #include "ExtendedPoint.h"
 
@@ -13,13 +11,14 @@ using namespace glm;
 
 namespace model
 {
-	template< typename MortonCode, typename Point >
-	class Octree;
+	template< typename Contents >
+	class InnerNode;
 	
-	// TODO: MortonCode seems to be unnecessary here.
+	template< typename Contents >
+	class LeafNode;
+	
 	// TODO: Eliminates the reinterpret_casts on this class.
 	/** Base class for octree nodes. */
-	template< typename MortonCode >
 	class OctreeNode
 	{
 		using IndexVector = vector< unsigned int >;
@@ -57,79 +56,74 @@ namespace model
 		static OctreeNode* deserialize( byte* serialization );
 	};
 	
-	template< typename MortonCode >
 	template< typename Contents >
-	inline void OctreeNode< MortonCode >::setContents( const Contents& contents )
+	inline void OctreeNode::setContents( const Contents& contents )
 	{
 		if( isLeaf() )
 		{
-			LeafNode< MortonCode, Contents >* node =
-				reinterpret_cast< LeafNode< MortonCode, Contents >* >( this );
+			LeafNode< Contents >* node =
+				reinterpret_cast< LeafNode< Contents >* >( this );
 			
 			node->setContents( contents );
 		}
 		else
 		{
-			InnerNode< MortonCode, Contents >* node =
-				reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
+			InnerNode< Contents >* node =
+				reinterpret_cast< InnerNode< Contents >* >( this );
 			
 			node->setContents( contents );
 		}
 	}
 		
-	template< typename MortonCode >
 	template< typename Contents >
-	inline Contents& OctreeNode< MortonCode >::getContents()
+	inline Contents& OctreeNode::getContents()
 	{
 		if( isLeaf() )
 		{
-			LeafNode< MortonCode, Contents >* node = reinterpret_cast< LeafNode< MortonCode, Contents >* >( this );
+			LeafNode< Contents >* node = reinterpret_cast< LeafNode< Contents >* >( this );
 			return node->getContents();
 		}
 		else
 		{
-			InnerNode< MortonCode, Contents >* node = reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
+			InnerNode< Contents >* node = reinterpret_cast< InnerNode< Contents >* >( this );
 			return node->getContents();
 		}
 	}
 	
-	template< typename MortonCode >
 	template< typename Contents >
-	inline const Contents& OctreeNode< MortonCode >::getContents() const
+	inline const Contents& OctreeNode::getContents() const
 	{
 		if( isLeaf() )
 		{
-			const LeafNode< MortonCode, Contents >* node =
-				reinterpret_cast< const LeafNode< MortonCode, Contents >* >( this );
+			const LeafNode< Contents >* node =
+				reinterpret_cast< const LeafNode< Contents >* >( this );
 			return node->getContents();
 		}
 		else
 		{
-			const InnerNode< MortonCode, Contents >* node =
-				reinterpret_cast< const InnerNode< MortonCode, Contents >* >( this );
+			const InnerNode< Contents >* node =
+				reinterpret_cast< const InnerNode< Contents >* >( this );
 			return node->getContents();
 		}
 	}
 	
-	template< typename MortonCode >
 	template< typename Contents >
-	void OctreeNode< MortonCode >::output( ostream& out )
+	void OctreeNode::output( ostream& out )
 	{
 		if( isLeaf() )
 		{
-			auto* leaf = reinterpret_cast< LeafNode< MortonCode, Contents >* >( this );
+			auto* leaf = reinterpret_cast< LeafNode< Contents >* >( this );
 			leaf->output( out );
 		}
 		else
 		{
-			auto* inner = reinterpret_cast< InnerNode< MortonCode, Contents >* >( this );
+			auto* inner = reinterpret_cast< InnerNode< Contents >* >( this );
 			inner->output( out );
 		}
 	}
 	
-	template< typename MortonCode >
 	template< typename Contents >
-	inline size_t OctreeNode< MortonCode >::serialize( byte** serialization ) const
+	inline size_t OctreeNode::serialize( byte** serialization ) const
 	{
 		byte* content;
 		size_t contentSize = Serializer::serialize( getContents< Contents >(), &content );
@@ -149,9 +143,8 @@ namespace model
 		return nodeSize;
 	}
 	
-	template< typename MortonCode >
 	template< typename Contents >
-	inline OctreeNode< MortonCode >* OctreeNode< MortonCode >::deserialize( byte* serialization )
+	inline OctreeNode* OctreeNode::deserialize( byte* serialization )
 	{
 		bool flag;
 		size_t flagSize = sizeof( bool );
@@ -160,7 +153,7 @@ namespace model
 		
 		if( flag )
 		{
-			auto node = new LeafNode< MortonCode, Contents >();
+			auto node = new LeafNode< Contents >();
 			Contents contents;
 			Serializer::deserialize( tempPtr, contents );
 			node->setContents( contents );
@@ -168,7 +161,7 @@ namespace model
 		}
 		else
 		{
-			auto node = new InnerNode< MortonCode, Contents >();
+			auto node = new InnerNode< Contents >();
 			Contents contents;
 			Serializer::deserialize( tempPtr, contents );
 			node->setContents( contents );
@@ -176,20 +169,7 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode >
-	using OctreeNodePtr = shared_ptr< OctreeNode< MortonCode > >;
-	
-	using ShallowOctreeNode = OctreeNode< ShallowMortonCode >;
-	
-	using ShallowOctreeNodePtr = shared_ptr< ShallowOctreeNode >;
-	
-	using MediumOctreeNode = OctreeNode< MediumMortonCode >;
-	
-	using MediumOctreeNodePtr = shared_ptr< MediumOctreeNode >;
-	
-	//using DeepOctreeNode = OctreeNode< DeepMortonCode >;
-	
-	//using DeepOctreeNodePtr = shared_ptr< DeepOctreeNode >;
+	using OctreeNodePtr = shared_ptr< OctreeNode >;
 }
 
 #endif

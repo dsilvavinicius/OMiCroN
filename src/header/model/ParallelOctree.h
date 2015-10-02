@@ -16,7 +16,6 @@ namespace model
 		using MortonVector = vector< MortonCode >;
 		using PointVector = vector< unsigned int >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
 		using ParallelFrontBehavior = model::ParallelFrontBehavior< MortonCode, Point, Front, FrontInsertionContainer >;
 	

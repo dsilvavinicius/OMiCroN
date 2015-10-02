@@ -16,8 +16,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
-		using LeafNode = model::LeafNode< MortonCode, PointVector >;
+		using LeafNode = model::LeafNode< PointVector >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using Octree = model::Octree< MortonCode, Point >;
 		using RandomPointAppender = model::RandomPointAppender< MortonCode, Point >;
@@ -101,12 +100,12 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point >
-	inline OctreeNodePtr< MortonCode > RandomSampleOctree< MortonCode, Point >
+	inline OctreeNodePtr RandomSampleOctree< MortonCode, Point >
 	::buildInnerNode( const PointVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		InnerNodePtr< MortonCode, PointVector > node( new InnerNode< MortonCode, PointVector > () );
+		InnerNodePtr< PointVector > node( new InnerNode< PointVector > () );
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
 		
@@ -154,7 +153,6 @@ namespace model
 		using PointVector = vector< shared_ptr< Point > >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		
 		out << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string( *octree.m_origin ) << endl

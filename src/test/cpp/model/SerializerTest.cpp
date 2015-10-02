@@ -72,7 +72,7 @@ namespace model
 		TEST_F( SerializerTest, LeafIndexNode )
 		{
 			using Contents = vector< uint >;
-			using Node = LeafNode< ShallowMortonCode, Contents >;
+			using Node = LeafNode< Contents >;
 			
 			SPI_BitMapMemoryManager::initInstance( 1000000 );
 			
@@ -84,7 +84,7 @@ namespace model
 			byte* bytes;
 			
 			node.serialize< Contents >( &bytes );
-			auto nodePtr = ( Node* ) OctreeNode< ShallowMortonCode >::deserialize< Contents >( bytes );
+			auto nodePtr = ( Node* ) OctreeNode::deserialize< Contents >( bytes );
 			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
@@ -95,7 +95,7 @@ namespace model
 		TEST_F( SerializerTest, InnerIndexNode )
 		{
 			using Contents = vector< uint >;
-			using Node = InnerNode< ShallowMortonCode, Contents >;
+			using Node = InnerNode< Contents >;
 			
 			SPI_BitMapMemoryManager::initInstance( 1000000 );
 			
@@ -107,7 +107,7 @@ namespace model
 			byte* bytes;
 			
 			node.serialize< Contents >( &bytes );
-			auto nodePtr = ( Node* ) OctreeNode< ShallowMortonCode >::deserialize< Contents >( bytes );
+			auto nodePtr = ( Node* ) OctreeNode::deserialize< Contents >( bytes );
 			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
@@ -126,14 +126,14 @@ namespace model
 			PointPtr pointArray[3] = { PointPtr( new Point( p0 ) ), PointPtr( new Point( p1 ) ), PointPtr( new Point( p2 ) ) };
 			PointVector points( pointArray, pointArray + 3 );
 			
-			auto node = new ShallowLeafNode< PointVector >();
+			auto node = new LeafNode< PointVector >();
 			node->setContents( points );
 			
 			byte* bytes;
-			auto genericNode = ( ShallowOctreeNode* ) node;
+			auto genericNode = ( OctreeNode* ) node;
 			genericNode->serialize< PointVector >( &bytes );
 			
-			ShallowOctreeNode* deserializedNode = ShallowOctreeNode::deserialize< PointVector >( bytes );
+			OctreeNode* deserializedNode = OctreeNode::deserialize< PointVector >( bytes );
 			PointVector deserializedPoints = deserializedNode->getContents< PointVector >();
 			
 			float epsilon = 1.e-15;
@@ -162,14 +162,14 @@ namespace model
 			PointPtr pointArray[3] = { p0, p1, p2 };
 			PointVector points( pointArray, pointArray + 3 );
 			
-			auto node = new ShallowInnerNode< PointVector >();
+			auto node = new InnerNode< PointVector >();
 			node->setContents( points );
 			
 			byte* bytes;
-			auto genericNode = ( ShallowOctreeNode* ) node;
+			auto genericNode = ( OctreeNode* ) node;
 			genericNode->serialize< PointVector >( &bytes );
 			
-			ShallowOctreeNode* deserializedNode = ShallowOctreeNode::deserialize< PointVector >( bytes );
+			OctreeNode* deserializedNode = OctreeNode::deserialize< PointVector >( bytes );
 			PointVector deserializedPoints = deserializedNode->getContents< PointVector >();
 			
 			float epsilon = 1.e-15;

@@ -16,9 +16,7 @@ namespace model
 		using PointVector = vector< PointPtr >;
 		using IndexVector = vector< unsigned int >;
 		using IndexVectorPtr = shared_ptr< IndexVector >;
-		using OctreeNode = model::OctreeNode< MortonCode >;
-		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using LeafNode = model::LeafNode< MortonCode, IndexVector >;
+		using LeafNode = model::LeafNode< IndexVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using RandomSampleOctree = model::RandomSampleOctree< MortonCode, Point >;
@@ -154,12 +152,12 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point >
-	inline OctreeNodePtr< MortonCode > IndexedOctree< MortonCode, Point >
+	inline OctreeNodePtr IndexedOctree< MortonCode, Point >
 		::buildInnerNode( const IndexVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		InnerNodePtr< MortonCode, IndexVector > node( new InnerNode< MortonCode, IndexVector >() );
+		InnerNodePtr< IndexVector > node( new InnerNode< IndexVector >() );
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		IndexVector selectedPoints( numSamplePoints );
 		
@@ -177,8 +175,8 @@ namespace model
 	
 	template< typename MortonCode, typename Point >
 	inline void IndexedOctree< MortonCode, Point >::setupInnerNodeRendering( OctreeNodePtr innerNode,
-																							   MortonCodePtr code,
-																							RenderingState& renderingState )
+																			 MortonCodePtr code,
+																		  RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
 		

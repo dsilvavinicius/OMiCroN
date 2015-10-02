@@ -11,12 +11,9 @@ using namespace glm;
 
 namespace model
 {
-	template< typename MortonCode >
-	class OctreeNode;
-	
-	// TODO: MortonCode seems to be unnecessary here.
-	template< typename MortonCode, typename Contents >
-	class InnerNode : public OctreeNode< MortonCode >
+	template< typename Contents >
+	class InnerNode
+	: public OctreeNode
 	{
 	public:
 		void* operator new( size_t size );
@@ -35,62 +32,62 @@ namespace model
 		Contents m_contents;
 	};
 	
-	template< typename MortonCode, typename Contents >
-	void* InnerNode< MortonCode, Contents >::operator new( size_t size )
+	template< typename Contents >
+	void* InnerNode< Contents >::operator new( size_t size )
 	{
 		return SingletonMemoryManager::instance().allocInner();
 	}
 	
-	template< typename MortonCode, typename Contents >
-	void* InnerNode< MortonCode, Contents >::operator new[]( size_t size )
+	template< typename Contents >
+	void* InnerNode< Contents >::operator new[]( size_t size )
 	{
 		return SingletonMemoryManager::instance().allocInnerArray( size );
 	}
 	
-	template< typename MortonCode, typename Contents >
-	void InnerNode< MortonCode, Contents >::operator delete( void* p )
+	template< typename Contents >
+	void InnerNode< Contents >::operator delete( void* p )
 	{
 		SingletonMemoryManager::instance().deallocInner( p );
 	}
 	
-	template< typename MortonCode, typename Contents >
-	void InnerNode< MortonCode, Contents >::operator delete[]( void* p )
+	template< typename Contents >
+	void InnerNode< Contents >::operator delete[]( void* p )
 	{
 		SingletonMemoryManager::instance().deallocInnerArray( p );
 	}
 	
-	template < typename MortonCode, typename Contents>
-	inline InnerNode< MortonCode, Contents >::~InnerNode()
+	template< typename Contents>
+	inline InnerNode< Contents >::~InnerNode()
 	{
 		NodeReleaser::releaseInner( *this );
 	}
 	
-	template < typename MortonCode, typename Contents>
-	inline bool InnerNode< MortonCode, Contents >::isLeaf() const
+	template< typename Contents>
+	inline bool InnerNode< Contents >::isLeaf() const
 	{
 		return false;
 	}
 	
-	template < typename MortonCode, typename Contents>
-	inline void InnerNode< MortonCode, Contents >::setContents( const Contents& contents )
+	template< typename Contents>
+	inline void InnerNode< Contents >::setContents( const Contents& contents )
 	{
 		m_contents = contents;
 	}
 	
-	template < typename MortonCode, typename Contents>
-	inline Contents& InnerNode< MortonCode, Contents >::getContents()
+	template< typename Contents>
+	inline Contents& InnerNode< Contents >::getContents()
 	{
 		return m_contents;
 	}
 	
-	template < typename MortonCode, typename Contents>
-	inline const Contents& InnerNode< MortonCode, Contents >::getContents() const
+	template< typename Contents>
+	inline const Contents& InnerNode< Contents >::getContents() const
 	{
 		return m_contents;
 	}
 	
-	template< typename MortonCode, typename Contents >
-	void InnerNode< MortonCode, Contents >::output( ostream& out )
+	template< typename Contents >
+	void InnerNode< Contents >::output( ostream& out )
 	{
 		out << "Inner Node: " << endl << getContents();
 	}
@@ -99,20 +96,8 @@ namespace model
 	// Type sugar
 	//===========
 	
-	template< typename MortonCode, typename Contents >
-	using InnerNodePtr = shared_ptr< InnerNode< MortonCode, Contents > >;
-	
 	template< typename Contents >
-	using ShallowInnerNode = InnerNode< ShallowMortonCode, Contents >;
-	
-	template< typename Contents >
-	using ShallowInnerNodePtr = shared_ptr< ShallowInnerNode< Contents > >;
-	
-	template< typename Contents >
-	using MediumInnerNode = InnerNode< MediumMortonCode, Contents >;
-	
-	template< typename Contents >
-	using MediumInnerNodePtr = shared_ptr< MediumInnerNode< Contents > >;
+	using InnerNodePtr = shared_ptr< InnerNode< Contents > >;
 }
 	
 #endif

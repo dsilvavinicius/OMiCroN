@@ -98,8 +98,7 @@ namespace model
 			ShallowMortonCodePtr rootCode( new ShallowMortonCode() );
 			rootCode->build( 0x1 );
 			
-			InnerNodePtr< ShallowMortonCode, PointVector > root = dynamic_pointer_cast<
-				InnerNode< ShallowMortonCode, PointVector > >( ( *hierarchy )[ rootCode ] );
+			InnerNodePtr< PointVector > root = dynamic_pointer_cast< InnerNode< PointVector > >( ( *hierarchy )[ rootCode ] );
 			
 			PointVector rootPoints = root->getContents();
 			ASSERT_TRUE( rootPoints.size() == pointsPerOctant );

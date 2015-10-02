@@ -66,7 +66,7 @@ namespace model
 		vector< Vec3 > verts;
 		vector< Vec3 > colors;
 		
-		for( pair< shared_ptr< MortonCode >, OctreeNodePtr< MortonCode > > entry
+		for( pair< shared_ptr< MortonCode >, OctreeNodePtr > entry
 			: *octree.getHierarchy() )
 		{
 			shared_ptr< MortonCode > code = entry.first;

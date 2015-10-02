@@ -24,8 +24,8 @@ class PointRendererWidget
 	using Point = model::Point;
 	//using Point = model::ExtendedPoint;
 	using PointVector = vector< shared_ptr< Point > >;
-	using LeafNode = model::LeafNode< MortonCode, PointVector >;
-	using InnerNode = model::InnerNode< MortonCode, PointVector >;
+	using LeafNode = model::LeafNode< PointVector >;
+	using InnerNode = model::InnerNode< PointVector >;
 	using PointReader = util::PlyPointReader< Point >;
 	//using Octree = model::ShallowIndexedOctree< Point >;
 	//using Octree = model::ShallowRandomSampleOctree< Point >;

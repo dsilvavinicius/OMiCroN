@@ -21,9 +21,9 @@ namespace model
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = ShallowInnerNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = ShallowLeafNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using OctreeMap = model::OctreeMap< Morton >;
 			
@@ -77,9 +77,9 @@ namespace model
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = MediumInnerNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = MediumLeafNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using OctreeMap = model::OctreeMap< Morton >;
 			
@@ -133,9 +133,9 @@ namespace model
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = MediumInnerNode< ExtendedPointPtr >;
+			using Inner = InnerNode< ExtendedPointPtr >;
 			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = MediumLeafNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using OctreeMap = model::OctreeMap< Morton >;
 			
@@ -187,8 +187,8 @@ namespace model
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = ShallowInnerNode< PointVector >;
-			using Leaf = ShallowLeafNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			
 			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
 			uint arrayTotal = arraySizes[ 0 ] + arraySizes[ 1 ] + arraySizes[ 2 ] + arraySizes[ 3 ] + arraySizes[ 4 ];
@@ -312,8 +312,8 @@ namespace model
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = MediumInnerNode< PointVector >;
-			using Leaf = MediumLeafNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			
 			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
 			uint arrayTotal = arraySizes[ 0 ] + arraySizes[ 1 ] + arraySizes[ 2 ] + arraySizes[ 3 ] + arraySizes[ 4 ];
@@ -439,8 +439,8 @@ namespace model
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
-			using Inner = ShallowInnerNode< PointVector >;
-			using Leaf = ShallowLeafNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			//using OctreeMap = map< 	MortonPtr, ShallowOctreeNodePtr, ShallowMortonComparator,
 			//						BitMapAllocator< pair< MortonPtr, ShallowOctreeNodePtr > > >;
 			

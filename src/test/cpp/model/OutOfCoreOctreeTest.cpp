@@ -17,7 +17,7 @@ namespace model
 		void testCreation( OutOfCoreOctree& octree )
 		{
 			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
-			SQLiteManager< Point, ShallowMortonCode, ShallowOctreeNode >& sqLite = octree.getSQLiteManager();
+			SQLiteManager< Point, ShallowMortonCode, OctreeNode >& sqLite = octree.getSQLiteManager();
 			
 			//cout << "DB after octree creation: " << endl << sqLite.output< PointVector >() << endl;
 			
@@ -33,7 +33,7 @@ namespace model
 		
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager0 )
 		{
-			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+			Ken12MemoryManager< ShallowMortonCode, Point, InnerNode< PointVector >, LeafNode< PointVector > >
 				::initInstance( 40, 40, 40, 40 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.85111f, 0.8999f, 1, 1, 1 ) );
@@ -45,7 +45,7 @@ namespace model
 		
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager2 )
 		{
-			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+			Ken12MemoryManager< ShallowMortonCode, Point, InnerNode< PointVector >, LeafNode< PointVector > >
 				::initInstance( 40, 40, 40, 40 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
@@ -57,7 +57,7 @@ namespace model
 		
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager3 )
 		{
-			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+			Ken12MemoryManager< ShallowMortonCode, Point, InnerNode< PointVector >, LeafNode< PointVector > >
 				::initInstance( 100, 100, 100, 100 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
@@ -69,7 +69,7 @@ namespace model
 		
 		TEST_F( OutOfCoreOctreeTest, CreationKen12Manager4 )
 		{
-			Ken12MemoryManager< ShallowMortonCode, Point, ShallowInnerNode< PointVector >, ShallowLeafNode< PointVector > >
+			Ken12MemoryManager< ShallowMortonCode, Point, InnerNode< PointVector >, LeafNode< PointVector > >
 				::initInstance( 100, 100, 100, 100 );
 			
 			ShallowOutOfCoreOctree octree( 1, 10, "Octree.db", ShallowOutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 5, 5, 5 ) );

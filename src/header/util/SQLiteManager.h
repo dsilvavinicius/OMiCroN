@@ -17,6 +17,7 @@ using namespace std;
 
 namespace util
 {
+	// TODO: It seems that OctreeNode template parameter is not necessary anymore.
 	/** Manages all SQLite operations. Provides a sync and async API. The async API can be used to make node requests
 	 * and to acquire them later on. */
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -28,7 +29,6 @@ namespace util
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using OctreeNodePtr = model::OctreeNodePtr< MortonCode >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonInterval = model::MortonInterval< MortonCode >;
 		using unordered_set = std::unordered_set< MortonInterval, hash< MortonInterval >,
@@ -329,7 +329,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	OctreeNodePtr< MortonCode > SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
+	OctreeNodePtr SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeQuery, 1, morton.getBits() ), SQLITE_OK );
 		bool isNodeFound = safeStep( m_nodeQuery );
@@ -347,7 +347,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	template< typename NodeContents >
-	vector< OctreeNodePtr< MortonCode > > SQLiteManager< Point, MortonCode, OctreeNode >
+	vector< OctreeNodePtr > SQLiteManager< Point, MortonCode, OctreeNode >
 	::getNodes( const MortonCode& a, const MortonCode& b )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 1, a.getBits() ), SQLITE_OK );

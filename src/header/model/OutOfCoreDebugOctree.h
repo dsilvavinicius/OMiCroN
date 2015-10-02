@@ -13,7 +13,6 @@ namespace model
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr >;
-		using OctreeNode = model::OctreeNode< MortonCode >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using ParentOctree = OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >;
 		

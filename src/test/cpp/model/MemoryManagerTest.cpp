@@ -2,6 +2,7 @@
 #include "MemoryManager.h"
 #include "OctreeMapTypes.h"
 #include "MortonCode.h"
+#include "InnerNode.h"
 #include "LeafNode.h"
 #include <Ken12MemoryManager.h>
 
@@ -21,9 +22,9 @@ namespace model
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = ShallowInnerNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = ShallowLeafNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using OctreeMap = model::OctreeMap< Morton >;
 			
@@ -73,9 +74,9 @@ namespace model
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = MediumInnerNode< PointVector >;
+			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = MediumLeafNode< PointVector >;
+			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using OctreeMap = model::OctreeMap< Morton >;
 			

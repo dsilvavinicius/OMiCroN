@@ -29,23 +29,11 @@ namespace model
 	using ShallowMortonCode = MortonCode< unsigned int >;
 	using MediumMortonCode = MortonCode< unsigned long >;
 	
-	template< typename M, typename C >
+	template< typename C >
 	class InnerNode;
 	
 	template< typename C >
-	using ShallowInnerNode = InnerNode< ShallowMortonCode, C >;
-	
-	template< typename C >
-	using MediumInnerNode = InnerNode< MediumMortonCode, C >;
-	
-	template< typename M, typename C >
 	class LeafNode;
-	
-	template< typename C >
-	using ShallowLeafNode = LeafNode< ShallowMortonCode, C >;
-	
-	template< typename C >
-	using MediumLeafNode = LeafNode< MediumMortonCode, C >;
 	
 	// shared_ptr< Point > internal allocated type.
 	template< typename Point >
@@ -225,49 +213,29 @@ namespace model
 	// InnerNode specializations
 	// =========================
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< IndexVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< IndexVector >,Inner)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< PointPtr >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< PointPtr >,Inner)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< ExtendedPointPtr >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ExtendedPointPtr >,Inner)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< PointVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< PointVector >,Inner)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowInnerNode< ExtendedPointVector >,Inner)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< IndexVector >,Inner)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< PointPtr >,Inner)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< ExtendedPointPtr >,Inner)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< PointVector >,Inner)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumInnerNode< ExtendedPointVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ExtendedPointVector >,Inner)
 	
 	// ========================
 	// LeafNode specializations
 	// ========================
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< IndexVector >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< IndexVector >,Leaf)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< PointPtr >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< PointPtr >,Leaf)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< ExtendedPointPtr >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ExtendedPointPtr >,Leaf)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< PointVector >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< PointVector >,Leaf)
 	
-	SPECIALIZE_ALLOC_DEALLOC(ShallowLeafNode< ExtendedPointVector >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< IndexVector >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< PointPtr >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< ExtendedPointPtr >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< PointVector >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(MediumLeafNode< ExtendedPointVector >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ExtendedPointVector >,Leaf)
 	
 	/** Provides suport for a singleton IMemoryManager. The derived class has the responsibility of initializing the
 	 * singleton instance. */
