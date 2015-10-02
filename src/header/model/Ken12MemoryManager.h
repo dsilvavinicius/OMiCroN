@@ -15,6 +15,8 @@ namespace model
 	: public MemoryManager< Morton, Point, Inner, Leaf >
 	{
 		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf >;
+		using PointPtr = shared_ptr< Point >;
+		using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
 	public:
 		/** Initializes the singleton instance with the number of memory blocks for each type specified by the
 		 * parameters. If it is already initialized, early allocated memory is deleted and new allocations are done
@@ -52,6 +54,12 @@ namespace model
 		
 		auto pointPool = new Ken12MemoryPool< Point >(); pointPool->createPool( nPoints );
 		MemoryManager::m_pointPool = pointPool;
+		
+		auto pointPtrPool = new Ken12MemoryPool< PointPtr >(); pointPtrPool->createPool( 0 );
+		MemoryManager::m_pointPtrPool = pointPtrPool;
+		
+		auto ptrInternalsPool = new Ken12MemoryPool< PtrInternals >(); ptrInternalsPool->createPool( 0 );
+		MemoryManager::m_ptrInternalsPool = ptrInternalsPool;
 		
 		auto innerPool = new Ken12MemoryPool< Inner >(); innerPool->createPool( nInners );
 		MemoryManager::m_innerPool = innerPool;

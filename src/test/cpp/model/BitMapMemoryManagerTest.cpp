@@ -434,27 +434,33 @@ namespace model
 		TEST_F( BitMapMemoryManagerTest, AllocatorShallowPointVector )
 		{
 			using Morton = ShallowMortonCode;
+			using MortonPtr = shared_ptr< Morton >;
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
 			using Inner = ShallowInnerNode< PointVector >;
 			using Leaf = ShallowLeafNode< PointVector >;
+			//using OctreeMap = map< 	MortonPtr, ShallowOctreeNodePtr, ShallowMortonComparator,
+			//						BitMapAllocator< pair< MortonPtr, ShallowOctreeNodePtr > > >;
 			
 			int nPoints = 10000;
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( nPoints * sizeof( Point ) );
+			size_t expectedMemUsage = 	2 * nPoints * sizeof( PointPtr ) + nPoints * sizeof( PtrInternals );
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
 			for( int i = 0; i < nPoints; ++i )
 			{
 				PointPtr point = makeManaged< Point >();
-				points.push_back( point );
+				points[ i ] = point;
 			}
+			
+			//cout << "Manager after allocs: " << SingletonMemoryManager::instance() << endl;
 			
 			Inner inner;
 			inner.setContents( points );
 			
-			ASSERT_EQ( 	SingletonMemoryManager::instance().usedMemory(), nPoints * sizeof( Point )
-						+ nPoints * sizeof( PointPtr ) );
+			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 		
 		/*TEST_F( BitMapMemoryManagerTest, AllocatorsShallowPointPtr )

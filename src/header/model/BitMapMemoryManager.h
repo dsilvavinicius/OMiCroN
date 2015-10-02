@@ -279,9 +279,6 @@ namespace model
 		typename std::set< BitMapEntry* >::iterator freeMapI = FreeMapEntries.begin();
 		if( freeMapI != FreeMapEntries.end() )
 		{
-			//cout << "Free entries found: " << FreeMapEntries.size() << endl << endl
-			//	 << "Blocks available: " << ( *freeMapI )->BlocksAvailable << endl << endl;
-			
 			BitMapEntry* mapEntry = *freeMapI;
 			T* block = firstFreeBlock( mapEntry );
 			
@@ -291,6 +288,7 @@ namespace model
 				//cout << "Block is not free anymore" << endl << endl;
 				FreeMapEntries.erase( freeMapI );
 			}
+			
 			return block;
 		}
 		else
@@ -313,7 +311,7 @@ namespace model
 		{
 			throw logic_error( "Array allocation: size greater than maximum allowed." );
 		}
-
+		
 		size_t neededBlocks = size / sizeof( T );
 		
 		// Checks if there is free array pools.
@@ -406,7 +404,6 @@ namespace model
 	{
 		lock_guard< mutex > guard( poolLock );
 		
-		//cout << "Deallocate" << endl << endl;
 		SetBlockBit( object, true );
 	}
 	
@@ -438,10 +435,11 @@ namespace model
 	template< typename T >
 	size_t BitMapMemoryPool< T >::usedBlocks() const
 	{
-		size_t nUsedBlocks = ( BitMapEntryList.size() - FreeMapEntries.size() ) * BIT_MAP_SIZE;
-		for( BitMapEntry* entry : FreeMapEntries )
+		size_t nUsedBlocks = 0;
+		
+		for( BitMapEntry bitmap : BitMapEntryList )
 		{
-			nUsedBlocks += BIT_MAP_SIZE - entry->BlocksAvailable;
+			nUsedBlocks += BIT_MAP_SIZE - bitmap.BlocksAvailable;
 		}
 		
 		return nUsedBlocks;
