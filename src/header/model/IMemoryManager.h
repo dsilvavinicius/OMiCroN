@@ -5,6 +5,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <map>
 #include "BasicTypes.h"
 
 using namespace std;
@@ -16,121 +17,92 @@ namespace model
 	
 	class Point;
 	using PointPtr = shared_ptr< Point >;
-	using PointVector = vector< PointPtr >;
+	using ManagedPointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 	
 	class ExtendedPoint;
 	using ExtendedPointPtr = shared_ptr< ExtendedPoint >;
-	using ExtendedPointVector = vector< ExtendedPointPtr >;
+	using ManagedExtendedPointVector = vector< ExtendedPointPtr, BitMapAllocator< ExtendedPointPtr > >;
 	
-	using IndexVector = vector< uint >;
+	using ManagedIndexVector = vector< uint, BitMapAllocator< uint > >;
 	
 	template< typename T >
 	class MortonCode;
 	using ShallowMortonCode = MortonCode< unsigned int >;
+	using ShallowMortonCodePtr = shared_ptr< ShallowMortonCode >;
 	using MediumMortonCode = MortonCode< unsigned long >;
+	using MediumMortonCodePtr = shared_ptr< MediumMortonCode >;
 	
 	template< typename C >
 	class InnerNode;
+	template< typename C >
+	using InnerNodePtr = shared_ptr< InnerNode< C > >;
 	
 	template< typename C >
 	class LeafNode;
+	template< typename C >
+	using LeafNodePtr = shared_ptr< LeafNode< C > >;
 	
-	// shared_ptr< Point > internal allocated type.
-	template< typename Point >
-	using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
+	class OctreeNode;
+	using OctreeNodePtr = shared_ptr< OctreeNode >;
+	
+	// shared_ptr< T > internal allocated type.
+	template< typename T >
+	using PtrInternals = std::_Sp_counted_ptr_inplace< T, BitMapAllocator< T >, (__gnu_cxx::_Lock_policy)2 >;
+	
+	// map< MortonPtr, OctreeNodePtr > internal allocated type.
+	template< typename Morton >
+	using MapInternals = std::_Rb_tree_node< std::pair< shared_ptr< Morton > const, OctreeNodePtr > >;
+	
+	// Macro that declares everything in IMemoryManager related with a given memory pool type.
+	#define DECLARE_POOL_INTERFACE(TYPE) \
+	virtual void* alloc##TYPE() = 0; \
+	\
+	virtual void* alloc##TYPE##Array( const size_t& size ) = 0;\
+	\
+	virtual void dealloc##TYPE( void* p ) = 0;\
+	\
+	virtual void dealloc##TYPE##Array( void* p ) = 0;\
+	\
+	size_t num##TYPE##Blocks() const;
 	
 	/** Interface for MemoryManagers. It defines an API for octree morton code, point and node allocation, deallocation
 	 * and usage statistics. */
 	class IMemoryManager
 	{
 	public:
-		/** Generic allocation method that chooses what allocation method to call based on type. */
+		/** Generic allocation that chooses which allocation method to call based on type. */
 		template< typename T >
 		T* alloc();
 		
-		/** Generic array allocation method that chooses what allocation method to call based on type. */
+		/** Generic array allocation that chooses which allocation method to call based on type. */
 		template< typename T >
 		T* allocArray( const size_t& size );
 		
-		/** Generic deallocation method that chooses what allocation method to call based on type. */
+		/** Generic deallocation that chooses what allocation method to call based on type. */
 		template< typename T >
 		void dealloc( T* p );
 		
-		/** Generic array deallocation method that chooses what allocation method to call based on type. */
+		/** Generic array deallocation that chooses which allocation method to call based on type. */
 		template< typename T >
 		void deallocArray( T* p );
 		
-		/** Allocates memory for morton code type. */
-		virtual void* allocMorton() = 0;
+		DECLARE_POOL_INTERFACE(Morton)
+		DECLARE_POOL_INTERFACE(MortonPtr)
+		DECLARE_POOL_INTERFACE(MortonPtrInternals)
 		
-		/** Allocates memory for point type. */
-		virtual void* allocPoint() = 0;
+		DECLARE_POOL_INTERFACE(Point)
+		DECLARE_POOL_INTERFACE(PointPtr)
+		DECLARE_POOL_INTERFACE(PointPtrInternals)
 		
-		/** Allocates memory for shared_ptr< point type > */
-		virtual void* allocPointPtr() = 0;
+		DECLARE_POOL_INTERFACE(Inner)
+		DECLARE_POOL_INTERFACE(InnerPtr)
+		DECLARE_POOL_INTERFACE(InnerPtrInternals)
 		
-		/** Allocates memory for shared_ptr< point type > internal data structure. */
-		virtual void* allocPtrInternals() = 0;
+		DECLARE_POOL_INTERFACE(Leaf)
+		DECLARE_POOL_INTERFACE(LeafPtr)
+		DECLARE_POOL_INTERFACE(LeafPtrInternals)
 		
-		/** Allocates memory for inner node type. */
-		virtual void* allocInner() = 0;
-		
-		/** Allocates memory for leaf node type. */
-		virtual void* allocLeaf() = 0;
-		
-		/** Allocates memory for morton code type array. */
-		virtual void* allocMortonArray( const size_t& size ) = 0;
-		
-		/** Allocates memory for point type array. */
-		virtual void* allocPointArray( const size_t& size ) = 0;
-		
-		/** Allocates memory for shared_ptr< point type > array. */
-		virtual void* allocPointPtrArray( const size_t& size ) = 0;
-		
-		/** Allocates memory for shared_ptr< point type > interl data structure array. */
-		virtual void* allocPtrInternalsArray( const size_t& size ) = 0;
-		
-		/** Allocates memory for inner node type array. */
-		virtual void* allocInnerArray( const size_t& size ) = 0;
-		
-		/** Allocates memory for leaf node type array. */
-		virtual void* allocLeafArray( const size_t& size ) = 0;
-		
-		/** Deallocates memory for morton code type. */
-		virtual void deallocMorton( void* p ) = 0;
-		
-		/** Deallocates memory for point type. */
-		virtual void deallocPoint( void* p ) = 0;
-		
-		/** Deallocates memory for shared_ptr< point type >. */
-		virtual void deallocPointPtr( void* p ) = 0;
-		
-		/** Deallocates memory for shared_ptr< point type > internal data structure. */
-		virtual void deallocPtrInternals( void* p ) = 0;
-		
-		/** Deallocates memory for inner node type. */
-		virtual void deallocInner( void* p ) = 0;
-		
-		/** Deallocates memory for leaf node type. */
-		virtual void deallocLeaf( void* p ) = 0;
-		
-		/** Deallocates an array of morton code type. */
-		virtual void deallocMortonArray( void* p ) = 0;
-		
-		/** Deallocates an array of point type. */
-		virtual void deallocPointArray( void* p ) = 0;
-		
-		/** Deallocates an array of shared_ptr< point type >. */
-		virtual void deallocPointPtrArray( void* p ) = 0;
-		
-		/** Deallocates an array of shared_ptr< point type > internal data structures. */
-		virtual void deallocPtrInternalsArray( void* p ) = 0;
-		
-		/** Deallocates an array of inner node type. */
-		virtual void deallocInnerArray( void* p ) = 0;
-		
-		/** Deallocates an array of leaf node type. */
-		virtual void deallocLeafArray( void* p ) = 0;
+		DECLARE_POOL_INTERFACE(MapInternals)
 		
 		/** Reports all memory currently being used. */
 		virtual size_t usedMemory() const = 0;
@@ -186,6 +158,22 @@ namespace model
 	SPECIALIZE_ALLOC_DEALLOC(MediumMortonCode,Morton)
 	
 	// =========================
+	// MortonCodePtr specializations
+	// =========================
+	
+	SPECIALIZE_ALLOC_DEALLOC(ShallowMortonCodePtr,MortonPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MediumMortonCodePtr,MortonPtr)
+	
+	// =======================================
+	// MortonCodePtr internals specializations
+	// =======================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< ShallowMortonCode >,MortonPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< MediumMortonCode >,MortonPtrInternals)
+	
+	// =========================
 	// Point specializations
 	// =========================
 	
@@ -205,37 +193,101 @@ namespace model
 	// PointPtr internals specializations
 	// ==================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< Point >,PtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< Point >,PointPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< ExtendedPoint >,PtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< ExtendedPoint >,PointPtrInternals)
+	
+	// ==================================
+	// map internals specializations
+	// ==================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(MapInternals< ShallowMortonCode >,MapInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MapInternals< MediumMortonCode >,MapInternals)
 	
 	// =========================
 	// InnerNode specializations
 	// =========================
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< IndexVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ManagedIndexVector >,Inner)
 	
 	SPECIALIZE_ALLOC_DEALLOC(InnerNode< PointPtr >,Inner)
 	
 	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ExtendedPointPtr >,Inner)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< PointVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ManagedPointVector >,Inner)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ExtendedPointVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ManagedExtendedPointVector >,Inner)
+	
+	// ============================
+	// InnerNodePtr specializations
+	// ============================
+	
+	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< ManagedIndexVector >,InnerPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< PointPtr >,InnerPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< ExtendedPointPtr >,InnerPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< ManagedPointVector >,InnerPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< ManagedExtendedPointVector >,InnerPtr)
+	
+	// ======================================
+	// InnerNodePtr internals specializations
+	// ======================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ManagedIndexVector > >,InnerPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< PointPtr > >,InnerPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ExtendedPointPtr > >,InnerPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ManagedPointVector > >,InnerPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ManagedExtendedPointVector > >,InnerPtrInternals)
 	
 	// ========================
 	// LeafNode specializations
 	// ========================
 	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< IndexVector >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ManagedIndexVector >,Leaf)
 	
 	SPECIALIZE_ALLOC_DEALLOC(LeafNode< PointPtr >,Leaf)
 	
 	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ExtendedPointPtr >,Leaf)
 	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< PointVector >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ManagedPointVector >,Leaf)
 	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ExtendedPointVector >,Leaf)
+	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ManagedExtendedPointVector >,Leaf)
+	
+	// ============================
+	// LeafNodePtr specializations
+	// ============================
+	
+	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< ManagedIndexVector >,LeafPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< PointPtr >,LeafPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< ExtendedPointPtr >,LeafPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< ManagedPointVector >,LeafPtr)
+	
+	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< ManagedExtendedPointVector >,LeafPtr)
+	
+	// ======================================
+	// LeafNodePtr internals specializations
+	// ======================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ManagedIndexVector > >,LeafPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< PointPtr > >,LeafPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ExtendedPointPtr > >,LeafPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ManagedPointVector > >,LeafPtrInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ManagedExtendedPointVector > >,LeafPtrInternals)
 	
 	/** Provides suport for a singleton IMemoryManager. The derived class has the responsibility of initializing the
 	 * singleton instance. */

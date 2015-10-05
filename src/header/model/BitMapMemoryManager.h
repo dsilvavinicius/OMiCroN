@@ -134,8 +134,20 @@ namespace model
 	: public MemoryManager< Morton, Point, Inner, Leaf >
 	{
 		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf >;
+		
+		using MortonPtr = shared_ptr< Morton >;
+		using MortonPtrInternals = model::PtrInternals< Morton >;
+		
 		using PointPtr = shared_ptr< Point >;
-		using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
+		using PointPtrInternals = model::PtrInternals< Point >;
+		
+		using InnerPtr = shared_ptr< Inner >;
+		using InnerPtrInternals = model::PtrInternals< Inner >;
+		
+		using LeafPtr = shared_ptr< Leaf >;
+		using LeafPtrInternals = model::PtrInternals< Leaf >;
+		
+		using MapInternals = model::MapInternals< Morton >;
 	public:
 		static void initInstance( const size_t& maxAllowedMem );
 	
@@ -527,12 +539,24 @@ namespace model
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	BitMapMemoryManager< Morton, Point, Inner, Leaf >::BitMapMemoryManager( const size_t& maxAllowedMem )
 	{
-		MemoryManager::m_mortonPool = new BitMapMemoryPool< Morton >();
-		MemoryManager::m_pointPool = new BitMapMemoryPool< Point >();
-		MemoryManager::m_pointPtrPool = new BitMapMemoryPool< PointPtr >();
-		MemoryManager::m_ptrInternalsPool = new BitMapMemoryPool< PtrInternals >();
-		MemoryManager::m_innerPool = new BitMapMemoryPool< Inner >();
-		MemoryManager::m_leafPool = new BitMapMemoryPool< Leaf >();
+		MemoryManager::m_MortonPool = new BitMapMemoryPool< Morton >();
+		MemoryManager::m_MortonPtrPool = new BitMapMemoryPool< MortonPtr >();
+		MemoryManager::m_MortonPtrInternalsPool = new BitMapMemoryPool< MortonPtrInternals >();
+		
+		MemoryManager::m_PointPool = new BitMapMemoryPool< Point >();
+		MemoryManager::m_PointPtrPool = new BitMapMemoryPool< PointPtr >();
+		MemoryManager::m_PointPtrInternalsPool = new BitMapMemoryPool< PointPtrInternals >();
+		
+		MemoryManager::m_InnerPool = new BitMapMemoryPool< Inner >();
+		MemoryManager::m_InnerPtrPool = new BitMapMemoryPool< InnerPtr >();
+		MemoryManager::m_InnerPtrInternalsPool = new BitMapMemoryPool< InnerPtrInternals >();
+		
+		MemoryManager::m_LeafPool = new BitMapMemoryPool< Leaf >();
+		MemoryManager::m_LeafPtrPool = new BitMapMemoryPool< LeafPtr >();
+		MemoryManager::m_LeafPtrInternalsPool = new BitMapMemoryPool< LeafPtrInternals >();
+		
+		MemoryManager::m_MapInternalsPool = new BitMapMemoryPool< MapInternals >();
+		
 		MemoryManager::m_maxAllowedMem = maxAllowedMem;
 	}
 }

@@ -438,14 +438,16 @@ namespace model
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
-			using PtrInternals = std::_Sp_counted_ptr_inplace< Point, BitMapAllocator< Point >, (__gnu_cxx::_Lock_policy)2 >;
+			using PtrInternals = model::PtrInternals< Point >;
 			using Inner = InnerNode< PointVector >;
+			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;
-			//using OctreeMap = map< 	MortonPtr, ShallowOctreeNodePtr, ShallowMortonComparator,
-			//						BitMapAllocator< pair< MortonPtr, ShallowOctreeNodePtr > > >;
+			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, ShallowMortonComparator,
+									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
 			
 			int nPoints = 10000;
-			size_t expectedMemUsage = 	2 * nPoints * sizeof( PointPtr ) + nPoints * sizeof( PtrInternals );
+			size_t expectedMemUsage = 	sizeof( InnerPtr ) + sizeof( Morton ) + 2 * nPoints * sizeof( PointPtr )
+										+ nPoints * sizeof( PtrInternals );
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
@@ -457,8 +459,12 @@ namespace model
 			
 			//cout << "Manager after allocs: " << SingletonMemoryManager::instance() << endl;
 			
-			Inner inner;
-			inner.setContents( points );
+			InnerPtr inner = makeManaged< Inner >();
+			inner->setContents( points );
+			
+			MortonPtr morton = makeManaged< Morton >();
+			OctreeMap map;
+			map[ morton ] = inner;
 			
 			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}

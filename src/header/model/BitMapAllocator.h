@@ -2,6 +2,7 @@
 #define BITMAP_ALLOCATOR_H
 
 #include "IMemoryManager.h"
+#include <qabstractitemmodel.h>
 
 namespace model
 {
@@ -11,6 +12,9 @@ namespace model
 	public:
 		using value_type = T;
 		using pointer = T*;
+		using const_pointer = const pointer;
+		using reference = T&;
+		using const_reference = const reference;
 		using size_type = size_t;
 		
 		template< typename U >
@@ -24,6 +28,9 @@ namespace model
 		
 		pointer allocate( size_type n );
 		void deallocate( pointer p, size_type n );
+		
+		template< typename U >
+		void destroy( U* p );
 		
 		bool operator==( const BitMapAllocator& ){ return true; }
 		bool operator!=( const BitMapAllocator& ){ return false; }
@@ -41,6 +48,13 @@ namespace model
 	{
 		IMemoryManager& manager = SingletonMemoryManager::instance();
 		n == 1 ? manager.dealloc< T >( p ) : manager.deallocArray< T >( p );
+	}
+	
+	template< typename T >
+	template< typename U >
+	inline void BitMapAllocator< T >::destroy( U* p )
+	{
+		p->~U();
 	}
 }
 
