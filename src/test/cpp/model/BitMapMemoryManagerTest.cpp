@@ -435,19 +435,23 @@ namespace model
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
+			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
+			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
-			using PtrInternals = model::PtrInternals< Point, BitMapAllocator< Point > >;
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
+			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
 			using Leaf = LeafNode< PointVector >;
 			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, ShallowMortonComparator,
 									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
+			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
-			size_t expectedMemUsage = 	sizeof( InnerPtr ) + sizeof( Morton ) + 2 * nPoints * sizeof( PointPtr )
-										+ nPoints * sizeof( PtrInternals );
+			size_t expectedMemUsage = 	nPoints * ( 2 * sizeof( PointPtr ) + sizeof( PointPtrInternals ) )
+										+ sizeof( InnerPtrInternals ) + sizeof( MortonPtrInternals )
+										+ sizeof( MapInternals );
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
