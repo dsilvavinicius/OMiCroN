@@ -23,35 +23,36 @@ namespace model
 	
 	// Macro that defines everything in MemoryManager related with a given memory pool type.
 	#define DEFINE_POOL_MEMBERS(TYPE) \
-	template< typename Morton, typename Point, typename Inner, typename Leaf >\
-	inline void* MemoryManager< Morton, Point, Inner, Leaf >::alloc##TYPE()\
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
+	inline void* MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::alloc##TYPE()\
 	{\
 		return m_##TYPE##Pool->allocate();\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf >\
-	void* MemoryManager< Morton, Point, Inner, Leaf >::alloc##TYPE##Array( const size_t& size )\
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
+	void* MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::alloc##TYPE##Array( const size_t& size )\
 	{\
 		return m_##TYPE##Pool->allocateArray( size );\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf >\
-	inline void MemoryManager< Morton, Point, Inner, Leaf >::dealloc##TYPE( void* p )\
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
+	inline void MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::dealloc##TYPE( void* p )\
 	{\
 		m_##TYPE##Pool->deallocate( static_cast< TYPE* >( p ) );\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf >\
-	void MemoryManager< Morton, Point, Inner, Leaf >::dealloc##TYPE##Array( void* p )\
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
+	void MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::dealloc##TYPE##Array( void* p )\
 	{\
 		m_##TYPE##Pool->deallocateArray( static_cast< TYPE* >( p ) );\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf >\
-	size_t MemoryManager< Morton, Point, Inner, Leaf >::num##TYPE##Blocks() const\
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
+	size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::num##TYPE##Blocks() const\
 	{\
 		return m_##TYPE##Pool->getNumBlocks();\
 	}\
+	
 	
 	/** Skeletal base implementation of a SingletonMemoryManager. This implementation does not initialize members, what
 	 * is left for derived classes to do.
@@ -59,8 +60,9 @@ namespace model
 	 * @param Point is the point Type.
 	 * @param Inner is the inner node type.
 	 * @param Leaf is the leaf node type.
+	 * @param AllocGroup is a struct defining the allocators for Morton, Point, Inner and Leaf types.
 	 */
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
 	class MemoryManager
 	: public SingletonMemoryManager
 	{
@@ -69,10 +71,10 @@ namespace model
 		using InnerPtr = shared_ptr< Inner >;
 		using LeafPtr = shared_ptr< Leaf >;
 		
-		using PointPtrInternals = model::PtrInternals< Point >;
-		using MortonPtrInternals = model::PtrInternals< Morton >;
-		using InnerPtrInternals = model::PtrInternals< Inner >;
-		using LeafPtrInternals = model::PtrInternals< Leaf >;
+		using PointPtrInternals = model::PtrInternals< Point, typename AllocGroup::PointAlloc >;
+		using MortonPtrInternals = model::PtrInternals< Morton, typename AllocGroup::MortonAlloc >;
+		using InnerPtrInternals = model::PtrInternals< Inner, typename AllocGroup::InnerAlloc >;
+		using LeafPtrInternals = model::PtrInternals< Leaf, typename AllocGroup::LeafAlloc >;
 		
 		using MapInternals = model::MapInternals< Morton >;
 	public:
@@ -128,8 +130,8 @@ namespace model
 		size_t m_maxAllowedMem;
 	};
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	MemoryManager< Morton, Point, Inner, Leaf >::~MemoryManager()
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
+	MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::~MemoryManager()
 	{
 		delete m_MortonPool;
 		delete m_MortonPtrPool;
@@ -168,8 +170,8 @@ namespace model
 	
 	DEFINE_POOL_MEMBERS(MapInternals)
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	inline size_t MemoryManager< Morton, Point, Inner, Leaf >::usedMemory() const
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
+	inline size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::usedMemory() const
 	{
 		return 	m_MortonPool->memoryUsage() + m_MortonPtrPool->memoryUsage() + m_MortonPtrInternalsPool->memoryUsage() +
 				m_PointPool->memoryUsage() + m_PointPtrPool->memoryUsage() + m_PointPtrInternalsPool->memoryUsage() +
@@ -178,20 +180,20 @@ namespace model
 				m_MapInternalsPool->memoryUsage();
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	size_t MemoryManager< Morton, Point, Inner, Leaf >::maxAllowedMem() const
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
+	size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::maxAllowedMem() const
 	{
 		return m_maxAllowedMem;
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	inline bool MemoryManager< Morton, Point, Inner, Leaf >::hasEnoughMemory( const float& percentageThreshold ) const
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
+	inline bool MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::hasEnoughMemory( const float& percentageThreshold ) const
 	{
 		return ( m_maxAllowedMem - usedMemory() ) > float( m_maxAllowedMem * percentageThreshold );
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	string MemoryManager< Morton, Point, Inner, Leaf >::toString() const
+	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
+	string MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::toString() const
 	{
 		stringstream ss;
 		ss 	<< "Morton used blocks: " << m_MortonPool->usedBlocks() << " Used memory: " << m_MortonPool->memoryUsage() << endl

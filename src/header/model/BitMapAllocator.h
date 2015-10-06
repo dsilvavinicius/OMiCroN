@@ -36,6 +36,16 @@ namespace model
 		bool operator!=( const BitMapAllocator& ){ return false; }
 	};
 	
+	/** Defines allocator types for Morton, Point, Inner and Leaf types. */
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	struct BitMapAllocGroup
+	{
+		using MortonAlloc = BitMapAllocator< Morton >;
+		using PointAlloc = BitMapAllocator< Point >;
+		using InnerAlloc = BitMapAllocator< Inner >;
+		using LeafAlloc = BitMapAllocator< Leaf >;
+	};
+	
 	template< typename T >
 	inline T* BitMapAllocator< T >::allocate( size_type n )
 	{

@@ -46,8 +46,14 @@ namespace model
 	using OctreeNodePtr = shared_ptr< OctreeNode >;
 	
 	// shared_ptr< T > internal allocated type.
+	template< typename T, typename Alloc >
+	using PtrInternals = std::_Sp_counted_ptr_inplace< T, Alloc, (__gnu_cxx::_Lock_policy)2 >;
+	
 	template< typename T >
-	using PtrInternals = std::_Sp_counted_ptr_inplace< T, BitMapAllocator< T >, (__gnu_cxx::_Lock_policy)2 >;
+	using BitMapPtrInternals = PtrInternals< T, BitMapAllocator< T > >;
+	
+	template< typename T >
+	using DefaultPtrInternals = PtrInternals< T, std::allocator< T > >;
 	
 	// map< MortonPtr, OctreeNodePtr > internal allocated type.
 	template< typename Morton >
@@ -169,9 +175,9 @@ namespace model
 	// MortonCodePtr internals specializations
 	// =======================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< ShallowMortonCode >,MortonPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< ShallowMortonCode >,MortonPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< MediumMortonCode >,MortonPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< MediumMortonCode >,MortonPtrInternals)
 	
 	// =========================
 	// Point specializations
@@ -193,9 +199,9 @@ namespace model
 	// PointPtr internals specializations
 	// ==================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< Point >,PointPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< Point >,PointPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< ExtendedPoint >,PointPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< ExtendedPoint >,PointPtrInternals)
 	
 	// ==================================
 	// map internals specializations
@@ -237,15 +243,15 @@ namespace model
 	// InnerNodePtr internals specializations
 	// ======================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ManagedIndexVector > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< ManagedIndexVector > >,InnerPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< PointPtr > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< PointPtr > >,InnerPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ExtendedPointPtr > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< ExtendedPointPtr > >,InnerPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ManagedPointVector > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< ManagedPointVector > >,InnerPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< InnerNode< ManagedExtendedPointVector > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< ManagedExtendedPointVector > >,InnerPtrInternals)
 	
 	// ========================
 	// LeafNode specializations
@@ -279,15 +285,15 @@ namespace model
 	// LeafNodePtr internals specializations
 	// ======================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ManagedIndexVector > >,LeafPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< ManagedIndexVector > >,LeafPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< PointPtr > >,LeafPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< PointPtr > >,LeafPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ExtendedPointPtr > >,LeafPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< ExtendedPointPtr > >,LeafPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ManagedPointVector > >,LeafPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< ManagedPointVector > >,LeafPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(PtrInternals< LeafNode< ManagedExtendedPointVector > >,LeafPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< ManagedExtendedPointVector > >,LeafPtrInternals)
 	
 	/** Provides suport for a singleton IMemoryManager. The derived class has the responsibility of initializing the
 	 * singleton instance. */

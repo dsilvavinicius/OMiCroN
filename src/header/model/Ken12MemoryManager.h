@@ -6,27 +6,38 @@
 
 namespace model
 {
+	/** Defines allocator types for Morton, Point, Inner and Leaf types. */
+	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	struct DefaultAllocGroup
+	{
+		using MortonAlloc = allocator< Morton >;
+		using PointAlloc = allocator< Point >;
+		using InnerAlloc = allocator< Inner >;
+		using LeafAlloc = allocator< Leaf >;
+	};
+	
 	/** MemoryManager implementation using pools described in Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:
 	 * http://www.thinkmind.org/index.php?view=article&articleid=computation_tools_2012_1_10_80006. ARRAY ALLOCATIONS AND
 	 * DEALLOCATIONS ARE NOT SUPPORTED BY THIS IMPLEMENTATION.
 	 */
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	class Ken12MemoryManager
-	: public MemoryManager< Morton, Point, Inner, Leaf >
+	: public MemoryManager< Morton, Point, Inner, Leaf, DefaultAllocGroup< Morton, Point, Inner, Leaf > >
 	{
-		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf >;
+		using AllocGroup = DefaultAllocGroup< Morton, Point, Inner, Leaf >;
+		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >;
 		
 		using MortonPtr = shared_ptr< Morton >;
-		using MortonPtrInternals = model::PtrInternals< Morton >;
+		using MortonPtrInternals = model::PtrInternals< Morton, typename AllocGroup::MortonAlloc >;
 		
 		using PointPtr = shared_ptr< Point >;
-		using PointPtrInternals = model::PtrInternals< Point >;
+		using PointPtrInternals = model::PtrInternals< Point, typename AllocGroup::PointAlloc >;
 		
 		using InnerPtr = shared_ptr< Inner >;
-		using InnerPtrInternals = model::PtrInternals< Inner >;
+		using InnerPtrInternals = model::PtrInternals< Inner, typename AllocGroup::InnerAlloc >;
 		
 		using LeafPtr = shared_ptr< Leaf >;
-		using LeafPtrInternals = model::PtrInternals< Leaf >;
+		using LeafPtrInternals = model::PtrInternals< Leaf, typename AllocGroup::LeafAlloc >;
 		
 		using MapInternals = model::MapInternals< Morton >;
 	public:

@@ -438,7 +438,7 @@ namespace model
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
-			using PtrInternals = model::PtrInternals< Point >;
+			using PtrInternals = model::PtrInternals< Point, BitMapAllocator< Point > >;
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;

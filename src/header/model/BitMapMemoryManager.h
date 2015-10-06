@@ -131,21 +131,22 @@ namespace model
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	class BitMapMemoryManager
-	: public MemoryManager< Morton, Point, Inner, Leaf >
+	: public MemoryManager< Morton, Point, Inner, Leaf, BitMapAllocGroup< Morton, Point, Inner, Leaf > >
 	{
-		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf >;
+		using AllocGroup = model::BitMapAllocGroup< Morton, Point, Inner, Leaf >;
+		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >;
 		
 		using MortonPtr = shared_ptr< Morton >;
-		using MortonPtrInternals = model::PtrInternals< Morton >;
+		using MortonPtrInternals = model::PtrInternals< Morton, typename AllocGroup::MortonAlloc >;
 		
 		using PointPtr = shared_ptr< Point >;
-		using PointPtrInternals = model::PtrInternals< Point >;
+		using PointPtrInternals = model::PtrInternals< Point, typename AllocGroup::PointAlloc >;
 		
 		using InnerPtr = shared_ptr< Inner >;
-		using InnerPtrInternals = model::PtrInternals< Inner >;
+		using InnerPtrInternals = model::PtrInternals< Inner, typename AllocGroup::InnerAlloc >;
 		
 		using LeafPtr = shared_ptr< Leaf >;
-		using LeafPtrInternals = model::PtrInternals< Leaf >;
+		using LeafPtrInternals = model::PtrInternals< Leaf, typename AllocGroup::LeafAlloc >;
 		
 		using MapInternals = model::MapInternals< Morton >;
 	public:
