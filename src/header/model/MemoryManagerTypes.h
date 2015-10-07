@@ -23,8 +23,8 @@ namespace model
 															LeafNode< PointVector > >;
 
 	/** Shallow, Point, Index inner. */
-	using SPI_BitMapMemoryManager = BitMapMemoryManager<	ShallowMortonCode, Point, InnerNode< vector< uint > >,
-															LeafNode< vector< uint > > >;
+	using SPI_BitMapMemoryManager = BitMapMemoryManager<	ShallowMortonCode, Point, InnerNode< IndexVector >,
+															LeafNode< IndexVector > >;
 															
 	/** Shallow, ExtendedPoint, Vector inner. */
 	using SEV_BitMapMemoryManager = BitMapMemoryManager< 	ShallowMortonCode, ExtendedPoint,
@@ -37,9 +37,8 @@ namespace model
 															LeafNode< PointVector > >;
 	
 	/** Shallow, ExtendedPoint, Index inner. */
-	using SEI_BitMapMemoryManager = BitMapMemoryManager<	ShallowMortonCode, ExtendedPoint,
-															InnerNode< vector< uint > >,
-															LeafNode< vector< uint > > >;
+	using SEI_BitMapMemoryManager = BitMapMemoryManager<	ShallowMortonCode, ExtendedPoint, InnerNode< IndexVector >,
+															LeafNode< IndexVector > >;
 	
 	/** Medium, Point, Vector inner. */
 	using MPV_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, Point, InnerNode< PointVector >,
@@ -50,8 +49,8 @@ namespace model
 															LeafNode< PointVector > >;
 															
 	/** Medium, Point, Index inner. */
-	using MPI_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, Point, InnerNode< vector< uint > >,
-															LeafNode< vector< uint > > >;
+	using MPI_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, Point, InnerNode< IndexVector >,
+															LeafNode< IndexVector > >;
 
 	/** Medium, ExtendedPoint, Vector inner. */
 	using MEV_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, ExtendedPoint,
@@ -64,9 +63,8 @@ namespace model
 															LeafNode< PointVector > >;
 
 	/** Medium, ExtendedPoint, Index inner. */
-	using MEI_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, ExtendedPoint,
-															InnerNode< vector< uint > >,
-															LeafNode< vector< uint > > >;
+	using MEI_BitMapMemoryManager = BitMapMemoryManager<	MediumMortonCode, ExtendedPoint, InnerNode< IndexVector >,
+															LeafNode< IndexVector > >;
 
 	// ===================
 	// Ken12MemoryManager
@@ -81,8 +79,8 @@ namespace model
 														LeafNode< PointVector > >;
 
 	/** Shallow, Point, Index inner. */
-	using SPI_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, Point, InnerNode< vector< uint > >,
-														LeafNode< vector< uint > > >;
+	using SPI_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, Point, InnerNode< IndexVector >,
+														LeafNode< IndexVector > >;
 															
 	/** Shallow, ExtendedPoint, Vector inner. */
 	using SEV_Ken12MemoryManager = Ken12MemoryManager< 	ShallowMortonCode, ExtendedPoint,
@@ -96,8 +94,8 @@ namespace model
 	
 	/** Shallow, ExtendedPoint, Index inner. */
 	using SEI_Ken12MemoryManager = Ken12MemoryManager<	ShallowMortonCode, ExtendedPoint,
-														InnerNode< vector< uint > >,
-														LeafNode< vector< uint > > >;
+														InnerNode< IndexVector >,
+														LeafNode< IndexVector > >;
 	
 	/** Medium, Point, Vector inner. */
 	using MPV_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, Point, InnerNode< PointVector >,
@@ -108,8 +106,8 @@ namespace model
 														LeafNode< PointVector > >;
 															
 	/** Medium, Point, Index inner. */
-	using MPI_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, Point, InnerNode< vector< uint > >,
-														LeafNode< vector< uint > > >;
+	using MPI_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, Point, InnerNode< IndexVector >,
+														LeafNode< IndexVector > >;
 
 	/** Medium, ExtendedPoint, Vector inner. */
 	using MEV_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, ExtendedPoint,
@@ -123,8 +121,8 @@ namespace model
 
 	/** Medium, ExtendedPoint, Index inner. */
 	using MEI_Ken12MemoryManager = Ken12MemoryManager<	MediumMortonCode, ExtendedPoint,
-														InnerNode< vector< uint > >,
-														LeafNode< vector< uint > > >;
+														InnerNode< IndexVector >,
+														LeafNode< IndexVector > >;
 }
 
 #endif

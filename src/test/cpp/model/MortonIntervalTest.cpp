@@ -22,12 +22,9 @@ namespace model
 			
 			ShallowMortonCode a; a.build( 0x3 );
 			ShallowMortonCode b; a.build( 0x4 );
-			ShallowMortonInterval interval0( ShallowMortonCodePtr( new ShallowMortonCode( a ) ),
-											 ShallowMortonCodePtr( new ShallowMortonCode( b ) ) );
-			ShallowMortonInterval interval1( ShallowMortonCodePtr( new ShallowMortonCode( b ) ),
-											 ShallowMortonCodePtr( new ShallowMortonCode( a ) ) );
-			ShallowMortonInterval interval2( ShallowMortonCodePtr( new ShallowMortonCode( a ) ),
-											 ShallowMortonCodePtr( new ShallowMortonCode( b ) ) );
+			ShallowMortonInterval interval0( makeManaged< ShallowMortonCode >( a ), makeManaged< ShallowMortonCode >( b ) );
+			ShallowMortonInterval interval1( makeManaged< ShallowMortonCode >( b ), makeManaged< ShallowMortonCode >( a ) );
+			ShallowMortonInterval interval2( makeManaged< ShallowMortonCode >( a ), makeManaged< ShallowMortonCode >( b ) );
 			ShallowMortonInterval interval3 = interval2;
 			
 			ASSERT_FALSE( ShallowMortonIntervalComparator()( interval0, interval1 ) );
@@ -48,12 +45,9 @@ namespace model
 			ShallowMortonCode a; a.build( 0x3 );
 			ShallowMortonCode b; a.build( 0x4 );
 			
-			ShallowMortonInterval interval0( ShallowMortonCodePtr( new ShallowMortonCode( a ) ),
-											 ShallowMortonCodePtr( new ShallowMortonCode( b ) ) );
-			ShallowMortonInterval interval1( ShallowMortonCodePtr( new ShallowMortonCode( b ) ),
-											 ShallowMortonCodePtr( new ShallowMortonCode( a ) ) );
-			ShallowMortonInterval interval2( ShallowMortonCodePtr( new ShallowMortonCode( a ) ),
-											 ShallowMortonCodePtr( new ShallowMortonCode( b ) ) );
+			ShallowMortonInterval interval0( makeManaged< ShallowMortonCode >( a ), makeManaged< ShallowMortonCode >( b ) );
+			ShallowMortonInterval interval1( makeManaged< ShallowMortonCode >( b ), makeManaged< ShallowMortonCode >( a ) );
+			ShallowMortonInterval interval2( makeManaged< ShallowMortonCode >( a ), makeManaged< ShallowMortonCode >( b ) );
 			
 			unordered_set< ShallowMortonInterval, hash< ShallowMortonInterval >,
 						   MortonIntervalComparator< ShallowMortonInterval > > uSet( { interval0, interval1, interval2 } );

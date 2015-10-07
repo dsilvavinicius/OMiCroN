@@ -35,7 +35,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
@@ -200,7 +200,7 @@ namespace model
 		PlyPointReader *reader = new PlyPointReader(
 			[ & ]( const Point& point )
 			{
-				points.push_back( PointPtr( new Point( point ) ) );
+				points.push_back( makeManaged< Point >( point ) );
 			}
 		);
 		reader->read( plyFileName, precision, attribs );
@@ -286,13 +286,13 @@ namespace model
 	template< typename MortonCode, typename Point >
 	inline void OctreeBase< MortonCode, Point >::insertPointInLeaf( const PointPtr& point )
 	{
-		MortonCodePtr code( new MortonCode( calcMorton( *point ) ) );
+		MortonCodePtr code = makeManaged< MortonCode >( calcMorton( *point ) );
 		typename OctreeMap::iterator genericLeafIt = m_hierarchy->find( code );
 		
 		if( genericLeafIt == m_hierarchy->end() )
 		{
 			// Creates leaf node.
-			LeafNodePtr leafNode( new LeafNode() );
+			LeafNodePtr leafNode = makeManaged< LeafNode >();
 			
 			PointVector points;
 			points.push_back( point );
@@ -380,7 +380,7 @@ namespace model
 			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			LeafNodePtr mergedNode( new LeafNode() );
+			LeafNodePtr mergedNode = makeManaged< LeafNode >();
 			mergedNode->setContents( childrenPoints );
 			
 			( *m_hierarchy )[ parentCode ] = mergedNode;
@@ -414,8 +414,8 @@ namespace model
 		}
 		accumulated = accumulated.multiply( 1 / ( Float )childrenPoints.size());
 		
-		InnerNodePtr LODNode( new InnerNode() );
-		LODNode->setContents( PointPtr( new Point( accumulated ) ) );
+		InnerNodePtr LODNode = makeManaged< InnerNode >();
+		LODNode->setContents( makeManaged< Point >( accumulated ) );
 		
 		return LODNode;
 	}
@@ -425,7 +425,7 @@ namespace model
 	{
 		clock_t timing = clock();
 		
-		MortonCodePtr rootCode( new MortonCode() );
+		MortonCodePtr rootCode = makeManaged< MortonCode >();
 		rootCode->build( 0x1 );
 		
 		traverse( rootCode, renderingState, projThresh );

@@ -19,12 +19,12 @@ namespace util
 		TEST_F( PlyPointReaderTest, Read )
 		{
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			
 			SPV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			PointVector points;
-			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
+			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
 			reader.read( "data/test.ply", SimplePointReader::SINGLE, COLORS );
 			
 			Point expectedPoint0( vec3( ( float )81 / 255, ( float )63 / 255, ( float )39 / 255 ),
@@ -45,12 +45,12 @@ namespace util
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			
 			SPV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			PointVector points;
-			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
+			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
 			reader.read( "data/test_normals.ply", SimplePointReader::SINGLE, NORMALS );
 			
 			Point expectedPoint0( vec3( 11.321565, 4.658535, 7.163479 ), vec3( 7.163479, 4.658535, 11.321565 ) );
@@ -69,12 +69,12 @@ namespace util
 		{
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			
 			SEV_BitMapMemoryManager::initInstance( 1000000 );
 			
 			PointVector points;
-			ExtendedPointReader reader( [ & ]( const Point& point ){ points.push_back( PointPtr( new Point( point ) ) ); } );
+			ExtendedPointReader reader( [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
 			reader.read( "data/test_extended_points.ply", ExtendedPointReader::SINGLE, COLORS_AND_NORMALS );
 			
 			Point expectedPoint0( vec3( 0.003921569, 0.007843137, 0.011764706 ), vec3( 11.321565, 4.658535, 7.163479 ),

@@ -11,9 +11,8 @@ namespace model
 	class PointAppender
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using IndexVector = vector< unsigned int >;
 		
 	public:
 		virtual void appendPoints( OctreeNodePtr node, PointVector& vec, int& numChildren, int& numLeaves )
@@ -44,10 +43,8 @@ namespace model
 	: public PointAppender< MortonCode, Point >
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using IndexVector = vector< unsigned int >;
-		using IndexVectorPtr = shared_ptr< IndexVector >;
 		
 	public:
 		virtual void appendPoints( OctreeNodePtr node, PointVector& vec, int& numChildren, int& numLeaves )

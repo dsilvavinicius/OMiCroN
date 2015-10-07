@@ -11,6 +11,7 @@
 
 #include "Stream.h"
 #include "IMemoryManager.h"
+#include "MemoryUtils.h"
 
 using namespace std;
 
@@ -208,7 +209,7 @@ namespace model
 	{
 		assert( m_bits > 1 );
 		T bits = m_bits >> 3;
-		MortonCodePtr<T> parentMorton( new MortonCode<T>() );
+		MortonCodePtr<T> parentMorton = makeManaged< MortonCode< T > >();
 		parentMorton->build(bits);
 		return parentMorton;
 	}
@@ -229,7 +230,7 @@ namespace model
 		
 		for (int i = 0; i < 8; ++i)
 		{
-			MortonCodePtr<T> child( new MortonCode<T>() );
+			MortonCodePtr<T> child = makeManaged< MortonCode< T > >();
 			child->build(shifted | i);
 			children[i] = child;
 		}
@@ -240,7 +241,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getFirstChild() const
 	{
-		MortonCodePtr< T > firstChild( new MortonCode() );
+		MortonCodePtr< T > firstChild = makeManaged< MortonCode< T > >();
 		firstChild->build( m_bits << 3 );
 		return firstChild;
 	}
@@ -248,7 +249,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getLastChild() const
 	{
-		MortonCodePtr< T > lastChild( new MortonCode() );
+		MortonCodePtr< T > lastChild = makeManaged< MortonCode< T > >();
 		lastChild->build( ( m_bits << 3 ) | ( T ) 0x7 );
 		return lastChild;
 	}
@@ -271,7 +272,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getPrevious() const
 	{
-		MortonCodePtr< T > prev( new MortonCode() );
+		MortonCodePtr< T > prev = makeManaged< MortonCode< T > >();
 		prev->build( m_bits - ( T )1 );
 		return prev;
 	}
@@ -279,7 +280,7 @@ namespace model
 	template <typename T>
 	inline MortonCodePtr< T > MortonCode< T >::getNext() const
 	{
-		MortonCodePtr< T > next( new MortonCode() );
+		MortonCodePtr< T > next = makeManaged< MortonCode< T > >();
 		next->build( m_bits + ( T )1 );
 		return next;
 	}

@@ -44,7 +44,7 @@ namespace model
 		TEST_F( SQLiteManagerTest, InsertAndGetIndexNodes )
 		{
 			using MortonCode = model::ShallowMortonCode;
-			using Contents = vector< uint >;
+			using Contents = IndexVector;
 			using LeafNode = model::LeafNode< Contents >;
 			using InnerNode = model::InnerNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
@@ -87,9 +87,9 @@ namespace model
 			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
 			PointVector points;
-			points.push_back( PointPtr( new Point( p0 ) ) );
-			points.push_back( PointPtr( new Point( p1 ) ) );
-			points.push_back( PointPtr( new Point( p2 ) ) );
+			points.push_back( makeManaged< Point >( p0 ) );
+			points.push_back( makeManaged< Point >( p1 ) );
+			points.push_back( makeManaged< Point >( p2 ) );
 			
 			LeafNode node;
 			node.setContents( points );
@@ -113,7 +113,7 @@ namespace model
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetIdNodes )
 		{
-			using Contents = vector< uint >;
+			using Contents = IndexVector;
 			using LeafNode = model::LeafNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			using IdNode = model::IdNode< ShallowMortonCode >;
@@ -153,7 +153,7 @@ namespace model
 		TEST_F( SQLiteManagerTest, DeleteNodes )
 		{
 			using MortonCode = model::ShallowMortonCode;
-			using Contents = vector< uint >;
+			using Contents = IndexVector;
 			using LeafNode = model::LeafNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 			
@@ -198,9 +198,9 @@ namespace model
 			Point p2( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
 			
 			PointVector points;
-			points.push_back( PointPtr( new Point( p0 ) ) );
-			points.push_back( PointPtr( new Point( p1 ) ) );
-			points.push_back( PointPtr( new Point( p2 ) ) );
+			points.push_back( makeManaged< Point >( p0 ) );
+			points.push_back( makeManaged< Point >( p1 ) );
+			points.push_back( makeManaged< Point >( p2 ) );
 			
 			LeafNode node;
 			node.setContents( points );
@@ -231,12 +231,12 @@ namespace model
 			
 			SEV_BitMapMemoryManager::initInstance( 1000000 );
 			
-			ExtendedPointPtr p0( new ExtendedPoint( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-													vec3( 1.f, 15.f ,2.f ) ) );
-			ExtendedPointPtr p1( new ExtendedPoint( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-													vec3( 3.f, -31.f ,4.f ) ) );
-			ExtendedPointPtr p2( new ExtendedPoint( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-													vec3( -14.f, 5.f ,6.f ) ) );
+			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+																vec3( 1.f, 15.f ,2.f ) );
+			ExtendedPointPtr p1 = makeManaged< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+																vec3( 3.f, -31.f ,4.f ) );
+			ExtendedPointPtr p2 = makeManaged< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+																vec3( -14.f, 5.f ,6.f ) );
 			
 			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
 			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
@@ -279,7 +279,8 @@ namespace model
 		void checkRequestResults( util::SQLiteManager< Point, MortonCode, OctreeNode >& sqLite,
 								  const IdNode< MortonCode >& code0, const IdNode< MortonCode >& code1 )
 		{
-			using PointVector = vector< shared_ptr< Point > >;
+			using PointPtr = shared_ptr< Point >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			
 			vector< IdNodeVector< MortonCode > > results = sqLite.getRequestResults( 10 );
 	
@@ -338,12 +339,12 @@ namespace model
 			SEV_BitMapMemoryManager::initInstance( 1000000 );
 			//SEV_Ken12MemoryManager::initInstance( 100000, 100000, 100000, 100000 );
 			
-			ExtendedPointPtr p0( new ExtendedPoint( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-													vec3( 1.f, 15.f ,2.f ) ) );
-			ExtendedPointPtr p1( new ExtendedPoint( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-													vec3( 3.f, -31.f ,4.f ) ) );
-			ExtendedPointPtr p2( new ExtendedPoint( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-													vec3( -14.f, 5.f ,6.f ) ) );
+			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
+																vec3( 1.f, 15.f ,2.f ) );
+			ExtendedPointPtr p1 = makeManaged< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
+																vec3( 3.f, -31.f ,4.f ) );
+			ExtendedPointPtr p2 = makeManaged< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
+																vec3( -14.f, 5.f ,6.f ) );
 			
 			//cout << "p1 ptr: " << p1.get() << endl << endl;
 			
@@ -353,8 +354,8 @@ namespace model
 			Contents vec0( rawPoints0, rawPoints0 + 3 );
 			Contents vec1( rawPoints1, rawPoints1 + 3 );
 			
-			LeafNodePtr node0( new LeafNode() );
-			LeafNodePtr node1( new LeafNode() );
+			LeafNodePtr node0 = makeManaged< LeafNode >();
+			LeafNodePtr node1 = makeManaged< LeafNode >();
 			node0->setContents( vec0 );
 			node1->setContents( vec1 );
 			
@@ -367,8 +368,8 @@ namespace model
 			sqLite.insertNode< Contents >( code0, *node0 );
 			sqLite.insertNode< Contents >( code1, *node1 );
 			
-			ShallowMortonCodePtr code0Ptr( new ShallowMortonCode( code0 ) );
-			ShallowMortonCodePtr code1Ptr( new ShallowMortonCode( code1 ) );
+			ShallowMortonCodePtr code0Ptr = makeManaged< ShallowMortonCode >( code0 );
+			ShallowMortonCodePtr code1Ptr = makeManaged< ShallowMortonCode > ( code1 );
 			
 			IdNode idNode0( code0Ptr, node0 );
 			IdNode idNode1( code1Ptr, node1 );

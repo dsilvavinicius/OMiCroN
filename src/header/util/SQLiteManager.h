@@ -28,7 +28,7 @@ namespace util
 		using IdNodeVector = vector< IdNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonInterval = model::MortonInterval< MortonCode >;
 		using unordered_set = std::unordered_set< MortonInterval, hash< MortonInterval >,
@@ -300,7 +300,7 @@ namespace util
 		if( isPointFound )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_pointQuery, 0 );
-			point = PointPtr( new Point( blob ) );
+			point = makeManaged< Point >( blob );
 		}
 		else
 		{
@@ -338,7 +338,7 @@ namespace util
 		if( isNodeFound )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
-			node = OctreeNodePtr( OctreeNode:: template deserialize< NodeContents >( blob ) );
+			node = OctreeNode:: template deserialize< NodeContents >( blob );
 		}
 		
 		safeReset( m_nodeQuery );
@@ -358,7 +358,7 @@ namespace util
 		while( safeStep( m_nodeIntervalQuery ) )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalQuery, 0 );
-			OctreeNodePtr node( OctreeNode:: template deserialize< NodeContents >( blob ) );
+			OctreeNodePtr node = OctreeNode:: template deserialize< NodeContents >( blob );
 			nodes.push_back( node );
 		}
 		
@@ -646,11 +646,11 @@ namespace util
 		if( rowIsFound )
 		{
 			sqlite3_int64 mortonBits = sqlite3_column_int64( stmt, 0 );
-			MortonCodePtr code( new MortonCode() );
+			MortonCodePtr code = makeManaged< MortonCode >();
 			code->build( mortonBits );
 			
 			byte* blob = ( byte* ) sqlite3_column_blob( stmt, 1 );
-			OctreeNodePtr node( OctreeNode:: template deserialize< NodeContents >( blob ) );
+			OctreeNodePtr node = OctreeNode:: template deserialize< NodeContents >( blob );
 			
 			*queried = IdNode( code, node );
 		}

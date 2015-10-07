@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "Serializer.h"
 #include "ExtendedPoint.h"
+#include "MemoryUtils.h"
 
 using namespace std;
 using namespace glm;
@@ -21,7 +22,6 @@ namespace model
 	/** Base class for octree nodes. */
 	class OctreeNode
 	{
-		using IndexVector = vector< unsigned int >;
 	public:
 		virtual ~OctreeNode() {}
 		
@@ -53,7 +53,7 @@ namespace model
 		/** Deserializes a byte sequence into an OctreeNode. The pointer is owned by the caller, who needs to delete it
 		 *	later on. */
 		template< typename Contents >
-		static OctreeNode* deserialize( byte* serialization );
+		static OctreeNodePtr deserialize( byte* serialization );
 	};
 	
 	template< typename Contents >
@@ -144,7 +144,7 @@ namespace model
 	}
 	
 	template< typename Contents >
-	inline OctreeNode* OctreeNode::deserialize( byte* serialization )
+	inline OctreeNodePtr OctreeNode::deserialize( byte* serialization )
 	{
 		bool flag;
 		size_t flagSize = sizeof( bool );
@@ -153,7 +153,7 @@ namespace model
 		
 		if( flag )
 		{
-			auto node = new LeafNode< Contents >();
+			auto node = makeManaged< LeafNode< Contents > >();
 			Contents contents;
 			Serializer::deserialize( tempPtr, contents );
 			node->setContents( contents );
@@ -161,7 +161,7 @@ namespace model
 		}
 		else
 		{
-			auto node = new InnerNode< Contents >();
+			auto node = makeManaged< InnerNode< Contents > >();
 			Contents contents;
 			Serializer::deserialize( tempPtr, contents );
 			node->setContents( contents );

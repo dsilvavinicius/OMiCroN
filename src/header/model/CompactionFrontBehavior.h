@@ -2,6 +2,7 @@
 #define COMPACTION_FRONT_BEHAVIOR_H
 
 #include "FrontBehavior.h"
+#include "MemoryUtils.h"
 
 namespace model
 {
@@ -41,7 +42,7 @@ namespace model
 				}
 				//erasePrevious = false;
 				
-				MortonCodePtr code( new MortonCode( *it ) );
+				MortonCodePtr code = makeManaged< MortonCode >( *it );
 				
 				erasePrevious = octree.trackNode( code, renderingState, projThresh );
 			}

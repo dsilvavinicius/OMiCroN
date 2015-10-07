@@ -14,7 +14,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using LeafNode = model::LeafNode< PointVector >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
@@ -83,7 +83,7 @@ namespace model
 			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			shared_ptr< LeafNode > mergedNode( new LeafNode() );
+			shared_ptr< LeafNode > mergedNode = makeManaged< LeafNode >();
 			mergedNode->setContents( childrenPoints );
 			
 			( *Octree::m_hierarchy )[ parentCode ] = mergedNode;
@@ -105,7 +105,7 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		InnerNodePtr< PointVector > node( new InnerNode< PointVector > () );
+		InnerNodePtr< PointVector > node = makeManaged< InnerNode< PointVector > >();
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
 		
@@ -150,7 +150,8 @@ namespace model
 	template< typename MortonCode, typename Point >
 	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonCode, Point >& octree )
 	{
-		using PointVector = vector< shared_ptr< Point > >;
+		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		

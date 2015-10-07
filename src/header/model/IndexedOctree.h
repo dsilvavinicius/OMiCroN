@@ -3,6 +3,7 @@
 
 #include "ExtendedPoint.h"
 #include "RandomSampleOctree.h"
+#include "MemoryUtils.h"
 
 namespace model
 {
@@ -13,9 +14,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
-		using IndexVector = vector< unsigned int >;
-		using IndexVectorPtr = shared_ptr< IndexVector >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using LeafNode = model::LeafNode< IndexVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
@@ -83,7 +82,7 @@ namespace model
 	template< typename MortonCode, typename Point >
 	inline void IndexedOctree< MortonCode, Point >::insertPointInLeaf( const PointPtr& point )
 	{
-		MortonCodePtr code( new MortonCode( RandomSampleOctree::calcMorton( *point ) ) );
+		MortonCodePtr code = makeManaged< MortonCode >( RandomSampleOctree::calcMorton( *point ) );
 		typename OctreeMap::iterator genericLeafIt = RandomSampleOctree::m_hierarchy->find( code );
 		
 		unsigned long index = m_nPoints++;
@@ -93,7 +92,7 @@ namespace model
 			// Creates leaf node.
 			IndexVector indices;
 			indices.push_back( index );
-			LeafNodePtr leafNode( new LeafNode() );
+			LeafNodePtr leafNode = makeManaged< LeafNode >();
 			leafNode->setContents( indices );
 			( *RandomSampleOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -136,7 +135,7 @@ namespace model
 			RandomSampleOctree::eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			LeafNodePtr mergedNode( new LeafNode() );
+			LeafNodePtr mergedNode = makeManaged< LeafNode >();
 			mergedNode->setContents( childrenPoints );
 			
 			( *RandomSampleOctree::m_hierarchy )[ parentCode ] = mergedNode;
@@ -157,7 +156,7 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		InnerNodePtr< IndexVector > node( new InnerNode< IndexVector >() );
+		InnerNodePtr< IndexVector > node = makeManaged< InnerNode< IndexVector > >();
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		IndexVector selectedPoints( numSamplePoints );
 		
@@ -194,8 +193,7 @@ namespace model
 	}
 	
 	template< typename MortonCode, typename Point >
-	inline void IndexedOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node,
-																						  RenderingState& renderingState )
+	inline void IndexedOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState )
 	{
 		const IndexVector& points = node-> template getContents< IndexVector >();
 		renderingState.handleNodeRendering( points );

@@ -11,7 +11,8 @@ namespace model
 {	
 	/** Internal map type used to actualy store the octree. */
 	template< typename MortonCode >
-	using OctreeMap = map< shared_ptr< MortonCode >, OctreeNodePtr, MortonComparator< MortonCode > >;
+	using OctreeMap = map< 	shared_ptr< MortonCode >, OctreeNodePtr, MortonComparator< MortonCode >,
+							BitMapAllocator< pair< const shared_ptr< MortonCode >, OctreeNodePtr > > >;
 
 	/** Smart pointer for the internal octree map. */
 	template < typename MortonCode >

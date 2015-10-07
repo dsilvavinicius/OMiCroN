@@ -23,7 +23,8 @@ class PointRendererWidget
 	using MortonCode = ShallowMortonCode;
 	using Point = model::Point;
 	//using Point = model::ExtendedPoint;
-	using PointVector = vector< shared_ptr< Point > >;
+	using PointPtr = shared_ptr< Point >;
+	using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 	using LeafNode = model::LeafNode< PointVector >;
 	using InnerNode = model::InnerNode< PointVector >;
 	using PointReader = util::PlyPointReader< Point >;

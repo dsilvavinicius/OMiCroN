@@ -5,6 +5,7 @@
 #include "RenderingState.h"
 #include "Front.h"
 #include "OctreeMapTypes.h"
+#include "MemoryUtils.h"
 
 namespace model
 {
@@ -78,7 +79,7 @@ namespace model
 					m_front.erase( prev );
 				}
 				
-				MortonCodePtr code( new MortonCode( *it ) );
+				MortonCodePtr code = makeManaged< MortonCode >( *it );
 				
 				//
 				//cout << "Track: " << code->getPathToRoot( true ) << endl << endl;

@@ -44,12 +44,12 @@ namespace model
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				MortonPtr mortonCode( new Morton() );
+				MortonPtr mortonCode = makeManaged< Morton >();
 				mortonCode->build( i );
 				
-				LeafPtr node( new Leaf() );
-				PointPtr p0( new Point() );
-				PointPtr p1( new Point() );
+				LeafPtr node = makeManaged< Leaf >();
+				PointPtr p0 = makeManaged< Point >();
+				PointPtr p1 = makeManaged< Point >();
 				node->setContents( PointVector( { p0, p1 } ) );
 				
 				map[ mortonCode ] = node;
@@ -59,7 +59,7 @@ namespace model
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				MortonPtr expected( new Morton() );
+				MortonPtr expected = makeManaged< Morton >();
 				expected->build( i );
 				
 				ASSERT_TRUE( map.find( expected ) != map.end() );
@@ -100,12 +100,12 @@ namespace model
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				MortonPtr mortonCode( new Morton() );
+				MortonPtr mortonCode = makeManaged< Morton >();
 				mortonCode->build( i );
 				
-				InnerPtr node( new Inner() );
-				PointPtr p0( new Point() );
-				PointPtr p1( new Point() );
+				InnerPtr node = makeManaged< Inner >();
+				PointPtr p0 = makeManaged< Point >();
+				PointPtr p1 = makeManaged< Point >();
 				node->setContents( PointVector( { p0, p1 } ) );
 				
 				map[ mortonCode ] = node;
@@ -115,7 +115,7 @@ namespace model
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				MortonPtr expected( new Morton() );
+				MortonPtr expected = makeManaged< Morton >();
 				expected->build( i );
 				
 				ASSERT_TRUE( map.find( expected ) != map.end() );
@@ -156,11 +156,11 @@ namespace model
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				MortonPtr mortonCode( new Morton() );
+				MortonPtr mortonCode = makeManaged< Morton >();
 				mortonCode->build( i );
 				
-				InnerPtr node( new Inner() );
-				PointPtr point( new Point() );
+				InnerPtr node = makeManaged< Inner >();
+				PointPtr point = makeManaged< Point >();
 				node->setContents( point );
 				
 				map[ mortonCode ] = node;
@@ -170,7 +170,7 @@ namespace model
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
-				MortonPtr expected( new Morton() );
+				MortonPtr expected = makeManaged< Morton >();
 				expected->build( i );
 				
 				ASSERT_TRUE( map.find( expected ) != map.end() );

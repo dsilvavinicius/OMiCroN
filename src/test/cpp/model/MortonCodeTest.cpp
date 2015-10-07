@@ -103,13 +103,13 @@ namespace model
 		{
 			SPV_BitMapMemoryManager::initInstance( 1000000 );
 			
-			ShallowMortonCodePtr morton0( new ShallowMortonCode() );
+			ShallowMortonCodePtr morton0 = makeManaged< ShallowMortonCode >();
 			morton0->build( 1, 1, 1, 3 );
 			
-			ShallowMortonCodePtr morton1( new ShallowMortonCode() );
+			ShallowMortonCodePtr morton1 = makeManaged< ShallowMortonCode >();
 			morton1->build( 1, 1, 1, 2 );
 			
-			ShallowMortonCodePtr morton2( new ShallowMortonCode() );
+			ShallowMortonCodePtr morton2 = makeManaged< ShallowMortonCode >();
 			morton2->build( 1, 1, 1, 3 );
 			
 			ASSERT_TRUE(*morton0 != *morton1);

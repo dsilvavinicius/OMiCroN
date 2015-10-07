@@ -3,12 +3,16 @@
 
 #include <string.h>
 #include "Stream.h"
+#include "MemoryUtils.h"
 
 namespace model
 {
 	/** Serialization and deserialization routines. */
 	class Serializer
 	{
+		template< typename T >
+		using Vector = vector< T, BitMapAllocator< T > >;
+		
 	public:
 		/** Serializes an vector. The form is:
 		 *	size_t with the size of the vector s;
@@ -17,20 +21,20 @@ namespace model
 		 *	behavior.
 		 *	@param T is the vector content type. */
 		template< typename T >
-		static size_t serialize( const vector< T >& vector , byte** serialization );
+		static size_t serialize( const Vector< T >& vector , byte** serialization );
 		
 		/** Deserializes an byte sequence created by serialize() into a vector. Default implementation assumes vector contents POD
 		 *	(plain old data). Specialize this method for more specific behavior.
 		 *	@param T is the vector content type. */
 		template< typename T >
-		static void deserialize( byte* serialization, vector< T >& out );
+		static void deserialize( byte* serialization, Vector< T >& out );
 		
 		/** Disposes the byte sequence created by serialize(). */
 		static void dispose( byte* serialization ) { delete[] serialization; }
 	};
 	
 	template< typename T >
-	inline size_t Serializer::serialize( const vector< T >& vector , byte** serialization )
+	inline size_t Serializer::serialize( const Vector< T >& vector , byte** serialization )
 	{
 		size_t count = vector.size();
 		size_t countSize = sizeof( size_t );
@@ -49,7 +53,7 @@ namespace model
 	}
 	
 	template<>
-	inline size_t Serializer::serialize< PointPtr >( const vector< PointPtr >& vector , byte** serialization )
+	inline size_t Serializer::serialize< PointPtr >( const PointVector& vector , byte** serialization )
 	{
 		size_t count = vector.size();
 		size_t countSize = sizeof( size_t );
@@ -91,8 +95,7 @@ namespace model
 	}
 	
 	template<>
-	inline size_t Serializer::serialize< ExtendedPointPtr >( const vector< ExtendedPointPtr >& vector ,
-															 byte** serialization )
+	inline size_t Serializer::serialize< ExtendedPointPtr >( const ExtendedPointVector& vector , byte** serialization )
 	{
 		size_t count = vector.size();
 		size_t countSize = sizeof( size_t );
@@ -134,7 +137,7 @@ namespace model
 	}
 	
 	template< typename T >
-	inline void Serializer::deserialize( byte* serialization, vector< T >& out )
+	inline void Serializer::deserialize( byte* serialization, Vector< T >& out )
 	{
 		size_t count;
 		size_t countSize = sizeof( size_t );
@@ -143,7 +146,7 @@ namespace model
 		size_t vecSize = count * sizeof( T );
 		T* array = ( T* ) malloc( vecSize );
 		memcpy( array, serialization + countSize, vecSize );
-		out = vector< T >( array, array + count );
+		out = Vector< T >( array, array + count );
 		
 		free( array );
 	}
@@ -161,7 +164,7 @@ namespace model
 		for( int i = 0; i < count; ++i )
 		{
 			Point p( tempPtr0, tempPtr1 );
-			out.push_back( PointPtr( new Point( p ) ) );
+			out.push_back( makeManaged< Point >( p ) );
 			swap( tempPtr0, tempPtr1 );
 		}
 	}
@@ -179,7 +182,7 @@ namespace model
 		for( int i = 0; i < count; ++i )
 		{
 			ExtendedPoint p( tempPtr0, tempPtr1 );
-			out.push_back( ExtendedPointPtr( new ExtendedPoint( p ) ) );
+			out.push_back( makeManaged< ExtendedPoint >( p ) );
 			swap( tempPtr0, tempPtr1 );
 		}
 	}

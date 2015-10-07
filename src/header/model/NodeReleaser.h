@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include "BitMapAllocator.h"
 
 using namespace std;
 
@@ -27,6 +28,34 @@ namespace model
 		template< typename Contents >
 		void releaseInner( InnerNode< Contents >& node )
 		{}
+		
+		template< typename T >
+		void releaseLeaf( LeafNode< vector< shared_ptr< T >, BitMapAllocator< shared_ptr< T > > > >& node )
+		{
+			using ElementPtr = shared_ptr< T >;
+			using Allocator = BitMapAllocator< ElementPtr >;
+			
+			vector< ElementPtr, Allocator >& vector = node.getContents();
+			for( ElementPtr& element : vector )
+			{
+				element = nullptr;
+			}
+			vector.clear();
+		}
+		
+		template< typename T >
+		void releaseInner( InnerNode< vector< shared_ptr< T >, BitMapAllocator< shared_ptr< T > > > >& node )
+		{
+			using ElementPtr = shared_ptr< T >;
+			using Allocator = BitMapAllocator< ElementPtr >;
+			
+			vector< ElementPtr, Allocator >& vector = node.getContents();
+			for( ElementPtr& element : vector )
+			{
+				element = nullptr;
+			}
+			vector.clear();
+		}
 		
 		template< typename T >
 		void releaseLeaf( LeafNode< vector< shared_ptr< T > > >& node )

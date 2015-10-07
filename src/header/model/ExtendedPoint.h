@@ -58,7 +58,7 @@ namespace model
 	using ExtendedPointPtr = shared_ptr< ExtendedPoint >;
 	
 	/** Vector of ExtendedPoints. */
-	using ExtendedPointVector = vector< ExtendedPointPtr >;
+	using ExtendedPointVector = vector< ExtendedPointPtr, BitMapAllocator< ExtendedPointPtr > >;
 	
 	/** Ptr for Vector of ExtendedPoints. */
 	using ExtendedPointVectorPtr = shared_ptr< ExtendedPointVector >;

@@ -14,7 +14,7 @@ namespace model
 	: public FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	{
 		using MortonVector = vector< MortonCode >;
-		using PointVector = vector< unsigned int >;
+		using PointVector = IndexVector;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
 		using ParallelFrontBehavior = model::ParallelFrontBehavior< MortonCode, Point, Front, FrontInsertionContainer >;
@@ -39,8 +39,7 @@ namespace model
 		FrontOctree::m_frontBehavior = new ParallelFrontBehavior( *this );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front,
-			  typename FrontInsertionContainer >
+	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	inline void ParallelOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, RenderingState& renderingState )
 	{

@@ -45,7 +45,7 @@ namespace model
 				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
 				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
 					
-				PointPtr point( new Point( vec3( 1.f, 1.f, 1.f ), vec3( x, y, z ) ) );
+				PointPtr point = makeManaged< Point >( vec3( 1.f, 1.f, 1.f ), vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
 		}
@@ -59,7 +59,8 @@ namespace model
 				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
 				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
 					
-				ExtendedPointPtr point( new ExtendedPoint( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ), vec3( x, y, z ) ) );
+				ExtendedPointPtr point = makeManaged< ExtendedPoint >( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ),
+																	   vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
 		}
@@ -73,7 +74,7 @@ namespace model
 		{
 			using Point = TypeParam;
 			using PointPtr = shared_ptr< TypeParam >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using PointVectorPtr = shared_ptr< PointVector >;
 			using Octree = RandomSampleOctree< ShallowMortonCode, Point >;
 			
@@ -95,7 +96,7 @@ namespace model
 			octree.build( tmpPts );
 			
 			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
-			ShallowMortonCodePtr rootCode( new ShallowMortonCode() );
+			ShallowMortonCodePtr rootCode = makeManaged< ShallowMortonCode >();
 			rootCode->build( 0x1 );
 			
 			InnerNodePtr< PointVector > root = dynamic_pointer_cast< InnerNode< PointVector > >( ( *hierarchy )[ rootCode ] );

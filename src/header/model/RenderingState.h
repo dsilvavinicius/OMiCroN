@@ -66,7 +66,7 @@ namespace model
 		virtual void handleNodeRendering( const ExtendedPointVector& points );
 		
 		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const vector< unsigned int >& points );
+		virtual void handleNodeRendering( const IndexVector& points );
 		
 		vector< Vec3 >& getPositions() { return m_positions; }
 		vector< Vec3 >& getColors() { return m_colors; }
@@ -124,7 +124,7 @@ namespace model
 		}
 	}
 		
-	inline void RenderingState::handleNodeRendering( const vector< unsigned int >& points )
+	inline void RenderingState::handleNodeRendering( const IndexVector& points )
 	{
 		for( unsigned int index : points )
 		{

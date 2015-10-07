@@ -20,7 +20,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
@@ -181,7 +181,7 @@ namespace model
 	: ParentOctree( maxPointsPerNode, maxLevel ),
 	m_nodesUntilLastPersistence( 0uL ),
 	m_sqLite( dbFilename ),
-	m_lastDirty( new MortonCode( MortonCode::getLvlLast( maxLevel ) ) ),
+	m_lastDirty( makeManaged< MortonCode >( MortonCode::getLvlLast( maxLevel ) ) ),
 	m_memSetup( memSetup )
 	{}
 	
@@ -235,7 +235,7 @@ namespace model
 		*reader = PlyPointReader(
 			[ & ]( const Point& point )
 			{
-				insertPointInLeaf( PointPtr( new Point( point ) ) );
+				insertPointInLeaf( makeManaged< Point >( point ) );
 			}
 		);
 		
@@ -258,7 +258,7 @@ namespace model
 	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
-		MortonCodePtr code( new MortonCode( ParentOctree::calcMorton( *point ) ) );
+		MortonCodePtr code = makeManaged< MortonCode >( ParentOctree::calcMorton( *point ) );
 			
 		OctreeNodePtr node = getNode( code );
 		
@@ -269,7 +269,7 @@ namespace model
 			// Creates leaf node.
 			PointVector points;
 			points.push_back( point );
-			LeafNodePtr< PointVector > leafNode( new LeafNode< PointVector >() );
+			LeafNodePtr< PointVector > leafNode = makeManaged< LeafNode< PointVector > >();
 			leafNode->setContents( points );
 			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -559,12 +559,12 @@ namespace model
 			
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
-			MortonCodePtr lvlBoundary( new MortonCode( MortonCode::getLvlLast( level + 1 ) ) );
+			MortonCodePtr lvlBoundary = makeManaged< MortonCode >( MortonCode::getLvlLast( level + 1 ) );
 			
 			//cout << "Acquiring nodes for current lvl." << endl << endl;
 			{
 				// Query nodes to load.
-				SQLiteQuery query = getRangeInDB( MortonCodePtr( new MortonCode( MortonCode::getLvlFirst( level + 1 ) ) ),
+				SQLiteQuery query = getRangeInDB( makeManaged< MortonCode >( MortonCode::getLvlFirst( level + 1 ) ),
 												  lvlBoundary );
 			
 				// Clear up hierarchy to ensure no holes.
@@ -701,7 +701,7 @@ namespace model
 		}
 		
 		//cout << "Creating code to save the first loaded code" << endl;
-		MortonCodePtr firstLoadedCode( new MortonCode( *idNode.first ) );
+		MortonCodePtr firstLoadedCode = makeManaged< MortonCode >( *idNode.first );
 		MortonCodePtr currentCode( idNode.first );
 		MortonCodePtr parentCode = currentCode->traverseUp();
 		
@@ -792,7 +792,8 @@ namespace model
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
 	ostream& operator<<( ostream& out, OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >& octree )
 	{
-		using PointVector = vector< shared_ptr< Point > >;
+		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		
 		out << "====== OutOfCoreOctree ======" << endl << endl
 			<< "Last Dirty: " << octree.m_lastDirty->getPathToRoot( true ) << endl

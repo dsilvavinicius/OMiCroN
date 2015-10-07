@@ -11,7 +11,8 @@ namespace model
 	class TucanoDebugRenderer
 	: public TucanoRenderingState
 	{
-		using PointVector = vector< shared_ptr< Point > >;
+		using PointPtr = shared_ptr< Point >;
+		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 		
 	public:
 		TucanoDebugRenderer( Camera* camera, Camera* lightCam, Mesh* mesh, const Attributes& attribs,
