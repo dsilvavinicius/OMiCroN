@@ -444,14 +444,16 @@ namespace model
 			using InnerPtr = shared_ptr< Inner >;
 			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
 			using Leaf = LeafNode< PointVector >;
+			using LeafPtr = shared_ptr< Leaf >;
+			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
 			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, ShallowMortonComparator,
 									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
-			size_t expectedMemUsage = 	nPoints * ( 2 * sizeof( PointPtr ) + sizeof( PointPtrInternals ) )
-										+ sizeof( InnerPtrInternals ) + sizeof( MortonPtrInternals )
-										+ sizeof( MapInternals );
+			size_t expectedMemUsage = 	nPoints * ( 3 * sizeof( PointPtr ) + sizeof( PointPtrInternals ) )
+										+ 2 * sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
+										+ sizeof( LeafPtrInternals ) + 2 * sizeof( MapInternals );
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
@@ -466,21 +468,115 @@ namespace model
 			InnerPtr inner = makeManaged< Inner >();
 			inner->setContents( points );
 			
-			MortonPtr morton = makeManaged< Morton >();
+			LeafPtr leaf = makeManaged< Leaf >();
+			leaf->setContents( points );
+			
+			MortonPtr morton0 = makeManaged< Morton >();
+			MortonPtr morton1 = makeManaged< Morton >(); morton1->build( 0xF );
 			OctreeMap map;
-			map[ morton ] = inner;
+			map[ morton0 ] = inner;
+			map[ morton1 ] = leaf;
 			
 			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 		
-		/*TEST_F( BitMapMemoryManagerTest, AllocatorsShallowPointPtr )
+		TEST_F( BitMapMemoryManagerTest, AllocatorShallowPointPtr )
 		{
+			using Morton = ShallowMortonCode;
+			using MortonPtr = shared_ptr< Morton >;
+			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using Point = model::Point;
+			using PointPtr = shared_ptr< Point >;
+			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using Inner = InnerNode< PointPtr >;
+			using InnerPtr = shared_ptr< Inner >;
+			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using Leaf = LeafNode< PointVector >;
+			using LeafPtr = shared_ptr< Leaf >;
+			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
 			
+			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, ShallowMortonComparator,
+									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
+			using MapInternals = model::MapInternals< Morton >;
+			
+			int nPoints = 10000;
+			size_t expectedMemUsage = 	nPoints * ( 2 * sizeof( PointPtr ) + sizeof( PointPtrInternals ) )
+										+ sizeof( PointPtrInternals ) + 2 * sizeof( MortonPtrInternals )
+										+ sizeof( InnerPtrInternals ) + sizeof( LeafPtrInternals )
+										+ 2 * sizeof( MapInternals );
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			
+			PointVector points( nPoints );
+			for( int i = 0; i < nPoints; ++i )
+			{
+				PointPtr point = makeManaged< Point >();
+				points[ i ] = point;
+			}
+			
+			InnerPtr inner = makeManaged< Inner >();
+			inner->setContents( makeManaged< Point >() );
+			
+			LeafPtr leaf = makeManaged< Leaf >();
+			leaf->setContents( points );
+			
+			MortonPtr morton0 = makeManaged< Morton >();
+			MortonPtr morton1 = makeManaged< Morton >(); morton1->build( 0xF );
+			OctreeMap map;
+			map[ morton0 ] = inner;
+			map[ morton1 ] = leaf;
+			
+			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 		
 		TEST_F( BitMapMemoryManagerTest, AllocatorsMediumExtendedIndex )
 		{
+			using Morton = MediumMortonCode;
+			using MortonPtr = shared_ptr< Morton >;
+			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using Point = ExtendedPoint;
+			using PointPtr = shared_ptr< Point >;
+			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using IndexVector = vector< Index, BitMapAllocator< Index > >;
+			using Inner = InnerNode< IndexVector >;
+			using InnerPtr = shared_ptr< Inner >;
+			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using Leaf = LeafNode< IndexVector >;
+			using LeafPtr = shared_ptr< Leaf >;
+			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
 			
-		}*/
+			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, MediumMortonComparator,
+									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
+			using MapInternals = model::MapInternals< Morton >;
+			
+			int nPoints = 10000;
+			size_t expectedMemUsage = 	nPoints * ( 3 * sizeof( Index ) + sizeof( PointPtrInternals ) + sizeof( PointPtr ) )
+										+ 2 * sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
+										+ sizeof( LeafPtrInternals ) + 2 * sizeof( MapInternals );
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			
+			PointVector points( nPoints );
+			IndexVector indices( nPoints );
+			for( int i = 0; i < nPoints; ++i )
+			{
+				points[ i ] = makeManaged< Point >();
+				indices[ i ] = i;
+			}
+			
+			InnerPtr inner = makeManaged< Inner >();
+			inner->setContents( indices );
+			
+			LeafPtr leaf = makeManaged< Leaf >();
+			leaf->setContents( indices );
+			
+			MortonPtr morton0 = makeManaged< Morton >();
+			MortonPtr morton1 = makeManaged< Morton >(); morton1->build( 0xF );
+			OctreeMap map;
+			map[ morton0 ] = inner;
+			map[ morton1 ] = leaf;
+			
+			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
+		}
 	}
 }

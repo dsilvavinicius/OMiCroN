@@ -81,6 +81,9 @@ namespace model
 		auto mortonPtrInternalsPool = new Ken12MemoryPool< MortonPtrInternals >(); mortonPtrInternalsPool->createPool( 0 );
 		MemoryManager::m_MortonPtrInternalsPool = mortonPtrInternalsPool;
 		
+		auto indexPool = new Ken12MemoryPool< Index >(); indexPool->createPool( 0 );
+		MemoryManager::m_IndexPool = indexPool;
+		
 		auto pointPool = new Ken12MemoryPool< Point >(); pointPool->createPool( nPoints );
 		MemoryManager::m_PointPool = pointPool;
 		

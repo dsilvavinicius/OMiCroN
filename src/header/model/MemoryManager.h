@@ -46,13 +46,6 @@ namespace model
 	{\
 		m_##TYPE##Pool->deallocateArray( static_cast< TYPE* >( p ) );\
 	}\
-	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::num##TYPE##Blocks() const\
-	{\
-		return m_##TYPE##Pool->getNumBlocks();\
-	}\
-	
 	
 	/** Skeletal base implementation of a SingletonMemoryManager. This implementation does not initialize members, what
 	 * is left for derived classes to do.
@@ -87,6 +80,8 @@ namespace model
 		DECLARE_POOL_MEMBERS(MortonPtr)
 		DECLARE_POOL_MEMBERS(MortonPtrInternals)
 		
+		DECLARE_POOL_MEMBERS(Index)
+		
 		DECLARE_POOL_MEMBERS(Point)
 		DECLARE_POOL_MEMBERS(PointPtr)
 		DECLARE_POOL_MEMBERS(PointPtrInternals)
@@ -114,6 +109,8 @@ namespace model
 		IMemoryPool< MortonPtr >* m_MortonPtrPool;
 		IMemoryPool< MortonPtrInternals >* m_MortonPtrInternalsPool;
 		
+		IMemoryPool< Index >* m_IndexPool;
+		
 		IMemoryPool< Point >* m_PointPool;
 		IMemoryPool< PointPtr >* m_PointPtrPool;
 		IMemoryPool< PointPtrInternals >* m_PointPtrInternalsPool;
@@ -137,6 +134,8 @@ namespace model
 		delete m_MortonPtrPool;
 		delete m_MortonPtrInternalsPool;
 		
+		delete m_IndexPool;
+		
 		delete m_PointPool;
 		delete m_PointPtrPool;
 		delete m_PointPtrInternalsPool;
@@ -156,6 +155,8 @@ namespace model
 	DEFINE_POOL_MEMBERS(MortonPtr)
 	DEFINE_POOL_MEMBERS(MortonPtrInternals)
 	
+	DEFINE_POOL_MEMBERS(Index)
+	
 	DEFINE_POOL_MEMBERS(Point)
 	DEFINE_POOL_MEMBERS(PointPtr)
 	DEFINE_POOL_MEMBERS(PointPtrInternals)
@@ -174,10 +175,10 @@ namespace model
 	inline size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::usedMemory() const
 	{
 		return 	m_MortonPool->memoryUsage() + m_MortonPtrPool->memoryUsage() + m_MortonPtrInternalsPool->memoryUsage() +
-				m_PointPool->memoryUsage() + m_PointPtrPool->memoryUsage() + m_PointPtrInternalsPool->memoryUsage() +
-				m_InnerPool->memoryUsage() + m_InnerPtrPool->memoryUsage() + m_InnerPtrInternalsPool->memoryUsage() +
-				m_LeafPool->memoryUsage() + m_LeafPtrPool->memoryUsage() + m_LeafPtrInternalsPool->memoryUsage() +
-				m_MapInternalsPool->memoryUsage();
+				m_IndexPool->memoryUsage() + m_PointPool->memoryUsage() + m_PointPtrPool->memoryUsage() +
+				m_PointPtrInternalsPool->memoryUsage() + m_InnerPool->memoryUsage() + m_InnerPtrPool->memoryUsage() +
+				m_InnerPtrInternalsPool->memoryUsage() + m_LeafPool->memoryUsage() + m_LeafPtrPool->memoryUsage() +
+				m_LeafPtrInternalsPool->memoryUsage() + m_MapInternalsPool->memoryUsage();
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
@@ -199,6 +200,8 @@ namespace model
 		ss 	<< "Morton used blocks: " << m_MortonPool->usedBlocks() << " Used memory: " << m_MortonPool->memoryUsage() << endl
 			<< "MortonPtr used blocks: " << m_MortonPtrPool->usedBlocks() << " Used memory: " << m_MortonPtrPool->memoryUsage() << endl
 			<< "MortonPtrInternals used blocks: " << m_MortonPtrInternalsPool->usedBlocks() << " Used memory: " << m_MortonPtrInternalsPool->memoryUsage() << endl
+			
+			<< "Index used blocks: " << m_IndexPool->usedBlocks() << " Used memory: " << m_IndexPool->memoryUsage() << endl
 			
 			<< "Point used blocks: " << m_PointPool->usedBlocks() << " Used memory: " << m_PointPool->memoryUsage() << endl
 			<< "PointPtr used blocks: " << m_PointPtrPool->usedBlocks() << " Used memory: " << m_PointPtrPool->memoryUsage() << endl

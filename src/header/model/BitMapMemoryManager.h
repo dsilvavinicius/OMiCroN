@@ -544,6 +544,8 @@ namespace model
 		MemoryManager::m_MortonPtrPool = new BitMapMemoryPool< MortonPtr >();
 		MemoryManager::m_MortonPtrInternalsPool = new BitMapMemoryPool< MortonPtrInternals >();
 		
+		MemoryManager::m_IndexPool = new BitMapMemoryPool< Index >();
+		
 		MemoryManager::m_PointPool = new BitMapMemoryPool< Point >();
 		MemoryManager::m_PointPtrPool = new BitMapMemoryPool< PointPtr >();
 		MemoryManager::m_PointPtrInternalsPool = new BitMapMemoryPool< PointPtrInternals >();

@@ -23,7 +23,8 @@ namespace model
 	using ExtendedPointPtr = shared_ptr< ExtendedPoint >;
 	using ManagedExtendedPointVector = vector< ExtendedPointPtr, BitMapAllocator< ExtendedPointPtr > >;
 	
-	using ManagedIndexVector = vector< uint, BitMapAllocator< uint > >;
+	using Index = uint;
+	using ManagedIndexVector = vector< Index, BitMapAllocator< Index > >;
 	
 	template< typename T >
 	class MortonCode;
@@ -95,6 +96,8 @@ namespace model
 		DECLARE_POOL_INTERFACE(Morton)
 		DECLARE_POOL_INTERFACE(MortonPtr)
 		DECLARE_POOL_INTERFACE(MortonPtrInternals)
+		
+		DECLARE_POOL_INTERFACE(Index)
 		
 		DECLARE_POOL_INTERFACE(Point)
 		DECLARE_POOL_INTERFACE(PointPtr)
@@ -178,6 +181,12 @@ namespace model
 	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< ShallowMortonCode >,MortonPtrInternals)
 	
 	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< MediumMortonCode >,MortonPtrInternals)
+	
+	// =======================================
+	// Index specializations
+	// =======================================
+	
+	SPECIALIZE_ALLOC_DEALLOC(Index,Index)
 	
 	// =========================
 	// Point specializations
