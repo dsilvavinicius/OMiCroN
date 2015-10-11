@@ -314,30 +314,33 @@ namespace model
 		
 		assert( neededBlocks <= BIT_MAP_SIZE && "Array allocation: size greater than maximum allowed." );
 		
-		ArrayInfo arrayInfo = m_freeHeap.top();
-		if( arrayInfo.m_size >= neededBlocks )
+		if( !m_freeHeap.empty() )
 		{
-			if( arrayInfo.m_size == neededBlocks )
+			ArrayInfo arrayInfo = m_freeHeap.top();
+			if( arrayInfo.m_size >= neededBlocks )
 			{
-				// Delete this free entry in heap and map
-				m_freeHeap.pop();
-				typename Map::iterator mapIt = arrayInfo.m_mapIt;
-				T* address = mapIt->first;
-				m_freeMap.erase( mapIt );
-				
-				return setHeader( address, arraySize );
-			}
-			else
-			{
-				typename Map::iterator mapIt = arrayInfo.m_mapIt;
-				T* address = mapIt->first;
-				typename Heap::handle_type handler = mapIt->second;
-				
-				typename Map::iterator nextIt = m_freeMap.erase( mapIt );
-				m_freeMap.insert( nextIt, typename Map::value_type( address + neededBlocks, handler ) );
-				arrayInfo.m_size -= neededBlocks;
-				m_freeHeap.decrease( handler, arrayInfo );
-				return setHeader( mapIt->first, arraySize );
+				if( arrayInfo.m_size == neededBlocks )
+				{
+					// Delete this free entry in heap and map
+					m_freeHeap.pop();
+					typename Map::iterator mapIt = arrayInfo.m_mapIt;
+					T* address = mapIt->first;
+					m_freeMap.erase( mapIt );
+					
+					return setHeader( address, arraySize );
+				}
+				else
+				{
+					typename Map::iterator mapIt = arrayInfo.m_mapIt;
+					T* address = mapIt->first;
+					typename Heap::handle_type handler = mapIt->second;
+					
+					typename Map::iterator nextIt = m_freeMap.erase( mapIt );
+					m_freeMap.insert( nextIt, typename Map::value_type( address + neededBlocks, handler ) );
+					arrayInfo.m_size -= neededBlocks;
+					m_freeHeap.decrease( handler, arrayInfo );
+					return setHeader( mapIt->first, arraySize );
+				}
 			}
 		}
 		
