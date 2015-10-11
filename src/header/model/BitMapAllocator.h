@@ -16,6 +16,7 @@ namespace model
 		using reference = T&;
 		using const_reference = const reference;
 		using size_type = size_t;
+		using difference_type = ptrdiff_t;
 		
 		template< typename U >
 		struct rebind{ using other = BitMapAllocator< U >; };

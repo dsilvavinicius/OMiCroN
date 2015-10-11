@@ -10,10 +10,10 @@ namespace model
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	struct DefaultAllocGroup
 	{
-		using MortonAlloc = allocator< Morton >;
-		using PointAlloc = allocator< Point >;
-		using InnerAlloc = allocator< Inner >;
-		using LeafAlloc = allocator< Leaf >;
+		using MortonAlloc = std::allocator< Morton >;
+		using PointAlloc = std::allocator< Point >;
+		using InnerAlloc = std::allocator< Inner >;
+		using LeafAlloc = std::allocator< Leaf >;
 	};
 	
 	/** MemoryManager implementation using pools described in Ben Kenwright's Fast Efficient Fixed-Sized Memory Pool paper:

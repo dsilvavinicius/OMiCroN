@@ -20,7 +20,7 @@ namespace model
 			using MortonPtr = shared_ptr< Morton >;
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;
@@ -76,7 +76,7 @@ namespace model
 			using MortonPtr = shared_ptr< Morton >;
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;
@@ -132,7 +132,7 @@ namespace model
 			using MortonPtr = shared_ptr< Morton >;
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using Inner = InnerNode< ExtendedPointPtr >;
 			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;
@@ -186,7 +186,7 @@ namespace model
 			using Morton = ShallowMortonCode;
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using Inner = InnerNode< PointVector >;
 			using Leaf = LeafNode< PointVector >;
 			
@@ -311,7 +311,7 @@ namespace model
 			using Morton = MediumMortonCode;
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr >;
+			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using Inner = InnerNode< PointVector >;
 			using Leaf = LeafNode< PointVector >;
 			

@@ -3,12 +3,15 @@
 
 #include <map>
 #include <mutex>
+#include <boost/heap/fibonacci_heap.hpp>
 #include "IMemoryPool.h"
 #include "MemoryManager.h"
 
+using namespace boost::heap;
+
 namespace model
 {
-	const int BIT_MAP_SIZE = 1048576; // 1024 ^ 2
+	const int BIT_MAP_SIZE = 1024 * 1024 * 10;
 	const int INT_SIZE = sizeof( int ) * 8;
 	const int BIT_MAP_ELEMENTS = BIT_MAP_SIZE / INT_SIZE;
 
@@ -54,19 +57,39 @@ namespace model
 		/** @returns the position of the first free block associated with this BitMapEntry. */
 		int FirstFreeBlockPos();
 	
+		int BitMap[ BIT_MAP_ELEMENTS ];
 		int Index;
 		int BlocksAvailable;
-		int BitMap[ BIT_MAP_ELEMENTS ];
 	};
-
-	/** Contains info of array allocation requests. */
-	typedef struct ArrayInfo
+	
+	template< typename T >
+	class ArrayInfo;
+	
+	template< typename T >
+	class ArrayInfoComparator
 	{
-		int   MemPoolListIndex;
-		int   StartPosition;
-		int   Size;
-	}
-	ArrayMemoryInfo;
+	public:
+		bool operator()( const ArrayInfo< T >& info0, const ArrayInfo< T >& info1 ) const
+		{
+			return info0.m_size < info1.m_size;
+		};
+	};
+	
+	/** Contains info of array allocation requests. */
+	template< typename T >
+	class ArrayInfo
+	{
+		using Heap = fibonacci_heap< ArrayInfo< T >, std::allocator< ArrayInfo< T > >, ArrayInfoComparator< T > >;
+		using Map = map< T*, typename Heap::handle_type >;
+	public:
+		ArrayInfo( const uint& size, const typename Map::iterator& it )
+		: m_size( size ),
+		m_mapIt( it )
+		{}
+		
+		typename Map::iterator m_mapIt;
+		uint m_size;
+	};
 	
 	/**
 	 * BitMapMemoryPool, which provides a thread-safe type-safe implementation of
@@ -78,9 +101,19 @@ namespace model
 	: public IMemoryPool< T >
 	{
 		using BitMapEntry = model::BitMapEntry< T >;
+		using ArrayInfo = model::ArrayInfo< T >;
+		using Heap = fibonacci_heap< ArrayInfo, std::allocator< ArrayInfo >, ArrayInfoComparator< T > >;
+		using Map = map< T*, typename Heap::handle_type >;
 		
 	public: 
-		BitMapMemoryPool() {}
+		BitMapMemoryPool()
+		{
+			m_arrayHeaderSize = sizeof( uint ) / sizeof( T ); // Number of blocks needed to contain the array size header.
+			if( sizeof( uint ) % sizeof( T ) != 0 )
+			{
+				m_arrayHeaderSize += 1;
+			};
+		}
 		
 		~BitMapMemoryPool();
 		
@@ -92,29 +125,27 @@ namespace model
 		
 		void deallocateArray( T* p) override;
 		
-		size_t usedBlocks() const override;
-		
+		size_t usedBlocks() const override;		
 		size_t memoryUsage() const override;
 		
 	private:
-		T* AllocateArrayMemory( size_t size );
 		T* AllocateChunkAndInitBitMap();
-		
-		/** Creates an ArrayMemoryInfo, setting all necessary bits in the associated bitmap entry, inserting it into the
-		 * array info map and returning the pointer to the allocated array. */
-		T* createArrayInfo( int index, int start, int size );
 		
 		/** Sets the bit related with the given pointer. */
 		void SetBlockBit( T* object, bool flag );
-		
-		/** Sets all bits associated with a given array described by the given ArrayMemoryInfo. */
-		void SetMultipleBlockBits( ArrayMemoryInfo* info, bool flag );
 		
 		/** @returns the first free block of the given BitMapEntry. */
 		T* firstFreeBlock( BitMapEntry* bitmap );
 		
 		/** @returns the object address of the given position in the memory chunk associated with the given BitMapEntry. */
 		T* objectAddress( BitMapEntry* bitmap, int pos );
+		
+		/** Setups the header of the array.
+		 * @returns a pointer to the array after the header, pointing to the first actual array element. */
+		T* setHeader( T* array, const uint& arraySize );
+		
+		/** Allocates chunk for array memory. Setup all needed data in free heap and map. */
+		T* allocArrayChunk();
 		
 		vector< T* >& GetMemoryPoolList();
 		
@@ -124,9 +155,11 @@ namespace model
 		//should be of same  size.
 		set< BitMapEntry* > FreeMapEntries; // Bitmaps that currently have free entries.
 		
-		map< T*, ArrayMemoryInfo > ArrayMemoryList; // List of currently allocated arrays.
-		set< int > freeArrayPoolIndices; // Indices for array memory pools that currently have no arrays allocated.
-		mutex poolLock; // Lock to the pool
+		Map m_freeMap; // List of current free memory areas.
+		Heap m_freeHeap; // Heap of free memory areas. Used to query allocations fast. 
+		uint m_arrayHeaderSize; // Header size for arrays in units of T.
+		
+		mutex m_poolLock; // Lock to the pool
 	};
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
@@ -168,50 +201,6 @@ namespace model
 			BitMap[ elementNo ] = BitMap[ elementNo ] | ( 1 << bitNo );
 		else
 			BitMap[ elementNo ] = BitMap[ elementNo ] & ~( 1 << bitNo ); 
-	}
-
-	template< typename T >
-	void BitMapEntry< T >::SetMultipleBits( int position, bool flag, int count )
-	{
-		//cout << "SetMultipleBits " << flag << endl << endl;
-		
-		BlocksAvailable += flag ? count : -count;
-		int elementNo = position / INT_SIZE;
-		int bitNo = position % INT_SIZE;
-
-		int bitSize = ( count <= INT_SIZE - bitNo ) ? count : INT_SIZE - bitNo;  
-		SetRangeOfInt( &BitMap[ elementNo ], bitNo + bitSize - 1, bitNo, flag );
-		count -= bitSize;
-		if( !count ) return;
-		
-		int i = ++elementNo;
-		while( count >= 0 )
-		{
-			if( count <= INT_SIZE )
-			{
-				SetRangeOfInt( &BitMap[ i ], count - 1, 0, flag );
-				return;
-			}
-			else 
-				BitMap[ i ] = flag ? unsigned ( -1 ) : 0;
-			count -= 32; 
-			i++;
-		}
-	}
-
-	template< typename T >
-	void BitMapEntry< T >::SetRangeOfInt( int* element, int msb, int lsb, bool flag )
-	{
-		if( flag )
-		{
-			int mask = ( unsigned( -1 ) << lsb ) & ( unsigned( -1 ) >> INT_SIZE - msb - 1 );
-			*element |= mask;
-		}
-		else 
-		{
-			int mask = ( unsigned( -1 ) << lsb ) & ( unsigned( -1 ) >> INT_SIZE - msb - 1 );
-			*element &= ~mask;
-		}
 	}
 
 	template< typename T >
@@ -287,7 +276,7 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::allocate()
 	{
-		lock_guard< mutex > guard( poolLock );
+		lock_guard< mutex > guard( m_poolLock );
 		
 		typename std::set< BitMapEntry* >::iterator freeMapI = FreeMapEntries.begin();
 		if( freeMapI != FreeMapEntries.end() )
@@ -318,125 +307,104 @@ namespace model
 	template< typename T >
 	T* BitMapMemoryPool< T >::allocateArray( const size_t& size )
 	{
-		lock_guard< mutex > guard( poolLock );
+		lock_guard< mutex > guard( m_poolLock );
 		
-		if( size > BIT_MAP_SIZE * sizeof( T ) )
+		size_t arraySize = size / sizeof( T );
+		size_t neededBlocks = arraySize + m_arrayHeaderSize;
+		
+		assert( neededBlocks <= BIT_MAP_SIZE && "Array allocation: size greater than maximum allowed." );
+		
+		ArrayInfo arrayInfo = m_freeHeap.top();
+		if( arrayInfo.m_size >= neededBlocks )
 		{
-			throw logic_error( "Array allocation: size greater than maximum allowed." );
-		}
-		
-		size_t neededBlocks = size / sizeof( T );
-		
-		// Checks if there is free array pools.
-		if( freeArrayPoolIndices.size() != 0 )
-		{
-			auto freeArrayPoolIdxIt = freeArrayPoolIndices.begin();
-			int index = *freeArrayPoolIdxIt;
-			freeArrayPoolIndices.erase( freeArrayPoolIdxIt );
-			return createArrayInfo( index, 0, neededBlocks );
-		}
-		
-		typename std::map< T*, ArrayMemoryInfo >::iterator infoI = ArrayMemoryList.begin();
-		typename std::map< T*, ArrayMemoryInfo >::iterator infoEndI = ArrayMemoryList.end();
-		
-		while( infoI != infoEndI )
-		{
-			ArrayMemoryInfo info = ( *infoI ).second;
-			BitMapEntry* entry = &BitMapEntryList[ info.MemPoolListIndex ];
-			
-			if( entry->BlocksAvailable < neededBlocks ) 
-				continue;
-			else 
+			if( arrayInfo.m_size == neededBlocks )
 			{
-				if( info.StartPosition != 0 )
-				{
-					// Check if have space behind current array.
-					if( info.StartPosition >= neededBlocks )
-					{
-						return createArrayInfo( info.MemPoolListIndex, 0, neededBlocks );
-					}
-				}
-				else
-				{
-					while( infoI != infoEndI )
-					{
-						info = infoI->second;
-						auto nextI = std::next( infoI, 1 );
-						if( nextI == infoEndI || nextI->second.MemPoolListIndex != info.MemPoolListIndex )
-						{
-							return createArrayInfo( info.MemPoolListIndex, info.StartPosition + info.Size, neededBlocks );
-						}
-						else
-						{
-							ArrayMemoryInfo nextInfo = nextI->second;
-							if( info.StartPosition + info.Size - nextInfo.StartPosition >= neededBlocks )
-							{
-								return createArrayInfo( info.MemPoolListIndex, info.StartPosition + info.Size, neededBlocks );
-							}
-						}
-						
-						infoI++;
-					}
-				}
+				// Delete this free entry in heap and map
+				m_freeHeap.pop();
+				typename Map::iterator mapIt = arrayInfo.m_mapIt;
+				T* address = mapIt->first;
+				m_freeMap.erase( mapIt );
+				
+				return setHeader( address, arraySize );
+			}
+			else
+			{
+				typename Map::iterator mapIt = arrayInfo.m_mapIt;
+				T* address = mapIt->first;
+				typename Heap::handle_type handler = mapIt->second;
+				
+				typename Map::iterator nextIt = m_freeMap.erase( mapIt );
+				m_freeMap.insert( nextIt, typename Map::value_type( address + neededBlocks, handler ) );
+				arrayInfo.m_size -= neededBlocks;
+				m_freeHeap.decrease( handler, arrayInfo );
+				return setHeader( mapIt->first, arraySize );
 			}
 		}
 		
-		return AllocateArrayMemory( size );
-	}
-	
-	template< typename T >
-	T* BitMapMemoryPool< T >::createArrayInfo( int index, int start, int size )
-	{
-		ArrayInfo info;
-		info.MemPoolListIndex = index;
-		info.StartPosition = start;
-		info.Size = size;
-		
-		T* baseAddress = MemoryPoolList[ info.MemPoolListIndex ] + start;
-		ArrayMemoryList[ baseAddress ] = info;
-		SetMultipleBlockBits( &info, false );
-		
-		return baseAddress;
-	}
-	
-	template< typename T >
-	T* BitMapMemoryPool< T >::AllocateArrayMemory( size_t size )
-	{
-		T* chunkAddress = AllocateChunkAndInitBitMap();
-		ArrayMemoryInfo info;
-		info.MemPoolListIndex = MemoryPoolList.size() - 1;
-		info.StartPosition = 0;
-		info.Size = size / sizeof( T );
-		ArrayMemoryList[ chunkAddress ] = info;
-		SetMultipleBlockBits( &info, false );
-		return chunkAddress;
+		return setHeader( allocArrayChunk(), arraySize );
 	}
 
 	template< typename T >
 	void BitMapMemoryPool< T >::deallocate( T* object )
 	{
-		lock_guard< mutex > guard( poolLock );
+		lock_guard< mutex > guard( m_poolLock );
 		
 		SetBlockBit( object, true );
 	}
 	
 	template< typename T >
-	void BitMapMemoryPool< T >::deallocateArray( T* object )
+	void BitMapMemoryPool< T >::deallocateArray( T* array )
 	{
-		lock_guard< mutex > guard( poolLock );
+		lock_guard< mutex > guard( m_poolLock );
 		
-		auto it = ArrayMemoryList.find( object );
-		ArrayMemoryInfo *info = &it->second;
-		SetMultipleBlockBits( info, true );
+		T* header = array - m_arrayHeaderSize;
+		uint arraySize = *( reinterpret_cast< uint* >( header ) ) + m_arrayHeaderSize;
 		
-		// In case of all ArrayMemoryInfo of the pool being dealloc, the pool index is inserted into freeArrayPoolIndices
-		// for fast alloc later on.
-		if( BitMapEntryList[ info->MemPoolListIndex ].BlocksAvailable == BIT_MAP_SIZE )
+		typename Map::iterator nextIt = m_freeMap.upper_bound( header );
+		T* nextAddr = nextIt->first;
+		uint nextSize = ( *nextIt->second ).m_size;
+		
+		typename Map::iterator prevIt = std::prev( nextIt );
+		T* prevAddr = prevIt->first;
+		uint prevSize = ( *prevIt->second ).m_size;
+		
+		bool canMergePrev = prevAddr + prevSize == header;
+		bool canMergeNext = array + arraySize == nextAddr;
+		
+		if( canMergePrev && canMergeNext )
 		{
-			freeArrayPoolIndices.insert( info->MemPoolListIndex );
+			// Free area can be merged with previous and next. Next will be deleted and previous will grow.
+			ArrayInfo arrayInfo = *prevIt->second;
+			arrayInfo.m_size += arraySize + nextSize;
+			m_freeHeap.increase( prevIt->second, arrayInfo );
+			
+			m_freeHeap.erase( nextIt->second );
+			m_freeMap.erase( nextIt );
 		}
-		
-		ArrayMemoryList.erase( it );
+		else if( canMergePrev )
+		{
+			ArrayInfo arrayInfo = *prevIt->second;
+			arrayInfo.m_size += arraySize;
+			m_freeHeap.increase( prevIt->second, arrayInfo );
+		}
+		else if( canMergeNext )
+		{
+			typename Heap::handle_type nextHeapHandle = nextIt->second;
+			typename Map::iterator nextHint = m_freeMap.erase( nextIt );
+			m_freeMap.insert( nextHint, typename Map::value_type( nextAddr - arraySize, nextHeapHandle ) );
+			
+			ArrayInfo arrayInfo = *nextHeapHandle;
+			arrayInfo.m_size += arraySize;
+			m_freeHeap.increase( nextHeapHandle, arrayInfo );
+		}
+		else
+		{
+			// Cannot merge. Just insert a new free entry.
+			typename Map::value_type mapEntry( header, typename Heap::handle_type() );
+			typename Map::iterator it = m_freeMap.insert( mapEntry ).first;
+			ArrayInfo arrayInfo( arraySize, it );
+			it->second = m_freeHeap.push( arrayInfo );
+		}
 	}
 	
 	template< typename T >
@@ -495,6 +463,27 @@ namespace model
 		BitMapEntryList.push_back( mapEntry );
 		return memoryBeginAddress;
 	}
+	
+	template< typename T >
+	inline T* BitMapMemoryPool< T >::setHeader( T* array, const uint& arraySize )
+	{
+		uint* header = reinterpret_cast< uint* >( array );
+		*header = arraySize;
+		return array + m_arrayHeaderSize;
+	}
+	
+	template< typename T >
+	T* BitMapMemoryPool< T >::allocArrayChunk()
+	{
+		T* address = reinterpret_cast< T* >( new char [ sizeof( T ) * BIT_MAP_SIZE ] );
+		
+		typename Map::value_type mapEntry( address, typename Heap::handle_type() );
+		typename Map::iterator mapIt = m_freeMap.insert( mapEntry ).first;
+		ArrayInfo arrayInfo( BIT_MAP_SIZE, mapIt );
+		mapIt->second = m_freeHeap.push( arrayInfo );
+		
+		return address;
+	}
 
 	template< typename T >
 	void BitMapMemoryPool< T >::SetBlockBit( T* object, bool flag )
@@ -520,13 +509,6 @@ namespace model
 				}
 			}
 		}
-	}
-
-	template< typename T >
-	void BitMapMemoryPool< T >::SetMultipleBlockBits( ArrayMemoryInfo* info, bool flag )
-	{
-		BitMapEntry* mapEntry = &BitMapEntryList[ info->MemPoolListIndex ];
-		mapEntry->SetMultipleBits( info->StartPosition, flag, info->Size );
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
