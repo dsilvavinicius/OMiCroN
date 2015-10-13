@@ -107,6 +107,7 @@ namespace model
 		
 	public: 
 		BitMapMemoryPool()
+		: m_usedBlocks( 0 )
 		{
 			m_arrayHeaderSize = sizeof( uint ) / sizeof( T ); // Number of blocks needed to contain the array size header.
 			if( sizeof( uint ) % sizeof( T ) != 0 )
@@ -144,9 +145,6 @@ namespace model
 		 * @returns a pointer to the array after the header, pointing to the first actual array element. */
 		T* setHeader( T* array, const uint& arraySize );
 		
-		/** Allocates chunk for array memory. Setup all needed data in free heap and map. */
-		T* allocArrayChunk();
-		
 		vector< T* >& GetMemoryPoolList();
 		
 		vector< T* > MemoryPoolList;
@@ -158,6 +156,8 @@ namespace model
 		Map m_freeMap; // List of current free memory areas.
 		Heap m_freeHeap; // Heap of free memory areas. Used to query allocations fast. 
 		uint m_arrayHeaderSize; // Header size for arrays in units of T.
+		
+		uint m_usedBlocks; // Number of used blocks in this pool.
 		
 		mutex m_poolLock; // Lock to the pool
 	};
@@ -278,6 +278,8 @@ namespace model
 	{
 		lock_guard< mutex > guard( m_poolLock );
 		
+		++m_usedBlocks;
+		
 		typename std::set< BitMapEntry* >::iterator freeMapI = FreeMapEntries.begin();
 		if( freeMapI != FreeMapEntries.end() )
 		{
@@ -312,15 +314,24 @@ namespace model
 		size_t arraySize = size / sizeof( T );
 		size_t neededBlocks = arraySize + m_arrayHeaderSize;
 		
+		m_usedBlocks += neededBlocks;
+		
 		assert( neededBlocks <= BIT_MAP_SIZE && "Array allocation: size greater than maximum allowed." );
+		
+		//cout << "Needed blocks: " << neededBlocks << endl << endl;
 		
 		if( !m_freeHeap.empty() )
 		{
 			ArrayInfo arrayInfo = m_freeHeap.top();
+			
+			//cout << "heap top: " << arrayInfo.m_size << endl << endl;
+			
 			if( arrayInfo.m_size >= neededBlocks )
 			{
 				if( arrayInfo.m_size == neededBlocks )
 				{
+					//cout << "Correct fit" << endl << endl;
+					
 					// Delete this free entry in heap and map
 					m_freeHeap.pop();
 					typename Map::iterator mapIt = arrayInfo.m_mapIt;
@@ -335,22 +346,42 @@ namespace model
 					T* address = mapIt->first;
 					typename Heap::handle_type handler = mapIt->second;
 					
+					//cout << "Worst fit. address: " << address << endl << endl;
+					
 					typename Map::iterator nextIt = m_freeMap.erase( mapIt );
-					m_freeMap.insert( nextIt, typename Map::value_type( address + neededBlocks, handler ) );
+					arrayInfo.m_mapIt = m_freeMap.insert( nextIt, typename Map::value_type( address + neededBlocks, handler ) );
 					arrayInfo.m_size -= neededBlocks;
+					
 					m_freeHeap.decrease( handler, arrayInfo );
-					return setHeader( mapIt->first, arraySize );
+					
+					//cout << "New address: " << arrayInfo.m_mapIt->first << " diff: " << arrayInfo.m_mapIt->first - address
+					//	 << " updated heap: " << ( *arrayInfo.m_mapIt->second ).m_size << endl << endl;
+					
+					return setHeader( address, arraySize );
 				}
 			}
 		}
 		
-		return setHeader( allocArrayChunk(), arraySize );
+		// Alloc new chunk.
+		T* address = reinterpret_cast< T* >( new char [ sizeof( T ) * BIT_MAP_SIZE ] );
+		
+		typename Map::value_type mapEntry( address + neededBlocks, typename Heap::handle_type() );
+		typename Map::iterator mapIt = m_freeMap.insert( mapEntry ).first;
+		ArrayInfo arrayInfo( BIT_MAP_SIZE - neededBlocks, mapIt );
+		mapIt->second = m_freeHeap.push( arrayInfo );
+		
+		//cout << "alloc chunk: allocated: ( " << address << ", " << BIT_MAP_SIZE << " ), mapEntry: " << mapIt->first <<
+		//	 ", handle: (" << ( *mapIt->second ).m_size << ", " << ( *mapIt->second ).m_mapIt->first << ")" << endl << endl;
+		
+		return setHeader( address , arraySize );
 	}
 
 	template< typename T >
 	void BitMapMemoryPool< T >::deallocate( T* object )
 	{
 		lock_guard< mutex > guard( m_poolLock );
+		
+		--m_usedBlocks;
 		
 		SetBlockBit( object, true );
 	}
@@ -362,20 +393,48 @@ namespace model
 		
 		T* header = array - m_arrayHeaderSize;
 		uint arraySize = *( reinterpret_cast< uint* >( header ) ) + m_arrayHeaderSize;
+		m_usedBlocks -= arraySize;
 		
 		typename Map::iterator nextIt = m_freeMap.upper_bound( header );
-		T* nextAddr = nextIt->first;
-		uint nextSize = ( *nextIt->second ).m_size;
+		T* nextAddr;
+		uint nextSize;
+		bool canMergeNext;
 		
-		typename Map::iterator prevIt = std::prev( nextIt );
-		T* prevAddr = prevIt->first;
-		uint prevSize = ( *prevIt->second ).m_size;
+		typename Map::iterator end = m_freeMap.end();
 		
-		bool canMergePrev = prevAddr + prevSize == header;
-		bool canMergeNext = array + arraySize == nextAddr;
+		if( nextIt != end )
+		{
+			nextAddr = nextIt->first;
+			nextSize = ( *nextIt->second ).m_size;
+			
+			canMergeNext = header + arraySize == nextAddr;
+		}
+		else
+		{
+			canMergeNext = false;
+		}
+		
+		typename Map::iterator prevIt;
+		T* prevAddr;
+		uint prevSize;
+		bool canMergePrev;
+		
+		prevIt = std::prev( nextIt );
+		if( prevIt != end )
+		{
+			prevAddr = prevIt->first;
+			prevSize = ( *prevIt->second ).m_size;
+			canMergePrev = prevAddr + prevSize == header;
+		}
+		else
+		{
+			canMergePrev = false;
+		}
 		
 		if( canMergePrev && canMergeNext )
 		{
+			//cout << "Can merge both" << endl << endl;
+			
 			// Free area can be merged with previous and next. Next will be deleted and previous will grow.
 			ArrayInfo arrayInfo = *prevIt->second;
 			arrayInfo.m_size += arraySize + nextSize;
@@ -386,28 +445,39 @@ namespace model
 		}
 		else if( canMergePrev )
 		{
+			//cout << "Can merge prev" << endl << endl;
+			
 			ArrayInfo arrayInfo = *prevIt->second;
 			arrayInfo.m_size += arraySize;
 			m_freeHeap.increase( prevIt->second, arrayInfo );
 		}
 		else if( canMergeNext )
 		{
-			typename Heap::handle_type nextHeapHandle = nextIt->second;
-			typename Map::iterator nextHint = m_freeMap.erase( nextIt );
-			m_freeMap.insert( nextHint, typename Map::value_type( nextAddr - arraySize, nextHeapHandle ) );
+			//cout << "Can merge next" << endl << endl;
 			
+			typename Heap::handle_type nextHeapHandle = nextIt->second;
 			ArrayInfo arrayInfo = *nextHeapHandle;
+			typename Map::iterator nextHint = m_freeMap.erase( nextIt );
+			arrayInfo.m_mapIt = m_freeMap.insert( nextHint, typename Map::value_type( nextAddr - arraySize, nextHeapHandle ) );
 			arrayInfo.m_size += arraySize;
 			m_freeHeap.increase( nextHeapHandle, arrayInfo );
 		}
 		else
 		{
+			//cout << "Cannot merge" << endl << endl;
+			
 			// Cannot merge. Just insert a new free entry.
 			typename Map::value_type mapEntry( header, typename Heap::handle_type() );
 			typename Map::iterator it = m_freeMap.insert( mapEntry ).first;
 			ArrayInfo arrayInfo( arraySize, it );
 			it->second = m_freeHeap.push( arrayInfo );
 		}
+		
+		//for( typename Map::value_type entry : m_freeMap )
+		//{
+		//	cout << "address: " << entry.first << endl << "heap: " << ( *entry.second ).m_size << ", " << ( *entry.second ).m_mapIt->first
+		//		 << endl << endl;
+		//}
 	}
 	
 	template< typename T >
@@ -419,20 +489,13 @@ namespace model
 	template< typename T >
 	size_t BitMapMemoryPool< T >::usedBlocks() const
 	{
-		size_t nUsedBlocks = 0;
-		
-		for( BitMapEntry bitmap : BitMapEntryList )
-		{
-			nUsedBlocks += BIT_MAP_SIZE - bitmap.BlocksAvailable;
-		}
-		
-		return nUsedBlocks;
+		return m_usedBlocks;
 	}
 	
 	template< typename T >
 	size_t BitMapMemoryPool< T >::memoryUsage() const
 	{
-		return usedBlocks() * sizeof( T );
+		return m_usedBlocks * sizeof( T );
 	}
 	
 	template< typename T >
@@ -473,19 +536,6 @@ namespace model
 		uint* header = reinterpret_cast< uint* >( array );
 		*header = arraySize;
 		return array + m_arrayHeaderSize;
-	}
-	
-	template< typename T >
-	T* BitMapMemoryPool< T >::allocArrayChunk()
-	{
-		T* address = reinterpret_cast< T* >( new char [ sizeof( T ) * BIT_MAP_SIZE ] );
-		
-		typename Map::value_type mapEntry( address, typename Heap::handle_type() );
-		typename Map::iterator mapIt = m_freeMap.insert( mapEntry ).first;
-		ArrayInfo arrayInfo( BIT_MAP_SIZE, mapIt );
-		mapIt->second = m_freeHeap.push( arrayInfo );
-		
-		return address;
 	}
 
 	template< typename T >

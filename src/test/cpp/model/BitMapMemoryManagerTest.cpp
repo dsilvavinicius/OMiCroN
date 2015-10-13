@@ -18,22 +18,29 @@ namespace model
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
+			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
+			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
+			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
+			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
+			
 			using OctreeMap = model::OctreeMap< Morton >;
+			using MapInternals = model::MapInternals< Morton >;
 			
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
-			size_t totalMortonsSize = nNodes * sizeof( Morton );
-			size_t totalPointsSize = nPoints * sizeof( Point );
-			size_t totalInnersSize = 0 * sizeof( Inner );
-			size_t totalLeavesSize = nNodes * sizeof( Leaf );
-			size_t maxMemToUse = totalMortonsSize + totalPointsSize + totalInnersSize + totalLeavesSize;
+			size_t maxMemToUse = nNodes * ( sizeof( MortonPtrInternals ) + sizeof( LeafPtrInternals )
+								+ sizeof( MapInternals ) + 3 * ( sizeof( PointPtr ) ) )
+								+ nPoints * sizeof( PointPtrInternals );
 			
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
@@ -74,22 +81,26 @@ namespace model
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
+			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
+			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
+			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
 			using Leaf = LeafNode< PointVector >;
-			using LeafPtr = shared_ptr< Leaf >;
+			
 			using OctreeMap = model::OctreeMap< Morton >;
+			using MapInternals = model::MapInternals< Morton >;
 			
 			uint nNodes = 500000u;
 			uint nPoints = 2u * nNodes;
-			size_t totalMortonsSize = nNodes * sizeof( Morton );
-			size_t totalPointsSize = nPoints * sizeof( Point );
-			size_t totalInnersSize = nNodes * sizeof( Inner );
-			size_t totalLeavesSize = 0;
-			size_t maxMemToUse = totalMortonsSize + totalPointsSize + totalInnersSize + totalLeavesSize;
+			size_t maxMemToUse = nNodes * ( sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
+								+ sizeof( MapInternals ) + 3 * ( sizeof( PointPtr ) ) )
+								+ nPoints * sizeof( PointPtrInternals );
 			
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
@@ -130,22 +141,26 @@ namespace model
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
+			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
+			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			
 			using Inner = InnerNode< ExtendedPointPtr >;
 			using InnerPtr = shared_ptr< Inner >;
+			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
+			
 			using OctreeMap = model::OctreeMap< Morton >;
+			using MapInternals = model::MapInternals< Morton >;
 			
 			uint nNodes = 500000u;
-			uint nPoints = nNodes;
-			size_t totalMortonsSize = nNodes * sizeof( Morton );
-			size_t totalPointsSize = nPoints * sizeof( Point );
-			size_t totalInnersSize = nNodes * sizeof( Inner );
-			size_t totalLeavesSize = 0;
-			size_t maxMemToUse = totalMortonsSize + totalPointsSize + totalInnersSize + totalLeavesSize;
+			size_t maxMemToUse = nNodes * ( sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
+								+ sizeof( MapInternals ) + sizeof( PointPtrInternals ) );
 			
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
@@ -191,11 +206,8 @@ namespace model
 			using Leaf = LeafNode< PointVector >;
 			
 			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
-			uint arrayTotal = arraySizes[ 0 ] + arraySizes[ 1 ] + arraySizes[ 2 ] + arraySizes[ 3 ] + arraySizes[ 4 ];
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance(
-				arrayTotal * sizeof( Morton ) + arrayTotal * sizeof( Point ) + arrayTotal * sizeof( Inner )
-				+ arrayTotal * sizeof( Leaf ) );
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( 1024 * 1024 );
 			
 			Morton* mortonArrays[ 5 ];
 			Point* pointArrays[ 5 ];
@@ -204,27 +216,39 @@ namespace model
 			
 			for( int i = 0; i < 5; ++i )
 			{
+				//cout << "Morton" << endl << endl;
+				
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
+				
+				//cout << "Point" << endl << endl;
+				
 				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
+				
+				//cout << "Inner" << endl << endl;
+				
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
+				
+				//cout << "Leaf" << endl << endl;
+				
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
 			}
 			
 			// Checking if arrays are being allocated to pointers as expected.
-			uint sameBlockElements = arraySizes[ 0 ];
+			uint sameBlockElements = arraySizes[ 0 ] + 1;
 			for( int i = 1; i < 5; ++i )
 			{
-				sameBlockElements += arraySizes[ i ];
+				sameBlockElements += arraySizes[ i ] + 1;
 				if( sameBlockElements > BIT_MAP_SIZE )
 				{
-					sameBlockElements = arraySizes[ i ];
+					sameBlockElements = arraySizes[ i ] + 1;
 				}
 				else
 				{
-					ASSERT_EQ( mortonArrays[ i ], mortonArrays[ i - 1 ] + arraySizes[ i - 1 ] );
-					ASSERT_EQ( pointArrays[ i ], pointArrays[ i - 1 ] + arraySizes[ i - 1 ] );
-					ASSERT_EQ( innerArrays[ i ], innerArrays[ i - 1 ] + arraySizes[ i - 1 ] );
-					ASSERT_EQ( leafArrays[ i ], leafArrays[ i - 1 ] + arraySizes[ i - 1 ] );
+					//cout << "array " << i << endl << endl;
+					ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
+					ASSERT_EQ( pointArrays[ i ] - pointArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
+					ASSERT_EQ( innerArrays[ i ] - innerArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
+					ASSERT_EQ( leafArrays[ i ] - leafArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
 				}
 			}
 			
@@ -245,9 +269,20 @@ namespace model
 			// Deleting some arrays in order to check if remaining pointers are correct afterwards.
 			for( int i = 0; i < 3; ++i )
 			{
+				//cout << "Delete morton" << endl << endl;
+				
 				delete[] mortonArrays[ i ];
+				
+				//cout << "Delete point" << endl << endl;
+				
 				delete[] pointArrays[ i ];
+				
+				//cout << "Delete inner" << endl << endl;
+				
 				delete[] innerArrays[ i ];
+				
+				//cout << "Delete leaf" << endl << endl;
+				
 				delete[] leafArrays[ i ];
 				
 				// Dereferencing attempt to check integrity after deletes.
@@ -260,7 +295,7 @@ namespace model
 				}
 			}
 			
-			// Creating arrays after deletions in order to check if memory is being reused correctly.
+			// Creating arrays after deletions in order to check if memory is handled correctly after deletions.
 			for( int i = 0; i < 3; ++i )
 			{
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
@@ -268,22 +303,31 @@ namespace model
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
 				
-				ASSERT_EQ( mortonArrays[ i ], expectedMortonArrays[ i ] );
-				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
-				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
-				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+				int modPrev = ( ( i - 1 ) % 5 + 5 ) % 5;
+				
+				ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ modPrev  ] - arraySizes[ modPrev ] - 1, 0 );
+				ASSERT_EQ( pointArrays[ i ] - pointArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
+				ASSERT_EQ( innerArrays[ i ] - innerArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
+				ASSERT_EQ( leafArrays[ i ] - leafArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
 			}
 			
 			// Deleting all arrays to setup the case where the pool could be lost because all ArrayMemoryInfo are erased.
 			for( int i = 0; i < 5; ++i )
 			{
+				//cout << "Delete morton" << endl << endl;
 				delete[] mortonArrays[ i ];
+				
+				//cout << "Delete point" << endl << endl;
 				delete[] pointArrays[ i ];
+				
+				//cout << "Delete inner" << endl << endl;
 				delete[] innerArrays[ i ];
+				
+				//cout << "Delete leaf" << endl << endl;
 				delete[] leafArrays[ i ];
 			}
 			
-			// Alloc again to check if the case aforementioned is not occurring and the pool is indeed being reused.
+			// Alloc again to check if memory is reused after deletion.
 			for( int i = 0; i < 5; ++i )
 			{
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
@@ -291,10 +335,10 @@ namespace model
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
 				
-				ASSERT_EQ( mortonArrays[ i ], expectedMortonArrays[ i ] );
-				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
-				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
-				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+				ASSERT_EQ( mortonArrays[ i ] - expectedMortonArrays[ i ], 0 );
+				ASSERT_EQ( pointArrays[ i ] - expectedPointArrays[ i ], 0 );
+				ASSERT_EQ( innerArrays[ i ] - expectedInnerArrays[ i ], 0 );
+				ASSERT_EQ( leafArrays[ i ] - expectedLeafArrays[ i ], 0 );
 			}
 			
 			for( int i = 0; i < 5; ++i )
@@ -316,11 +360,8 @@ namespace model
 			using Leaf = LeafNode< PointVector >;
 			
 			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
-			uint arrayTotal = arraySizes[ 0 ] + arraySizes[ 1 ] + arraySizes[ 2 ] + arraySizes[ 3 ] + arraySizes[ 4 ];
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance(
-				arrayTotal * sizeof( Morton ) + arrayTotal * sizeof( Point ) + arrayTotal * sizeof( Inner )
-				+ arrayTotal * sizeof( Leaf ) );
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( 1024 * 1024 );
 			
 			Morton* mortonArrays[ 5 ];
 			Point* pointArrays[ 5 ];
@@ -329,27 +370,39 @@ namespace model
 			
 			for( int i = 0; i < 5; ++i )
 			{
+				//cout << "Morton" << endl << endl;
+				
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
+				
+				//cout << "Point" << endl << endl;
+				
 				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
+				
+				//cout << "Inner" << endl << endl;
+				
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
+				
+				//cout << "Leaf" << endl << endl;
+				
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
 			}
 			
 			// Checking if arrays are being allocated to pointers as expected.
-			uint sameBlockElements = arraySizes[ 0 ];
+			uint sameBlockElements = arraySizes[ 0 ] + 1;
 			for( int i = 1; i < 5; ++i )
 			{
-				sameBlockElements += arraySizes[ i ];
+				sameBlockElements += arraySizes[ i ] + 1;
 				if( sameBlockElements > BIT_MAP_SIZE )
 				{
-					sameBlockElements = arraySizes[ i ];
+					sameBlockElements = arraySizes[ i ] + 1;
 				}
 				else
 				{
-					ASSERT_EQ( mortonArrays[ i ], mortonArrays[ i - 1 ] + arraySizes[ i - 1 ] );
-					ASSERT_EQ( pointArrays[ i ], pointArrays[ i - 1 ] + arraySizes[ i - 1 ] );
-					ASSERT_EQ( innerArrays[ i ], innerArrays[ i - 1 ] + arraySizes[ i - 1 ] );
-					ASSERT_EQ( leafArrays[ i ], leafArrays[ i - 1 ] + arraySizes[ i - 1 ] );
+					//cout << "array " << i << endl << endl;
+					ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
+					ASSERT_EQ( pointArrays[ i ] - pointArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
+					ASSERT_EQ( innerArrays[ i ] - innerArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
+					ASSERT_EQ( leafArrays[ i ] - leafArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
 				}
 			}
 			
@@ -370,9 +423,20 @@ namespace model
 			// Deleting some arrays in order to check if remaining pointers are correct afterwards.
 			for( int i = 0; i < 3; ++i )
 			{
+				//cout << "Delete morton" << endl << endl;
+				
 				delete[] mortonArrays[ i ];
+				
+				//cout << "Delete point" << endl << endl;
+				
 				delete[] pointArrays[ i ];
+				
+				//cout << "Delete inner" << endl << endl;
+				
 				delete[] innerArrays[ i ];
+				
+				//cout << "Delete leaf" << endl << endl;
+				
 				delete[] leafArrays[ i ];
 				
 				// Dereferencing attempt to check integrity after deletes.
@@ -385,7 +449,7 @@ namespace model
 				}
 			}
 			
-			// Creating arrays after deletions in order to check if memory is being reused correctly.
+			// Creating arrays after deletions in order to check if memory is handled correctly after deletions.
 			for( int i = 0; i < 3; ++i )
 			{
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
@@ -393,22 +457,31 @@ namespace model
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
 				
-				ASSERT_EQ( mortonArrays[ i ], expectedMortonArrays[ i ] );
-				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
-				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
-				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+				int modPrev = ( ( i - 1 ) % 5 + 5 ) % 5;
+				
+				ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ modPrev  ] - arraySizes[ modPrev ] - 1, 0 );
+				ASSERT_EQ( pointArrays[ i ] - pointArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
+				ASSERT_EQ( innerArrays[ i ] - innerArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
+				ASSERT_EQ( leafArrays[ i ] - leafArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
 			}
 			
 			// Deleting all arrays to setup the case where the pool could be lost because all ArrayMemoryInfo are erased.
 			for( int i = 0; i < 5; ++i )
 			{
+				//cout << "Delete morton" << endl << endl;
 				delete[] mortonArrays[ i ];
+				
+				//cout << "Delete point" << endl << endl;
 				delete[] pointArrays[ i ];
+				
+				//cout << "Delete inner" << endl << endl;
 				delete[] innerArrays[ i ];
+				
+				//cout << "Delete leaf" << endl << endl;
 				delete[] leafArrays[ i ];
 			}
 			
-			// Alloc again to check if the case aforementioned is not occurring and the pool is indeed being reused.
+			// Alloc again to check if memory is reused after deletion.
 			for( int i = 0; i < 5; ++i )
 			{
 				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
@@ -416,10 +489,10 @@ namespace model
 				innerArrays[ i ] = new Inner[ arraySizes[ i ] ];
 				leafArrays[ i ] = new Leaf[ arraySizes[ i ] ];
 				
-				ASSERT_EQ( mortonArrays[ i ], expectedMortonArrays[ i ] );
-				ASSERT_EQ( pointArrays[ i ], expectedPointArrays[ i ] );
-				ASSERT_EQ( innerArrays[ i ], expectedInnerArrays[ i ] );
-				ASSERT_EQ( leafArrays[ i ], expectedLeafArrays[ i ] );
+				ASSERT_EQ( mortonArrays[ i ] - expectedMortonArrays[ i ], 0 );
+				ASSERT_EQ( pointArrays[ i ] - expectedPointArrays[ i ], 0 );
+				ASSERT_EQ( innerArrays[ i ] - expectedInnerArrays[ i ], 0 );
+				ASSERT_EQ( leafArrays[ i ] - expectedLeafArrays[ i ], 0 );
 			}
 			
 			for( int i = 0; i < 5; ++i )
@@ -436,24 +509,28 @@ namespace model
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
 			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
 			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
-			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, ShallowMortonComparator,
-									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
+			
+			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
 			size_t expectedMemUsage = 	nPoints * ( 3 * sizeof( PointPtr ) + sizeof( PointPtrInternals ) )
-										+ 2 * sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
-										+ sizeof( LeafPtrInternals ) + 2 * sizeof( MapInternals );
+										+ 3 * sizeof( PointPtr ) + 2 * sizeof( MortonPtrInternals )
+										+ sizeof( InnerPtrInternals ) + sizeof( LeafPtrInternals )
+										+ 2 * sizeof( MapInternals );
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
@@ -485,26 +562,28 @@ namespace model
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
 			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			
 			using Inner = InnerNode< PointPtr >;
 			using InnerPtr = shared_ptr< Inner >;
 			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
 			
-			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, ShallowMortonComparator,
-									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
+			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
 			size_t expectedMemUsage = 	nPoints * ( 2 * sizeof( PointPtr ) + sizeof( PointPtrInternals ) )
-										+ sizeof( PointPtrInternals ) + 2 * sizeof( MortonPtrInternals )
-										+ sizeof( InnerPtrInternals ) + sizeof( LeafPtrInternals )
-										+ 2 * sizeof( MapInternals );
+										+ 2 * sizeof( PointPtr ) + sizeof( PointPtrInternals )
+										+ 2 * sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
+										+ sizeof( LeafPtrInternals ) + 2 * sizeof( MapInternals );
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
@@ -534,26 +613,30 @@ namespace model
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
 			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			
 			using Point = ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
+			
 			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
 			using IndexVector = vector< Index, BitMapAllocator< Index > >;
+			
 			using Inner = InnerNode< IndexVector >;
 			using InnerPtr = shared_ptr< Inner >;
 			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			
 			using Leaf = LeafNode< IndexVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
 			
-			using OctreeMap = map< 	MortonPtr, OctreeNodePtr, MediumMortonComparator,
-									BitMapAllocator< pair< const MortonPtr, OctreeNodePtr > > >;
+			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
-			size_t expectedMemUsage = 	nPoints * ( 3 * sizeof( Index ) + sizeof( PointPtrInternals ) + sizeof( PointPtr ) )
-										+ 2 * sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
-										+ sizeof( LeafPtrInternals ) + 2 * sizeof( MapInternals );
+			size_t expectedMemUsage = 	nPoints * ( sizeof( PointPtr ) + 3 * sizeof( Index ) + sizeof( PointPtrInternals ) )
+										+ sizeof( PointPtr ) + 3 * sizeof( Index ) + 2 * sizeof( MortonPtrInternals )
+										+ sizeof( InnerPtrInternals ) + sizeof( LeafPtrInternals )
+										+ 2 * sizeof( MapInternals );
 			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
 			
 			PointVector points( nPoints );
