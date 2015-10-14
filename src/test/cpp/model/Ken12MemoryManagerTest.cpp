@@ -12,10 +12,10 @@ namespace model
 {
 	namespace test
 	{
-        class MemoryManagerTest : public ::testing::Test
+        class Ken12MemoryManagerTest : public ::testing::Test
 		{};
 		
-		TEST_F( MemoryManagerTest, ShallowPointVectorLeafNodes )
+		TEST_F( Ken12MemoryManagerTest, ShallowPointVectorLeafNodes )
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -67,7 +67,7 @@ namespace model
 			ASSERT_EQ( manager.usedMemory(), ( size_t ) 0 );
 		}
 		
-		TEST_F( MemoryManagerTest, MediumExtendedPointVectorInnerNodes )
+		TEST_F( Ken12MemoryManagerTest, MediumExtendedPointVectorInnerNodes )
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;

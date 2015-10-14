@@ -359,7 +359,7 @@ namespace model
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
 			// Debug
-			//cout << "Manager before release: " << endl << memManager << endl;
+			cout << "Manager before release: " << endl << memManager << endl;
 			//
 			
 			m_nodesUntilLastPersistence = 0;
@@ -392,7 +392,7 @@ namespace model
 			}
 			
 			// Debug
-			//cout << "Manager after release: " << endl << memManager << endl;
+			cout << "Manager after release: " << endl << memManager << endl;
 			//
 		}
 	}
@@ -460,6 +460,8 @@ namespace model
 		
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
 		{
+			cout << "Manager before release: " << endl << memManager << endl;
+			
 			m_sqLite.beginTransaction();
 			
 			currentCode = nodeIt->first;
@@ -495,6 +497,8 @@ namespace model
 			}
 			
 			m_sqLite.endTransaction();
+			
+			cout << "Manager after release: " << endl << memManager << endl;
 		}
 		
 		return currentCode;

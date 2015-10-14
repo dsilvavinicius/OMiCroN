@@ -197,25 +197,27 @@ namespace model
 	string MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::toString() const
 	{
 		stringstream ss;
-		ss 	<< "Morton used blocks: " << m_MortonPool->usedBlocks() << " Used memory: " << m_MortonPool->memoryUsage() << endl
-			<< "MortonPtr used blocks: " << m_MortonPtrPool->usedBlocks() << " Used memory: " << m_MortonPtrPool->memoryUsage() << endl
-			<< "MortonPtrInternals used blocks: " << m_MortonPtrInternalsPool->usedBlocks() << " Used memory: " << m_MortonPtrInternalsPool->memoryUsage() << endl
+		ss 	<< "Max allowed mem: " << m_maxAllowedMem << endl << endl
+			<< "Used memory: " << usedMemory() << endl << endl
+			<< "Morton used blocks: " << m_MortonPool->usedBlocks() << " Used memory: " << m_MortonPool->memoryUsage() << endl << endl
+			<< "MortonPtr used blocks: " << m_MortonPtrPool->usedBlocks() << " Used memory: " << m_MortonPtrPool->memoryUsage() << endl << endl
+			<< "MortonPtrInternals used blocks: " << m_MortonPtrInternalsPool->usedBlocks() << " Used memory: " << m_MortonPtrInternalsPool->memoryUsage() << endl << endl
 			
-			<< "Index used blocks: " << m_IndexPool->usedBlocks() << " Used memory: " << m_IndexPool->memoryUsage() << endl
+			<< "Index used blocks: " << m_IndexPool->usedBlocks() << " Used memory: " << m_IndexPool->memoryUsage() << endl << endl
 			
-			<< "Point used blocks: " << m_PointPool->usedBlocks() << " Used memory: " << m_PointPool->memoryUsage() << endl
-			<< "PointPtr used blocks: " << m_PointPtrPool->usedBlocks() << " Used memory: " << m_PointPtrPool->memoryUsage() << endl
-			<< "PointPtrInternals used blocks: " << m_PointPtrInternalsPool->usedBlocks() << " Used memory: " << m_PointPtrInternalsPool->memoryUsage() << endl
+			<< "Point used blocks: " << m_PointPool->usedBlocks() << " Used memory: " << m_PointPool->memoryUsage() << endl << endl
+			<< "PointPtr used blocks: " << m_PointPtrPool->usedBlocks() << " Used memory: " << m_PointPtrPool->memoryUsage() << endl << endl
+			<< "PointPtrInternals used blocks: " << m_PointPtrInternalsPool->usedBlocks() << " Used memory: " << m_PointPtrInternalsPool->memoryUsage() << endl << endl
 			
-			<< "Inner used blocks: " << m_InnerPool->usedBlocks() << " Used memory: " << m_InnerPool->memoryUsage() << endl
-			<< "InnerPtr used blocks: " << m_InnerPtrPool->usedBlocks() << " Used memory: " << m_InnerPtrPool->memoryUsage() << endl
-			<< "InnerPtrInternals used blocks: " << m_InnerPtrInternalsPool->usedBlocks() << " Used memory: " << m_InnerPtrInternalsPool->memoryUsage() << endl
+			<< "Inner used blocks: " << m_InnerPool->usedBlocks() << " Used memory: " << m_InnerPool->memoryUsage() << endl << endl
+			<< "InnerPtr used blocks: " << m_InnerPtrPool->usedBlocks() << " Used memory: " << m_InnerPtrPool->memoryUsage() << endl << endl
+			<< "InnerPtrInternals used blocks: " << m_InnerPtrInternalsPool->usedBlocks() << " Used memory: " << m_InnerPtrInternalsPool->memoryUsage() << endl << endl
 			
 			<< "Leaf used blocks: " << m_LeafPool->usedBlocks() << " Used memory: " << m_LeafPool->memoryUsage() << endl << endl
-			<< "LeafPtr used blocks: " << m_LeafPtrPool->usedBlocks() << " Used memory: " << m_LeafPtrPool->memoryUsage() << endl
-			<< "LeafPtrInternals used blocks: " << m_LeafPtrInternalsPool->usedBlocks() << " Used memory: " << m_LeafPtrInternalsPool->memoryUsage() << endl
+			<< "LeafPtr used blocks: " << m_LeafPtrPool->usedBlocks() << " Used memory: " << m_LeafPtrPool->memoryUsage() << endl << endl
+			<< "LeafPtrInternals used blocks: " << m_LeafPtrInternalsPool->usedBlocks() << " Used memory: " << m_LeafPtrInternalsPool->memoryUsage() << endl << endl
 			
-			<< "MapInternals used blocks: " << m_MapInternalsPool->usedBlocks() << " Used memory: " << m_MapInternalsPool->memoryUsage() << endl;
+			<< "MapInternals used blocks: " << m_MapInternalsPool->usedBlocks() << " Used memory: " << m_MapInternalsPool->memoryUsage() << endl << endl;
 		return ss.str();
 	}
 }
