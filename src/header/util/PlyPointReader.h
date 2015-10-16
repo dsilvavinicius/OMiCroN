@@ -18,7 +18,7 @@ namespace util
 	class PlyPointReader 
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 	public:
 		enum Precision
 		{
@@ -171,7 +171,7 @@ namespace util
 	struct CBDataHandler
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
 		void operator()( const unsigned int& index, const float& value,
 						 pair< Point*, function< void( const Point& ) >* >* readingData )
@@ -221,7 +221,7 @@ namespace util
 	{
 		using Point = ExtendedPoint;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
 		void operator()( const unsigned int& index, const float& value,
 						 pair< Point*, function< void( const Point& ) >* >* readingData )
@@ -263,7 +263,7 @@ namespace util
 	int PlyPointReader< Point >::vertexCB( p_ply_argument argument )
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
 		long propFlag;
 		void *rawReadingData;

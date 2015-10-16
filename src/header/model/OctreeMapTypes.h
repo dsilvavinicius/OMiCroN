@@ -17,9 +17,9 @@ namespace model
 	template< typename MortonCode >
 	using DefaultOctreeMap = OctreeMapBase< MortonCode, std::allocator< pair< const shared_ptr< MortonCode >, OctreeNodePtr > > >;
 	
-	/** OctreeMap with BitMapAllocator. */
+	/** OctreeMap with ManagedAllocator. */
 	template< typename MortonCode >
-	using OctreeMap = OctreeMapBase< MortonCode, BitMapAllocator< pair< const shared_ptr< MortonCode >, OctreeNodePtr > > >;
+	using OctreeMap = OctreeMapBase< MortonCode, ManagedAllocator< pair< const shared_ptr< MortonCode >, OctreeNodePtr > > >;
 	
 							
 	/** Smart pointer for the internal octree map. */

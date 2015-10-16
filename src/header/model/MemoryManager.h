@@ -5,7 +5,7 @@
 #include <sstream>
 #include "IMemoryPool.h"
 #include "IMemoryManager.h"
-#include "BitMapAllocator.h"
+#include "ManagedAllocator.h"
 
 namespace model
 {

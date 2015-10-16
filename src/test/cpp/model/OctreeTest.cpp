@@ -130,7 +130,7 @@ namespace model
 		protected:
 			void SetUp()
 			{
-				SPP_BitMapMemoryManager::initInstance( 1000000 );
+				SPP_DefaultManager::initInstance( 1000000 );
 				
 				PointVector points;
 				generatePoints( points );
@@ -152,7 +152,7 @@ namespace model
 		protected:
 			void SetUp()
 			{
-				MPP_BitMapMemoryManager::initInstance( 1000000 );
+				MPP_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -176,7 +176,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SEP_BitMapMemoryManager::initInstance( 1000000 );
+				SEP_DefaultManager::initInstance( 1000000 );
 				
 				PointVector points;
 				generatePoints( points );
@@ -201,7 +201,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MEP_BitMapMemoryManager::initInstance( 1000000 );
+				MEP_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -223,7 +223,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SPV_BitMapMemoryManager::initInstance( 1000000 );
+				SPV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 10 ) );
@@ -245,7 +245,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MPV_BitMapMemoryManager::initInstance( 1000000 );
+				MPV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -269,7 +269,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SEV_BitMapMemoryManager::initInstance( 1000000 );
+				SEV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 10 ) );
@@ -293,7 +293,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MEV_BitMapMemoryManager::initInstance( 1000000 );
+				MEV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -315,7 +315,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SPI_BitMapMemoryManager::initInstance( 1000000 );
+				SPI_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 10 ) );
@@ -337,7 +337,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MPI_BitMapMemoryManager::initInstance( 1000000 );
+				MPI_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -361,7 +361,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SEI_BitMapMemoryManager::initInstance( 1000000 );
+				SEI_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 10 ) );
@@ -385,7 +385,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MEI_BitMapMemoryManager::initInstance( 1000000 );
+				MEI_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -407,7 +407,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SPV_BitMapMemoryManager::initInstance( 1000000 );
+				SPV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 10 ) );
@@ -429,7 +429,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MPV_BitMapMemoryManager::initInstance( 1000000 );
+				MPV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );
@@ -453,7 +453,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				SEV_BitMapMemoryManager::initInstance( 1000000 );
+				SEV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 10 ) );
@@ -477,7 +477,7 @@ namespace model
 			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
-				MEV_BitMapMemoryManager::initInstance( 1000000 );
+				MEV_DefaultManager::initInstance( 1000000 );
 				PointVector points;
 				generatePoints( points );
 				m_octree = OctreePtr( new Octree( 1, 20 ) );

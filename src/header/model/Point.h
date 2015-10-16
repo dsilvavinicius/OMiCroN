@@ -7,7 +7,7 @@
 #include <vector>
 #include <iostream>
 #include "BasicTypes.h"
-#include "BitMapAllocator.h"
+#include "ManagedAllocator.h"
 
 using namespace std;
 using namespace glm;
@@ -79,7 +79,7 @@ namespace model
 	using PointPtr = shared_ptr< Point >;
 	
 	/** Vector of Points. */
-	using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+	using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 	
 	/** Ptr for Vector of Points. */
 	using PointVectorPtr = shared_ptr< PointVector >;

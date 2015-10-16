@@ -2,13 +2,8 @@
 #include <QApplication>
 #include <QDir>
 #include <string>
-#include "MemoryManager.h"
-#include <Point.h>
-#include <LeafNode.h>
-#include <BitMapMemoryManager.h>
 
 using namespace std;
-using namespace model;
 
 int main(int argc, char** argv)
 {

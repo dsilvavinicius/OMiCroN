@@ -2,7 +2,7 @@
 #define MEMORY_UTILS_H
 
 #include <memory.h>
-#include "BitMapAllocator.h"
+#include "ManagedAllocator.h"
 
 using namespace std;
 
@@ -13,7 +13,7 @@ namespace model
 	template< class T, class... Args >
 	inline shared_ptr< T > makeManaged( Args... args )
 	{
-		return allocate_shared< T >( BitMapAllocator< T >(), args... );
+		return allocate_shared< T >( ManagedAllocator< T >(), args... );
 	}
 }
 

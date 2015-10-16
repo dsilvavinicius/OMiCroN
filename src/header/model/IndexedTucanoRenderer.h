@@ -15,7 +15,7 @@ namespace model
 	: public TucanoRenderingState
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using MeshInitializer = model::MeshInitializer< Point >;
 		
 	public:
@@ -71,7 +71,7 @@ namespace model
 	struct MeshInitializer< Point >
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Point >;
 		
 	public:
@@ -138,7 +138,7 @@ namespace model
 	{
 		using Point = model::ExtendedPoint;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using IndexedTucanoRenderer = model::IndexedTucanoRenderer< Point >;
 		
 	public:

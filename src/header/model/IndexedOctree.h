@@ -14,7 +14,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using LeafNode = model::LeafNode< IndexVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;

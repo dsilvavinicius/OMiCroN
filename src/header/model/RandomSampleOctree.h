@@ -14,7 +14,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using LeafNode = model::LeafNode< PointVector >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
@@ -151,7 +151,7 @@ namespace model
 	ostream& operator<<( ostream& out, const RandomSampleOctree< MortonCode, Point >& octree )
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		

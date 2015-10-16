@@ -13,18 +13,18 @@ using namespace std;
 namespace model
 {
 	template< typename T >
-	class BitMapAllocator;
+	class ManagedAllocator;
 	
 	class Point;
 	using PointPtr = shared_ptr< Point >;
-	using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+	using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 	
 	class ExtendedPoint;
 	using ExtendedPointPtr = shared_ptr< ExtendedPoint >;
-	using ExtendedPointVector = vector< ExtendedPointPtr, BitMapAllocator< ExtendedPointPtr > >;
+	using ExtendedPointVector = vector< ExtendedPointPtr, ManagedAllocator< ExtendedPointPtr > >;
 	
 	using Index = uint;
-	using IndexVector = vector< Index, BitMapAllocator< Index > >;
+	using IndexVector = vector< Index, ManagedAllocator< Index > >;
 	using IndexVectorPtr = shared_ptr< IndexVector >;
 	
 	template< typename T >
@@ -52,7 +52,7 @@ namespace model
 	using PtrInternals = std::_Sp_counted_ptr_inplace< T, Alloc, (__gnu_cxx::_Lock_policy)2 >;
 	
 	template< typename T >
-	using BitMapPtrInternals = PtrInternals< T, BitMapAllocator< T > >;
+	using BitMapPtrInternals = PtrInternals< T, ManagedAllocator< T > >;
 	
 	template< typename T >
 	using DefaultPtrInternals = PtrInternals< T, std::allocator< T > >;

@@ -18,7 +18,7 @@ namespace model
 
 		TEST_F( OctreeNodeTest, CreationAndDestruction )
 		{
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 1.f, 2.f, 3.f ), vec3( 4.f, 5.f, 6.f ) );
 			Point p1( vec3( 7.f, 8.f, 9.f ), vec3( 10.f, 11.f, 12.f ) );

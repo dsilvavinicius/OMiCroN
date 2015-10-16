@@ -16,7 +16,7 @@ namespace model
 		
 		TEST_F( SerializerTest, PointVector )
 		{
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
@@ -46,7 +46,7 @@ namespace model
 			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
 			
-			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			SEV_DefaultManager::initInstance( 1000000 );
 			
 			PointPtr p0 = makeManaged< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
 			PointPtr p1 = makeManaged< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
@@ -75,7 +75,7 @@ namespace model
 			using Node = LeafNode< Contents >;
 			using NodePtr = shared_ptr< Node >;
 			
-			SPI_BitMapMemoryManager::initInstance( 1000000 );
+			SPI_DefaultManager::initInstance( 1000000 );
 			
 			Node node;
 			uint array[ 3 ] = { 1, 2, 3 };
@@ -98,7 +98,7 @@ namespace model
 			using Node = InnerNode< Contents >;
 			using NodePtr = shared_ptr< Node >;
 			
-			SPI_BitMapMemoryManager::initInstance( 1000000 );
+			SPI_DefaultManager::initInstance( 1000000 );
 			
 			Node node;
 			uint array[ 3 ] = { 1, 2, 3 };
@@ -117,7 +117,7 @@ namespace model
 		
 		TEST_F( SerializerTest, PointNode )
 		{
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
@@ -151,7 +151,7 @@ namespace model
 			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
 			
-			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			SEV_DefaultManager::initInstance( 1000000 );
 			
 			PointPtr p0 = makeManaged< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
 			PointPtr p1 = makeManaged< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );

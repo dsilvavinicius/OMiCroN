@@ -20,7 +20,7 @@ namespace model
 	{
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
@@ -586,13 +586,7 @@ namespace model
 			// Loops per siblings in a level.
 			while( !isLevelEnded )
 			{
-				//cout << "Processing a sibling group." << endl << endl;
-				
 				MortonCodePtr parentCode = firstChildIt->first->traverseUp();
-				
-				//cout << "Node: " << firstChildIt->first->toString() << endl << endl;
-				//cout << "Parent: " << parentCode->toString() << endl << endl;
-				//cout << "Parent path: " << parentCode->getPathToRoot( true ) << endl;
 				
 				{
 					auto children = vector< OctreeNodePtr >();
@@ -617,7 +611,6 @@ namespace model
 					}
 				}
 				
-				//cout << "Releasing nodes if needed" << endl << endl;
 				// Release node if memory pressure is high enough.
 				MortonCodePtr lastReleased = releaseNodesAtCreation();
 				
@@ -797,7 +790,7 @@ namespace model
 	ostream& operator<<( ostream& out, OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >& octree )
 	{
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
 		out << "====== OutOfCoreOctree ======" << endl << endl
 			<< "Last Dirty: " << octree.m_lastDirty->getPathToRoot( true ) << endl

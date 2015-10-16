@@ -11,7 +11,7 @@ namespace model
 	class Serializer
 	{
 		template< typename T >
-		using Vector = vector< T, BitMapAllocator< T > >;
+		using Vector = vector< T, ManagedAllocator< T > >;
 		
 	public:
 		/** Serializes an vector. The form is:

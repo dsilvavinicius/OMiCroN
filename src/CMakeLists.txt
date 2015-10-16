@@ -69,6 +69,7 @@ find_package (Qt5Sql REQUIRED)
 
 set (RPLY_DIR "lib/rply")
 set (JUMP_FLOODING_DIR "lib/jf-pbr")
+set (TLSF_DIR "lib/tlsf")
 
 include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
@@ -81,6 +82,7 @@ include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	include/tucano/effects/
 	${RPLY_DIR}
 	${JUMP_FLOODING_DIR}
+	${TLSF_DIR}
 	
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
@@ -137,7 +139,8 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	RPly)
+	RPly
+	Tlsf)
 
 # Creates renderer program and links with the renderer library.
 add_executable (Point_Based_Renderer

@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "OutOfCoreOctree.h"
-#include <Ken12MemoryManager.h>
-#include <BitMapMemoryManager.h>
+#include <MemoryManagerTypes.h>
 #include "HierarchyTestMethods.h"
 
 namespace model

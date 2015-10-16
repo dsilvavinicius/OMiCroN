@@ -19,7 +19,7 @@ namespace model
 		{
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
@@ -49,7 +49,7 @@ namespace model
 			using InnerNode = model::InnerNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 			
-			SPI_BitMapMemoryManager::initInstance( 1000000 );
+			SPI_DefaultManager::initInstance( 1000000 );
 			
 			MortonCode leafCode;
 			leafCode.build( 2, 3, 4, 5 );
@@ -80,7 +80,7 @@ namespace model
 			using LeafNode = model::LeafNode< PointVector >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
 			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
@@ -118,7 +118,7 @@ namespace model
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 			using IdNode = model::IdNode< ShallowMortonCode >;
 			
-			SPI_BitMapMemoryManager::initInstance( 1000000 );
+			SPI_DefaultManager::initInstance( 1000000 );
 			
 			int rawInts0[ 3 ] = { 1, 2, 3 };
 			int rawInts1[ 3 ] = { 10, 20, 30 };
@@ -157,7 +157,7 @@ namespace model
 			using LeafNode = model::LeafNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 			
-			SPI_BitMapMemoryManager::initInstance( 1000000 );
+			SPI_DefaultManager::initInstance( 1000000 );
 			
 			MortonCode code0; code0.build( 0x8 );
 			MortonCode code1; code1.build( 0x9 );
@@ -191,7 +191,7 @@ namespace model
 			using LeafNode = model::LeafNode< PointVector >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
 
-			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			SEV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 0.000510f, 0.000549f, 0.000588f ), vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f, 24.f ) );
 			Point p1( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
@@ -229,7 +229,7 @@ namespace model
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, OctreeNode >;
 			using IdNode = model::IdNode< ShallowMortonCode >;
 			
-			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			SEV_DefaultManager::initInstance( 1000000 );
 			
 			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
 																vec3( 1.f, 15.f ,2.f ) );
@@ -280,7 +280,7 @@ namespace model
 								  const IdNode< MortonCode >& code0, const IdNode< MortonCode >& code1 )
 		{
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
 			vector< IdNodeVector< MortonCode > > results = sqLite.getRequestResults( 10 );
 	
@@ -336,7 +336,7 @@ namespace model
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, OctreeNode >;
 			using IdNode = model::IdNode< ShallowMortonCode >;
 			
-			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			SEV_DefaultManager::initInstance( 1000000 );
 			//SEV_Ken12MemoryManager::initInstance( 100000, 100000, 100000, 100000 );
 			
 			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),

@@ -24,7 +24,7 @@ namespace model
 		using OctreeMap = model::OctreeMap< MortonCode >;
 		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		using FrontBehavior = model::FrontBehavior< MortonCode, Point, Front, FrontInsertionContainer >;
 		

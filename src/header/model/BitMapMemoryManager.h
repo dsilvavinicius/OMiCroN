@@ -164,9 +164,9 @@ namespace model
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf >
 	class BitMapMemoryManager
-	: public MemoryManager< Morton, Point, Inner, Leaf, BitMapAllocGroup< Morton, Point, Inner, Leaf > >
+	: public MemoryManager< Morton, Point, Inner, Leaf, ManagedAllocGroup< Morton, Point, Inner, Leaf > >
 	{
-		using AllocGroup = model::BitMapAllocGroup< Morton, Point, Inner, Leaf >;
+		using AllocGroup = model::ManagedAllocGroup< Morton, Point, Inner, Leaf >;
 		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >;
 		
 		using MortonPtr = shared_ptr< Morton >;

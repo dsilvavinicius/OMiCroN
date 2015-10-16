@@ -20,7 +20,7 @@ namespace model
 			
 			void SetUp()
 			{
-				SPV_BitMapMemoryManager::initInstance( 1000000 );
+				SPV_DefaultManager::initInstance( 1000000 );
 			}
 		};
 		
@@ -32,7 +32,7 @@ namespace model
 			
 			void SetUp()
 			{
-				SEV_BitMapMemoryManager::initInstance( 1000000 );
+				SEV_DefaultManager::initInstance( 1000000 );
 			}
 		};
 
@@ -74,7 +74,7 @@ namespace model
 		{
 			using Point = TypeParam;
 			using PointPtr = shared_ptr< TypeParam >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			using PointVectorPtr = shared_ptr< PointVector >;
 			using Octree = RandomSampleOctree< ShallowMortonCode, Point >;
 			

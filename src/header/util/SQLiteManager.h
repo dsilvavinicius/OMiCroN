@@ -28,7 +28,7 @@ namespace util
 		using IdNodeVector = vector< IdNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonInterval = model::MortonInterval< MortonCode >;
 		using unordered_set = std::unordered_set< MortonInterval, hash< MortonInterval >,

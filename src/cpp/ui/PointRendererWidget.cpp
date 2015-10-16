@@ -1,6 +1,6 @@
 #include "PointRendererWidget.h"
 #include "TucanoDebugRenderer.h"
-#include <Ken12MemoryManager.h>
+#include <MemoryManagerTypes.h>
 #include <QDebug>
 #include <QTimer>
 
@@ -27,13 +27,15 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	// Init MemoryManager allowing 8GB of data. 
-	Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
-		1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,
-		3.25f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3.25GB for Points */,
-		1.625f * 1024ul * 1024ul * 1024ul / sizeof( InnerNode ) /* 1.625GB for Nodes */,
-		1.625f * 1024ul * 1024ul * 1024ul / sizeof( LeafNode ) /* 1.625GB for Nodes */
-	);
+	// Init MemoryManager allowing 10GB of data.
+	DefaultManager< MortonCode, Point, InnerNode, LeafNode >::initInstance( 1024ul * 1024ul * 1024ul * 10 );
+	
+	//Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
+	//	1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,
+	//	3.25f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3.25GB for Points */,
+	//	1.625f * 1024ul * 1024ul * 1024ul / sizeof( InnerNode ) /* 1.625GB for Nodes */,
+	//	1.625f * 1024ul * 1024ul * 1024ul / sizeof( LeafNode ) /* 1.625GB for Nodes */
+	//);
 	
 	cout << "MemoryManager initialized: " << endl << SingletonMemoryManager::instance() << endl;
 	
@@ -42,10 +44,10 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
-	openMesh( "data/example/staypuff.ply" );
+	//openMesh( "data/example/staypuff.ply" );
 	//openMesh( "../../src/data/real/tempietto_all.ply" );
 	//openMesh( "../../src/data/real/filippini1-4.ply" );
-	//openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
+	openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -259,7 +261,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	int nameEnding = filename.find_last_of( "." );
 	string dbFilename = filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 10, dbFilename );
+	m_octree = new Octree( 1, 15, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
 	
 	cout << "Octree built." << endl;

@@ -19,9 +19,9 @@ namespace util
 		TEST_F( PlyPointReaderTest, Read )
 		{
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			PointVector points;
 			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
@@ -45,9 +45,9 @@ namespace util
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			PointVector points;
 			SimplePointReader reader( [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
@@ -69,9 +69,9 @@ namespace util
 		{
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
-			SEV_BitMapMemoryManager::initInstance( 1000000 );
+			SEV_DefaultManager::initInstance( 1000000 );
 			
 			PointVector points;
 			ExtendedPointReader reader( [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );

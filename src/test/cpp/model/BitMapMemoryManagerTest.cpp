@@ -3,7 +3,7 @@
 #include "OctreeMapTypes.h"
 #include <InnerNode.h>
 #include <MemoryManagerTypes.h>
-#include <BitMapAllocator.h>
+#include <ManagedAllocator.h>
 #include <MemoryUtils.h>
 #include <qabstractitemmodel.h>
 
@@ -18,20 +18,20 @@ namespace model
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
-			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using MortonPtrInternals = PtrInternals< Morton, ManagedAllocator< Morton > >;
 			
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
-			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointPtrInternals = PtrInternals< Point, ManagedAllocator< Point > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
-			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
+			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
 			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;
@@ -81,16 +81,16 @@ namespace model
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
-			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using MortonPtrInternals = PtrInternals< Morton, ManagedAllocator< Morton > >;
 			
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointPtrInternals = PtrInternals< Point, ManagedAllocator< Point > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			using Leaf = LeafNode< PointVector >;
 			
 			using OctreeMap = model::OctreeMap< Morton >;
@@ -141,16 +141,16 @@ namespace model
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
-			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using MortonPtrInternals = PtrInternals< Morton, ManagedAllocator< Morton > >;
 			
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointPtrInternals = PtrInternals< Point, ManagedAllocator< Point > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
 			using Inner = InnerNode< ExtendedPointPtr >;
 			using InnerPtr = shared_ptr< Inner >;
-			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
@@ -201,7 +201,7 @@ namespace model
 			using Morton = ShallowMortonCode;
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			using Inner = InnerNode< PointVector >;
 			using Leaf = LeafNode< PointVector >;
 			
@@ -355,7 +355,7 @@ namespace model
 			using Morton = MediumMortonCode;
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			using Inner = InnerNode< PointVector >;
 			using Leaf = LeafNode< PointVector >;
 			
@@ -508,20 +508,20 @@ namespace model
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
-			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using MortonPtrInternals = PtrInternals< Morton, ManagedAllocator< Morton > >;
 			
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
-			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointPtrInternals = PtrInternals< Point, ManagedAllocator< Point > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
 			using Inner = InnerNode< PointVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
-			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
+			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
 			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;
@@ -561,20 +561,20 @@ namespace model
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
-			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using MortonPtrInternals = PtrInternals< Morton, ManagedAllocator< Morton > >;
 			
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
-			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
+			using PointPtrInternals = PtrInternals< Point, ManagedAllocator< Point > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			
 			using Inner = InnerNode< PointPtr >;
 			using InnerPtr = shared_ptr< Inner >;
-			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
-			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
+			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
 			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;
@@ -612,22 +612,22 @@ namespace model
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
-			using MortonPtrInternals = PtrInternals< Morton, BitMapAllocator< Morton > >;
+			using MortonPtrInternals = PtrInternals< Morton, ManagedAllocator< Morton > >;
 			
 			using Point = ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
-			using PointPtrInternals = PtrInternals< Point, BitMapAllocator< Point > >;
+			using PointPtrInternals = PtrInternals< Point, ManagedAllocator< Point > >;
 			
-			using PointVector = vector< PointPtr, BitMapAllocator< PointPtr > >;
-			using IndexVector = vector< Index, BitMapAllocator< Index > >;
+			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
+			using IndexVector = vector< Index, ManagedAllocator< Index > >;
 			
 			using Inner = InnerNode< IndexVector >;
 			using InnerPtr = shared_ptr< Inner >;
-			using InnerPtrInternals = PtrInternals< Inner, BitMapAllocator< Inner > >;
+			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			
 			using Leaf = LeafNode< IndexVector >;
 			using LeafPtr = shared_ptr< Leaf >;
-			using LeafPtrInternals = PtrInternals< Leaf, BitMapAllocator< Leaf > >;
+			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
 			using OctreeMap = model::OctreeMap< Morton >;
 			using MapInternals = model::MapInternals< Morton >;

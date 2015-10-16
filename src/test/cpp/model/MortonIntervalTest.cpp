@@ -18,7 +18,7 @@ namespace model
 
 		TEST_F( MortonIntervalTest, EqualityAndHash )
 		{
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			ShallowMortonCode a; a.build( 0x3 );
 			ShallowMortonCode b; a.build( 0x4 );
@@ -40,7 +40,7 @@ namespace model
 		
 		TEST_F( MortonIntervalTest, UnorderedSet )
 		{
-			SPV_BitMapMemoryManager::initInstance( 1000000 );
+			SPV_DefaultManager::initInstance( 1000000 );
 			
 			ShallowMortonCode a; a.build( 0x3 );
 			ShallowMortonCode b; a.build( 0x4 );
