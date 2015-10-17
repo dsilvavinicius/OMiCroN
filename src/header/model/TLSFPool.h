@@ -85,7 +85,8 @@ namespace model
 	template< typename T >
 	inline size_t TLSFPool< T >::usedBlocks() const
 	{
-		throw logic_error( "Used blocks statistics is not available in TLSF implementation. Use memoryUsage() instead." );
+		// Statistic not available.
+		return 0;
 	}
 	
 	template< typename T >

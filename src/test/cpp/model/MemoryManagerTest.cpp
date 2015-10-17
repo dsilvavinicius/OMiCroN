@@ -11,10 +11,37 @@ namespace model
 {
 	namespace test
 	{
-        class BitMapMemoryManagerTest : public ::testing::Test
-		{};
+		// Hacks to allow overloading.
+		typedef struct BitMapManagerType{} BitMapManagerType;
+		typedef struct TLSFManagerType{} TLSFManagerType;
 		
-		TEST_F( BitMapMemoryManagerTest, ManagedTypes0 )
+		template< typename Morton, typename Point, typename Inner, typename Leaf >
+		void initManager( const size_t& maxMemory, const BitMapManagerType& )
+		{
+			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemory );
+		}
+		
+		template< typename Morton, typename Point, typename Inner, typename Leaf >
+		void initManager( const size_t& maxMemory, const TLSFManagerType& )
+		{
+			TLSFManager< Morton, Point, Inner, Leaf >::initInstance( maxMemory );
+		}
+		
+		template< typename M >
+        class MemoryManagerTest
+        :  public ::testing::Test
+        {};
+		
+		using testing::Types;
+		
+		typedef Types< BitMapManagerType, TLSFManagerType > Implementations;
+		
+		TYPED_TEST_CASE( MemoryManagerTest, Implementations );
+		
+        //class BitMapMemoryManagerTest : public ::testing::Test
+		//{};
+		
+		TYPED_TEST( MemoryManagerTest, ManagedTypes0 )
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -42,7 +69,8 @@ namespace model
 								+ sizeof( MapInternals ) + 3 * ( sizeof( PointPtr ) ) )
 								+ nPoints * sizeof( PointPtrInternals );
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
+			initManager< Morton, Point, Inner, Leaf >( maxMemToUse, TypeParam() );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
 			
 			ASSERT_EQ( 0, manager.usedMemory() );
@@ -77,7 +105,7 @@ namespace model
 			ASSERT_EQ( 0, manager.usedMemory() );
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, ManagedTypes1 )
+		TYPED_TEST( MemoryManagerTest, ManagedTypes1 )
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -102,7 +130,8 @@ namespace model
 								+ sizeof( MapInternals ) + 3 * ( sizeof( PointPtr ) ) )
 								+ nPoints * sizeof( PointPtrInternals );
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
+			initManager< Morton, Point, Inner, Leaf >( maxMemToUse, TypeParam() );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
 			
 			ASSERT_EQ( 0, manager.usedMemory() );
@@ -137,7 +166,7 @@ namespace model
 			ASSERT_EQ( 0, manager.usedMemory() );
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, ManagedTypes2 )
+		TYPED_TEST( MemoryManagerTest, ManagedTypes2 )
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -162,7 +191,8 @@ namespace model
 			size_t maxMemToUse = nNodes * ( sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
 								+ sizeof( MapInternals ) + sizeof( PointPtrInternals ) );
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( maxMemToUse );
+			initManager< Morton, Point, Inner, Leaf >( maxMemToUse, TypeParam() );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
 			
 			ASSERT_EQ( 0, manager.usedMemory() );
@@ -196,7 +226,7 @@ namespace model
 			ASSERT_EQ( 0, manager.usedMemory() );
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, SimpleArrays )
+		TYPED_TEST( MemoryManagerTest, SimpleArrays )
 		{
 			using Morton = ShallowMortonCode;
 			using Point = model::Point;
@@ -207,7 +237,8 @@ namespace model
 			
 			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( 1024 * 1024 );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( 1024 * 1024 );
+			initManager< Morton, Point, Inner, Leaf >( 1024 * 1024, TypeParam() );
 			
 			Morton* mortonArrays[ 5 ];
 			Point* pointArrays[ 5 ];
@@ -350,7 +381,7 @@ namespace model
 			}
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, ComplexArrays )
+		TYPED_TEST( MemoryManagerTest, ComplexArrays )
 		{
 			using Morton = MediumMortonCode;
 			using Point = model::ExtendedPoint;
@@ -361,7 +392,8 @@ namespace model
 			
 			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
 			
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( 1024 * 1024 );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( 1024 * 1024 );
+			initManager< Morton, Point, Inner, Leaf >( 1024 * 1024, TypeParam() );
 			
 			Morton* mortonArrays[ 5 ];
 			Point* pointArrays[ 5 ];
@@ -504,7 +536,7 @@ namespace model
 			}
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, AllocatorShallowPointVector )
+		TYPED_TEST( MemoryManagerTest, AllocatorShallowPointVector )
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -531,7 +563,9 @@ namespace model
 										+ 3 * sizeof( PointPtr ) + 2 * sizeof( MortonPtrInternals )
 										+ sizeof( InnerPtrInternals ) + sizeof( LeafPtrInternals )
 										+ 2 * sizeof( MapInternals );
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			initManager< Morton, Point, Inner, Leaf >( expectedMemUsage, TypeParam() );
 			
 			PointVector points( nPoints );
 			for( int i = 0; i < nPoints; ++i )
@@ -557,7 +591,7 @@ namespace model
 			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, AllocatorShallowPointPtr )
+		TYPED_TEST( MemoryManagerTest, AllocatorShallowPointPtr )
 		{
 			using Morton = ShallowMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -584,7 +618,8 @@ namespace model
 										+ 2 * sizeof( PointPtr ) + sizeof( PointPtrInternals )
 										+ 2 * sizeof( MortonPtrInternals ) + sizeof( InnerPtrInternals )
 										+ sizeof( LeafPtrInternals ) + 2 * sizeof( MapInternals );
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			initManager< Morton, Point, Inner, Leaf >( expectedMemUsage, TypeParam() );
 			
 			PointVector points( nPoints );
 			for( int i = 0; i < nPoints; ++i )
@@ -608,7 +643,7 @@ namespace model
 			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 		
-		TEST_F( BitMapMemoryManagerTest, AllocatorsMediumExtendedIndex )
+		TYPED_TEST( MemoryManagerTest, AllocatorsMediumExtendedIndex )
 		{
 			using Morton = MediumMortonCode;
 			using MortonPtr = shared_ptr< Morton >;
@@ -637,7 +672,8 @@ namespace model
 										+ sizeof( PointPtr ) + 3 * sizeof( Index ) + 2 * sizeof( MortonPtrInternals )
 										+ sizeof( InnerPtrInternals ) + sizeof( LeafPtrInternals )
 										+ 2 * sizeof( MapInternals );
-			BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
+			initManager< Morton, Point, Inner, Leaf >( expectedMemUsage, TypeParam() );
 			
 			PointVector points( nPoints );
 			IndexVector indices( nPoints );
