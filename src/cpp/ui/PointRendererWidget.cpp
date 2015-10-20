@@ -27,8 +27,8 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	// Init MemoryManager allowing 10GB of data.
-	DefaultManager< MortonCode, Point, InnerNode, LeafNode >::initInstance( 1024ul * 1024ul * 1024ul * 10 );
+	// Init MemoryManager allowing 9GB of data.
+	DefaultManager< MortonCode, Point, InnerNode, LeafNode >::initInstance( 1024ul * 1024ul * 1024ul * 9 );
 	
 	//Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
 	//	1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,
@@ -44,6 +44,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
+	//openMesh( "test/data/extended_point_octree.ply" );
 	//openMesh( "data/example/staypuff.ply" );
 	//openMesh( "../../src/data/real/tempietto_all.ply" );
 	//openMesh( "../../src/data/real/filippini1-4.ply" );

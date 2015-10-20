@@ -9,6 +9,8 @@ namespace model
 	class IMemoryPool
 	{
 	public:
+		virtual ~IMemoryPool(){}
+		
 		/** Allocates memory for T */
 		virtual T* allocate() = 0;
 		

@@ -34,7 +34,7 @@ namespace model
 		
 		using testing::Types;
 		
-		typedef Types< BitMapManagerType, TLSFManagerType > Implementations;
+		typedef Types< /*BitMapManagerType,*/ TLSFManagerType > Implementations;
 		
 		TYPED_TEST_CASE( MemoryManagerTest, Implementations );
 		

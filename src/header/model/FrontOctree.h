@@ -152,6 +152,8 @@ namespace model
 		bool isCullable = false;
 		bool eraseNode = false;
 		
+		//cout << "Tracking: " << code->getPathToRoot( true ) << endl;
+		
 		// Code for prunnable front
 		if( checkPrune( renderingState, code, projThresh ) )
 		{
@@ -160,6 +162,8 @@ namespace model
 		}
 		else if( checkBranch( renderingState, code, projThresh, isCullable ) )
 		{
+			//cout << "Branching" << endl << endl;
+			
 			eraseNode = branch( code, renderingState );
 		}
 		else

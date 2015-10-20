@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <iostream>
 #include "BasicTypes.h"
 
 using namespace std;
@@ -78,6 +79,9 @@ namespace model
 	class IMemoryManager
 	{
 	public:
+		
+		virtual ~IMemoryManager(){}
+		
 		/** Generic allocation that chooses which allocation method to call based on type. */
 		template< typename T >
 		T* alloc();
@@ -311,6 +315,8 @@ namespace model
 	: public IMemoryManager
 	{
 	public:
+		virtual ~SingletonMemoryManager(){}
+		
 		static IMemoryManager& instance();
 	
 	protected:

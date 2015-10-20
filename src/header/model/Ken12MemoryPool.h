@@ -157,7 +157,7 @@ namespace model
 			
 			if( m_memStart != NULL )
 			{
-				delete[] m_memStart;
+				delete[] ( uchar* ) m_memStart;
 				m_memStart = NULL;
 			}
 		}

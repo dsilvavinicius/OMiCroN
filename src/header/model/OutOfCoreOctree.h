@@ -249,9 +249,11 @@ namespace model
 		// Persist all leaves in order to start bottom-up octree creation.
 		persistAllLeaves();
 		
+		cout << "Leaf construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
+		
 		build();
 		
-		cout << "Hierarchy construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
+		cout << "Total Hierarchy construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
@@ -561,6 +563,8 @@ namespace model
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			
+			clock_t timing = clock();
+			
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
 			MortonCodePtr lvlBoundary = makeManaged< MortonCode >( MortonCode::getLvlLast( level + 1 ) );
@@ -652,7 +656,8 @@ namespace model
 			// Persists all nodes in left dirty in this lvl before proceeding one lvl up.
 			persistAllDirty();
 			
-			cout << "========== End of level " << level << " ==========" << endl << endl;
+			cout << "========== End of level " << level << ". Time spent: "
+				 << float( clock() - timing ) / CLOCKS_PER_SEC << "s ==========" << endl << endl;
 		}
 	}
 	
