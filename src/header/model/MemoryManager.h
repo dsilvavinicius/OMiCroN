@@ -30,7 +30,7 @@ namespace model
 	}\
 	\
 	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	void* MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::alloc##TYPE##Array( const size_t& size )\
+	inline void* MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::alloc##TYPE##Array( const size_t& size )\
 	{\
 		return m_##TYPE##Pool->allocateArray( size );\
 	}\
@@ -42,7 +42,7 @@ namespace model
 	}\
 	\
 	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	void MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::dealloc##TYPE##Array( void* p )\
+	inline void MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::dealloc##TYPE##Array( void* p )\
 	{\
 		m_##TYPE##Pool->deallocateArray( static_cast< TYPE* >( p ) );\
 	}\
@@ -182,7 +182,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
-	size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::maxAllowedMem() const
+	inline size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::maxAllowedMem() const
 	{
 		return m_maxAllowedMem;
 	}

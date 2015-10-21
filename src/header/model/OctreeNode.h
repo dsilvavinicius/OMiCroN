@@ -18,7 +18,7 @@ namespace model
 	template< typename Contents >
 	class LeafNode;
 	
-	// TODO: Eliminates the reinterpret_casts on this class.
+	// TODO: Eliminate the reinterpret_casts in this class.
 	/** Base class for octree nodes. */
 	class OctreeNode
 	{
@@ -28,6 +28,21 @@ namespace model
 		/** Indicates the type of the node. */
 		virtual bool isLeaf() const = 0;
 		
+		/** Acquire parent iterator, given an hierarchy and the Morton code associated with this OctreeNode. */
+		template< typename Morton >
+		OctreeNodePtr getParent( const Morton& morton, const OctreeMap< Morton >& hierarchy ) const;
+		
+		/** Acquire sibling iterator, given the iterator for this OctreeNode inside hierarchy and a flag indicating
+		 * if the iterator should be advanced or not.
+		 * @param it is the iterator to this OctreeNode.
+		 * @param advance is true if it should be advanced or false otherwise. */
+		template< typename Morton >
+		OctreeNodePtr getSibling( const OctreeMap< Morton >::iterator& it, const bool& advance ) const;
+		
+		/** Acquire first child iterator, given an hierarchy and the Morton code associated with this OctreeNode. */
+		template< typename Morton >
+		OctreeNodePtr getFirstChild( const Morton& morton, const OctreeMap< Morton >& hierarchy ) const;
+														  
 		/** Sets the contents of this node. Implies reinterpret_cast downawards hierarchy. */
 		template< typename Contents >
 		void setContents( const Contents& contents );

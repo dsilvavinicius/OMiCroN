@@ -45,10 +45,10 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	//openMesh( "test/data/extended_point_octree.ply" );
-	//openMesh( "data/example/staypuff.ply" );
+	openMesh( "data/example/staypuff.ply" );
 	//openMesh( "../../src/data/real/tempietto_all.ply" );
 	//openMesh( "../../src/data/real/filippini1-4.ply" );
-	openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
+	//openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -262,7 +262,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	int nameEnding = filename.find_last_of( "." );
 	string dbFilename = filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 15, dbFilename );
+	m_octree = new Octree( 1, 10, dbFilename );
 	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
 	
 	cout << "Octree built." << endl;

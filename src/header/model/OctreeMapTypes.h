@@ -8,7 +8,11 @@
 #include "OctreeNode.h"
 
 namespace model
-{	
+{
+	// =========
+	// OctreeMap
+	// =========
+	
 	/** Internal map type used to actualy store the octree. */
 	template< typename MortonCode, typename Allocator >
 	using OctreeMapBase = map< shared_ptr< MortonCode >, OctreeNodePtr, MortonComparator< MortonCode >, Allocator >;

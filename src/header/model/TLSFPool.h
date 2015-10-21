@@ -75,7 +75,7 @@ namespace model
 	}
 	
 	template< typename T >
-	T* TLSFPool< T >::allocate()
+	inline T* TLSFPool< T >::allocate()
 	{
 		lock_guard< mutex > guard( m_freeListLock );
 		
@@ -94,7 +94,7 @@ namespace model
 	}
 
 	template< typename T >
-	void TLSFPool< T >::deallocate( T* p )
+	inline void TLSFPool< T >::deallocate( T* p )
 	{
 		lock_guard< mutex > guard( m_freeListLock );
 		
@@ -138,7 +138,7 @@ namespace model
 	
 	/** Creates a new chunk and prepend it into current free list. */
 	template< typename T >
-	void TLSFPool< T >::newFreeListChunk()
+	inline void TLSFPool< T >::newFreeListChunk()
 	{
 		T* chunk = ( T* ) malloc( m_poolSize * sizeof( T ) );
 		m_freeListChunks.push_back( chunk );
