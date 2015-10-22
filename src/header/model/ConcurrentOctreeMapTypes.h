@@ -23,3 +23,5 @@ namespace model
 	using ConcurrentOctreeMap = ConcurrentOctreeMapBase< Morton, Node,
 		ManagedAllocator< pair< shared_ptr< Morton >, shared_ptr< Node > > > >;
 }
+
+#endif

@@ -8,16 +8,16 @@
 namespace model
 {
 	/** An octree that performs front tracking in parallel. */
-	template< typename MortonCode, typename Point, typename Front,
-			  typename FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
 	class ParallelOctree
-	: public FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	: public FrontOctree< OctreeParameters, Front, FrontInsertionContainer >
 	{
+		using MortonCode = typename OctreeParameters::Morton;
 		using MortonVector = vector< MortonCode >;
 		using PointVector = IndexVector;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
-		using ParallelFrontBehavior = model::ParallelFrontBehavior< MortonCode, Point, Front, FrontInsertionContainer >;
+		using FrontOctree = model::FrontOctree< OctreeParameters, Front, FrontInsertionContainer >;
+		using ParallelFrontBehavior = model::ParallelFrontBehavior< OctreeParameters, Front, FrontInsertionContainer >;
 	
 	public:
 		ParallelOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -30,17 +30,16 @@ namespace model
 		MortonVector m_frontDeletionList;
 	};
 	
-	template< typename MortonCode, typename Point, typename Front,
-			  typename FrontInsertionContainer >
-	ParallelOctree< MortonCode, Point, Front, FrontInsertionContainer >::ParallelOctree(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	ParallelOctree< OctreeParameters, Front, FrontInsertionContainer >::ParallelOctree(
 		const int& maxPointsPerNode, const int& maxLevel )
 	: FrontOctree( maxPointsPerNode, maxLevel )
 	{
 		FrontOctree::m_frontBehavior = new ParallelFrontBehavior( *this );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void ParallelOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRendering(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void ParallelOctree< OctreeParameters, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, RenderingState& renderingState )
 	{
 		PointVectorPtr points = node-> template getContents< PointVector >();
@@ -48,15 +47,6 @@ namespace model
 		#pragma omp critical (FrontRendering)
 			renderingState.handleNodeRendering( *points );
 	}
-	
-	//=====================================================================
-	// Type Sugar.
-	//=====================================================================
-	
-	/** An parallel octree with shallow morton code and usual data structures for front and front insertion container.  */
-	template< typename Point >
-	using ShallowParallelOctree = ParallelOctree< unsigned int, Point, unordered_set< MortonCode< unsigned int > >,
-												  unordered_set< MortonCode< unsigned int > > >;
 }
 
 #endif

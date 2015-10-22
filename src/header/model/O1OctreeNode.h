@@ -22,18 +22,15 @@ namespace model
 		Contents m_contents;
 	};
 	
-	template< typename Contents, typename Morton, typename Hierarchy  >
-	class O1OctreeNode
-	: O1OctreeNodeBase< Contents >{};
-	
 	/** O1OctreeNode that uses an OctreeMap as hierarchy.
 	 * @param Contents is the content type of the node.
 	 * @param Morton is the morton code used in the OctreeMap. */
 	template< typename Contents, typename Morton >
 	class O1OctreeNode
+	: O1OctreeNodeBase< Contents >
 	{
 		using Hierarchy = OctreeMap< Morton, O1OctreeNode >;
-		using Accessor = OctreeMap::iterator;
+		using Accessor = typename Hierarchy::iterator;
 	
 	public:
 		O1OctreeNode( const Hierarchy& hierarchy );
@@ -55,7 +52,8 @@ namespace model
 		/** @returns true if there is no m_firstChild set, false otherwise */
 		bool isLeaf( const Hierarchy& hierarchy ) const;
 		
-		friend ostream& operator<<( ostream& out, const O1OctreeNode& node );
+		template< typename C, typename M >
+		friend ostream& operator<<( ostream& out, const O1OctreeNode< C, M >& node );
 		
 		size_t serialize( byte** serialization ) const;
 		
@@ -70,13 +68,14 @@ namespace model
 	 * @param Contents is the content type of the node.
 	 * @param Morton is the morton code used in the OctreeMap. */
 	template< typename Contents, typename Morton >
-	class O1OctreeNode
+	class ParallelO1OctreeNode
+	: O1OctreeNodeBase< Contents >
 	{
-		using Hierarchy = ConcurrentOctreeMap< Morton, O1OctreeNode >;
-		using Accessor = OctreeMap::accessor;
+		using Hierarchy = ConcurrentOctreeMap< Morton, ParallelO1OctreeNode >;
+		using Accessor = typename Hierarchy::accessor;
 	
 	public:
-		O1OctreeNode( const Hierarchy& hierarchy );
+		ParallelO1OctreeNode( const Hierarchy& hierarchy );
 		
 		Accessor getParent() const;
 		Accessor getSibling() const;
@@ -92,11 +91,12 @@ namespace model
 		/** @returns true if there is no m_firstChild set, false otherwise */
 		bool isLeaf( const Hierarchy& hierarchy ) const;
 		
-		friend ostream& operator<<( ostream& out, const O1OctreeNode& node );
+		template< typename C, typename M >
+		friend ostream& operator<<( ostream& out, const ParallelO1OctreeNode< C, M >& node );
 		
 		size_t serialize( byte** serialization ) const;
 		
-		static O1OctreeNode deserialize( byte* serialization, const Accessor& parent, const Accessor& sibling );
+		static ParallelO1OctreeNode deserialize( byte* serialization, const Accessor& parent, const Accessor& sibling );
 		
 	private:
 		Accessor m_parent; // parent.

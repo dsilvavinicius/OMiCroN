@@ -13,20 +13,25 @@ namespace model
 	 *	while traversing and added to the actual front at traversal ending.
 	 *	@param: Front is the type used as the actual front container.
 	 *	@param: FrontInsertionContainer is the insertion container, used to track nodes that should be added to the front. */
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
 	class FrontOctree
-	: public RandomSampleOctree< MortonCode, Point >
+	: public RandomSampleOctree< OctreeParameters >
 	{
+		using MortonCode = typename OctreeParameters::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
-		using ParentOctree = model::RandomSampleOctree< MortonCode, Point >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using MortonVector = vector< MortonCode >;
-		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
-		using OctreeMapPtr = shared_ptr< OctreeMap >;
+		
+		using Point = typename OctreeParameters::Point;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using FrontBehavior = model::FrontBehavior< MortonCode, Point, Front, FrontInsertionContainer >;
+		
+		using OctreeMap = typename OctreeParameters::Hierarchy;
+		using OctreeMapPtr = shared_ptr< OctreeMap >;
+		
+		using ParentOctree = model::RandomSampleOctree< OctreeParameters >;
+		using FrontBehavior = model::FrontBehavior< OctreeParameters, Front, FrontInsertionContainer >;
 		
 	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -96,8 +101,8 @@ namespace model
 		FrontBehavior* m_frontBehavior;
 	};
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::FrontOctree( const int& maxPointsPerNode,
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::FrontOctree( const int& maxPointsPerNode,
 																						const int& maxLevel )
 	: ParentOctree::RandomSampleOctree( maxPointsPerNode, maxLevel )
 	{
@@ -107,14 +112,14 @@ namespace model
 		m_frontBehavior->onFrontTrackingEnd();
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::~FrontOctree()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::~FrontOctree()
 	{
 		delete m_frontBehavior;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	FrontOctreeStats FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::trackFront(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	FrontOctreeStats FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::trackFront(
 		RenderingState& renderer, const Float& projThresh )
 	{
 		clock_t timing = clock();
@@ -145,8 +150,8 @@ namespace model
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_frontBehavior->size() );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::trackNode(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline bool FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::trackNode(
 		MortonCodePtr& code, RenderingState& renderingState, const Float& projThresh )
 	{
 		bool isCullable = false;
@@ -184,8 +189,8 @@ namespace model
 		return eraseNode;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::checkPrune(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline bool FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::checkPrune(
 		RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh ) const
 	{
 		if( code->getBits() == 1 )
@@ -211,8 +216,8 @@ namespace model
 		return true;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::prune( const MortonCodePtr& code, RenderingState& renderingState )
 	{
 		//cout << "=== Prunning begins ===" << endl << endl;
@@ -244,8 +249,8 @@ namespace model
 		//cout << "=== Prunning ends ===" << endl << endl;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline bool FrontOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::checkBranch( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh,
 				   bool& out_isCullable ) const
 	{
@@ -255,8 +260,8 @@ namespace model
 		return !renderingState.isRenderable( box, projThresh ) && !out_isCullable;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline bool FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline bool FrontOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::branch( const MortonCodePtr& code, RenderingState& renderingState )
 	{
 		//cout << "=== Branching begins ===" << endl << endl;
@@ -313,8 +318,8 @@ namespace model
 		return childFound;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupLeafNodeRendering(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::setupLeafNodeRendering(
 		OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
@@ -322,8 +327,8 @@ namespace model
 		setupNodeRendering( leafNode, code, renderingState );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupInnerNodeRendering(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::setupInnerNodeRendering(
 		OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
@@ -331,8 +336,8 @@ namespace model
 		setupNodeRendering( innerNode, code, renderingState );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRendering(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
 		//cout << "Into front: " << code->getPathToRoot( true ) << endl;
@@ -340,23 +345,23 @@ namespace model
 		ParentOctree::setupNodeRendering( node, renderingState );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::setupNodeRenderingNoFront(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::setupNodeRenderingNoFront(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
 		ParentOctree::setupNodeRendering( node, renderingState );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::handleCulledNode(
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::handleCulledNode(
 		MortonCodePtr code )
 	{
 		//cout << "Inserted cull: " << hex << code->getBits() << dec << endl;
 		m_frontBehavior->insert( *code );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >::onTraversalEnd()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void FrontOctree< OctreeParameters, Front, FrontInsertionContainer >::onTraversalEnd()
 	{
 		m_frontBehavior->onFrontTrackingEnd();
 	}
@@ -367,19 +372,36 @@ namespace model
 	
 	//TODO: Use an unordered_set< MortonCodePtr > as front, so data is reused from hierarchy.
 	/** An front octree with shallow morton code and usual data structures for front and front insertion container. */
-	template< typename MortonCode, typename Point  >
-	using DefaultFrontOctree = FrontOctree< MortonCode, Point, unordered_set< MortonCode >, vector< MortonCode > >;
+	template< typename OctreeParameters  >
+	using DefaultFrontOctree = FrontOctree< OctreeParameters, unordered_set< typename OctreeParameters::Morton >,
+											vector< typename OctreeParameters::Morton > >;
 	
-	using ShallowFrontOctree = DefaultFrontOctree< ShallowMortonCode, Point >;
+	using ShallowFrontOctree = 	DefaultFrontOctree<
+									OctreeParameters< 	ShallowMortonCode, Point, OctreeNode,
+														OctreeMap< ShallowMortonCode, OctreeNode >
+									>
+								>;
 	using ShallowFrontOctreePtr = shared_ptr< ShallowFrontOctree >;
 	
-	using MediumFrontOctree = DefaultFrontOctree< MediumMortonCode, Point >;
+	using MediumFrontOctree = 	DefaultFrontOctree<
+									OctreeParameters< 	MediumMortonCode, Point, OctreeNode,
+														OctreeMap< MediumMortonCode, OctreeNode >
+									>
+								>;
 	using MediumFrontOctreePtr = shared_ptr< MediumFrontOctree >;
 	
-	using ShallowExtFrontOctree = DefaultFrontOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtFrontOctree = 	DefaultFrontOctree<
+										OctreeParameters< 	ShallowMortonCode, ExtendedPoint, OctreeNode,
+															OctreeMap< ShallowMortonCode, OctreeNode >
+										>
+									>;
 	using ShallowExtFrontOctreePtr = shared_ptr< ShallowExtFrontOctree >;
 	
-	using MediumExtFrontOctree = DefaultFrontOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtFrontOctree = 	DefaultFrontOctree<
+										OctreeParameters< 	MediumMortonCode, ExtendedPoint, OctreeNode,
+															OctreeMap< MediumMortonCode, OctreeNode >
+										>
+									>;
 	using MediumExtFrontOctreePtr = shared_ptr< MediumExtFrontOctree >;
 }
 

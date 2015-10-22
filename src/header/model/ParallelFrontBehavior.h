@@ -7,23 +7,26 @@
 
 namespace model
 {
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
 	class FrontOctree;
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
 	class ParallelFrontBehavior{};
 	
-	template< typename MortonCode, typename Point >
-	class ParallelFrontBehavior< MortonCode, Point, unordered_set< MortonCode >, unordered_set< MortonCode > >
-	: public FrontBehavior< MortonCode, Point, unordered_set< MortonCode >, unordered_set< MortonCode > >
+	template< typename OctreeParameters >
+	class ParallelFrontBehavior< 	OctreeParameters, unordered_set< typename OctreeParameters::Morton >,
+									unordered_set< typename OctreeParameters::Morton > >
+	: public FrontBehavior< OctreeParameters, unordered_set< typename OctreeParameters::Morton >,
+							unordered_set< typename OctreeParameters::Morton > >
 	{
+		using MortonCode = typename OctreeParameters::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using Front = unordered_set< MortonCode >;
 		using InsertionContainer = unordered_set< MortonCode >;
-		using FrontBehavior = model::FrontBehavior< MortonCode, Point, Front, InsertionContainer >;
-		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, InsertionContainer >;
+		using FrontBehavior = model::FrontBehavior< OctreeParameters, Front, InsertionContainer >;
+		using FrontOctree = model::FrontOctree< OctreeParameters, Front, InsertionContainer >;
 	
 	public:
 		ParallelFrontBehavior( FrontOctree& octree )
@@ -96,17 +99,6 @@ namespace model
 		/** List with front nodes to be deleted. */
 		MortonVector m_deletionList;
 	};
-	
-	//=====================================================================
-	// Type Sugar.
-	//=====================================================================
-	
-	/** Front behavior with shallow morton code and usual datastructures that allow parallelism. */
-	template< typename Point >
-	using ShallowParallelFrontBehavior = ParallelFrontBehavior< unsigned int, Point,
-																unordered_set< MortonCode< unsigned int > >,
-																unordered_set< MortonCode< unsigned int > >
-															  >;
 }
 
 #endif

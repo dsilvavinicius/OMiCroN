@@ -14,19 +14,26 @@ namespace model
 	/** Octree for massive point clouds that cannot be held in main memory because of their sizes. The main memory is
 	 * used as a cache, with data being fetched on demand from a database in disk. The persistence is tracked, so
 	 * the construction and front tracking algorithms try to minimize database access. */
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
 	class OutOfCoreOctree
-	: public FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	: public FrontOctree< OctreeParameters, Front, FrontInsertionContainer >
 	{
+		using MortonCode = typename OctreeParameters::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
+		
+		using Point = typename OctreeParameters::Point;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
+		
+		using OctreeNode = typename OctreeParameters::Node;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
+		
+		using OctreeMap = typename OctreeParameters::Hierarchy;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
+		
+		using ParentOctree = model::FrontOctree< OctreeParameters, Front, FrontInsertionContainer >;
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
-		using ParentOctree = model::FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >;
 		using IdNode = model::IdNode< MortonCode >;
 		using IdNodeVector = model::IdNodeVector< MortonCode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
@@ -81,8 +88,8 @@ namespace model
 		/** DEPRECATED: use build() instead. */
 		virtual void build( PointVector& points ) override;
 		
-		template< typename M, typename P, typename F, typename FIC >
-		friend ostream& operator<<( ostream& out, OutOfCoreOctree< M, P, F, FIC >& octree );
+		template< typename P, typename F, typename FIC >
+		friend ostream& operator<<( ostream& out, OutOfCoreOctree< P, F, FIC >& octree );
 	
 	protected:
 		virtual void insertPointInLeaf( const PointPtr& point ) override;
@@ -174,8 +181,8 @@ namespace model
 		MemorySetup m_memSetup;
 	};
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::OutOfCoreOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename,
 					   const MemorySetup& memSetup )
 	: ParentOctree( maxPointsPerNode, maxLevel ),
@@ -185,14 +192,14 @@ namespace model
 	m_memSetup( memSetup )
 	{}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::build()
 	{
 		buildInners();
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
 					 const Attributes& attribs )
 	{
@@ -256,8 +263,8 @@ namespace model
 		cout << "Total Hierarchy construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code = makeManaged< MortonCode >( ParentOctree::calcMorton( *point ) );
@@ -288,8 +295,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline OctreeNodePtr OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline shared_ptr< typename OctreeParameters::Node > OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::getNode( const MortonCodePtr& code )
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
@@ -315,8 +322,9 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline vector< OctreeNodePtr > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline vector< shared_ptr< typename OctreeParameters::Node > > OutOfCoreOctree
+	< OctreeParameters, Front, FrontInsertionContainer >
 	::getChildren( const MortonCodePtr& parent )
 	{
 		MortonCodePtr firstChildCode = parent->getFirstChild();
@@ -347,15 +355,16 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline SQLiteQuery< IdNode< MortonCode > > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline SQLiteQuery< IdNode< typename OctreeParameters::Morton > > OutOfCoreOctree
+	< OctreeParameters, Front, FrontInsertionContainer >
 	::getRangeInDB(  const MortonCodePtr& a, const MortonCodePtr& b  )
 	{
 		return m_sqLite. template getIdNodesQuery< PointVector >( *a, *b );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::persistAndReleaseLeaves()
 	{
 		IMemoryManager& memManager = SingletonMemoryManager::instance();
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
@@ -399,8 +408,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllLeaves()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::persistAllLeaves()
 	{
 		cout << "===== Persisting all leaves before inner node creation =====" << endl << endl;
 		
@@ -419,8 +428,8 @@ namespace model
 		cout << "===== Ending leaf persistence =====" << endl << endl;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::persistAllDirty()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::persistAllDirty()
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		if( !hierarchy->empty() )
@@ -451,8 +460,9 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline shared_ptr< typename OctreeParameters::Morton > OutOfCoreOctree
+	< OctreeParameters, Front, FrontInsertionContainer >
 	::releaseNodesAtCreation()
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
@@ -506,8 +516,8 @@ namespace model
 		return currentCode;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::releaseNodesAtFrontTracking()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::releaseNodesAtFrontTracking()
 	{
 		IMemoryManager& memManager = SingletonMemoryManager::instance();
 		if( !memManager.hasEnoughMemory( m_memSetup.m_freeMemPercentThreshToStartRelease ) )
@@ -553,8 +563,8 @@ namespace model
 	
 	// TODO: Changing the starting point of level construction iteration to the last nodes of the level imediately below
 	// should make less nodes dirty when reseting m_lastDirty.
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildInners()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::buildInners()
 	{
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
@@ -661,8 +671,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::loadNodesAndValidateIter( const MortonCodePtr& nextFirstChildCode, const MortonCodePtr& lvlBoundary,
 								typename OctreeMap::iterator& firstChildIt )
 	{
@@ -690,8 +700,8 @@ namespace model
 		firstChildIt = hierarchy->find( firstLoadedCode );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	shared_ptr< MortonCode > OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	shared_ptr< typename OctreeParameters::Morton > OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::loadSiblingGroups( SQLiteQuery& query )
 	{
 		IdNode idNode;
@@ -734,33 +744,33 @@ namespace model
 	}
 	
 	// TODO: Find a way to let deletions also be in transactions.
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::eraseNodes( const typename OctreeMap::iterator& first, const typename OctreeMap::iterator& last )
 	{
 		auto prevLast = last;
 		--prevLast;
 		
 		m_sqLite.deleteNodes( *first->first, *prevLast->first );
-		RandomSampleOctree< MortonCode, Point >::eraseNodes( first, last );
+		RandomSampleOctree< OctreeParameters >::eraseNodes( first, last );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline bool OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline bool OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::isDirty( const MortonCodePtr& code ) const
 	{
 		return *code <= *m_lastDirty;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::onPrunningItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
 	{
 		onBranchingItAcquired( it, code ); // Both cases do the same thing: load the sibling groups related with code.
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
 	::onBranchingItAcquired( const typename OctreeMap::iterator& it, const MortonCodePtr& code )
 	{
 		if( it == ParentOctree::m_hierarchy->end() )
@@ -769,8 +779,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::onTraversalEnd()
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::onTraversalEnd()
 	{
 		ParentOctree::onTraversalEnd();
 		
@@ -791,8 +801,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	ostream& operator<<( ostream& out, OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >& octree )
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	ostream& operator<<( ostream& out, OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >& octree )
 	{
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
@@ -801,52 +811,70 @@ namespace model
 			<< "Last Dirty: " << octree.m_lastDirty->getPathToRoot( true ) << endl
 			<< octree.m_sqLite. template output< PointVector >() << endl
 			<< SingletonMemoryManager::instance() << endl
-			<< ( FrontOctree< MortonCode, Point, Front, FrontInsertionContainer >& ) octree << endl
+			<< ( FrontOctree< OctreeParameters, Front, FrontInsertionContainer >& ) octree << endl
 			<< "====== End of OutOfCoreOctree ======" << endl;
 		return out;
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildBoundaries( const PointVector& points )
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::buildBoundaries( const PointVector& points )
 	{
 		throw logic_error(  "buildBoundaries( PointVector& ) is unsuported. The boundaries are now calculated in"
 							"buildFromFile()" );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildNodes( PointVector& points )
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::buildNodes( PointVector& points )
 	{
 		throw logic_error(  "buildNodes( PointVector& ) is unsuported. Use buildFromFile() to take into consideration"
 							"the database or use FrontOctree." );
 	}
 		
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::buildLeaves( const PointVector& points )
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::buildLeaves( const PointVector& points )
 	{
 		throw logic_error(  "buildLeaves( PointVector& ) is unsuported. The leaves are now being built in "
 							"buildFromFile()" );
 	}
 	
-	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreOctree< MortonCode, Point, Front, FrontInsertionContainer >::build( PointVector& points )
+	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >::build( PointVector& points )
 	{
 		throw logic_error(  "build( PointVector& ) is unsuported. Use buildFromFile() instead." );
 	}
 	
 	// ====================== Type Sugar ================================ /
-	template< typename MortonCode, typename Point >
-	using DefaultOutOfCoreOctree = OutOfCoreOctree< MortonCode, Point, unordered_set< MortonCode >, vector< MortonCode > >;
+	template< typename OctreeParameters >
+	using DefaultOutOfCoreOctree = OutOfCoreOctree< OctreeParameters,
+													unordered_set< typename OctreeParameters::Morton >,
+													vector< typename OctreeParameters::Morton > >;
 	
-	using ShallowOutOfCoreOctree = DefaultOutOfCoreOctree< ShallowMortonCode, Point >;
+	using ShallowOutOfCoreOctree = 	DefaultOutOfCoreOctree<
+										OctreeParameters< ShallowMortonCode, Point, OctreeNode,
+											OctreeMap< ShallowMortonCode, OctreeNode >
+										>
+									>;
 	using ShallowOutOfCoreOctreePtr = shared_ptr< ShallowOutOfCoreOctree >;
 	
-	using MediumOutOfCoreOctree = DefaultOutOfCoreOctree< MediumMortonCode, Point >;
+	using MediumOutOfCoreOctree = 	DefaultOutOfCoreOctree<
+										OctreeParameters< MediumMortonCode, Point, OctreeNode,
+											OctreeMap< MediumMortonCode, OctreeNode >
+										>
+									>;
 	using MediumOutOfCoreOctreePtr = shared_ptr< MediumOutOfCoreOctree >;
 	
-	using ShallowExtOutOfCoreOctree = DefaultOutOfCoreOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtOutOfCoreOctree = DefaultOutOfCoreOctree<
+										OctreeParameters< ShallowMortonCode, ExtendedPoint, OctreeNode,
+											OctreeMap< ShallowMortonCode, OctreeNode >
+										>
+									>;
 	using ShallowExtOutOfCoreOctreePtr = shared_ptr< ShallowExtOutOfCoreOctree >;
 	
-	using MediumExtOutOfCoreOctree = DefaultOutOfCoreOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtOutOfCoreOctree = DefaultOutOfCoreOctree<
+										OctreeParameters< MediumMortonCode, ExtendedPoint, OctreeNode,
+											OctreeMap< MediumMortonCode, OctreeNode >
+										>
+									>;
 	using MediumExtOutOfCoreOctreePtr = shared_ptr< MediumExtOutOfCoreOctree >;
 }
 
