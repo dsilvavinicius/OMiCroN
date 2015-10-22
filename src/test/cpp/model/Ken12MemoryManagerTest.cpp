@@ -26,7 +26,7 @@ namespace model
 			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
-			using OctreeMap = model::DefaultOctreeMap< Morton >;
+			using OctreeMap = model::DefaultOctreeMap< Morton, OctreeNode >;
 			
 			size_t nNodes = 500000u;
 			size_t nPoints = 2u * nNodes;
@@ -78,7 +78,7 @@ namespace model
 			using InnerPtr = shared_ptr< Inner >;
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
-			using OctreeMap = model::DefaultOctreeMap< Morton >;
+			using OctreeMap = model::DefaultOctreeMap< Morton, OctreeNode >;
 			
 			size_t nNodes = 500000u;
 			size_t nPoints = 2u * nNodes;

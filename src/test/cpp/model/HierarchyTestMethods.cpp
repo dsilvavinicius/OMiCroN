@@ -4,7 +4,7 @@ namespace model
 {
 	namespace test
 	{
-		void checkHierarchy( const ShallowOctreeMapPtr& hierarchy )
+		void checkHierarchy( const ShallowOctreeMapPtr< OctreeNode >& hierarchy )
 		{
 			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
 			// it is a sibling of the node at the same position at the line immediately above.
@@ -50,7 +50,7 @@ namespace model
 			ASSERT_TRUE( hierarchy->empty() );
 		}
 		
-		void checkHierarchy( const MediumOctreeMapPtr& hierarchy )
+		void checkHierarchy( const MediumOctreeMapPtr< OctreeNode >& hierarchy )
 		{
 			// Checks if the hierarchy has the expected nodes.
 			checkNode< MediumMortonCode >( hierarchy, 0xc320UL );

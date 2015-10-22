@@ -60,7 +60,7 @@ namespace model
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
-			using OctreeMap = model::OctreeMap< Morton >;
+			using OctreeMap = model::OctreeMap< Morton, OctreeNode >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			uint nNodes = 500000u;
@@ -121,7 +121,7 @@ namespace model
 			using InnerPtrInternals = PtrInternals< Inner, ManagedAllocator< Inner > >;
 			using Leaf = LeafNode< PointVector >;
 			
-			using OctreeMap = model::OctreeMap< Morton >;
+			using OctreeMap = model::OctreeMap< Morton, OctreeNode >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			uint nNodes = 500000u;
@@ -184,7 +184,7 @@ namespace model
 			using Leaf = LeafNode< PointVector >;
 			using LeafPtr = shared_ptr< Leaf >;
 			
-			using OctreeMap = model::OctreeMap< Morton >;
+			using OctreeMap = model::OctreeMap< Morton, OctreeNode >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			uint nNodes = 500000u;
@@ -555,7 +555,7 @@ namespace model
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
-			using OctreeMap = model::OctreeMap< Morton >;
+			using OctreeMap = model::OctreeMap< Morton, OctreeNode >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
@@ -610,7 +610,7 @@ namespace model
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
-			using OctreeMap = model::OctreeMap< Morton >;
+			using OctreeMap = model::OctreeMap< Morton, OctreeNode >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;
@@ -664,7 +664,7 @@ namespace model
 			using LeafPtr = shared_ptr< Leaf >;
 			using LeafPtrInternals = PtrInternals< Leaf, ManagedAllocator< Leaf > >;
 			
-			using OctreeMap = model::OctreeMap< Morton >;
+			using OctreeMap = model::OctreeMap< Morton, OctreeNode >;
 			using MapInternals = model::MapInternals< Morton >;
 			
 			int nPoints = 10000;

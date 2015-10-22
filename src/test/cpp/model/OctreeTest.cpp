@@ -2,7 +2,7 @@
 #include <QApplication>
 
 #include "HierarchyTestMethods.h"
-#include "Octree.h"
+#include "RandomSampleOctree.h"
 #include <IndexedOctree.h>
 #include <OutOfCoreOctree.h>
 #include <MemoryManagerTypes.h>
@@ -118,98 +118,6 @@ namespace model
 		
 		template< typename P >
         class OctreeTest {};
-		
-		template<>
-		class OctreeTest< ShallowOctree >
-		: public SimplePointTest
-		{
-			using Octree = ShallowOctree;
-			using OctreePtr = ShallowOctreePtr;
-			using Test = model::test::OctreeTest< Octree >;
-			
-		protected:
-			void SetUp()
-			{
-				SPP_DefaultManager::initInstance( 1000000 );
-				
-				PointVector points;
-				generatePoints( points );
-				m_octree = OctreePtr( new Octree( 1, 10 ) );
-				m_octree->build( points );
-			}
-			
-			OctreePtr m_octree; 
-		};
-		
-		template<>
-		class OctreeTest< MediumOctree >
-		: public SimplePointTest
-		{
-			using Octree = MediumOctree;
-			using OctreePtr = MediumOctreePtr;
-			using Test = model::test::OctreeTest< Octree >;
-			
-		protected:
-			void SetUp()
-			{
-				MPP_DefaultManager::initInstance( 1000000 );
-				PointVector points;
-				generatePoints( points );
-				m_octree = OctreePtr( new Octree( 1, 20 ) );
-				m_octree->build( points );
-			}
-			
-			OctreePtr m_octree; 
-		};
-		
-		template<>
-		class OctreeTest< ShallowExtOctree >
-		: public ExtendedPointTest
-		{
-			using Point = ExtendedPoint;
-			using PointVector = ExtendedPointVector;
-			using Octree = ShallowExtOctree;
-			using OctreePtr = ShallowExtOctreePtr;
-			using Test = model::test::OctreeTest< Octree >;
-		
-		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
-			void SetUp()
-			{
-				SEP_DefaultManager::initInstance( 1000000 );
-				
-				PointVector points;
-				generatePoints( points );
-				m_octree = OctreePtr( new Octree( 1, 10 ) );
-				m_octree->build( points );
-			}
-			
-			OctreePtr m_octree;
-		};
-		
-		template<>
-		class OctreeTest< MediumExtOctree >
-		: public ExtendedPointTest
-		{
-			using Point = ExtendedPoint;
-			using PointVector = ExtendedPointVector;
-			using Octree = MediumExtOctree;
-			using OctreePtr = MediumExtOctreePtr;
-			using Test = model::test::OctreeTest< Octree >;
-		
-		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
-			void SetUp()
-			{
-				MEP_DefaultManager::initInstance( 1000000 );
-				PointVector points;
-				generatePoints( points );
-				m_octree = OctreePtr( new Octree( 1, 20 ) );
-				m_octree->build( points );
-			}
-			
-			OctreePtr m_octree;
-		};
 		
 		template<>
 		class OctreeTest< ShallowRandomSampleOctree >
@@ -567,52 +475,52 @@ namespace model
 			OctreePtr m_octree;
 		};
 		
-		void testBoundaries( const ShallowOctree& octree )
+		void testBoundaries( const ShallowRandomSampleOctree& octree )
 		{
 			testShallowBoundaries( octree );
 		}
 		
-		void testHierarchy( const ShallowOctree& octree )
+		void testHierarchy( const ShallowRandomSampleOctree& octree )
 		{
 			checkHierarchy( octree.getHierarchy() );
 		}
 		
-		void testBoundaries( const MediumOctree& octree )
+		void testBoundaries( const MediumRandomSampleOctree& octree )
 		{
 			testMediumBoundaries( octree );
 		}
 		
-		void testHierarchy( const MediumOctree& octree )
+		void testHierarchy( const MediumRandomSampleOctree& octree )
 		{
 			checkHierarchy( octree.getHierarchy() );
 		}
 		
-		void testBoundaries( const ShallowExtOctree& octree )
+		void testBoundaries( const ShallowExtRandomSampleOctree& octree )
 		{
 			testShallowBoundaries( octree );
 		}
 		
-		void testHierarchy( const ShallowExtOctree& octree )
+		void testHierarchy( const ShallowExtRandomSampleOctree& octree )
 		{
 			checkHierarchy( octree.getHierarchy() );
 		}
 		
-		void testBoundaries( const MediumExtOctree& octree )
+		void testBoundaries( const MediumExtRandomSampleOctree& octree )
 		{
 			testMediumBoundaries( octree );
 		}
 		
-		void testHierarchy( const MediumExtOctree& octree )
+		void testHierarchy( const MediumExtRandomSampleOctree& octree )
 		{
 			checkHierarchy( octree.getHierarchy() );
 		}
 		
 		using testing::Types;
 		
-		typedef Types< 	ShallowOctree, ShallowExtOctree, MediumOctree, MediumExtOctree, ShallowRandomSampleOctree,
-						ShallowExtRandomSampleOctree, MediumRandomSampleOctree, MediumExtRandomSampleOctree,
-						ShallowIndexedOctree, ShallowExtIndexedOctree, MediumIndexedOctree, MediumExtIndexedOctree,
-						ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree, MediumExtFrontOctree
+		typedef Types< 	ShallowRandomSampleOctree, ShallowExtRandomSampleOctree, MediumRandomSampleOctree,
+						MediumExtRandomSampleOctree/*, ShallowIndexedOctree, ShallowExtIndexedOctree, MediumIndexedOctree,
+						MediumExtIndexedOctree*/, ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree,
+						MediumExtFrontOctree
 						> Implementations;
 		
 		TYPED_TEST_CASE( OctreeTest, Implementations );

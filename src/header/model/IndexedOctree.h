@@ -17,7 +17,7 @@ namespace model
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using LeafNode = model::LeafNode< IndexVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
-		using OctreeMap = model::OctreeMap< MortonCode >;
+		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
 		using RandomSampleOctree = model::RandomSampleOctree< MortonCode, Point >;
 		
 	public:

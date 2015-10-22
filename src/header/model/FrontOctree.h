@@ -21,8 +21,8 @@ namespace model
 		using ParentOctree = model::RandomSampleOctree< MortonCode, Point >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using MortonVector = vector< MortonCode >;
-		using OctreeMap = model::OctreeMap< MortonCode >;
-		using OctreeMapPtr = model::OctreeMapPtr< MortonCode >;
+		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
+		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;

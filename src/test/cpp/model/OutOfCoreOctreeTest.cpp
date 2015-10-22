@@ -16,7 +16,7 @@ namespace model
 		template< typename OutOfCoreOctree >
 		void testCreation( OutOfCoreOctree& octree )
 		{
-			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
+			ShallowOctreeMapPtr< OctreeNode > hierarchy = octree.getHierarchy();
 			SQLiteManager< Point, ShallowMortonCode, OctreeNode >& sqLite = octree.getSQLiteManager();
 			
 			//cout << "DB after octree creation: " << endl << sqLite.output< PointVector >() << endl;

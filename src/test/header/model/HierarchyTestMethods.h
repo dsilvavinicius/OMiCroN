@@ -46,7 +46,7 @@ namespace model
 		}
 		
 		template< typename MortonCode >
-		void checkNode( OctreeMapPtr< MortonCode > hierarchy, const unsigned long long& bits )
+		void checkNode( OctreeMapPtr< MortonCode, OctreeNode > hierarchy, const unsigned long long& bits )
 		{
 			shared_ptr< MortonCode > code = makeManaged< MortonCode >( );
 			code->build( bits );
@@ -56,9 +56,9 @@ namespace model
 			hierarchy->erase( iter );
 		}
 		
-		void checkHierarchy( const ShallowOctreeMapPtr& hierarchy );
+		void checkHierarchy( const ShallowOctreeMapPtr< OctreeNode >& hierarchy );
 		
-		void checkHierarchy( const MediumOctreeMapPtr& hierarchy );
+		void checkHierarchy( const MediumOctreeMapPtr< OctreeNode >& hierarchy );
 	}
 }
 

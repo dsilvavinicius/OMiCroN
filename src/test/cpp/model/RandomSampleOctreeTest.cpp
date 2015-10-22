@@ -95,7 +95,7 @@ namespace model
 			Octree octree( 1, 1 );
 			octree.build( tmpPts );
 			
-			ShallowOctreeMapPtr hierarchy = octree.getHierarchy();
+			ShallowOctreeMapPtr< OctreeNode > hierarchy = octree.getHierarchy();
 			ShallowMortonCodePtr rootCode = makeManaged< ShallowMortonCode >();
 			rootCode->build( 0x1 );
 			

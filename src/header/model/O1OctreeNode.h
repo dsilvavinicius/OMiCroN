@@ -22,7 +22,7 @@ namespace model
 		Contents m_contents;
 	};
 	
-	template< typename Contents, typename Hierarchy  >
+	template< typename Contents, typename Morton, typename Hierarchy  >
 	class O1OctreeNode
 	: O1OctreeNodeBase< Contents >{};
 	
@@ -32,7 +32,7 @@ namespace model
 	template< typename Contents, typename Morton >
 	class O1OctreeNode
 	{
-		using Hierarchy = OctreeMap< Morton >; // This will have to change.
+		using Hierarchy = OctreeMap< Morton, O1OctreeNode >;
 		using Accessor = OctreeMap::iterator;
 	
 	public:

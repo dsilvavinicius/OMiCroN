@@ -49,7 +49,7 @@ namespace model
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using Front = unordered_set< MortonCode >;
 		using FrontOctree = model::FrontOctree< MortonCode, Point, Front, InsertionContainer >;
-		using OctreeMapPtr = shared_ptr< OctreeMap< MortonCode > >;
+		using OctreeMapPtr = shared_ptr< OctreeMap< MortonCode, OctreeNode > >;
 		
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}

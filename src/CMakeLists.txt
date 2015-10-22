@@ -39,8 +39,10 @@ set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # Find includes in corresponding build directories.
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
+
 # Instruct CMake to run moc automatically when needed.
 set (CMAKE_AUTOMOC ON)
+
 # Necessary flags for C++11, linkage to Qt5, OpenMP and Eigen setup.
 SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -fopenmp -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 

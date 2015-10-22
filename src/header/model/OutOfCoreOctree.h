@@ -22,7 +22,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using OctreeMap = model::OctreeMap< MortonCode >;
+		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
@@ -742,7 +742,7 @@ namespace model
 		--prevLast;
 		
 		m_sqLite.deleteNodes( *first->first, *prevLast->first );
-		Octree< MortonCode, Point >::eraseNodes( first, last );
+		RandomSampleOctree< MortonCode, Point >::eraseNodes( first, last );
 	}
 	
 	template< typename MortonCode, typename Point, typename Front, typename FrontInsertionContainer >
