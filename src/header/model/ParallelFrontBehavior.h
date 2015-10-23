@@ -7,26 +7,26 @@
 
 namespace model
 {
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
 	class FrontOctree;
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
 	class ParallelFrontBehavior{};
 	
-	template< typename OctreeParameters >
-	class ParallelFrontBehavior< 	OctreeParameters, unordered_set< typename OctreeParameters::Morton >,
-									unordered_set< typename OctreeParameters::Morton > >
-	: public FrontBehavior< OctreeParameters, unordered_set< typename OctreeParameters::Morton >,
-							unordered_set< typename OctreeParameters::Morton > >
+	template< typename OctreeParams >
+	class ParallelFrontBehavior< 	OctreeParams, unordered_set< typename OctreeParams::Morton >,
+									unordered_set< typename OctreeParams::Morton > >
+	: public FrontBehavior< OctreeParams, unordered_set< typename OctreeParams::Morton >,
+							unordered_set< typename OctreeParams::Morton > >
 	{
-		using MortonCode = typename OctreeParameters::Morton;
+		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		using Front = unordered_set< MortonCode >;
 		using InsertionContainer = unordered_set< MortonCode >;
-		using FrontBehavior = model::FrontBehavior< OctreeParameters, Front, InsertionContainer >;
-		using FrontOctree = model::FrontOctree< OctreeParameters, Front, InsertionContainer >;
+		using FrontBehavior = model::FrontBehavior< OctreeParams, Front, InsertionContainer >;
+		using FrontOctree = model::FrontOctree< OctreeParams, Front, InsertionContainer >;
 	
 	public:
 		ParallelFrontBehavior( FrontOctree& octree )

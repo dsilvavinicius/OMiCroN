@@ -6,21 +6,21 @@
 namespace model
 {
 	/** OutOfCoreOctree that also provides debug info when rendering. */
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
 	class OutOfCoreDebugOctree
-	: public OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >
+	: public OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >
 	{
-		using MortonCode = typename OctreeParameters::Morton;
+		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		
-		using Point = typename OctreeParameters::Point;
+		using Point = typename OctreeParams::Point;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
-		using OctreeNode = typename OctreeParameters::Node;
+		using OctreeNode = typename OctreeParams::Node;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		
-		using ParentOctree = OutOfCoreOctree< OctreeParameters, Front, FrontInsertionContainer >;
+		using ParentOctree = OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >;
 		
 	public:
 		OutOfCoreDebugOctree( const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename,
@@ -42,29 +42,29 @@ namespace model
 		bool m_isDebugOn;
 	};
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	OutOfCoreDebugOctree< OctreeParameters, Front, FrontInsertionContainer >::OutOfCoreDebugOctree(
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	OutOfCoreDebugOctree< OctreeParams, Front, FrontInsertionContainer >::OutOfCoreDebugOctree(
 		const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename,
 		const typename ParentOctree::MemorySetup& memSetup )
 	: ParentOctree( maxPointsPerNode, maxLevel, dbFilename, memSetup ),
 	m_isDebugOn( false )
 	{}
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	OutOfCoreDebugOctree< OctreeParameters, Front, FrontInsertionContainer >::OutOfCoreDebugOctree(
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	OutOfCoreDebugOctree< OctreeParams, Front, FrontInsertionContainer >::OutOfCoreDebugOctree(
 		const int& maxPointsPerNode, const int& maxLevel, const string& dbFilename )
 	: ParentOctree( maxPointsPerNode, maxLevel, dbFilename ),
 	m_isDebugOn( false )
 	{}
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	void OutOfCoreDebugOctree< OctreeParameters, Front, FrontInsertionContainer >::toggleDebug( const bool& flag )
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	void OutOfCoreDebugOctree< OctreeParams, Front, FrontInsertionContainer >::toggleDebug( const bool& flag )
 	{
 		m_isDebugOn = flag;
 	}
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreDebugOctree< OctreeParameters, Front, FrontInsertionContainer >::setupNodeRendering(
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreDebugOctree< OctreeParams, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
 		if( m_isDebugOn )
@@ -78,8 +78,8 @@ namespace model
 		ParentOctree::setupNodeRendering( node, code, renderingState );
 	}
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	inline void OutOfCoreDebugOctree< OctreeParameters, Front, FrontInsertionContainer >::setupNodeRenderingNoFront(
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	inline void OutOfCoreDebugOctree< OctreeParams, Front, FrontInsertionContainer >::setupNodeRenderingNoFront(
 		OctreeNodePtr node, MortonCodePtr code, RenderingState& renderingState )
 	{
 		if( m_isDebugOn )
@@ -94,34 +94,34 @@ namespace model
 	}
 	
 	// ====================== Type Sugar ================================ /
-	template< typename OctreeParameters >
-	using DefaultOutOfCoreDebugOctree = OutOfCoreDebugOctree< 	OctreeParameters,
-																unordered_set< typename OctreeParameters::Morton >,
-																vector< typename OctreeParameters::Morton > >;
+	template< typename OctreeParams >
+	using DefaultOutOfCoreDebugOctree = OutOfCoreDebugOctree< 	OctreeParams,
+																unordered_set< typename OctreeParams::Morton >,
+																vector< typename OctreeParams::Morton > >;
 	
 	using ShallowOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParameters< ShallowMortonCode, Point, OctreeNode,
+											OctreeParams< ShallowMortonCode, Point, OctreeNode,
 												OctreeMap< ShallowMortonCode, OctreeNode >
 											>
 										>;
 	using ShallowOutOfCoreDebugOctreePtr = shared_ptr< ShallowOutOfCoreDebugOctree >;
 	
 	using MediumOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParameters< MediumMortonCode, Point, OctreeNode,
+											OctreeParams< MediumMortonCode, Point, OctreeNode,
 												OctreeMap< MediumMortonCode, OctreeNode >
 											>
 										>;
 	using MediumOutOfCoreDebugOctreePtr = shared_ptr< MediumOutOfCoreDebugOctree >;
 	
 	using ShallowExtOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParameters< ShallowMortonCode, ExtendedPoint, OctreeNode,
+											OctreeParams< ShallowMortonCode, ExtendedPoint, OctreeNode,
 												OctreeMap< ShallowMortonCode, OctreeNode >
 											>
 										>;
 	using ShallowExtOutOfCoreDebugOctreePtr = shared_ptr< ShallowExtOutOfCoreDebugOctree >;
 	
 	using MediumExtOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParameters< MediumMortonCode, ExtendedPoint, OctreeNode,
+											OctreeParams< MediumMortonCode, ExtendedPoint, OctreeNode,
 												OctreeMap< MediumMortonCode, OctreeNode >
 											>
 										>;

@@ -76,7 +76,9 @@ namespace model
 			using PointPtr = shared_ptr< TypeParam >;
 			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			using PointVectorPtr = shared_ptr< PointVector >;
-			using Octree = RandomSampleOctree< ShallowMortonCode, Point >;
+			using OctreeParams = model::OctreeParams< ShallowMortonCode, Point, OctreeNode,
+																OctreeMap< ShallowMortonCode, OctreeNode > >;
+			using Octree = RandomSampleOctree< OctreeParams >;
 			
 			srand( 1 );
 			PointVector points;

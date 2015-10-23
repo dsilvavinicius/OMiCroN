@@ -25,7 +25,7 @@ namespace model
 		}
 	};
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
 	class FrontOctree;
 	
 	// TODO: Make an implementation using set< MortonCode > as front, profile results and compare with
@@ -36,22 +36,22 @@ namespace model
 	
 	/** Wrapper used to "specialize" just the parts of the front behavior in FrontOctree and derived classes. This struct
 	 * should be tightly coupled with the class that it is "specializing". */
-	template< typename OctreeParameters, typename Front, typename InsertionContainer >
+	template< typename OctreeParams, typename Front, typename InsertionContainer >
 	class FrontBehavior
 	{};
 	
-	template< typename OctreeParameters, typename InsertionContainer >
-	class FrontBehavior< OctreeParameters, unordered_set< typename OctreeParameters::Morton >, InsertionContainer >
+	template< typename OctreeParams, typename InsertionContainer >
+	class FrontBehavior< OctreeParams, unordered_set< typename OctreeParams::Morton >, InsertionContainer >
 	{
 	public:
-		using MortonCode = typename OctreeParameters::Morton;
+		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonVector = vector< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
 		
 		using Front = unordered_set< MortonCode >;
-		using FrontOctree = model::FrontOctree< OctreeParameters, Front, InsertionContainer >;
-		using OctreeMapPtr = shared_ptr< typename OctreeParameters::Hierarchy >;
+		using FrontOctree = model::FrontOctree< OctreeParams, Front, InsertionContainer >;
+		using OctreeMapPtr = shared_ptr< typename OctreeParams::Hierarchy >;
 		
 		FrontBehavior( FrontOctree& octree )
 		: m_octree( octree ) {}

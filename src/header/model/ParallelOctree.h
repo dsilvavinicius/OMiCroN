@@ -8,16 +8,16 @@
 namespace model
 {
 	/** An octree that performs front tracking in parallel. */
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
 	class ParallelOctree
-	: public FrontOctree< OctreeParameters, Front, FrontInsertionContainer >
+	: public FrontOctree< OctreeParams, Front, FrontInsertionContainer >
 	{
-		using MortonCode = typename OctreeParameters::Morton;
+		using MortonCode = typename OctreeParams::Morton;
 		using MortonVector = vector< MortonCode >;
 		using PointVector = IndexVector;
 		using PointVectorPtr = shared_ptr< PointVector >;
-		using FrontOctree = model::FrontOctree< OctreeParameters, Front, FrontInsertionContainer >;
-		using ParallelFrontBehavior = model::ParallelFrontBehavior< OctreeParameters, Front, FrontInsertionContainer >;
+		using FrontOctree = model::FrontOctree< OctreeParams, Front, FrontInsertionContainer >;
+		using ParallelFrontBehavior = model::ParallelFrontBehavior< OctreeParams, Front, FrontInsertionContainer >;
 	
 	public:
 		ParallelOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -30,16 +30,16 @@ namespace model
 		MortonVector m_frontDeletionList;
 	};
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	ParallelOctree< OctreeParameters, Front, FrontInsertionContainer >::ParallelOctree(
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	ParallelOctree< OctreeParams, Front, FrontInsertionContainer >::ParallelOctree(
 		const int& maxPointsPerNode, const int& maxLevel )
 	: FrontOctree( maxPointsPerNode, maxLevel )
 	{
 		FrontOctree::m_frontBehavior = new ParallelFrontBehavior( *this );
 	}
 	
-	template< typename OctreeParameters, typename Front, typename FrontInsertionContainer >
-	inline void ParallelOctree< OctreeParameters, Front, FrontInsertionContainer >::setupNodeRendering(
+	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
+	inline void ParallelOctree< OctreeParams, Front, FrontInsertionContainer >::setupNodeRendering(
 		OctreeNodePtr node, RenderingState& renderingState )
 	{
 		PointVectorPtr points = node-> template getContents< PointVector >();

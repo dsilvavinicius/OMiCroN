@@ -8,17 +8,21 @@
 namespace model
 {
 	/** An octree that uses indices to a vector of points in the hierarchy. */
-	template< typename MortonCode, typename Point >
+	template< typename OctreeParams >
 	class IndexedOctree
-	: public RandomSampleOctree< MortonCode, Point >
+	: public RandomSampleOctree< OctreeParams >
 	{
+		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
+		
+		using Point = typename OctreeParams::Point;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
+		
 		using LeafNode = model::LeafNode< IndexVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
 		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
-		using RandomSampleOctree = model::RandomSampleOctree< MortonCode, Point >;
+		using RandomSampleOctree = model::RandomSampleOctree< OctreeParams >;
 		
 	public:
 		IndexedOctree( const int& maxPointsPerNode, const int& maxLevel );
@@ -54,13 +58,13 @@ namespace model
 		PointVector m_points;
 	};
 	
-	template< typename MortonCode, typename Point >
-	IndexedOctree< MortonCode, Point >::IndexedOctree( const int& maxPointsPerNode, const int& maxLevel )
+	template< typename OctreeParams >
+	IndexedOctree< OctreeParams >::IndexedOctree( const int& maxPointsPerNode, const int& maxLevel )
 	: RandomSampleOctree::RandomSampleOctree( maxPointsPerNode, maxLevel ),
 	m_nPoints( 0 ) {}
 	
-	template< typename MortonCode, typename Point >
-	void IndexedOctree< MortonCode, Point >::build( PointVector& points )
+	template< typename OctreeParams >
+	void IndexedOctree< OctreeParams >::build( PointVector& points )
 	{
 		m_points = points;
 		points.clear();
@@ -69,8 +73,8 @@ namespace model
 		buildNodes( m_points );
 	}
 	
-	template< typename MortonCode, typename Point >
-	void IndexedOctree< MortonCode, Point >::buildNodes( PointVector& points )
+	template< typename OctreeParams >
+	void IndexedOctree< OctreeParams >::buildNodes( PointVector& points )
 	{
 		cout << "Before leaf nodes build." << endl << endl;
 		RandomSampleOctree::buildLeaves(points);
@@ -79,8 +83,8 @@ namespace model
 		cout << "After inner nodes build." << endl << endl;
 	}
 	
-	template< typename MortonCode, typename Point >
-	inline void IndexedOctree< MortonCode, Point >::insertPointInLeaf( const PointPtr& point )
+	template< typename OctreeParams >
+	inline void IndexedOctree< OctreeParams >::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code = makeManaged< MortonCode >( RandomSampleOctree::calcMorton( *point ) );
 		typename OctreeMap::iterator genericLeafIt = RandomSampleOctree::m_hierarchy->find( code );
@@ -105,8 +109,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point >
-	inline void IndexedOctree< MortonCode, Point >::buildInnerNode(
+	template< typename OctreeParams >
+	inline void IndexedOctree< OctreeParams >::buildInnerNode(
 		typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
 		const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children )
 	{
@@ -150,8 +154,8 @@ namespace model
 		}
 	}
 	
-	template< typename MortonCode, typename Point >
-	inline OctreeNodePtr IndexedOctree< MortonCode, Point >
+	template< typename OctreeParams >
+	inline OctreeNodePtr IndexedOctree< OctreeParams >
 		::buildInnerNode( const IndexVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
@@ -172,8 +176,8 @@ namespace model
 		return node;
 	}
 	
-	template< typename MortonCode, typename Point >
-	inline void IndexedOctree< MortonCode, Point >::setupInnerNodeRendering( OctreeNodePtr innerNode,
+	template< typename OctreeParams >
+	inline void IndexedOctree< OctreeParams >::setupInnerNodeRendering( OctreeNodePtr innerNode,
 																			 MortonCodePtr code,
 																		  RenderingState& renderingState )
 	{
@@ -182,8 +186,8 @@ namespace model
 		setupNodeRendering( innerNode, renderingState );
 	}
 	
-	template< typename MortonCode, typename Point >
-	inline void IndexedOctree< MortonCode, Point >::setupLeafNodeRendering( OctreeNodePtr leafNode, 
+	template< typename OctreeParams >
+	inline void IndexedOctree< OctreeParams >::setupLeafNodeRendering( OctreeNodePtr leafNode, 
 																							  MortonCodePtr code,
 																						   RenderingState& renderingState )
 	{
@@ -192,24 +196,40 @@ namespace model
 		setupNodeRendering( leafNode, renderingState );
 	}
 	
-	template< typename MortonCode, typename Point >
-	inline void IndexedOctree< MortonCode, Point >::setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState )
+	template< typename OctreeParams >
+	inline void IndexedOctree< OctreeParams >::setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState )
 	{
 		const IndexVector& points = node-> template getContents< IndexVector >();
 		renderingState.handleNodeRendering( points );
 	}
 	
 	// ====================== Type Sugar ================================ /
-	using ShallowIndexedOctree = IndexedOctree< ShallowMortonCode, Point >;
+	using ShallowIndexedOctree = IndexedOctree<
+									OctreeParams< ShallowMortonCode, Point, OctreeNode,
+										OctreeMap< ShallowMortonCode, OctreeNode >
+									>
+								>;
 	using ShallowIndexedOctreePtr = shared_ptr< ShallowIndexedOctree >;
 	
-	using MediumIndexedOctree = IndexedOctree< MediumMortonCode, Point >;
+	using MediumIndexedOctree = IndexedOctree<
+									OctreeParams< MediumMortonCode, Point, OctreeNode,
+										OctreeMap< MediumMortonCode, OctreeNode >
+									>
+								>;
 	using MediumIndexedOctreePtr = shared_ptr< MediumIndexedOctree >;
 	
-	using ShallowExtIndexedOctree = IndexedOctree< ShallowMortonCode, ExtendedPoint >;
+	using ShallowExtIndexedOctree = IndexedOctree<
+									OctreeParams< ShallowMortonCode, ExtendedPoint, OctreeNode,
+										OctreeMap< ShallowMortonCode, OctreeNode >
+									>
+								>;
 	using ShallowExtIndexedOctreePtr = shared_ptr< ShallowExtIndexedOctree >;
 	
-	using MediumExtIndexedOctree = IndexedOctree< MediumMortonCode, ExtendedPoint >;
+	using MediumExtIndexedOctree = IndexedOctree<
+									OctreeParams< MediumMortonCode, ExtendedPoint, OctreeNode,
+										OctreeMap< MediumMortonCode, OctreeNode >
+									>
+								>;
 	using MediumExtIndexedOctreePtr = shared_ptr< MediumExtIndexedOctree >;
 }
 

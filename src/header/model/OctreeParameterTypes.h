@@ -9,7 +9,7 @@
 namespace model
 {
 	template< typename M, typename P, typename N, typename H >
-	struct OctreeParameters
+	struct OctreeParams
 	{
 		using Morton = M;
 		using Point = P;
@@ -18,7 +18,7 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point, typename Node, typename Hierarchy >
-	using OctreeParameters = struct OctreeParameters< Morton, Point, Node, Hierarchy >;
+	using OctreeParams = struct OctreeParams< Morton, Point, Node, Hierarchy >;
 }
 
 #endif

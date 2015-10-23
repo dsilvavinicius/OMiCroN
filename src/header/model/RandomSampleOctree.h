@@ -29,25 +29,25 @@ namespace model
 	 * between level of detail (LOD), but has the cost of more points being rendered per frame.
 	 * @param OctreeParamaters is the struct defining the morton code, point, node and hierarchy types used by the
 	 * octree. */
-	template< typename OctreeParameters >
+	template< typename OctreeParams >
 	class RandomSampleOctree
 	{
-		using MortonCode = typename OctreeParameters::Morton;
+		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		
-		using Point = typename OctreeParameters::Point;
+		using Point = typename OctreeParams::Point;
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		
-		using OctreeNode = typename OctreeParameters::Node;
+		using OctreeNode = typename OctreeParams::Node;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using InnerNode = model::InnerNode< PointVector >;
 		using InnerNodePtr = shared_ptr< InnerNode >;
 		using LeafNode = model::LeafNode< PointVector >;
 		using LeafNodePtr = shared_ptr< LeafNode >;
 		
-		using OctreeMap = typename OctreeParameters::Hierarchy;
+		using OctreeMap = typename OctreeParams::Hierarchy;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		
 		using PlyPointReader = util::PlyPointReader< Point >;
@@ -179,8 +179,8 @@ namespace model
 		OctreeNodePtr buildInnerNode( const PointVector& childrenPoints ) const;
 	};
 	
-	template< typename OctreeParameters >
-	RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	RandomSampleOctree< OctreeParams >
 	::RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel )
 	: m_size( new Vec3() ),
 	m_leafSize( new Vec3() ),
@@ -193,21 +193,21 @@ namespace model
 		srand( 1 );
 	}
 	
-	template< typename OctreeParameters >
-	RandomSampleOctree< OctreeParameters >::~RandomSampleOctree()
+	template< typename OctreeParams >
+	RandomSampleOctree< OctreeParams >::~RandomSampleOctree()
 	{
 		delete m_pointAppender;
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::build( PointVector& points )
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::build( PointVector& points )
 	{
 		buildBoundaries( points );
 		buildNodes( points );
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >
 	::buildFromFile( const string& plyFileName, const Precision& precision, const Attributes& attribs )
 	{
 		PointVector points;
@@ -239,8 +239,8 @@ namespace model
 		build( points );
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::buildBoundaries( const PointVector& points )
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::buildBoundaries( const PointVector& points )
 	{
 		Float negInf = -numeric_limits< Float >::max();
 		Float posInf = numeric_limits< Float >::max();
@@ -263,8 +263,8 @@ namespace model
 		*m_leafSize = *m_size * ( ( Float )1 / ( ( unsigned long long )1 << m_maxLevel ) );
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::buildNodes( PointVector& points )
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::buildNodes( PointVector& points )
 	{
 		cout << "Before leaf nodes build." << endl << endl;
 		buildLeaves(points);
@@ -277,8 +277,8 @@ namespace model
 		cout << "After inner nodes build." << endl << endl;
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::buildLeaves( const PointVector& points )
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::buildLeaves( const PointVector& points )
 	{
 		for( PointPtr point : points )
 		{
@@ -286,8 +286,8 @@ namespace model
 		}
 	}
 	
-	template< typename OctreeParameters >
-	inline typename OctreeParameters::Morton RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	inline typename OctreeParams::Morton RandomSampleOctree< OctreeParams >
 	::calcMorton( const Point& point ) const
 	{
 		const Vec3& pos = point.getPos();
@@ -298,8 +298,8 @@ namespace model
 		return code;
 	}
 	
-	template< typename OctreeParameters >
-	inline void RandomSampleOctree< OctreeParameters >::insertPointInLeaf( const PointPtr& point )
+	template< typename OctreeParams >
+	inline void RandomSampleOctree< OctreeParams >::insertPointInLeaf( const PointPtr& point )
 	{
 		MortonCodePtr code = makeManaged< MortonCode >( calcMorton( *point ) );
 		typename OctreeMap::iterator genericLeafIt = m_hierarchy->find( code );
@@ -323,8 +323,8 @@ namespace model
 		}
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::buildInners()
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::buildInners()
 	{
 		// Do a bottom-up per-level construction of inner nodes.
 		for( int level = m_maxLevel - 1; level > -1; --level )
@@ -364,8 +364,8 @@ namespace model
 		}
 	}
 
-	template< typename OctreeParameters >
-	inline void RandomSampleOctree< OctreeParameters >::buildInnerNode(
+	template< typename OctreeParams >
+	inline void RandomSampleOctree< OctreeParams >::buildInnerNode(
 		typename OctreeMap::iterator& firstChildIt, const typename OctreeMap::iterator& currentChildIt,
 		const MortonCodePtr& parentCode, const vector< OctreeNodePtr >& children )
 	{
@@ -409,15 +409,15 @@ namespace model
 		}
 	}
 	
-	template< typename OctreeParameters >
-	inline void RandomSampleOctree< OctreeParameters >::eraseNodes( const typename OctreeMap::iterator& first,
+	template< typename OctreeParams >
+	inline void RandomSampleOctree< OctreeParams >::eraseNodes( const typename OctreeMap::iterator& first,
 																		 const typename OctreeMap::iterator& last )
 	{
 		m_hierarchy->erase( first, last );
 	}
 	
-	template< typename OctreeParameters >
-	inline shared_ptr< typename OctreeParameters::Node > RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	inline shared_ptr< typename OctreeParams::Node > RandomSampleOctree< OctreeParams >
 	::buildInnerNode( const PointVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
@@ -438,8 +438,8 @@ namespace model
 		return node;
 	}
 	
-	template< typename OctreeParameters >
-	OctreeStats RandomSampleOctree< OctreeParameters >::traverse( RenderingState& renderingState,
+	template< typename OctreeParams >
+	OctreeStats RandomSampleOctree< OctreeParams >::traverse( RenderingState& renderingState,
 																	   const Float& projThresh )
 	{
 		clock_t timing = clock();
@@ -464,8 +464,8 @@ namespace model
 		return OctreeStats( traversalTime, renderingTime, numRenderedPoints );
 	}
 	
-	template< typename OctreeParameters >
-	inline pair< Vec3, Vec3 > RandomSampleOctree< OctreeParameters >::getBoundaries( MortonCodePtr code ) const
+	template< typename OctreeParams >
+	inline pair< Vec3, Vec3 > RandomSampleOctree< OctreeParams >::getBoundaries( MortonCodePtr code ) const
 	{
 		unsigned int level = code->getLevel();
 		auto nodeCoordsVec = code->decode(level);
@@ -489,8 +489,8 @@ namespace model
 		return box;
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::traverse( MortonCodePtr nodeCode, RenderingState& renderingState,
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::traverse( MortonCodePtr nodeCode, RenderingState& renderingState,
 																const Float& projThresh )
 	{
 		//cout << "TRAVERSING " << *nodeCode << endl << endl;
@@ -540,8 +540,8 @@ namespace model
 		}
 	}
 	
-	template< typename OctreeParameters >
-	inline void RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	inline void RandomSampleOctree< OctreeParams >
 	::setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState )
 	{
 		PointVector points = node-> template getContents< PointVector >();
@@ -549,8 +549,8 @@ namespace model
 		renderingState.handleNodeRendering( points );
 	}
 	
-	template< typename OctreeParameters >
-	inline void RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	inline void RandomSampleOctree< OctreeParams >
 	::setupInnerNodeRendering( OctreeNodePtr innerNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( !innerNode->isLeaf() && "innerNode cannot be leaf." );
@@ -558,8 +558,8 @@ namespace model
 		setupNodeRendering( innerNode, renderingState );
 	}
 	
-	template< typename OctreeParameters >
-	inline void RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	inline void RandomSampleOctree< OctreeParams >
 	::setupLeafNodeRendering( OctreeNodePtr leafNode, MortonCodePtr code, RenderingState& renderingState )
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
@@ -568,42 +568,42 @@ namespace model
 		renderingState.handleNodeRendering( points );
 	}
 	
-	template< typename OctreeParameters >
-	inline shared_ptr< typename OctreeParameters::Hierarchy > RandomSampleOctree< OctreeParameters >
+	template< typename OctreeParams >
+	inline shared_ptr< typename OctreeParams::Hierarchy > RandomSampleOctree< OctreeParams >
 	::getHierarchy() const
 	{
 		return m_hierarchy;
 	}
 		
 	/** Gets the origin, which is the point contained in octree with minimun coordinates for all axis. */
-	template< typename OctreeParameters >
-	inline shared_ptr< Vec3 > RandomSampleOctree< OctreeParameters >::getOrigin() const { return m_origin; }
+	template< typename OctreeParams >
+	inline shared_ptr< Vec3 > RandomSampleOctree< OctreeParams >::getOrigin() const { return m_origin; }
 		
 	/** Gets the size of the octree, which is the extents in each axis from origin representing the space that the octree occupies. */
-	template< typename OctreeParameters >
-	inline shared_ptr< Vec3 > RandomSampleOctree< OctreeParameters >::getSize() const { return m_size; }
+	template< typename OctreeParams >
+	inline shared_ptr< Vec3 > RandomSampleOctree< OctreeParams >::getSize() const { return m_size; }
 	
-	template< typename OctreeParameters >
-	inline shared_ptr< Vec3 > RandomSampleOctree< OctreeParameters >::getLeafSize() const { return m_leafSize; }
+	template< typename OctreeParams >
+	inline shared_ptr< Vec3 > RandomSampleOctree< OctreeParams >::getLeafSize() const { return m_leafSize; }
 		
 	/** Gets the maximum number of points that can be inside an octree node. */
-	template< typename OctreeParameters >
-	inline unsigned int RandomSampleOctree< OctreeParameters >::getMaxPointsPerNode() const
+	template< typename OctreeParams >
+	inline unsigned int RandomSampleOctree< OctreeParams >::getMaxPointsPerNode() const
 	{
 		return m_maxPointsPerNode;
 	}
 		
 	/** Gets the maximum level that this octree can reach. */
-	template< typename OctreeParameters >
-	inline unsigned int RandomSampleOctree< OctreeParameters >::getMaxLevel() const { return m_maxLevel; }
+	template< typename OctreeParams >
+	inline unsigned int RandomSampleOctree< OctreeParams >::getMaxLevel() const { return m_maxLevel; }
 	
-	template< typename OctreeParameters >
-	ostream& operator<<( ostream& out, const RandomSampleOctree< OctreeParameters >& octree )
+	template< typename OctreeParams >
+	ostream& operator<<( ostream& out, const RandomSampleOctree< OctreeParams >& octree )
 	{
-		using PointPtr = shared_ptr< typename OctreeParameters::Point >;
+		using PointPtr = shared_ptr< typename OctreeParams::Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-		using MortonCodePtr = shared_ptr< typename OctreeParameters::Morton >;
-		using OctreeMapPtr = shared_ptr< typename OctreeParameters::Hierarchy >;
+		using MortonCodePtr = shared_ptr< typename OctreeParams::Morton >;
+		using OctreeMapPtr = shared_ptr< typename OctreeParams::Hierarchy >;
 		
 		out << "=========== Begin Octree ============" << endl << endl
 			<< "origin: " << glm::to_string( *octree.m_origin ) << endl
@@ -628,8 +628,8 @@ namespace model
 		return out;
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::setMaxLvl( const int& maxLevel, const ShallowMortonCode& )
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::setMaxLvl( const int& maxLevel, const ShallowMortonCode& )
 	{
 		m_maxLevel = maxLevel;
 		m_maxMortonLevel = 10; // 0 to 10.
@@ -637,8 +637,8 @@ namespace model
 		assert( m_maxLevel <= m_maxMortonLevel && "Octree level cannot exceed maximum." );
 	}
 	
-	template< typename OctreeParameters >
-	void RandomSampleOctree< OctreeParameters >::setMaxLvl( const int& maxLevel, const MediumMortonCode& )
+	template< typename OctreeParams >
+	void RandomSampleOctree< OctreeParams >::setMaxLvl( const int& maxLevel, const MediumMortonCode& )
 	{
 		m_maxLevel = maxLevel;
 		m_maxMortonLevel = 20; // 0 to 20.
@@ -648,7 +648,7 @@ namespace model
 	
 	// ====================== Type Sugar ================================ /
 	using ShallowRandomSampleOctree = 	RandomSampleOctree<
-											OctreeParameters<
+											OctreeParams<
 												ShallowMortonCode, Point, OctreeNode,
 												OctreeMap< ShallowMortonCode, OctreeNode >
 											>
@@ -656,7 +656,7 @@ namespace model
 	using ShallowRandomSampleOctreePtr = shared_ptr< ShallowRandomSampleOctree >;
 	
 	using MediumRandomSampleOctree = 	RandomSampleOctree<
-											OctreeParameters<
+											OctreeParams<
 												MediumMortonCode, Point, OctreeNode,
 												OctreeMap< MediumMortonCode, OctreeNode >
 											>
@@ -664,7 +664,7 @@ namespace model
 	using MediumRandomSampleOctreePtr = shared_ptr< MediumRandomSampleOctree >;
 	
 	using ShallowExtRandomSampleOctree = 	RandomSampleOctree<
-												OctreeParameters<
+												OctreeParams<
 													ShallowMortonCode, ExtendedPoint, OctreeNode,
 													OctreeMap< ShallowMortonCode, OctreeNode >
 												>
@@ -672,7 +672,7 @@ namespace model
 	using ShallowExtRandomSampleOctreePtr = shared_ptr< ShallowExtRandomSampleOctree >;
 	
 	using MediumExtRandomSampleOctree = 	RandomSampleOctree<
-												OctreeParameters<
+												OctreeParams<
 													MediumMortonCode, ExtendedPoint, OctreeNode,
 													OctreeMap< MediumMortonCode, OctreeNode >
 												>
