@@ -162,12 +162,12 @@ namespace model
 		mutex m_poolLock; // Lock to the pool
 	};
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	template< typename Morton, typename Point, typename Node >
 	class BitMapMemoryManager
-	: public MemoryManager< Morton, Point, Inner, Leaf, ManagedAllocGroup< Morton, Point, Inner, Leaf > >
+	: public MemoryManager< Morton, Point, Node, ManagedAllocGroup< Morton, Point, Node > >
 	{
-		using AllocGroup = model::ManagedAllocGroup< Morton, Point, Inner, Leaf >;
-		using MemoryManager = model::MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >;
+		using AllocGroup = model::ManagedAllocGroup< Morton, Point, Node >;
+		using MemoryManager = model::MemoryManager< Morton, Point, Node, AllocGroup >;
 		
 		using MortonPtr = shared_ptr< Morton >;
 		using MortonPtrInternals = model::PtrInternals< Morton, typename AllocGroup::MortonAlloc >;
@@ -175,13 +175,10 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointPtrInternals = model::PtrInternals< Point, typename AllocGroup::PointAlloc >;
 		
-		using InnerPtr = shared_ptr< Inner >;
-		using InnerPtrInternals = model::PtrInternals< Inner, typename AllocGroup::InnerAlloc >;
+		using NodePtr = shared_ptr< Node >;
+		using NodePtrInternals = model::PtrInternals< Node, typename AllocGroup::NodeAlloc >;
 		
-		using LeafPtr = shared_ptr< Leaf >;
-		using LeafPtrInternals = model::PtrInternals< Leaf, typename AllocGroup::LeafAlloc >;
-		
-		using MapInternals = model::MapInternals< Morton >;
+		using MapInternals = model::MapInternals< Morton, Node >;
 	public:
 		static void initInstance( const size_t& maxAllowedMem );
 	
@@ -564,16 +561,16 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	void BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( const size_t& maxAllowedMem )
+	template< typename Morton, typename Point, typename Node >
+	void BitMapMemoryManager< Morton, Point, Node >::initInstance( const size_t& maxAllowedMem )
 	{
 		MemoryManager::m_instance = unique_ptr< IMemoryManager >(
-			new BitMapMemoryManager< Morton, Point, Inner, Leaf >( maxAllowedMem )
+			new BitMapMemoryManager< Morton, Point, Node >( maxAllowedMem )
 		);
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
-	BitMapMemoryManager< Morton, Point, Inner, Leaf >::BitMapMemoryManager( const size_t& maxAllowedMem )
+	template< typename Morton, typename Point, typename Node >
+	BitMapMemoryManager< Morton, Point, Node >::BitMapMemoryManager( const size_t& maxAllowedMem )
 	{
 		MemoryManager::m_MortonPool = new BitMapMemoryPool< Morton >();
 		MemoryManager::m_MortonPtrPool = new BitMapMemoryPool< MortonPtr >();
@@ -585,13 +582,9 @@ namespace model
 		MemoryManager::m_PointPtrPool = new BitMapMemoryPool< PointPtr >();
 		MemoryManager::m_PointPtrInternalsPool = new BitMapMemoryPool< PointPtrInternals >();
 		
-		MemoryManager::m_InnerPool = new BitMapMemoryPool< Inner >();
-		MemoryManager::m_InnerPtrPool = new BitMapMemoryPool< InnerPtr >();
-		MemoryManager::m_InnerPtrInternalsPool = new BitMapMemoryPool< InnerPtrInternals >();
-		
-		MemoryManager::m_LeafPool = new BitMapMemoryPool< Leaf >();
-		MemoryManager::m_LeafPtrPool = new BitMapMemoryPool< LeafPtr >();
-		MemoryManager::m_LeafPtrInternalsPool = new BitMapMemoryPool< LeafPtrInternals >();
+		MemoryManager::m_NodePool = new BitMapMemoryPool< Node >();
+		MemoryManager::m_NodePtrPool = new BitMapMemoryPool< NodePtr >();
+		MemoryManager::m_NodePtrInternalsPool = new BitMapMemoryPool< NodePtrInternals >();
 		
 		MemoryManager::m_MapInternalsPool = new BitMapMemoryPool< MapInternals >();
 		

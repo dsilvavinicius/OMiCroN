@@ -28,7 +28,7 @@ PointRendererWidget::~PointRendererWidget()
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
 	// Init MemoryManager allowing 9GB of data.
-	DefaultManager< MortonCode, Point, InnerNode, LeafNode >::initInstance( 1024ul * 1024ul * 1024ul * 9 );
+	DefaultManager< MortonCode, Point, OctreeNode >::initInstance( 1024ul * 1024ul * 1024ul * 9 );
 	
 	//Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
 	//	1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,

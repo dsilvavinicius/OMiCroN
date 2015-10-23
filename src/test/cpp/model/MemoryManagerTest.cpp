@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
+//#include <qabstractitemmodel.h>
 #include "BitMapMemoryManager.h"
 #include "OctreeMapTypes.h"
-#include <InnerNode.h>
-#include <MemoryManagerTypes.h>
-#include <ManagedAllocator.h>
-#include <MemoryUtils.h>
-#include <qabstractitemmodel.h>
+#include "OctreeNode.h"
+#include "MemoryManagerTypes.h"
+#include "ManagedAllocator.h"
+#include "MemoryUtils.h"
 
 namespace model
 {

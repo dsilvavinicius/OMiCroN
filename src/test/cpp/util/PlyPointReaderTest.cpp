@@ -1,11 +1,11 @@
-#include "PlyPointReader.h"
-#include "Stream.h"
-#include <LeafNode.h>
-#include <MortonCode.h>
-#include <MemoryManagerTypes.h>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <QApplication>
+#include "PlyPointReader.h"
+#include "Stream.h"
+#include "MortonCode.h"
+#include "OctreeNode.h"
+#include "MemoryManagerTypes.h"
 
 using namespace std;
 

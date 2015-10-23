@@ -64,9 +64,6 @@ namespace util
 	{
 		m_disposer();
 	}
-	
-	// ====================== Type Sugar ================================ /
-	using ShallowIdNodeSQLQuery = SQLiteQuery< IdNode< ShallowMortonCode > >;
 }
 
 #endif

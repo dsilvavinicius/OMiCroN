@@ -38,13 +38,12 @@ namespace model
 	};
 	
 	/** Defines allocator types for Morton, Point, Inner and Leaf types. */
-	template< typename Morton, typename Point, typename Inner, typename Leaf >
+	template< typename Morton, typename Point, typename Node >
 	struct ManagedAllocGroup
 	{
 		using MortonAlloc = ManagedAllocator< Morton >;
 		using PointAlloc = ManagedAllocator< Point >;
-		using InnerAlloc = ManagedAllocator< Inner >;
-		using LeafAlloc = ManagedAllocator< Leaf >;
+		using NodeAlloc = ManagedAllocator< Node >;
 	};
 	
 	template< typename T >

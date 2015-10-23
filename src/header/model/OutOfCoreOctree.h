@@ -34,8 +34,8 @@ namespace model
 		using ParentOctree = model::FrontOctree< OctreeParams, Front, FrontInsertionContainer >;
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
-		using IdNode = model::IdNode< MortonCode >;
-		using IdNodeVector = model::IdNodeVector< MortonCode >;
+		using IdNode = model::IdNode< MortonCode, OctreeNode >;
+		using IdNodeVector = model::IdNodeVector< MortonCode, OctreeNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 	public:
@@ -278,14 +278,14 @@ namespace model
 			// Creates leaf node.
 			PointVector points;
 			points.push_back( point );
-			LeafNodePtr< PointVector > leafNode = makeManaged< LeafNode< PointVector > >();
+			OctreeNodePtr leafNode = makeManaged< OctreeNode >( true );
 			leafNode->setContents( points );
 			( *ParentOctree::m_hierarchy )[ code ] = leafNode;
 		}
 		else
 		{
 			// Node already exists. Appends the point there.
-			PointVector& points = node-> template getContents< PointVector >();
+			PointVector& points = node->getContents();
 			points.push_back( point );
 		}
 		
@@ -308,7 +308,7 @@ namespace model
 		}
 		else
 		{
-			OctreeNodePtr node = m_sqLite. template getNode< PointVector >( *code );
+			OctreeNodePtr node = m_sqLite.getNode( *code );
 			( *hierarchy )[ code ] = node;
 			if( node )
 			{
@@ -356,11 +356,11 @@ namespace model
 	}
 	
 	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
-	inline SQLiteQuery< IdNode< typename OctreeParams::Morton > > OutOfCoreOctree
-	< OctreeParams, Front, FrontInsertionContainer >
+	inline SQLiteQuery< IdNode< typename OctreeParams::Morton, typename OctreeParams::Node > >
+	OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >
 	::getRangeInDB(  const MortonCodePtr& a, const MortonCodePtr& b  )
 	{
-		return m_sqLite. template getIdNodesQuery< PointVector >( *a, *b );
+		return m_sqLite.getIdNodesQuery( *a, *b );
 	}
 	
 	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
@@ -388,7 +388,7 @@ namespace model
 					MortonCodePtr code = nodeIt->first;
 					OctreeNodePtr node = nodeIt->second;
 					
-					m_sqLite. template insertNode< PointVector >( *code, *node );
+					m_sqLite.insertNode( *code, *node );
 					
 					++i;
 					nodeIt = typename OctreeMap::reverse_iterator( hierarchy->erase( std::next( nodeIt ).base() ) );
@@ -420,7 +420,7 @@ namespace model
 		// Send all in-memory leaves to database.
 		for( auto elem : *hierarchy )
 		{
-			m_sqLite. template insertNode< PointVector >( *elem.first, *elem.second );
+			m_sqLite.insertNode( *elem.first, *elem.second );
 		}
 		
 		m_sqLite.endTransaction();
@@ -450,7 +450,7 @@ namespace model
 						break;
 					}
 					
-					m_sqLite. template insertNode< PointVector >( *currentCode, *elem.second );
+					m_sqLite.insertNode( *currentCode, *elem.second );
 				}
 				
 				m_sqLite.endTransaction();
@@ -487,7 +487,7 @@ namespace model
 				{
 					if( isDirty( currentCode ) )
 					{
-						m_sqLite. template insertNode< PointVector >( *currentCode, *nodeIt->second );
+						m_sqLite.insertNode( *currentCode, *nodeIt->second );
 					}
 					
 					// Little hack because reverse_iterator has an offset of 1 of its base (God knows why...).
@@ -849,33 +849,21 @@ namespace model
 													unordered_set< typename OctreeParams::Morton >,
 													vector< typename OctreeParams::Morton > >;
 	
-	using ShallowOutOfCoreOctree = 	DefaultOutOfCoreOctree<
-										OctreeParams< ShallowMortonCode, Point, OctreeNode,
-											OctreeMap< ShallowMortonCode, OctreeNode >
-										>
-									>;
-	using ShallowOutOfCoreOctreePtr = shared_ptr< ShallowOutOfCoreOctree >;
+	DECLARE_OCTREE_TYPE(SPOpS,OutOfCoreOctree,DefaultOutOfCoreOctree,ShallowMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using MediumOutOfCoreOctree = 	DefaultOutOfCoreOctree<
-										OctreeParams< MediumMortonCode, Point, OctreeNode,
-											OctreeMap< MediumMortonCode, OctreeNode >
-										>
-									>;
-	using MediumOutOfCoreOctreePtr = shared_ptr< MediumOutOfCoreOctree >;
+	DECLARE_OCTREE_TYPE(MPOpS,OutOfCoreOctree,DefaultOutOfCoreOctree,MediumMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using ShallowExtOutOfCoreOctree = DefaultOutOfCoreOctree<
-										OctreeParams< ShallowMortonCode, ExtendedPoint, OctreeNode,
-											OctreeMap< ShallowMortonCode, OctreeNode >
-										>
-									>;
-	using ShallowExtOutOfCoreOctreePtr = shared_ptr< ShallowExtOutOfCoreOctree >;
+	DECLARE_OCTREE_TYPE(SEOpS,OutOfCoreOctree,DefaultOutOfCoreOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
 	
-	using MediumExtOutOfCoreOctree = DefaultOutOfCoreOctree<
-										OctreeParams< MediumMortonCode, ExtendedPoint, OctreeNode,
-											OctreeMap< MediumMortonCode, OctreeNode >
-										>
-									>;
-	using MediumExtOutOfCoreOctreePtr = shared_ptr< MediumExtOutOfCoreOctree >;
+	DECLARE_OCTREE_TYPE(MEOpS,OutOfCoreOctree,DefaultOutOfCoreOctree,MediumMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SPOiS,OutOfCoreOctree,DefaultOutOfCoreOctree,ShallowMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MPOiS,OutOfCoreOctree,DefaultOutOfCoreOctree,MediumMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SEOiS,OutOfCoreOctree,DefaultOutOfCoreOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOiS,OutOfCoreOctree,DefaultOutOfCoreOctree,MediumMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
 }
 
 #endif

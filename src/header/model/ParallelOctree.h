@@ -14,8 +14,13 @@ namespace model
 	{
 		using MortonCode = typename OctreeParams::Morton;
 		using MortonVector = vector< MortonCode >;
+		
 		using PointVector = IndexVector;
 		using PointVectorPtr = shared_ptr< PointVector >;
+		
+		using OctreeNode = typename OctreeParams::Node;
+		using OctreeNodePtr = shared_ptr< OctreeNode >;
+		
 		using FrontOctree = model::FrontOctree< OctreeParams, Front, FrontInsertionContainer >;
 		using ParallelFrontBehavior = model::ParallelFrontBehavior< OctreeParams, Front, FrontInsertionContainer >;
 	

@@ -55,7 +55,7 @@ namespace model
 	}
 	
 	
-	template< typename Octree, typename MortonCode >
+	template< typename Octree, typename MortonCode, typename OctreeNode >
 	void QtRenderingState::drawBoundaries( const Octree& octree, const bool& passProjTestOnly, const Float& projThresh )
 	const
 	{
@@ -66,7 +66,7 @@ namespace model
 		vector< Vec3 > verts;
 		vector< Vec3 > colors;
 		
-		for( pair< shared_ptr< MortonCode >, OctreeNodePtr > entry
+		for( pair< shared_ptr< MortonCode >, shared_ptr< OctreeNode > > entry
 			: *octree.getHierarchy() )
 		{
 			shared_ptr< MortonCode > code = entry.first;

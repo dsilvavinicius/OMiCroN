@@ -23,26 +23,26 @@ namespace model
 	
 	// Macro that defines everything in MemoryManager related with a given memory pool type.
 	#define DEFINE_POOL_MEMBERS(TYPE) \
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	inline void* MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::alloc##TYPE()\
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >\
+	inline void* MemoryManager< Morton, Point, Node, AllocGroup >::alloc##TYPE()\
 	{\
 		return m_##TYPE##Pool->allocate();\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	inline void* MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::alloc##TYPE##Array( const size_t& size )\
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >\
+	inline void* MemoryManager< Morton, Point, Node, AllocGroup >::alloc##TYPE##Array( const size_t& size )\
 	{\
 		return m_##TYPE##Pool->allocateArray( size );\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	inline void MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::dealloc##TYPE( void* p )\
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >\
+	inline void MemoryManager< Morton, Point, Node, AllocGroup >::dealloc##TYPE( void* p )\
 	{\
 		m_##TYPE##Pool->deallocate( static_cast< TYPE* >( p ) );\
 	}\
 	\
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >\
-	inline void MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::dealloc##TYPE##Array( void* p )\
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >\
+	inline void MemoryManager< Morton, Point, Node, AllocGroup >::dealloc##TYPE##Array( void* p )\
 	{\
 		m_##TYPE##Pool->deallocateArray( static_cast< TYPE* >( p ) );\
 	}\
@@ -51,25 +51,22 @@ namespace model
 	 * is left for derived classes to do.
 	 * @param Morton is the morton code type.
 	 * @param Point is the point Type.
-	 * @param Inner is the inner node type.
-	 * @param Leaf is the leaf node type.
-	 * @param AllocGroup is a struct defining the allocators for Morton, Point, Inner and Leaf types.
+	 * @param Node is the node type.
+	 * @param AllocGroup is a struct defining the allocators for Morton, Point and Node types.
 	 */
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >
 	class MemoryManager
 	: public SingletonMemoryManager
 	{
 		using PointPtr = shared_ptr< Point >;
 		using MortonPtr = shared_ptr< Morton >;
-		using InnerPtr = shared_ptr< Inner >;
-		using LeafPtr = shared_ptr< Leaf >;
+		using NodePtr = shared_ptr< Node >;
 		
 		using PointPtrInternals = model::PtrInternals< Point, typename AllocGroup::PointAlloc >;
 		using MortonPtrInternals = model::PtrInternals< Morton, typename AllocGroup::MortonAlloc >;
-		using InnerPtrInternals = model::PtrInternals< Inner, typename AllocGroup::InnerAlloc >;
-		using LeafPtrInternals = model::PtrInternals< Leaf, typename AllocGroup::LeafAlloc >;
+		using NodePtrInternals = model::PtrInternals< Node, typename AllocGroup::NodeAlloc >;
 		
-		using MapInternals = model::MapInternals< Morton >;
+		using MapInternals = model::MapInternals< Morton, Node >;
 	public:
 		virtual ~MemoryManager() = 0;
 		
@@ -86,13 +83,9 @@ namespace model
 		DECLARE_POOL_MEMBERS(PointPtr)
 		DECLARE_POOL_MEMBERS(PointPtrInternals)
 		
-		DECLARE_POOL_MEMBERS(Inner)
-		DECLARE_POOL_MEMBERS(InnerPtr)
-		DECLARE_POOL_MEMBERS(InnerPtrInternals)
-		
-		DECLARE_POOL_MEMBERS(Leaf)
-		DECLARE_POOL_MEMBERS(LeafPtr)
-		DECLARE_POOL_MEMBERS(LeafPtrInternals)
+		DECLARE_POOL_MEMBERS(Node)
+		DECLARE_POOL_MEMBERS(NodePtr)
+		DECLARE_POOL_MEMBERS(NodePtrInternals)
 		
 		DECLARE_POOL_MEMBERS(MapInternals)
 		
@@ -115,20 +108,16 @@ namespace model
 		IMemoryPool< PointPtr >* m_PointPtrPool;
 		IMemoryPool< PointPtrInternals >* m_PointPtrInternalsPool;
 		
-		IMemoryPool< Inner >* m_InnerPool;
-		IMemoryPool< InnerPtr >* m_InnerPtrPool;
-		IMemoryPool< InnerPtrInternals >* m_InnerPtrInternalsPool;
-		
-		IMemoryPool< Leaf >* m_LeafPool;
-		IMemoryPool< LeafPtr >* m_LeafPtrPool;
-		IMemoryPool< LeafPtrInternals >* m_LeafPtrInternalsPool;
+		IMemoryPool< Node >* m_NodePool;
+		IMemoryPool< NodePtr >* m_NodePtrPool;
+		IMemoryPool< NodePtrInternals >* m_NodePtrInternalsPool;
 		
 		IMemoryPool< MapInternals >* m_MapInternalsPool;
 		size_t m_maxAllowedMem;
 	};
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
-	MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::~MemoryManager()
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >
+	MemoryManager< Morton, Point, Node, AllocGroup >::~MemoryManager()
 	{
 		delete m_MortonPool;
 		delete m_MortonPtrPool;
@@ -140,13 +129,9 @@ namespace model
 		delete m_PointPtrPool;
 		delete m_PointPtrInternalsPool;
 		
-		delete m_InnerPool;
-		delete m_InnerPtrPool;
-		delete m_InnerPtrInternalsPool;
-		
-		delete m_LeafPool;
-		delete m_LeafPtrPool;
-		delete m_LeafPtrInternalsPool;
+		delete m_NodePool;
+		delete m_NodePtrPool;
+		delete m_NodePtrInternalsPool;
 		
 		delete m_MapInternalsPool;
 	}
@@ -161,40 +146,36 @@ namespace model
 	DEFINE_POOL_MEMBERS(PointPtr)
 	DEFINE_POOL_MEMBERS(PointPtrInternals)
 	
-	DEFINE_POOL_MEMBERS(Inner)
-	DEFINE_POOL_MEMBERS(InnerPtr)
-	DEFINE_POOL_MEMBERS(InnerPtrInternals)
-	
-	DEFINE_POOL_MEMBERS(Leaf)
-	DEFINE_POOL_MEMBERS(LeafPtr)
-	DEFINE_POOL_MEMBERS(LeafPtrInternals)
+	DEFINE_POOL_MEMBERS(Node)
+	DEFINE_POOL_MEMBERS(NodePtr)
+	DEFINE_POOL_MEMBERS(NodePtrInternals)
 	
 	DEFINE_POOL_MEMBERS(MapInternals)
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
-	inline size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::usedMemory() const
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >
+	inline size_t MemoryManager< Morton, Point, Node, AllocGroup >::usedMemory() const
 	{
 		return 	m_MortonPool->memoryUsage() + m_MortonPtrPool->memoryUsage() + m_MortonPtrInternalsPool->memoryUsage() +
 				m_IndexPool->memoryUsage() + m_PointPool->memoryUsage() + m_PointPtrPool->memoryUsage() +
-				m_PointPtrInternalsPool->memoryUsage() + m_InnerPool->memoryUsage() + m_InnerPtrPool->memoryUsage() +
-				m_InnerPtrInternalsPool->memoryUsage() + m_LeafPool->memoryUsage() + m_LeafPtrPool->memoryUsage() +
-				m_LeafPtrInternalsPool->memoryUsage() + m_MapInternalsPool->memoryUsage();
+				m_PointPtrInternalsPool->memoryUsage() + m_NodePool->memoryUsage() + m_NodePtrPool->memoryUsage() +
+				m_NodePtrInternalsPool->memoryUsage() + m_MapInternalsPool->memoryUsage();
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
-	inline size_t MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::maxAllowedMem() const
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >
+	inline size_t MemoryManager< Morton, Point, Node, AllocGroup >::maxAllowedMem() const
 	{
 		return m_maxAllowedMem;
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
-	inline bool MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::hasEnoughMemory( const float& percentageThreshold ) const
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >
+	inline bool MemoryManager< Morton, Point, Node, AllocGroup >
+	::hasEnoughMemory( const float& percentageThreshold ) const
 	{
 		return ( m_maxAllowedMem - usedMemory() ) > float( m_maxAllowedMem * percentageThreshold );
 	}
 	
-	template< typename Morton, typename Point, typename Inner, typename Leaf, typename AllocGroup >
-	string MemoryManager< Morton, Point, Inner, Leaf, AllocGroup >::toString() const
+	template< typename Morton, typename Point, typename Node, typename AllocGroup >
+	string MemoryManager< Morton, Point, Node, AllocGroup >::toString() const
 	{
 		stringstream ss;
 		ss 	<< "Max allowed mem: " << m_maxAllowedMem << endl << endl
@@ -209,13 +190,9 @@ namespace model
 			<< "PointPtr used blocks: " << m_PointPtrPool->usedBlocks() << " Used memory: " << m_PointPtrPool->memoryUsage() << endl << endl
 			<< "PointPtrInternals used blocks: " << m_PointPtrInternalsPool->usedBlocks() << " Used memory: " << m_PointPtrInternalsPool->memoryUsage() << endl << endl
 			
-			<< "Inner used blocks: " << m_InnerPool->usedBlocks() << " Used memory: " << m_InnerPool->memoryUsage() << endl << endl
-			<< "InnerPtr used blocks: " << m_InnerPtrPool->usedBlocks() << " Used memory: " << m_InnerPtrPool->memoryUsage() << endl << endl
-			<< "InnerPtrInternals used blocks: " << m_InnerPtrInternalsPool->usedBlocks() << " Used memory: " << m_InnerPtrInternalsPool->memoryUsage() << endl << endl
-			
-			<< "Leaf used blocks: " << m_LeafPool->usedBlocks() << " Used memory: " << m_LeafPool->memoryUsage() << endl << endl
-			<< "LeafPtr used blocks: " << m_LeafPtrPool->usedBlocks() << " Used memory: " << m_LeafPtrPool->memoryUsage() << endl << endl
-			<< "LeafPtrInternals used blocks: " << m_LeafPtrInternalsPool->usedBlocks() << " Used memory: " << m_LeafPtrInternalsPool->memoryUsage() << endl << endl
+			<< "Node used blocks: " << m_NodePool->usedBlocks() << " Used memory: " << m_NodePool->memoryUsage() << endl << endl
+			<< "NodePtr used blocks: " << m_NodePtrPool->usedBlocks() << " Used memory: " << m_NodePtrPool->memoryUsage() << endl << endl
+			<< "NodePtrInternals used blocks: " << m_NodePtrInternalsPool->usedBlocks() << " Used memory: " << m_NodePtrInternalsPool->memoryUsage() << endl << endl
 			
 			<< "MapInternals used blocks: " << m_MapInternalsPool->usedBlocks() << " Used memory: " << m_MapInternalsPool->memoryUsage() << endl << endl;
 		return ss.str();

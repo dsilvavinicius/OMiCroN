@@ -34,7 +34,7 @@ namespace model
 		
 		/** Draws the boundaries of the octree nodes.
 		 * @param passProjTestOnly indicates if only the nodes that pass the projection test should be rendered. */
-		template< typename Octree, typename MortonCode >
+		template< typename Octree, typename MortonCode, typename OctreeNode >
 		void drawBoundaries( const Octree& octree, const bool& passProjTestOnly, const Float& projThresh ) const;
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */

@@ -4,29 +4,31 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "Serializer.h"
-#include "ExtendedPoint.h"
 #include "MemoryUtils.h"
+#include "NodeReleaser.h"
 
 using namespace std;
 using namespace glm;
 
 namespace model
 {
+	/** Simple octree node. */
 	template< typename Contents >
-	class InnerNode;
-	
-	template< typename Contents >
-	class LeafNode;
-	
-	// TODO: Eliminate the reinterpret_casts in this class.
-	/** Base class for octree nodes. */
 	class OctreeNode
 	{
 	public:
-		virtual ~OctreeNode() {}
+		OctreeNode( const bool& isLeaf )
+		: m_isLeaf( isLeaf ) {}
+		
+		~OctreeNode() { NodeReleaser::release( *this ); }
+		
+		void* operator new( size_t size );
+		void* operator new[]( size_t size );
+		void operator delete( void* p );
+		void operator delete[]( void* p );
 		
 		/** Indicates the type of the node. */
-		virtual bool isLeaf() const = 0;
+		bool isLeaf() const { return m_isLeaf; }
 		
 		/** Acquire parent iterator, given an hierarchy and the Morton code associated with this OctreeNode. */
 		//template< typename Morton >
@@ -43,105 +45,67 @@ namespace model
 		//template< typename Morton >
 		//OctreeNodePtr getFirstChild( const Morton& morton, const OctreeMap< Morton >& hierarchy ) const;
 														  
-		/** Sets the contents of this node. Implies reinterpret_cast downawards hierarchy. */
-		template< typename Contents >
-		void setContents( const Contents& contents );
+		/** Sets the contents of this node. */
+		void setContents( const Contents& contents ) { m_contents = contents; }
 		
-		/** Gets the contents of this node. Implies reinterpret_cast downawards hierarchy. */
-		template< typename Contents >
-		Contents& getContents();
+		/** Gets the contents of this node. */
+		Contents& getContents() { return m_contents; }
 		
-		/** Gets the const contents of this node. Implies reinterpret_cast downawards hierarchy. */
-		template< typename Contents >
-		const Contents& getContents() const;
+		/** Gets the const contents of this node. */
+		const Contents& getContents() const { return m_contents; }
 		
+		// TODO: make an operator<< instead since the method doesn't need to be a template anymore.
 		/** Does the same as operator<< (however the compiler has bugs regarding template operator<< and is avoided here) */
-		template< typename Contents >
 		void output( ostream& out );
 		
 		/** Serializes the node. The form is:
 		 *	bool flag true if the node is leaf, false otherwise;
 		 *	serialization of content. */
-		template< typename Contents >
 		size_t serialize( byte** serialization ) const;
 		
-		/** Deserializes a byte sequence into an OctreeNode. The pointer is owned by the caller, who needs to delete it
-		 *	later on. */
-		template< typename Contents >
-		static OctreeNodePtr deserialize( byte* serialization );
+		/** Deserializes a byte sequence into an OctreeNode. The pointer is owned by the caller. */
+		static OctreeNodePtr< Contents > deserialize( byte* serialization );
+		
+	private:
+		Contents m_contents;
+		bool m_isLeaf;
 	};
 	
 	template< typename Contents >
-	inline void OctreeNode::setContents( const Contents& contents )
+	void* OctreeNode< Contents >::operator new( size_t size )
 	{
-		if( isLeaf() )
-		{
-			LeafNode< Contents >* node =
-				reinterpret_cast< LeafNode< Contents >* >( this );
-			
-			node->setContents( contents );
-		}
-		else
-		{
-			InnerNode< Contents >* node =
-				reinterpret_cast< InnerNode< Contents >* >( this );
-			
-			node->setContents( contents );
-		}
-	}
-		
-	template< typename Contents >
-	inline Contents& OctreeNode::getContents()
-	{
-		if( isLeaf() )
-		{
-			LeafNode< Contents >* node = reinterpret_cast< LeafNode< Contents >* >( this );
-			return node->getContents();
-		}
-		else
-		{
-			InnerNode< Contents >* node = reinterpret_cast< InnerNode< Contents >* >( this );
-			return node->getContents();
-		}
+		return SingletonMemoryManager::instance().allocNode();
 	}
 	
 	template< typename Contents >
-	inline const Contents& OctreeNode::getContents() const
+	void* OctreeNode< Contents >::operator new[]( size_t size )
 	{
-		if( isLeaf() )
-		{
-			const LeafNode< Contents >* node =
-				reinterpret_cast< const LeafNode< Contents >* >( this );
-			return node->getContents();
-		}
-		else
-		{
-			const InnerNode< Contents >* node =
-				reinterpret_cast< const InnerNode< Contents >* >( this );
-			return node->getContents();
-		}
+		return SingletonMemoryManager::instance().allocNodeArray( size );
 	}
 	
 	template< typename Contents >
-	void OctreeNode::output( ostream& out )
+	void OctreeNode< Contents >::operator delete( void* p )
 	{
-		if( isLeaf() )
-		{
-			auto* leaf = reinterpret_cast< LeafNode< Contents >* >( this );
-			leaf->output( out );
-		}
-		else
-		{
-			auto* inner = reinterpret_cast< InnerNode< Contents >* >( this );
-			inner->output( out );
-		}
+		SingletonMemoryManager::instance().deallocNode( p );
 	}
 	
 	template< typename Contents >
-	inline size_t OctreeNode::serialize( byte** serialization ) const
+	void OctreeNode< Contents >::operator delete[]( void* p )
+	{
+		SingletonMemoryManager::instance().deallocNodeArray( p );
+	}
+	
+	template < typename Contents >
+	void OctreeNode< Contents >::output( ostream& out )
+	{
+		out << "Points Leaf Node: " << endl << getContents();
+	}
+	
+	template< typename Contents >
+	inline size_t OctreeNode< Contents >::serialize( byte** serialization ) const
 	{
 		byte* content;
-		size_t contentSize = Serializer::serialize( getContents< Contents >(), &content );
+		size_t contentSize = Serializer::serialize( getContents(), &content );
 		
 		bool flag = isLeaf();
 		size_t flagSize = sizeof( bool );
@@ -159,32 +123,22 @@ namespace model
 	}
 	
 	template< typename Contents >
-	inline OctreeNodePtr OctreeNode::deserialize( byte* serialization )
+	inline OctreeNodePtr< Contents > OctreeNode< Contents >::deserialize( byte* serialization )
 	{
 		bool flag;
 		size_t flagSize = sizeof( bool );
 		memcpy( &flag, serialization, flagSize );
 		byte* tempPtr = serialization + flagSize;
 		
-		if( flag )
-		{
-			auto node = makeManaged< LeafNode< Contents > >();
-			Contents contents;
-			Serializer::deserialize( tempPtr, contents );
-			node->setContents( contents );
-			return node;
-		}
-		else
-		{
-			auto node = makeManaged< InnerNode< Contents > >();
-			Contents contents;
-			Serializer::deserialize( tempPtr, contents );
-			node->setContents( contents );
-			return node;
-		}
+		auto node = makeManaged< OctreeNode< Contents > >( flag );
+		Contents contents;
+		Serializer::deserialize( tempPtr, contents );
+		node->setContents( contents );
+		return node;
 	}
 	
-	using OctreeNodePtr = shared_ptr< OctreeNode >;
+	template< typename Contents >
+	using OctreeNodePtr = shared_ptr< OctreeNode< Contents > >;
 }
 
 #endif

@@ -2,9 +2,8 @@
 #include "MemoryManager.h"
 #include "OctreeMapTypes.h"
 #include "MortonCode.h"
-#include "InnerNode.h"
-#include "LeafNode.h"
-#include <Ken12MemoryManager.h>
+#include "OctreeNode.h"
+#include "Ken12MemoryManager.h"
 
 using namespace std;
 

@@ -36,31 +36,30 @@ namespace model
 	using MediumMortonCodePtr = shared_ptr< MediumMortonCode >;
 	
 	template< typename C >
-	class InnerNode;
-	template< typename C >
-	using InnerNodePtr = shared_ptr< InnerNode< C > >;
-	
-	template< typename C >
-	class LeafNode;
-	template< typename C >
-	using LeafNodePtr = shared_ptr< LeafNode< C > >;
-	
 	class OctreeNode;
-	using OctreeNodePtr = shared_ptr< OctreeNode >;
+	template< typename C >
+	using OctreeNodePtr = shared_ptr< OctreeNode< C > >;
 	
 	// shared_ptr< T > internal allocated type.
 	template< typename T, typename Alloc >
 	using PtrInternals = std::_Sp_counted_ptr_inplace< T, Alloc, (__gnu_cxx::_Lock_policy)2 >;
 	
 	template< typename T >
-	using BitMapPtrInternals = PtrInternals< T, ManagedAllocator< T > >;
-	
-	template< typename T >
 	using DefaultPtrInternals = PtrInternals< T, std::allocator< T > >;
 	
+	template< typename T >
+	using ManagedPtrInternals = PtrInternals< T, ManagedAllocator< T > >;
+	
 	// map< MortonPtr, OctreeNodePtr > internal allocated type.
-	template< typename Morton >
-	using MapInternals = std::_Rb_tree_node< std::pair< shared_ptr< Morton > const, OctreeNodePtr > >;
+	template< typename Morton, typename Node >
+	using MapInternals = std::_Rb_tree_node< std::pair< shared_ptr< Morton > const, shared_ptr< Node > > >;
+	
+	using SPVMapInternals = MapInternals< ShallowMortonCode, OctreeNode< PointVector > >;
+	using MPVMapInternals = MapInternals< MediumMortonCode, OctreeNode< PointVector > >;
+	using SEVMapInternals = MapInternals< ShallowMortonCode, OctreeNode< ExtendedPointVector > >;
+	using MEVMapInternals = MapInternals< MediumMortonCode, OctreeNode< ExtendedPointVector > >;
+	using SIVMapInternals = MapInternals< ShallowMortonCode, OctreeNode< IndexVector > >;
+	using MIVMapInternals = MapInternals< MediumMortonCode, OctreeNode< IndexVector > >;
 	
 	// Macro that declares everything in IMemoryManager related with a given memory pool type.
 	#define DECLARE_POOL_INTERFACE(TYPE) \
@@ -108,13 +107,9 @@ namespace model
 		DECLARE_POOL_INTERFACE(PointPtr)
 		DECLARE_POOL_INTERFACE(PointPtrInternals)
 		
-		DECLARE_POOL_INTERFACE(Inner)
-		DECLARE_POOL_INTERFACE(InnerPtr)
-		DECLARE_POOL_INTERFACE(InnerPtrInternals)
-		
-		DECLARE_POOL_INTERFACE(Leaf)
-		DECLARE_POOL_INTERFACE(LeafPtr)
-		DECLARE_POOL_INTERFACE(LeafPtrInternals)
+		DECLARE_POOL_INTERFACE(Node)
+		DECLARE_POOL_INTERFACE(NodePtr)
+		DECLARE_POOL_INTERFACE(NodePtrInternals)
 		
 		DECLARE_POOL_INTERFACE(MapInternals)
 		
@@ -183,9 +178,9 @@ namespace model
 	// MortonCodePtr internals specializations
 	// =======================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< ShallowMortonCode >,MortonPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< ShallowMortonCode >,MortonPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< MediumMortonCode >,MortonPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< MediumMortonCode >,MortonPtrInternals)
 	
 	// =======================================
 	// Index specializations
@@ -213,101 +208,67 @@ namespace model
 	// PointPtr internals specializations
 	// ==================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< Point >,PointPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< Point >,PointPtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< ExtendedPoint >,PointPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< ExtendedPoint >,PointPtrInternals)
 	
 	// ==================================
 	// map internals specializations
 	// ==================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(MapInternals< ShallowMortonCode >,MapInternals)
+	SPECIALIZE_ALLOC_DEALLOC(SPVMapInternals,MapInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(MapInternals< MediumMortonCode >,MapInternals)
+	SPECIALIZE_ALLOC_DEALLOC(MPVMapInternals,MapInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(SEVMapInternals,MapInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MEVMapInternals,MapInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(SIVMapInternals,MapInternals)
+	
+	SPECIALIZE_ALLOC_DEALLOC(MIVMapInternals,MapInternals)
 	
 	// =========================
-	// InnerNode specializations
+	// Node specializations
 	// =========================
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< IndexVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNode< IndexVector >,Node)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< PointPtr >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNode< PointPtr >,Node)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ExtendedPointPtr >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNode< ExtendedPointPtr >,Node)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< PointVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNode< PointVector >,Node)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNode< ExtendedPointVector >,Inner)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNode< ExtendedPointVector >,Node)
 	
 	// ============================
 	// InnerNodePtr specializations
 	// ============================
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< IndexVector >,InnerPtr)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNodePtr< IndexVector >,NodePtr)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< PointPtr >,InnerPtr)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNodePtr< PointPtr >,NodePtr)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< ExtendedPointPtr >,InnerPtr)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNodePtr< ExtendedPointPtr >,NodePtr)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< PointVector >,InnerPtr)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNodePtr< PointVector >,NodePtr)
 	
-	SPECIALIZE_ALLOC_DEALLOC(InnerNodePtr< ExtendedPointVector >,InnerPtr)
+	SPECIALIZE_ALLOC_DEALLOC(OctreeNodePtr< ExtendedPointVector >,NodePtr)
 	
 	// ======================================
 	// InnerNodePtr internals specializations
 	// ======================================
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< IndexVector > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< OctreeNode< IndexVector > >,NodePtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< PointPtr > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< OctreeNode< PointPtr > >,NodePtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< ExtendedPointPtr > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< OctreeNode< ExtendedPointPtr > >,NodePtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< PointVector > >,InnerPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< OctreeNode< PointVector > >,NodePtrInternals)
 	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< InnerNode< ExtendedPointVector > >,InnerPtrInternals)
-	
-	// ========================
-	// LeafNode specializations
-	// ========================
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< IndexVector >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< PointPtr >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ExtendedPointPtr >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< PointVector >,Leaf)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNode< ExtendedPointVector >,Leaf)
-	
-	// ============================
-	// LeafNodePtr specializations
-	// ============================
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< IndexVector >,LeafPtr)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< PointPtr >,LeafPtr)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< ExtendedPointPtr >,LeafPtr)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< PointVector >,LeafPtr)
-	
-	SPECIALIZE_ALLOC_DEALLOC(LeafNodePtr< ExtendedPointVector >,LeafPtr)
-	
-	// ======================================
-	// LeafNodePtr internals specializations
-	// ======================================
-	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< IndexVector > >,LeafPtrInternals)
-	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< PointPtr > >,LeafPtrInternals)
-	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< ExtendedPointPtr > >,LeafPtrInternals)
-	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< PointVector > >,LeafPtrInternals)
-	
-	SPECIALIZE_ALLOC_DEALLOC(BitMapPtrInternals< LeafNode< ExtendedPointVector > >,LeafPtrInternals)
+	SPECIALIZE_ALLOC_DEALLOC(ManagedPtrInternals< OctreeNode< ExtendedPointVector > >,NodePtrInternals)
 	
 	/** Provides suport for a singleton IMemoryManager. The derived class has the responsibility of initializing the
 	 * singleton instance. */

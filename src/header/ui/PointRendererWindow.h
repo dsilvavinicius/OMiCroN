@@ -25,7 +25,7 @@ namespace ui
 		
 		using MortonCode = model::ShallowMortonCode;
 		using Point = model::Point;
-		using Octree = model::ShallowFrontOctree;
+		using Octree = model::SPOpS_FrontOctree;
 	
 	public:
 		PointRendererWindow( const QSurfaceFormat &format, QWindow *parent = 0 );

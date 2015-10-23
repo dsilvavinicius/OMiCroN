@@ -7,18 +7,16 @@
 #include <map>
 #include <ctime>
 #include <glm/ext.hpp>
+#include <time.h>
 
 #include "MortonCode.h"
 #include "OctreeNode.h"
-#include "LeafNode.h"
-#include "InnerNode.h"
 #include "OctreeMapTypes.h"
 #include "TransientRenderingState.h"
 #include "OctreeStats.h"
 #include "PlyPointReader.h"
 #include "PointAppender.h"
 #include "OctreeParameterTypes.h"
-#include <time.h>
 
 using namespace std;
 using namespace util;
@@ -42,17 +40,12 @@ namespace model
 		
 		using OctreeNode = typename OctreeParams::Node;
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
-		using InnerNode = model::InnerNode< PointVector >;
-		using InnerNodePtr = shared_ptr< InnerNode >;
-		using LeafNode = model::LeafNode< PointVector >;
-		using LeafNodePtr = shared_ptr< LeafNode >;
 		
 		using OctreeMap = typename OctreeParams::Hierarchy;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using Precision = typename PlyPointReader::Precision;
-		using PointAppender = model::PointAppender< MortonCode, Point >;
 		using RandomPointAppender = model::RandomPointAppender< MortonCode, Point >;
 		
 	public:
@@ -60,7 +53,7 @@ namespace model
 		 * level of the hierarchy. */
 		RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
-		~RandomSampleOctree();
+		~RandomSampleOctree() {}
 		
 		/** Builds the octree for a given point cloud file. The points are expected to be in world coordinates.
 		 * @param precision tells the floating precision in which coordinates will be interpreted.
@@ -168,9 +161,6 @@ namespace model
 		/** Maximum level that the type used as morton code of this octree can represent. */
 		unsigned int m_maxMortonLevel;
 		
-		/** Utils to append points before building points. */
-		PointAppender* m_pointAppender;
-		
 	private:
 		void setMaxLvl( const int& maxLevel, const ShallowMortonCode& );
 		void setMaxLvl( const int& maxLevel, const MediumMortonCode& );
@@ -189,14 +179,7 @@ namespace model
 	m_hierarchy( new OctreeMap() )
 	{
 		setMaxLvl( maxLevel, MortonCode() );
-		m_pointAppender = new RandomPointAppender();
 		srand( 1 );
-	}
-	
-	template< typename OctreeParams >
-	RandomSampleOctree< OctreeParams >::~RandomSampleOctree()
-	{
-		delete m_pointAppender;
 	}
 	
 	template< typename OctreeParams >
@@ -307,7 +290,7 @@ namespace model
 		if( genericLeafIt == m_hierarchy->end() )
 		{
 			// Creates leaf node.
-			LeafNodePtr leafNode = makeManaged< LeafNode >();
+			OctreeNodePtr leafNode = makeManaged< OctreeNode >( true );
 			
 			PointVector points;
 			points.push_back( point );
@@ -318,7 +301,7 @@ namespace model
 		{
 			// Node already exists. Appends the point there.
 			OctreeNodePtr leafNode = genericLeafIt->second;
-			PointVector& nodePoints = leafNode-> template getContents< PointVector >();
+			PointVector& nodePoints = leafNode->getContents();
 			nodePoints.push_back( point );
 		}
 	}
@@ -379,7 +362,7 @@ namespace model
 		
 		for( OctreeNodePtr child : children )
 		{
-			m_pointAppender->appendPoints( child, childrenPoints, numChildren, numLeaves );
+			RandomPointAppender::appendPoints( child, childrenPoints, numChildren, numLeaves );
 		}
 
 		if( numChildren == numLeaves && childrenPoints.size() <= m_maxPointsPerNode )
@@ -393,7 +376,7 @@ namespace model
 			eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			shared_ptr< LeafNode > mergedNode = makeManaged< LeafNode >();
+			OctreeNodePtr mergedNode = makeManaged< OctreeNode >( true );
 			mergedNode->setContents( childrenPoints );
 			
 			( *m_hierarchy )[ parentCode ] = mergedNode;
@@ -422,7 +405,7 @@ namespace model
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		InnerNodePtr node = makeManaged< InnerNode >();
+		OctreeNodePtr node = makeManaged< OctreeNode >( false );
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		PointVector selectedPoints( numSamplePoints );
 		
@@ -544,7 +527,7 @@ namespace model
 	inline void RandomSampleOctree< OctreeParams >
 	::setupNodeRendering( OctreeNodePtr node, RenderingState& renderingState )
 	{
-		PointVector points = node-> template getContents< PointVector >();
+		PointVector points = node->getContents();
 		
 		renderingState.handleNodeRendering( points );
 	}
@@ -564,7 +547,7 @@ namespace model
 	{
 		assert( leafNode->isLeaf() && "leafNode cannot be inner." );
 		
-		PointVector& points = leafNode-> template getContents< PointVector >();
+		PointVector& points = leafNode->getContents();
 		renderingState.handleNodeRendering( points );
 	}
 	
@@ -617,7 +600,7 @@ namespace model
 		for( auto nodeIt = hierarchy->begin(); nodeIt != hierarchy->end(); ++nodeIt )
 		{
 			MortonCodePtr code = nodeIt->first;
-			OctreeNodePtr genericNode = nodeIt->second;
+			OctreeNodePtr< PointVector > genericNode = nodeIt->second;
 			
 			out << code->getPathToRoot( true ) << endl;
 			//out << "Node: {" << endl << code->getPathToRoot( true ) << "," << endl;
@@ -646,38 +629,43 @@ namespace model
 		assert( m_maxLevel <= m_maxMortonLevel && "Octree level cannot exceed maximum." );
 	}
 	
-	// ====================== Type Sugar ================================ /
-	using ShallowRandomSampleOctree = 	RandomSampleOctree<
-											OctreeParams<
-												ShallowMortonCode, Point, OctreeNode,
-												OctreeMap< ShallowMortonCode, OctreeNode >
-											>
-										>;
-	using ShallowRandomSampleOctreePtr = shared_ptr< ShallowRandomSampleOctree >;
+	// ==========
+	// Type Sugar
+	// ==========
 	
-	using MediumRandomSampleOctree = 	RandomSampleOctree<
-											OctreeParams<
-												MediumMortonCode, Point, OctreeNode,
-												OctreeMap< MediumMortonCode, OctreeNode >
-											>
-										>;
-	using MediumRandomSampleOctreePtr = shared_ptr< MediumRandomSampleOctree >;
+	// Macro used to declare Octree types based on OctreeParams.
+	// Naming convention:
+	// PREFIX_NAME, where PREFIX codifies the types in OctreeParams and NAME is original Octree type.
+	//
+	// PREFIX = XYZzW, where:
+	// X = morton code type: S for Shallow, M for Medium
+	// Y = point type: P for Point, E for Extended
+	// Zz = node type: 	Op for OctreeNode< PointVector >, Oi for OctreeNode< IndexVector >,
+	//					1p for O1OctreeNode< PointVector >, 1i for O1OctreeNode< IndexVector >
+	// W = hierarchy type: S for serial, C for concurrent
+	#define DECLARE_OCTREE_TYPE(PREFIX,LHS_NAME,RHS_NAME,MORTON,POINT,NODE,HIERARCHY) \
+	using PREFIX##_##LHS_NAME = RHS_NAME<\
+									OctreeParams<\
+										MORTON, POINT, NODE, HIERARCHY< MORTON, NODE >\
+									>\
+								>;\
+	using PREFIX##_##LHS_NAME##Ptr = shared_ptr< PREFIX##_##LHS_NAME >;
 	
-	using ShallowExtRandomSampleOctree = 	RandomSampleOctree<
-												OctreeParams<
-													ShallowMortonCode, ExtendedPoint, OctreeNode,
-													OctreeMap< ShallowMortonCode, OctreeNode >
-												>
-											>;
-	using ShallowExtRandomSampleOctreePtr = shared_ptr< ShallowExtRandomSampleOctree >;
+	DECLARE_OCTREE_TYPE(SPOpS,RandomSampleOctree,RandomSampleOctree,ShallowMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using MediumExtRandomSampleOctree = 	RandomSampleOctree<
-												OctreeParams<
-													MediumMortonCode, ExtendedPoint, OctreeNode,
-													OctreeMap< MediumMortonCode, OctreeNode >
-												>
-											>;
-	using MediumExtRandomSampleOctreePtr = shared_ptr< MediumExtRandomSampleOctree >;
+	DECLARE_OCTREE_TYPE(MPOpS,RandomSampleOctree,RandomSampleOctree,MediumMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SEOpS,RandomSampleOctree,RandomSampleOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOpS,RandomSampleOctree,RandomSampleOctree,MediumMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SPOiS,RandomSampleOctree,RandomSampleOctree,ShallowMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MPOiS,RandomSampleOctree,RandomSampleOctree,MediumMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SEOiS,RandomSampleOctree,RandomSampleOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOiS,RandomSampleOctree,RandomSampleOctree,MediumMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
 }
 
 #endif

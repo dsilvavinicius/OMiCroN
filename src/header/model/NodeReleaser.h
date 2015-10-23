@@ -11,26 +11,18 @@ using namespace std;
 namespace model
 {
 	template< typename Contents >
-	class LeafNode;
-	
-	template< typename Contents >
-	class InnerNode;
+	class OctreeNode;
 	
 	/** Methods to release node contents. */
 	namespace NodeReleaser
 	{
 		/** Default implementation assumes that no additional efforts should be done in order to release contents. */
 		template< typename Contents >
-		void releaseLeaf( LeafNode< Contents >& node )
-		{}
-		
-		/** Default implementation assumes that no additional efforts should be done in order to release contents. */
-		template< typename Contents >
-		void releaseInner( InnerNode< Contents >& node )
+		void release( OctreeNode< Contents >& node )
 		{}
 		
 		template< typename T >
-		void releaseLeaf( LeafNode< vector< shared_ptr< T >, ManagedAllocator< shared_ptr< T > > > >& node )
+		void release( OctreeNode< vector< shared_ptr< T >, ManagedAllocator< shared_ptr< T > > > >& node )
 		{
 			using ElementPtr = shared_ptr< T >;
 			using Allocator = ManagedAllocator< ElementPtr >;
@@ -44,33 +36,7 @@ namespace model
 		}
 		
 		template< typename T >
-		void releaseInner( InnerNode< vector< shared_ptr< T >, ManagedAllocator< shared_ptr< T > > > >& node )
-		{
-			using ElementPtr = shared_ptr< T >;
-			using Allocator = ManagedAllocator< ElementPtr >;
-			
-			vector< ElementPtr, Allocator >& vector = node.getContents();
-			for( ElementPtr& element : vector )
-			{
-				element = nullptr;
-			}
-			vector.clear();
-		}
-		
-		template< typename T >
-		void releaseLeaf( LeafNode< vector< shared_ptr< T > > >& node )
-		{
-			using ElementPtr = shared_ptr< T >;
-			vector< ElementPtr >& vector = node.getContents();
-			for( ElementPtr& element : vector )
-			{
-				element = nullptr;
-			}
-			vector.clear();
-		}
-		
-		template< typename T >
-		void releaseInner( InnerNode< vector< shared_ptr< T > > >& node )
+		void release( OctreeNode< vector< shared_ptr< T > > >& node )
 		{
 			using ElementPtr = shared_ptr< T >;
 			vector< ElementPtr >& vector = node.getContents();

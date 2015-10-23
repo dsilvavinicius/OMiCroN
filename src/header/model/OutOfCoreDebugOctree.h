@@ -71,7 +71,7 @@ namespace model
 		{
 			stringstream ss;
 			ss << "0x" << hex << code->getBits();
-			PointPtr p = node->template getContents< PointVector >()[ 0 ];
+			PointPtr p = node->getContents()[ 0 ];
 			renderingState.renderText( p->getPos(), ss.str() );
 		}
 		
@@ -86,7 +86,7 @@ namespace model
 		{
 			stringstream ss;
 			ss << "0x" << hex << code->getBits();
-			PointPtr p = node->template getContents< PointVector >()[ 0 ];
+			PointPtr p = node->getContents()[ 0 ];
 			renderingState.renderText( p->getPos(), ss.str() );
 		}
 		
@@ -99,33 +99,21 @@ namespace model
 																unordered_set< typename OctreeParams::Morton >,
 																vector< typename OctreeParams::Morton > >;
 	
-	using ShallowOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParams< ShallowMortonCode, Point, OctreeNode,
-												OctreeMap< ShallowMortonCode, OctreeNode >
-											>
-										>;
-	using ShallowOutOfCoreDebugOctreePtr = shared_ptr< ShallowOutOfCoreDebugOctree >;
+	DECLARE_OCTREE_TYPE(SPOpS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,ShallowMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using MediumOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParams< MediumMortonCode, Point, OctreeNode,
-												OctreeMap< MediumMortonCode, OctreeNode >
-											>
-										>;
-	using MediumOutOfCoreDebugOctreePtr = shared_ptr< MediumOutOfCoreDebugOctree >;
+	DECLARE_OCTREE_TYPE(MPOpS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,MediumMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using ShallowExtOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParams< ShallowMortonCode, ExtendedPoint, OctreeNode,
-												OctreeMap< ShallowMortonCode, OctreeNode >
-											>
-										>;
-	using ShallowExtOutOfCoreDebugOctreePtr = shared_ptr< ShallowExtOutOfCoreDebugOctree >;
+	DECLARE_OCTREE_TYPE(SEOpS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
 	
-	using MediumExtOutOfCoreDebugOctree = DefaultOutOfCoreDebugOctree<
-											OctreeParams< MediumMortonCode, ExtendedPoint, OctreeNode,
-												OctreeMap< MediumMortonCode, OctreeNode >
-											>
-										>;
-	using MediumExtOutOfCoreDebugOctreePtr = shared_ptr< MediumExtOutOfCoreDebugOctree >;
+	DECLARE_OCTREE_TYPE(MEOpS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,MediumMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SPOiS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,ShallowMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MPOiS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,MediumMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SEOiS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOiS,OutOfCoreDebugOctree,DefaultOutOfCoreDebugOctree,MediumMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
 }
 
 #endif

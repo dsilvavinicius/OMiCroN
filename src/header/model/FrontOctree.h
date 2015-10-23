@@ -27,6 +27,9 @@ namespace model
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointVectorPtr = shared_ptr< PointVector >;
 		
+		using OctreeNode = typename OctreeParams::Node;
+		using OctreeNodePtr = shared_ptr< OctreeNode >;
+		
 		using OctreeMap = typename OctreeParams::Hierarchy;
 		using OctreeMapPtr = shared_ptr< OctreeMap >;
 		
@@ -366,9 +369,9 @@ namespace model
 		m_frontBehavior->onFrontTrackingEnd();
 	}
 	
-	//=====================================================================
+	//============
 	// Type Sugar.
-	//=====================================================================
+	//============
 	
 	//TODO: Use an unordered_set< MortonCodePtr > as front, so data is reused from hierarchy.
 	/** An front octree with shallow morton code and usual data structures for front and front insertion container. */
@@ -376,33 +379,21 @@ namespace model
 	using DefaultFrontOctree = FrontOctree< OctreeParams, unordered_set< typename OctreeParams::Morton >,
 											vector< typename OctreeParams::Morton > >;
 	
-	using ShallowFrontOctree = 	DefaultFrontOctree<
-									OctreeParams< 	ShallowMortonCode, Point, OctreeNode,
-														OctreeMap< ShallowMortonCode, OctreeNode >
-									>
-								>;
-	using ShallowFrontOctreePtr = shared_ptr< ShallowFrontOctree >;
+	DECLARE_OCTREE_TYPE(SPOpS,FrontOctree,DefaultFrontOctree,ShallowMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using MediumFrontOctree = 	DefaultFrontOctree<
-									OctreeParams< 	MediumMortonCode, Point, OctreeNode,
-														OctreeMap< MediumMortonCode, OctreeNode >
-									>
-								>;
-	using MediumFrontOctreePtr = shared_ptr< MediumFrontOctree >;
+	DECLARE_OCTREE_TYPE(MPOpS,FrontOctree,DefaultFrontOctree,MediumMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using ShallowExtFrontOctree = 	DefaultFrontOctree<
-										OctreeParams< 	ShallowMortonCode, ExtendedPoint, OctreeNode,
-															OctreeMap< ShallowMortonCode, OctreeNode >
-										>
-									>;
-	using ShallowExtFrontOctreePtr = shared_ptr< ShallowExtFrontOctree >;
+	DECLARE_OCTREE_TYPE(SEOpS,FrontOctree,DefaultFrontOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
 	
-	using MediumExtFrontOctree = 	DefaultFrontOctree<
-										OctreeParams< 	MediumMortonCode, ExtendedPoint, OctreeNode,
-															OctreeMap< MediumMortonCode, OctreeNode >
-										>
-									>;
-	using MediumExtFrontOctreePtr = shared_ptr< MediumExtFrontOctree >;
+	DECLARE_OCTREE_TYPE(MEOpS,FrontOctree,DefaultFrontOctree,MediumMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SPOiS,FrontOctree,DefaultFrontOctree,ShallowMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MPOiS,FrontOctree,DefaultFrontOctree,MediumMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SEOiS,FrontOctree,DefaultFrontOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOiS,FrontOctree,DefaultFrontOctree,MediumMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
 }
 
 #endif

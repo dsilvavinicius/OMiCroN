@@ -9,18 +9,14 @@ using namespace std;
 
 namespace model
 {
-	template< typename MortonCode >
-	using IdNode = pair< shared_ptr< MortonCode >, model::OctreeNodePtr >;
+	template< typename MortonCode, typename OctreeNode >
+	using IdNode = pair< shared_ptr< MortonCode >, shared_ptr< OctreeNode > >;
 	
-	using ShallowIdNode = IdNode< ShallowMortonCode >;
+	template< typename MortonCode, typename OctreeNode >
+	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode > >;
 	
-	template< typename MortonCode >
-	using IdNodeVector = vector< IdNode< MortonCode > >;
-	
-	using ShallowIdNodeVector = IdNodeVector< ShallowMortonCode >;
-	
-	template< typename MortonCode >
-	ostream& operator<<( ostream& out, const IdNode< MortonCode >& idNode )
+	template< typename MortonCode, typename OctreeNode >
+	ostream& operator<<( ostream& out, const IdNode< MortonCode, OctreeNode >& idNode )
 	{
 		out << idNode.first->getPathToRoot( true );
 		return out;
