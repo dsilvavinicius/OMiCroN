@@ -17,7 +17,7 @@ namespace model
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetPoints )
 		{
-			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
+			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode< PointVector > >;
 			
 			SPV_DefaultManager::initInstance( 1000000 );
 			
@@ -45,40 +45,41 @@ namespace model
 		{
 			using MortonCode = model::ShallowMortonCode;
 			using Contents = IndexVector;
-			using LeafNode = model::LeafNode< Contents >;
-			using InnerNode = model::InnerNode< Contents >;
-			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
+			using Node = model::OctreeNode< Contents >;
+			using NodePtr = shared_ptr< Node >;
+			using SQLiteManager = util::SQLiteManager< Point, MortonCode, Node >;
 			
 			SPI_DefaultManager::initInstance( 1000000 );
 			
 			MortonCode leafCode;
 			leafCode.build( 2, 3, 4, 5 );
-			LeafNode leafNode;
+			Node leafNode( true );
 			Contents leafPoints = { 5, 4, 3, 2 };
 			leafNode.setContents( leafPoints );
 			
 			SQLiteManager sqLite( "Octree.db" );
-			sqLite.insertNode< Contents >( leafCode, leafNode );
+			sqLite.insertNode( leafCode, leafNode );
 			
 			MortonCode innerCode;
 			innerCode.build( 1, 2, 3, 4 );
-			InnerNode innerNode;
+			Node innerNode( false );
 			Contents innerPoints = { 4, 3, 2, 1 };
 			innerNode.setContents( innerPoints );
 			
-			sqLite.insertNode< Contents >( innerCode, innerNode );
+			sqLite.insertNode( innerCode, innerNode );
 			
-			OctreeNodePtr queriedNode = sqLite.getNode< Contents >( leafCode );
-			ASSERT_EQ( queriedNode->getContents< Contents >(), leafPoints );
+			NodePtr queriedNode = sqLite.getNode( leafCode );
+			ASSERT_EQ( queriedNode->getContents(), leafPoints );
 			
-			queriedNode = sqLite.getNode< Contents >( innerCode );
-			ASSERT_EQ( queriedNode->getContents< Contents >(), innerPoints );
+			queriedNode = sqLite.getNode( innerCode );
+			ASSERT_EQ( queriedNode->getContents(), innerPoints );
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetPointNodes )
 		{
-			using LeafNode = model::LeafNode< PointVector >;
-			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
+			using Node = OctreeNode< PointVector >;
+			using NodePtr = shared_ptr< Node >;
+			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, Node >;
 			
 			SPV_DefaultManager::initInstance( 1000000 );
 			
@@ -91,19 +92,19 @@ namespace model
 			points.push_back( makeManaged< Point >( p1 ) );
 			points.push_back( makeManaged< Point >( p2 ) );
 			
-			LeafNode node;
+			Node node( true );
 			node.setContents( points );
 			
 			ShallowMortonCode code;
 			code.build( 1, 2, 3, 4 );
 			SQLiteManager sqLite( "Octree.db" );
 			
-			sqLite.insertNode< PointVector >( code, node );
+			sqLite.insertNode( code, node );
 			
-			OctreeNodePtr queriedNode = sqLite.getNode< PointVector >( code );
+			NodePtr queriedNode = sqLite.getNode( code );
 			
 			float epsilon = 1.e-15;
-			PointVector queriedPoints = queriedNode->getContents< PointVector >();
+			PointVector queriedPoints = queriedNode->getContents();
 			
 			for( int i = 0; i < points.size(); ++i )
 			{
@@ -114,9 +115,9 @@ namespace model
 		TEST_F( SQLiteManagerTest, InsertAndGetIdNodes )
 		{
 			using Contents = IndexVector;
-			using LeafNode = model::LeafNode< Contents >;
-			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
-			using IdNode = model::IdNode< ShallowMortonCode >;
+			using Node = OctreeNode< Contents >;
+			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, Node >;
+			using IdNode = model::IdNode< ShallowMortonCode, Node >;
 			
 			SPI_DefaultManager::initInstance( 1000000 );
 			
@@ -125,8 +126,8 @@ namespace model
 			Contents ints0( rawInts0, rawInts0 + 3 );
 			Contents ints1( rawInts1, rawInts1 + 3 );
 			
-			LeafNode node0;
-			LeafNode node1;
+			Node node0( true );
+			Node node1( true );
 			node0.setContents( ints0 );
 			node1.setContents( ints1 );
 			
@@ -138,15 +139,15 @@ namespace model
 			intervalEnd.build( 1, 2, 3, 5 );
 			
 			SQLiteManager sqLite( "Octree.db" );
-			sqLite.insertNode< Contents >( code0, node0 );
-			sqLite.insertNode< Contents >( code1, node1 );
+			sqLite.insertNode( code0, node0 );
+			sqLite.insertNode( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
+			vector< IdNode > queried = sqLite.getIdNodes( code0, intervalEnd );
 			
 			ShallowMortonCode queriedId = *queried[ 0 ].first;
 			ASSERT_EQ( queriedId, code0 );
 			
-			Contents queriedInts = queried[ 0 ].second->getContents< Contents >();
+			Contents queriedInts = queried[ 0 ].second->getContents();
 			ASSERT_EQ( queriedInts, ints0 );
 		}
 		
@@ -154,8 +155,9 @@ namespace model
 		{
 			using MortonCode = model::ShallowMortonCode;
 			using Contents = IndexVector;
-			using LeafNode = model::LeafNode< Contents >;
-			using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
+			using Node = OctreeNode< Contents >;
+			using NodePtr = shared_ptr< Node >;
+			using SQLiteManager = util::SQLiteManager< Point, MortonCode, Node >;
 			
 			SPI_DefaultManager::initInstance( 1000000 );
 			
@@ -164,23 +166,23 @@ namespace model
 			MortonCode code2; code2.build( 0xA );
 			MortonCode code3; code3.build( 0xB );
 			
-			LeafNode node0; node0.setContents( Contents( 3, 0 ) );
-			LeafNode node1; node1.setContents( Contents( 3, 1 ) );
-			LeafNode node2; node2.setContents( Contents( 3, 2 ) );
-			LeafNode node3; node3.setContents( Contents( 3, 3 ) );
+			Node node0( true ); node0.setContents( Contents( 3, 0 ) );
+			Node node1( true ); node1.setContents( Contents( 3, 1 ) );
+			Node node2( true ); node2.setContents( Contents( 3, 2 ) );
+			Node node3( true ); node3.setContents( Contents( 3, 3 ) );
 			
 			SQLiteManager sqLite( "Octree.db" );
-			sqLite.insertNode< Contents >( code0, node0 );
-			sqLite.insertNode< Contents >( code1, node1 );
-			sqLite.insertNode< Contents >( code2, node2 );
-			sqLite.insertNode< Contents >( code3, node3 );
+			sqLite.insertNode( code0, node0 );
+			sqLite.insertNode( code1, node1 );
+			sqLite.insertNode( code2, node2 );
+			sqLite.insertNode( code3, node3 );
 			
 			sqLite.deleteNodes( code1, code2 );
-			vector< OctreeNodePtr > queried = sqLite. template getNodes< Contents >( code0, code3 );
+			vector< NodePtr > queried = sqLite.getNodes( code0, code3 );
 			
 			ASSERT_EQ( queried.size(), 2 );
-			ASSERT_EQ( queried[ 0 ]->getContents< Contents >(), Contents( 3, 0 ) );
-			ASSERT_EQ( queried[ 1 ]->getContents< Contents >(), Contents( 3, 3 ) );
+			ASSERT_EQ( queried[ 0 ]->getContents(), Contents( 3, 0 ) );
+			ASSERT_EQ( queried[ 1 ]->getContents(), Contents( 3, 3 ) );
 		}
 		
 		TEST_F( SQLiteManagerTest, InsertAndGetExtPointNodes )
@@ -188,8 +190,9 @@ namespace model
 			using Point = ExtendedPoint;
 			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
-			using LeafNode = model::LeafNode< PointVector >;
-			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, OctreeNode >;
+			using Node = OctreeNode< PointVector >;
+			using NodePtr = shared_ptr< Node >;
+			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, Node >;
 
 			SEV_DefaultManager::initInstance( 1000000 );
 			
@@ -202,19 +205,19 @@ namespace model
 			points.push_back( makeManaged< Point >( p1 ) );
 			points.push_back( makeManaged< Point >( p2 ) );
 			
-			LeafNode node;
+			Node node( true );
 			node.setContents( points );
 			
 			ShallowMortonCode code;
 			code.build( 1, 2, 3, 4 );
 			SQLiteManager sqLite( "Octree.db" );
 			
-			sqLite.insertNode< PointVector >( code, node );
+			sqLite.insertNode( code, node );
 			
-			OctreeNodePtr queriedNode = sqLite.getNode< PointVector >( code );
+			NodePtr queriedNode = sqLite.getNode( code );
 			
 			float epsilon = 1.e-15;
-			PointVector queriedPoints = queriedNode->getContents< PointVector >();
+			PointVector queriedPoints = queriedNode->getContents();
 			
 			for( int i = 0; i < points.size(); ++i )
 			{
@@ -225,9 +228,9 @@ namespace model
 		TEST_F( SQLiteManagerTest, InsertAndGetExtIdNodes )
 		{
 			using Contents = ExtendedPointVector;
-			using LeafNode = model::LeafNode< Contents >;
-			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, OctreeNode >;
-			using IdNode = model::IdNode< ShallowMortonCode >;
+			using Node = OctreeNode< Contents >;
+			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, Node >;
+			using IdNode = model::IdNode< ShallowMortonCode, Node >;
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
@@ -244,8 +247,8 @@ namespace model
 			Contents vec0( rawPoints0, rawPoints0 + 3 );
 			Contents vec1( rawPoints1, rawPoints1 + 3 );
 			
-			LeafNode node0;
-			LeafNode node1;
+			Node node0( true );
+			Node node1( true );
 			node0.setContents( vec0 );
 			node1.setContents( vec1 );
 			
@@ -257,18 +260,18 @@ namespace model
 			intervalEnd.build( 1, 2, 3, 5 );
 			
 			SQLiteManager sqLite( "Octree.db" );
-			sqLite.insertNode< Contents >( code0, node0 );
-			sqLite.insertNode< Contents >( code1, node1 );
+			sqLite.insertNode( code0, node0 );
+			sqLite.insertNode( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getIdNodes< Contents >( code0, code0 );
+			vector< IdNode > queried = sqLite.getIdNodes( code0, code0 );
 			ASSERT_EQ( queried.size(), 1 );
 			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
-			queried = sqLite.getIdNodes< Contents >( code0, intervalEnd );
+			queried = sqLite.getIdNodes( code0, intervalEnd );
 			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
 			float epsilon = 1.e-15;
-			Contents queriedVec = queried[ 0 ].second->getContents< Contents >();
+			Contents queriedVec = queried[ 0 ].second->getContents();
 			for( int i = 0; i < 3; ++i )
 			{
 				ASSERT_TRUE( vec0[ i ]->equal( *queriedVec[ i ], epsilon ) );
@@ -277,15 +280,16 @@ namespace model
 		
 		template< typename Point, typename MortonCode, typename OctreeNode >
 		void checkRequestResults( util::SQLiteManager< Point, MortonCode, OctreeNode >& sqLite,
-								  const IdNode< MortonCode >& code0, const IdNode< MortonCode >& code1 )
+								  const IdNode< MortonCode, OctreeNode >& code0, const IdNode< MortonCode, OctreeNode >& code1 )
 		{
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
+			using IdNodeVector = model::IdNodeVector< MortonCode, OctreeNode >;
 			
-			vector< IdNodeVector< MortonCode > > results = sqLite.getRequestResults( 10 );
+			vector< IdNodeVector > results = sqLite.getRequestResults( 10 );
 	
 			float epsilon = 1.e-15;
-			for( IdNodeVector< MortonCode > queryResult : results )
+			for( IdNodeVector queryResult : results )
 			{
 				int resultSize = queryResult.size();
 				ASSERT_TRUE( resultSize == 1 || resultSize == 2 );
@@ -294,8 +298,8 @@ namespace model
 				{
 					ASSERT_EQ( *queryResult[ 0 ].first, *code0.first );
 					
-					PointVector expectedPoints = code0.second-> template getContents< PointVector >();
-					PointVector queriedPoints = queryResult[ 0 ].second-> template getContents< PointVector >();;
+					PointVector expectedPoints = code0.second->getContents();
+					PointVector queriedPoints = queryResult[ 0 ].second->getContents();
 					
 					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
 					for( int i = 0; i < expectedPoints.size(); ++i )
@@ -307,8 +311,8 @@ namespace model
 				{
 					ASSERT_EQ( *queryResult[ 0 ].first, *code0.first );
 					
-					PointVector expectedPoints = code0.second-> template getContents< PointVector >();;
-					PointVector queriedPoints = queryResult[ 0 ].second-> template getContents< PointVector >();;
+					PointVector expectedPoints = code0.second->getContents();
+					PointVector queriedPoints = queryResult[ 0 ].second->getContents();
 					
 					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
 					for( int i = 0; i < expectedPoints.size(); ++i )
@@ -316,8 +320,8 @@ namespace model
 						ASSERT_TRUE( expectedPoints[ i ]->equal( *queriedPoints[ i ], epsilon ) );
 					}
 					
-					expectedPoints = code1.second-> template getContents< PointVector >();;
-					queriedPoints = queryResult[ 1 ].second-> template getContents< PointVector >();;
+					expectedPoints = code1.second->getContents();
+					queriedPoints = queryResult[ 1 ].second->getContents();
 					
 					ASSERT_EQ( expectedPoints.size(), queriedPoints.size() );
 					for( int i = 0; i < expectedPoints.size(); ++i )
@@ -331,10 +335,10 @@ namespace model
 		TEST_F( SQLiteManagerTest, AsyncAPI )
 		{
 			using Contents = ExtendedPointVector;
-			using LeafNode = model::LeafNode< Contents >;
-			using LeafNodePtr = shared_ptr< LeafNode >;
-			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, OctreeNode >;
-			using IdNode = model::IdNode< ShallowMortonCode >;
+			using Node = OctreeNode< Contents >;
+			using NodePtr = shared_ptr< Node >;
+			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, Node >;
+			using IdNode = model::IdNode< ShallowMortonCode, Node >;
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			//SEV_Ken12MemoryManager::initInstance( 100000, 100000, 100000, 100000 );
@@ -354,8 +358,8 @@ namespace model
 			Contents vec0( rawPoints0, rawPoints0 + 3 );
 			Contents vec1( rawPoints1, rawPoints1 + 3 );
 			
-			LeafNodePtr node0 = makeManaged< LeafNode >();
-			LeafNodePtr node1 = makeManaged< LeafNode >();
+			NodePtr node0 = makeManaged< Node >( true );
+			NodePtr node1 = makeManaged< Node >( true );
 			node0->setContents( vec0 );
 			node1->setContents( vec1 );
 			
@@ -365,17 +369,14 @@ namespace model
 			code1.build( 7, 7, 7, 10 );
 			
 			SQLiteManager sqLite( "Octree.db" );
-			sqLite.insertNode< Contents >( code0, *node0 );
-			sqLite.insertNode< Contents >( code1, *node1 );
+			sqLite.insertNode( code0, *node0 );
+			sqLite.insertNode( code1, *node1 );
 			
 			ShallowMortonCodePtr code0Ptr = makeManaged< ShallowMortonCode >( code0 );
 			ShallowMortonCodePtr code1Ptr = makeManaged< ShallowMortonCode > ( code1 );
 			
 			IdNode idNode0( code0Ptr, node0 );
 			IdNode idNode1( code1Ptr, node1 );
-			
-			//cout << "idNode0: " << endl;
-			//idNode0.second->output< Contents >( cout );
 			
 			default_random_engine generator;
 			uniform_int_distribution< int > boolDistribution( 0, 1 );
@@ -384,14 +385,6 @@ namespace model
 			int nRequests = 100;
 			for( int i = 0; i < nRequests; ++i )
 			{
-				//cout << "Iter " << i << endl << endl;
-				
-				// Debug
-				//cout << "idNode0: " << endl;
-				//idNode0.second->output< Contents >( cout );
-				//cout << endl << endl;
-				//
-				
 				if( boolDistribution( generator ) )
 				{
 					//cout << "request 0" << endl << endl;
@@ -407,13 +400,6 @@ namespace model
 				
 				if( boolDistribution( generator ) )
 				{
-					// Debug
-					//cout << "check results" << endl << endl;
-					//cout << "idNode0: " << endl;
-					//idNode0.second->output< Contents >( cout );
-					//cout << endl << endl;
-					//
-					
 					checkRequestResults( sqLite, idNode0, idNode1 );
 				}
 			}

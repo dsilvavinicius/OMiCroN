@@ -26,7 +26,7 @@ namespace model
 			points.push_back( makeManaged< Point >( p0 ) );
 			points.push_back( makeManaged< Point >( p1 ) );
 			
-			LeafNodePtr< PointVector > node = makeManaged< LeafNode< PointVector > >();
+			OctreeNodePtr< PointVector > node = makeManaged< OctreeNode< PointVector > >( true );
 			node->setContents( points );
 			
 			float epsilon = 1.e-15f;

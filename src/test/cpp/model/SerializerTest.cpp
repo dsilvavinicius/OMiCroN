@@ -72,21 +72,21 @@ namespace model
 		TEST_F( SerializerTest, LeafIndexNode )
 		{
 			using Contents = IndexVector;
-			using Node = LeafNode< Contents >;
+			using Node = OctreeNode< Contents >;
 			using NodePtr = shared_ptr< Node >;
 			
 			SPI_DefaultManager::initInstance( 1000000 );
 			
-			Node node;
+			Node node( true );
 			uint array[ 3 ] = { 1, 2, 3 };
 			Contents contents( array, array + 3 );
 			node.setContents( contents );
 			
 			byte* bytes;
 			
-			node.serialize< Contents >( &bytes );
-			auto nodePtr = OctreeNode::deserialize< Contents >( bytes );
-			Contents resultContents = nodePtr->getContents< Contents >();
+			node.serialize( &bytes );
+			auto nodePtr = Node::deserialize( bytes );
+			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
 			Serializer::dispose( bytes );
@@ -95,21 +95,21 @@ namespace model
 		TEST_F( SerializerTest, InnerIndexNode )
 		{
 			using Contents = IndexVector;
-			using Node = InnerNode< Contents >;
+			using Node = OctreeNode< Contents >;
 			using NodePtr = shared_ptr< Node >;
 			
 			SPI_DefaultManager::initInstance( 1000000 );
 			
-			Node node;
+			Node node( false );
 			uint array[ 3 ] = { 1, 2, 3 };
 			Contents contents( array, array + 3 );
 			node.setContents( contents );
 			
 			byte* bytes;
 			
-			node.serialize< Contents >( &bytes );
-			auto nodePtr = OctreeNode::deserialize< Contents >( bytes );
-			Contents resultContents = nodePtr->getContents< Contents >();
+			node.serialize( &bytes );
+			auto nodePtr = Node::deserialize( bytes );
+			Contents resultContents = nodePtr->getContents();
 			
 			ASSERT_EQ( resultContents, contents );
 			Serializer::dispose( bytes );
@@ -117,6 +117,9 @@ namespace model
 		
 		TEST_F( SerializerTest, PointNode )
 		{
+			using Node = OctreeNode< PointVector >;
+			using NodePtr = shared_ptr< Node >;
+			
 			SPV_DefaultManager::initInstance( 1000000 );
 			
 			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
@@ -126,14 +129,14 @@ namespace model
 			PointPtr pointArray[3] = { makeManaged< Point >( p0 ), makeManaged< Point >( p1 ), makeManaged< Point >( p2 ) };
 			PointVector points( pointArray, pointArray + 3 );
 			
-			auto node = makeManaged< LeafNode< PointVector > >();
+			auto node = makeManaged< Node >( true );
 			node->setContents( points );
 			
 			byte* bytes;
-			node->serialize< PointVector >( &bytes );
+			node->serialize( &bytes );
 			
-			OctreeNodePtr deserializedNode = OctreeNode::deserialize< PointVector >( bytes );
-			PointVector deserializedPoints = deserializedNode->getContents< PointVector >();
+			NodePtr deserializedNode = Node::deserialize( bytes );
+			PointVector deserializedPoints = deserializedNode->getContents();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )
@@ -150,6 +153,8 @@ namespace model
 			using Point = ExtendedPoint;
 			using PointPtr = ExtendedPointPtr;
 			using PointVector = ExtendedPointVector;
+			using Node = OctreeNode< PointVector >;
+			using NodePtr = shared_ptr< Node >;
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
@@ -159,14 +164,14 @@ namespace model
 			PointPtr pointArray[3] = { p0, p1, p2 };
 			PointVector points( pointArray, pointArray + 3 );
 			
-			auto node = makeManaged< InnerNode< PointVector > >();
+			auto node = makeManaged< Node >( true );
 			node->setContents( points );
 			
 			byte* bytes;
-			node->serialize< PointVector >( &bytes );
+			node->serialize( &bytes );
 			
-			OctreeNodePtr deserializedNode = OctreeNode::deserialize< PointVector >( bytes );
-			PointVector deserializedPoints = deserializedNode->getContents< PointVector >();
+			NodePtr deserializedNode = Node::deserialize( bytes );
+			PointVector deserializedPoints = deserializedNode->getContents();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )

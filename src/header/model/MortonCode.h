@@ -439,7 +439,7 @@ namespace model
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
-	template <>
+	/*template <>
 	inline unsigned long long MortonCode< unsigned long long >::spread3(unsigned long long x)
 	{
 		x &= 0x3ffffffffffLL;
@@ -451,7 +451,7 @@ namespace model
 		x = (x | x << 2) & 0x9249249249249249249249249249249LL;
 		
 		return x;
-	}
+	}*/
 	
 	// TODO: Finish this (so boring!).
 	/*template <>

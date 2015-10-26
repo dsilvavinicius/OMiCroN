@@ -21,16 +21,14 @@ namespace model
 			using Point = model::Point;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = InnerNode< PointVector >;
-			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = LeafNode< PointVector >;
-			using LeafPtr = shared_ptr< Leaf >;
-			using OctreeMap = model::DefaultOctreeMap< Morton, OctreeNode >;
+			using Node = OctreeNode< PointVector >;
+			using NodePtr = shared_ptr< Node >;
+			using OctreeMap = model::DefaultOctreeMap< Morton, Node >;
 			
 			size_t nNodes = 500000u;
 			size_t nPoints = 2u * nNodes;
 			
-			Ken12MemoryManager< Morton, Point, Inner, Leaf >::initInstance( nNodes, nPoints, 0, nNodes );
+			Ken12MemoryManager< Morton, Point, Node >::initInstance( nNodes, nPoints, nNodes );
 			
 			IMemoryManager& manager = SingletonMemoryManager::instance();
 			
@@ -43,14 +41,14 @@ namespace model
 				if( i == 0.5 * nNodes )
 				{
 					size_t expectedHalfSize = 	0.5 * nNodes * sizeof( Morton ) + 0.5 * nPoints * sizeof( Point )
-												+ 0.5 * nNodes * sizeof( Leaf );
+												+ 0.5 * nNodes * sizeof( Node );
 					ASSERT_EQ( manager.usedMemory(), expectedHalfSize );
 				}
 				
 				MortonPtr mortonCode( new Morton() );
 				mortonCode->build( i );
 				
-				LeafPtr node( new Leaf() );
+				NodePtr node( new Node( true ) );
 				PointPtr p0( new Point() );
 				PointPtr p1( new Point() );
 				node->setContents( PointVector( { p0, p1 } ) );
@@ -58,7 +56,7 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			size_t expectedFullSize = nNodes * sizeof( Morton ) + nPoints * sizeof( Point ) + nNodes * sizeof( Leaf );
+			size_t expectedFullSize = nNodes * sizeof( Morton ) + nPoints * sizeof( Point ) + nNodes * sizeof( Node );
 			ASSERT_EQ( manager.usedMemory(), expectedFullSize );
 			
 			map.clear();
@@ -73,16 +71,14 @@ namespace model
 			using Point = model::ExtendedPoint;
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr >;
-			using Inner = InnerNode< PointVector >;
-			using InnerPtr = shared_ptr< Inner >;
-			using Leaf = LeafNode< PointVector >;
-			using LeafPtr = shared_ptr< Leaf >;
-			using OctreeMap = model::DefaultOctreeMap< Morton, OctreeNode >;
+			using Node = OctreeNode< PointVector >;
+			using NodePtr = shared_ptr< Node >;
+			using OctreeMap = model::DefaultOctreeMap< Morton, Node >;
 			
 			size_t nNodes = 500000u;
 			size_t nPoints = 2u * nNodes;
 			
-			Ken12MemoryManager< Morton, Point, Inner, Leaf >::initInstance( nNodes, nPoints, 0, nNodes );
+			Ken12MemoryManager< Morton, Point, Node >::initInstance( nNodes, nPoints, nNodes );
 			
 			IMemoryManager& manager = SingletonMemoryManager::instance();
 			
@@ -95,14 +91,14 @@ namespace model
 				if( i == 0.5 * nNodes )
 				{
 					size_t expectedHalfSize = 	0.5 * nNodes * sizeof( Morton ) + 0.5 * nPoints * sizeof( Point )
-												+ 0.5 * nNodes * sizeof( Leaf );
+												+ 0.5 * nNodes * sizeof( Node );
 					ASSERT_EQ( manager.usedMemory(), expectedHalfSize );
 				}
 				
 				MortonPtr mortonCode( new Morton() );
 				mortonCode->build( i );
 				
-				LeafPtr node( new Leaf() );
+				NodePtr node( new Node( true ) );
 				PointPtr p0( new Point() );
 				PointPtr p1( new Point() );
 				node->setContents( PointVector( { p0, p1 } ) );
@@ -110,7 +106,7 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			size_t expectedFullSize = 	nNodes * sizeof( Morton ) + nPoints * sizeof( Point ) + nNodes * sizeof( Leaf );
+			size_t expectedFullSize = 	nNodes * sizeof( Morton ) + nPoints * sizeof( Point ) + nNodes * sizeof( Node );
 			ASSERT_EQ( manager.usedMemory(), expectedFullSize );
 			
 			map.clear();

@@ -17,6 +17,7 @@ namespace model
 	class FrontOctree
 	: public RandomSampleOctree< OctreeParams >
 	{
+	public:
 		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		using MortonPtrVector = vector< MortonCodePtr >;
@@ -36,7 +37,6 @@ namespace model
 		using ParentOctree = model::RandomSampleOctree< OctreeParams >;
 		using FrontBehavior = model::FrontBehavior< OctreeParams, Front, FrontInsertionContainer >;
 		
-	public:
 		FrontOctree( const int& maxPointsPerNode, const int& maxLevel );
 		
 		~FrontOctree();

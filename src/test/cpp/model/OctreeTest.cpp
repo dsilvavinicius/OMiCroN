@@ -119,6 +119,41 @@ namespace model
 		template< typename P >
         class OctreeTest {};
 		
+		#define SPECIALIZE_TEST(OCTREE,DERIVED_TEST,MANAGER_PREFIX,MAX_LVL) \
+		template<> \
+		class OctreeTest< OCTREE > \
+		: public DERIVED_TEST \
+		{ \
+			using PointVector = OCTREE::PointVector;\
+			using OctreePtr = shared_ptr< OCTREE >;\
+		protected: \
+			void SetUp() \
+			{ \
+				MANAGER_PREFIX##_DefaultManager::initInstance( 1000000 ); \
+				PointVector points; \
+				generatePoints( points ); \
+				m_octree = OctreePtr( new OCTREE( 1, MAX_LVL ) ); \
+				m_octree->build( points ); \
+			} \
+			\
+			OctreePtr m_octree;\
+		};\
+		
+		#define SPECIALIZE_ALL_TESTS_FOR_OCTREE(NAME) \
+		SPECIALIZE_TEST(SPOpS_##NAME,SimplePointTest,SPV,10) \
+		\
+		SPECIALIZE_TEST(MPOpS_##NAME,SimplePointTest,MPV,20) \
+		\
+		SPECIALIZE_TEST(SEOpS_##NAME,ExtendedPointTest,SEV,10) \
+		\
+		SPECIALIZE_TEST(MEOpS_##NAME,ExtendedPointTest,MEV,20) \
+		
+		
+		SPECIALIZE_ALL_TESTS_FOR_OCTREE(RandomSampleOctree)
+		
+		SPECIALIZE_ALL_TESTS_FOR_OCTREE(FrontOctree)
+		
+		/*
 		template<>
 		class OctreeTest< ShallowRandomSampleOctree >
 		: public SimplePointTest
@@ -128,7 +163,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				SPV_DefaultManager::initInstance( 1000000 );
@@ -150,7 +184,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				MPV_DefaultManager::initInstance( 1000000 );
@@ -174,7 +207,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				SEV_DefaultManager::initInstance( 1000000 );
@@ -198,7 +230,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				MEV_DefaultManager::initInstance( 1000000 );
@@ -220,7 +251,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				SPI_DefaultManager::initInstance( 1000000 );
@@ -242,7 +272,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				MPI_DefaultManager::initInstance( 1000000 );
@@ -266,7 +295,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				SEI_DefaultManager::initInstance( 1000000 );
@@ -290,7 +318,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				MEI_DefaultManager::initInstance( 1000000 );
@@ -312,7 +339,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				SPV_DefaultManager::initInstance( 1000000 );
@@ -334,7 +360,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				MPV_DefaultManager::initInstance( 1000000 );
@@ -358,7 +383,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				SEV_DefaultManager::initInstance( 1000000 );
@@ -382,7 +406,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				MEV_DefaultManager::initInstance( 1000000 );
@@ -404,7 +427,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				m_octree = OctreePtr( new Octree( 1, 10, "Octree.db" ) );
@@ -423,7 +445,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				m_octree = OctreePtr( new Octree( 1, 20, "Octree.db" ) );
@@ -444,7 +465,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				m_octree = OctreePtr( new Octree( 1, 10, "Octree.db" ) );
@@ -465,7 +485,6 @@ namespace model
 			using Test = model::test::OctreeTest< Octree >;
 		
 		protected:
-			/** Creates points that will be inside the octree and the associated expected results of octree construction. */
 			void SetUp()
 			{
 				m_octree = OctreePtr( new Octree( 1, 20, "Octree.db" ) );
@@ -473,9 +492,35 @@ namespace model
 			}
 			
 			OctreePtr m_octree;
-		};
+		};*/
 		
-		void testBoundaries( const ShallowRandomSampleOctree& octree )
+		// Defines the methods to test octree's shallow boundaries and hierarchy structure.
+		#define DEFINE_TEST_FUNCTIONS(OCTREE,DEPTH) \
+		void testBoundaries( const OCTREE& octree ) \
+		{ \
+			test##DEPTH##Boundaries( octree ); \
+		} \
+		\
+		void testHierarchy( const OCTREE& octree ) \
+		{ \
+			checkHierarchy( octree.getHierarchy() ); \
+		} \
+		
+		#define DEFINE_ALL_TEST_FUNCTIONS_FOR_OCTREE(NAME) \
+		DEFINE_TEST_FUNCTIONS(SPOpS_##NAME,Shallow) \
+		\
+		DEFINE_TEST_FUNCTIONS(MPOpS_##NAME,Medium) \
+		\
+		DEFINE_TEST_FUNCTIONS(SEOpS_##NAME,Shallow) \
+		\
+		DEFINE_TEST_FUNCTIONS(MEOpS_##NAME,Medium) \
+		
+		
+		DEFINE_ALL_TEST_FUNCTIONS_FOR_OCTREE(RandomSampleOctree)
+		
+		DEFINE_ALL_TEST_FUNCTIONS_FOR_OCTREE(FrontOctree)
+		
+		/*void testBoundaries( const ShallowRandomSampleOctree& octree )
 		{
 			testShallowBoundaries( octree );
 		}
@@ -513,15 +558,16 @@ namespace model
 		void testHierarchy( const MediumExtRandomSampleOctree& octree )
 		{
 			checkHierarchy( octree.getHierarchy() );
-		}
+		}*/
 		
 		using testing::Types;
 		
-		typedef Types< 	ShallowRandomSampleOctree, ShallowExtRandomSampleOctree, MediumRandomSampleOctree,
-						MediumExtRandomSampleOctree/*, ShallowIndexedOctree, ShallowExtIndexedOctree, MediumIndexedOctree,
-						MediumExtIndexedOctree*/, ShallowFrontOctree, ShallowExtFrontOctree, MediumFrontOctree,
-						MediumExtFrontOctree
-						> Implementations;
+		// Lists all type names derived from an octree name.
+		#define LIST_OCTREE_TYPES(NAME) \
+		SPOpS_##NAME, MPOpS_##NAME, SEOpS_##NAME, MEOpS_##NAME
+		
+		typedef Types< 	LIST_OCTREE_TYPES(RandomSampleOctree), //LIST_OCTREE_TYPES(IndexedOctree),
+						LIST_OCTREE_TYPES(FrontOctree) > Implementations;
 		
 		TYPED_TEST_CASE( OctreeTest, Implementations );
 

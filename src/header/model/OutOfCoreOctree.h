@@ -18,6 +18,7 @@ namespace model
 	class OutOfCoreOctree
 	: public FrontOctree< OctreeParams, Front, FrontInsertionContainer >
 	{
+	public:
 		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		
@@ -38,7 +39,6 @@ namespace model
 		using IdNodeVector = model::IdNodeVector< MortonCode, OctreeNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
-	public:
 		/** Encapsulates memory management setup parameters. */
 		struct MemorySetup
 		{

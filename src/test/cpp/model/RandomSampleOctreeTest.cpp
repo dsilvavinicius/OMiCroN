@@ -76,8 +76,10 @@ namespace model
 			using PointPtr = shared_ptr< TypeParam >;
 			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 			using PointVectorPtr = shared_ptr< PointVector >;
-			using OctreeParams = model::OctreeParams< ShallowMortonCode, Point, OctreeNode,
-																OctreeMap< ShallowMortonCode, OctreeNode > >;
+			using OctreeNode = model::OctreeNode< PointVector >;
+			using OctreeNodePtr = shared_ptr< OctreeNode >;
+			using OctreeParams = model::OctreeParams< 	ShallowMortonCode, Point, OctreeNode,
+														OctreeMap< ShallowMortonCode, OctreeNode > >;
 			using Octree = RandomSampleOctree< OctreeParams >;
 			
 			srand( 1 );
@@ -101,7 +103,7 @@ namespace model
 			ShallowMortonCodePtr rootCode = makeManaged< ShallowMortonCode >();
 			rootCode->build( 0x1 );
 			
-			InnerNodePtr< PointVector > root = dynamic_pointer_cast< InnerNode< PointVector > >( ( *hierarchy )[ rootCode ] );
+			OctreeNodePtr root = ( *hierarchy )[ rootCode ];
 			
 			PointVector rootPoints = root->getContents();
 			ASSERT_TRUE( rootPoints.size() == pointsPerOctant );

@@ -19,8 +19,9 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
-		using LeafNode = model::LeafNode< IndexVector >;
-		using LeafNodePtr = shared_ptr< LeafNode >;
+		using OctreeNode = typename OctreeParams::Node;
+		using OctreeNodePtr = shared_ptr< OctreeNode >;
+		
 		using OctreeMap = model::OctreeMap< MortonCode, OctreeNode >;
 		using RandomSampleOctree = model::RandomSampleOctree< OctreeParams >;
 		
@@ -96,7 +97,7 @@ namespace model
 			// Creates leaf node.
 			IndexVector indices;
 			indices.push_back( index );
-			LeafNodePtr leafNode = makeManaged< LeafNode >();
+			OctreeNodePtr leafNode = makeManaged< OctreeNode >( true );
 			leafNode->setContents( indices );
 			( *RandomSampleOctree::m_hierarchy )[ code ] = leafNode;
 		}
@@ -104,7 +105,7 @@ namespace model
 		{
 			// Node already exists. Appends the point there.
 			OctreeNodePtr leafNode = genericLeafIt->second;
-			IndexVector& indices = leafNode-> template getContents< IndexVector >();
+			IndexVector& indices = leafNode->getContents();
 			indices.push_back( index );
 		}
 	}
@@ -139,7 +140,7 @@ namespace model
 			RandomSampleOctree::eraseNodes( tempIt, currentChildIt );
 			
 			// Creates leaf to replace children.
-			LeafNodePtr mergedNode = makeManaged< LeafNode >();
+			OctreeNodePtr mergedNode = makeManaged< OctreeNode >( true );
 			mergedNode->setContents( childrenPoints );
 			
 			( *RandomSampleOctree::m_hierarchy )[ parentCode ] = mergedNode;
@@ -155,12 +156,12 @@ namespace model
 	}
 	
 	template< typename OctreeParams >
-	inline OctreeNodePtr IndexedOctree< OctreeParams >
-		::buildInnerNode( const IndexVector& childrenPoints ) const
+	inline shared_ptr< typename OctreeParams::Node > IndexedOctree< OctreeParams >
+	::buildInnerNode( const IndexVector& childrenPoints ) const
 	{
 		unsigned int numChildrenPoints = childrenPoints.size();
 		
-		InnerNodePtr< IndexVector > node = makeManaged< InnerNode< IndexVector > >();
+		OctreeNodePtr node = makeManaged< OctreeNode >( false );
 		int numSamplePoints = std::max( 1., numChildrenPoints * 0.125 );
 		IndexVector selectedPoints( numSamplePoints );
 		
@@ -203,34 +204,25 @@ namespace model
 		renderingState.handleNodeRendering( points );
 	}
 	
-	// ====================== Type Sugar ================================ /
-	using ShallowIndexedOctree = IndexedOctree<
-									OctreeParams< ShallowMortonCode, Point, OctreeNode,
-										OctreeMap< ShallowMortonCode, OctreeNode >
-									>
-								>;
-	using ShallowIndexedOctreePtr = shared_ptr< ShallowIndexedOctree >;
+	// ==========
+	// Type Sugar
+	// ==========
 	
-	using MediumIndexedOctree = IndexedOctree<
-									OctreeParams< MediumMortonCode, Point, OctreeNode,
-										OctreeMap< MediumMortonCode, OctreeNode >
-									>
-								>;
-	using MediumIndexedOctreePtr = shared_ptr< MediumIndexedOctree >;
+	DECLARE_OCTREE_TYPE(SPOpS,IndexedOctree,IndexedOctree,ShallowMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using ShallowExtIndexedOctree = IndexedOctree<
-									OctreeParams< ShallowMortonCode, ExtendedPoint, OctreeNode,
-										OctreeMap< ShallowMortonCode, OctreeNode >
-									>
-								>;
-	using ShallowExtIndexedOctreePtr = shared_ptr< ShallowExtIndexedOctree >;
+	DECLARE_OCTREE_TYPE(MPOpS,IndexedOctree,IndexedOctree,MediumMortonCode,Point,OctreeNode< PointVector >,OctreeMap)
 	
-	using MediumExtIndexedOctree = IndexedOctree<
-									OctreeParams< MediumMortonCode, ExtendedPoint, OctreeNode,
-										OctreeMap< MediumMortonCode, OctreeNode >
-									>
-								>;
-	using MediumExtIndexedOctreePtr = shared_ptr< MediumExtIndexedOctree >;
+	DECLARE_OCTREE_TYPE(SEOpS,IndexedOctree,IndexedOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOpS,IndexedOctree,IndexedOctree,MediumMortonCode,ExtendedPoint,OctreeNode< ExtendedPointVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SPOiS,IndexedOctree,IndexedOctree,ShallowMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MPOiS,IndexedOctree,IndexedOctree,MediumMortonCode,Point,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(SEOiS,IndexedOctree,IndexedOctree,ShallowMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
+	
+	DECLARE_OCTREE_TYPE(MEOiS,IndexedOctree,IndexedOctree,MediumMortonCode,ExtendedPoint,OctreeNode< IndexVector >,OctreeMap)
 }
 
 #endif

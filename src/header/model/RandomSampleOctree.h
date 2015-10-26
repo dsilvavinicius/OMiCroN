@@ -30,6 +30,7 @@ namespace model
 	template< typename OctreeParams >
 	class RandomSampleOctree
 	{
+	public:
 		using MortonCode = typename OctreeParams::Morton;
 		using MortonCodePtr = shared_ptr< MortonCode >;
 		
@@ -48,7 +49,6 @@ namespace model
 		using Precision = typename PlyPointReader::Precision;
 		using RandomPointAppender = model::RandomPointAppender< MortonCode, Point >;
 		
-	public:
 		/** Initialize data for building the octree, giving the desired max number of nodes per node and the maximum
 		 * level of the hierarchy. */
 		RandomSampleOctree( const int& maxPointsPerNode, const int& maxLevel );
