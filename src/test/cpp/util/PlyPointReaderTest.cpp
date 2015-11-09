@@ -24,9 +24,10 @@ namespace util
 			SPV_DefaultManager::initInstance( 1000000 );
 			
 			PointVector points;
-			SimplePointReader reader( "data/test.ply",
-									  [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
-			reader.read( SimplePointReader::SINGLE );
+			SimplePointReader reader( "data/test.ply" );
+			reader.read( SimplePointReader::SINGLE,
+				[ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); }
+			);
 			
 			Point expectedPoint0( vec3( ( float )81 / 255, ( float )63 / 255, ( float )39 / 255 ),
 								  vec3( 7.163479, 4.658535, 11.321565 ) );
@@ -50,9 +51,10 @@ namespace util
 			SPV_DefaultManager::initInstance( 1000000 );
 			
 			PointVector points;
-			SimplePointReader reader( "data/test_normals.ply",
-									  [ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
-			reader.read( SimplePointReader::SINGLE );
+			SimplePointReader reader( "data/test_normals.ply" );
+			reader.read( SimplePointReader::SINGLE,
+				[ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); }
+			);
 			
 			Point expectedPoint0( vec3( 11.321565, 4.658535, 7.163479 ), vec3( 7.163479, 4.658535, 11.321565 ) );
 			Point expectedPoint1( vec3( 11.201763, 5.635769, 6.996898 ), vec3( 6.996898, 5.635769, 11.201763 ) );
@@ -74,9 +76,10 @@ namespace util
 			SEV_DefaultManager::initInstance( 1000000 );
 			
 			PointVector points;
-			ExtendedPointReader reader( "data/test_extended_points.ply",
-										[ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); } );
-			reader.read( ExtendedPointReader::SINGLE );
+			ExtendedPointReader reader( "data/test_extended_points.ply" );
+			reader.read( ExtendedPointReader::SINGLE,
+				[ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); }
+			);
 			
 			Point expectedPoint0( vec3( 0.003921569, 0.007843137, 0.011764706 ), vec3( 11.321565, 4.658535, 7.163479 ),
 								  vec3( 7.163479, 4.658535, 11.321565 ) );

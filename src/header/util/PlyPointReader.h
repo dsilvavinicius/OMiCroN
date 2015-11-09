@@ -29,19 +29,20 @@ namespace util
 		/** Checks if the file is valid, opens it, reads its header and discovers the number of points in it.
 		 * @throws runtime_error if the file or its header cannot be read.
 		 * @param onPointDone is a function that process a read point. */
-		PlyPointReader( const string& fileName, const function< void( const Point& ) >& onPointDone );
+		PlyPointReader( const string& fileName );
 		
-		/** Copies the header of the file managed by this reader to other p_ply handler. */
-		void copyHeader( p_ply& other );
+		/** Copies the header of the file managed by this reader to other file. */
+		p_ply copyHeader( const string& outFilename );
 		
 		/** Reads a .ply file. . 
 		 * @param precision specifies the desired precision for read points. It must agree with the template
 		 * parameters of this method. */
-		void read( Precision precision );
+		void read( Precision precision, const function< void( const Point& ) >& onPointDone );
 	
 		long getNumPoints() { return m_numPoints; }
 	
 	protected:
+		void openPly();
 		void readHeader();
 		
 		/** Internal customizable reading method. Should setup reading needed data, callbacks, do the reading itself and free reading
@@ -60,19 +61,15 @@ namespace util
 		function< void( const Point& ) > m_onPointDone;
 		
 		p_ply m_ply;
+		
+		string m_filename;
 	};
 	
 	template< typename Point >
-	PlyPointReader< Point >
-	::PlyPointReader( const string& fileName, const function< void( const Point& ) >& onPointDone )
-	: m_onPointDone( onPointDone )
+	PlyPointReader< Point >::PlyPointReader( const string& fileName )
+	: m_filename( fileName )
 	{
-		m_ply = ply_open( fileName.c_str(), NULL, 0, NULL );
-		if( !m_ply )
-		{
-			throw runtime_error( fileName + ": cannot open .ply point file." );
-		}
-		
+		openPly();
 		readHeader();
 		
 		// Verify the properties of the vertex element in the .ply file in order to set the normal flag.
@@ -90,6 +87,18 @@ namespace util
 			property = ply_get_next_property( vertexElement, property );
 		}
 		cout << endl;
+		
+		ply_close( m_ply );
+	}
+	
+	template< typename Point >
+	void PlyPointReader< Point >::openPly()
+	{
+		m_ply = ply_open( m_filename.c_str(), NULL, 0, NULL );
+		if( !m_ply )
+		{
+			throw runtime_error( m_filename + ": cannot open .ply point file." );
+		}
 	}
 	
 	template< typename Point >
@@ -103,10 +112,16 @@ namespace util
 	}
 	
 	template< typename Point >
-	void PlyPointReader< Point >::copyHeader( p_ply& other )
+	p_ply PlyPointReader< Point >::copyHeader( const string& outFilename )
 	{
+		openPly();
 		readHeader();
 		
+		p_ply out = ply_create( outFilename.c_str(), PLY_LITTLE_ENDIAN, NULL, 0, NULL );
+		if( !out )
+		{
+			throw runtime_error( outFilename + ": cannot open .ply file to write." );
+		}
 		p_ply_element element = NULL;
 		
 		/* iterate over all elements in input file */
@@ -118,7 +133,7 @@ namespace util
 			ply_get_element_info( element, &element_name, &ninstances );
 			
 			/* add this element to output file */
-			if( !ply_add_element( other, element_name, ninstances ) )
+			if( !ply_add_element( out, element_name, ninstances ) )
 			{
 				throw runtime_error( "Cannot copy element to .ply header." );
 			}
@@ -131,22 +146,30 @@ namespace util
 				ply_get_property_info(property, &property_name, &type, &length_type, &value_type);
 				
 				/* add this property to output file */
-				if( !ply_add_property( other, property_name, type, length_type, value_type ) )
+				if( !ply_add_property( out, property_name, type, length_type, value_type ) )
 				{
 					throw runtime_error( "Cannot copy property to .ply header." );
 				}
 			}
 		}
 		
-		if( !ply_write_header( other ) )
+		if( !ply_write_header( out ) )
 		{
 			throw runtime_error( "Cannot write .ply header." );
 		}
+		
+		ply_close( m_ply );
+		
+		return out;
 	}
 	
 	template< typename Point >
-	void PlyPointReader< Point >::read( Precision precision )
+	void PlyPointReader< Point >::read( Precision precision, const function< void( const Point& ) >& onPointDone )
 	{
+		openPly();
+		
+		m_onPointDone = onPointDone;
+		
 		/* Save application locale */
 		const char *old_locale = setlocale( LC_NUMERIC, NULL );
 		/* Change to PLY standard */

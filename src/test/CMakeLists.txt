@@ -14,6 +14,7 @@ add_subdirectory (gtest/)
 add_executable (Tests
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
 	
+	${CPP_DIR}/${MODEL_DIR}/PointSorterTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/Ken12MemoryManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MemoryManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp

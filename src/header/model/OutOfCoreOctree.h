@@ -212,22 +212,22 @@ namespace model
 		
 		// The points are read in two passes. First to calculate octree boundaries and second to populate leaf nodes.
 		// First pass: whenever a point is full read, update the boundary variables.
-		auto *reader = new PlyPointReader( plyFileName,
-			[ & ]( const Point& point )
-			{
-				const Vec3& pos = point.getPos();
-				
-				for( int i = 0; i < 3; ++i )
-				{
-					minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
-					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
-				}
-			}
-		);
+		auto *reader = new PlyPointReader( plyFileName );
 		
 		cout << "===== Starting first .ply file reading for octree boundaries calculation =====" << endl << endl;
 		
-		reader->read( precision );
+		reader->read( precision,
+					  [ & ]( const Point& point )
+						{
+							const Vec3& pos = point.getPos();
+							
+							for( int i = 0; i < 3; ++i )
+							{
+								minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
+								maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+							}
+						}
+				);
 		
 		// Save boundary info.
 		*ParentOctree::m_origin = minCoords;
@@ -236,16 +236,16 @@ namespace model
 									( ( Float )1 / ( ( unsigned long long )1 << ParentOctree::m_maxLevel ) );
 		
 		// Second pass: whenever a point is full read, inserts it in the hierarchy.
-		*reader = PlyPointReader( plyFileName,
+		*reader = PlyPointReader( plyFileName );
+		
+		cout << "===== Starting second .ply file reading for octree point insertion =====" << endl << endl;
+		
+		reader->read( precision,
 			[ & ]( const Point& point )
 			{
 				insertPointInLeaf( makeManaged< Point >( point ) );
 			}
 		);
-		
-		cout << "===== Starting second .ply file reading for octree point insertion =====" << endl << endl;
-		
-		reader->read( precision );
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;

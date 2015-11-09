@@ -194,13 +194,13 @@ namespace model
 	::buildFromFile( const string& plyFileName, const Precision& precision )
 	{
 		PointVector points;
-		PlyPointReader *reader = new PlyPointReader( plyFileName, 
-			[ & ]( const Point& point )
-			{
-				points.push_back( makeManaged< Point >( point ) );
-			}
+		PlyPointReader *reader = new PlyPointReader( plyFileName );
+		reader->read( precision,
+					  [ & ]( const Point& point )
+						{
+							points.push_back( makeManaged< Point >( point ) );
+						}
 		);
-		reader->read( precision );
 		
 		cout << "After reading points" << endl << endl;
 		
