@@ -25,8 +25,8 @@ namespace model
 			JUMP_FLOODING
 		};
 		
-		TucanoRenderingState( Camera* camera, Camera* lightCam , Mesh* mesh, const Attributes& attribs,
-							  const string& shaderPath, const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
+		TucanoRenderingState( Camera* camera, Camera* lightCam , Mesh* mesh, const string& shaderPath,
+							  const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
 		

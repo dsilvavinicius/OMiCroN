@@ -58,7 +58,7 @@ namespace model
 		/** Builds the octree for a given point cloud file. The points are expected to be in world coordinates.
 		 * @param precision tells the floating precision in which coordinates will be interpreted.
 		 * @param attribs tells which point attributes will be loaded from the file. */
-		virtual void buildFromFile( const string& plyFileName, const Precision& precision, const Attributes& attribs );
+		virtual void buildFromFile( const string& plyFileName, const Precision& precision );
 		
 		/** Builds the octree for a given point cloud. The points are expected to be in world coordinates. In any moment
 		 * of the building, points can be cleared in order to save memory. */
@@ -191,16 +191,16 @@ namespace model
 	
 	template< typename OctreeParams >
 	void RandomSampleOctree< OctreeParams >
-	::buildFromFile( const string& plyFileName, const Precision& precision, const Attributes& attribs )
+	::buildFromFile( const string& plyFileName, const Precision& precision )
 	{
 		PointVector points;
-		PlyPointReader *reader = new PlyPointReader(
+		PlyPointReader *reader = new PlyPointReader( plyFileName, 
 			[ & ]( const Point& point )
 			{
 				points.push_back( makeManaged< Point >( point ) );
 			}
 		);
-		reader->read( plyFileName, precision, attribs );
+		reader->read( precision );
 		
 		cout << "After reading points" << endl << endl;
 		
@@ -211,8 +211,6 @@ namespace model
 			cout << *points[ i ] << endl << endl;
 		}*/
 		//
-		
-		cout << "Attributes:" << reader->getAttributes() << endl << endl;
 		
 		//cout << "Read points: " << endl << points << endl; 
 		

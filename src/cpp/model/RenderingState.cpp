@@ -2,8 +2,7 @@
 
 namespace model
 {
-	RenderingState::RenderingState( const Attributes& attribs )
-	: m_attribs( attribs ) {}
+	RenderingState::RenderingState() {}
 	
 	void RenderingState::clearAttribs()
 	{

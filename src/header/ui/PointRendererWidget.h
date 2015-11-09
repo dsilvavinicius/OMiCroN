@@ -133,9 +133,6 @@ private:
 	
 	/** Time when a frame is finished. Used to measure performance only. In ms. */
 	clock_t m_endOfFrameTime;
-	
-	/** Point attributes. */
-	Attributes m_attribs;
 };
 
 #endif // PointRendererWidget

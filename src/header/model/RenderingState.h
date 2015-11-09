@@ -10,13 +10,6 @@ using namespace std;
 
 namespace model
 {
-	enum Attributes
-	{
-		COLORS = 0x1,
-		NORMALS = 0x2,
-		COLORS_AND_NORMALS = 0x3
-	};
-	
 	/** Renders related data used while traversing octree. USAGE: call handleNodeRendering() to indicate that the
 	 * contents of octree nodes should be rendered. After all nodes are issued for rendering, call render() to
 	 * render them all.
@@ -26,7 +19,7 @@ namespace model
 	class RenderingState
 	{
 	public:
-		RenderingState( const Attributes& attribs );
+		RenderingState();
 		
 		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
 		 * Default implementation does nothing. */
@@ -72,7 +65,6 @@ namespace model
 		vector< Vec3 >& getColors() { return m_colors; }
 		vector< Vec3 >& getNormals() { return m_normals; }
 		vector< unsigned int >& getIndices() { return m_indices; }
-		Attributes getAttribs() { return m_attribs; }
 	
 		/** Clears all attrib vectors. */
 		void clearAttribs();
@@ -85,20 +77,12 @@ namespace model
 		vector< Vec3 > m_colors;
 		vector< Vec3 > m_normals;
 		vector< unsigned int > m_indices;
-		Attributes m_attribs;
 	};
 	
 	inline void RenderingState::handleNodeRendering( const PointPtr& point )
 	{
 		m_positions.push_back( point->getPos() );
-		if( m_attribs == COLORS )
-		{
-			m_colors.push_back( point->getColor() );
-		}
-		else
-		{
-			m_normals.push_back( point->getColor() );
-		}
+		m_normals.push_back( point->getColor() );
 	}
 	
 	inline void RenderingState::handleNodeRendering( const PointVector& points )

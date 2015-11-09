@@ -250,8 +250,6 @@ void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
 
 void PointRendererWidget::openMesh( const string& filename )
 {
-	Attributes vertAttribs = model::NORMALS;
-	
 	if( m_octree )
 	{
 		delete m_octree;
@@ -263,7 +261,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	string dbFilename = filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
 	m_octree = new Octree( 1, 10, dbFilename );
-	m_octree->buildFromFile( filename, PointReader::SINGLE, vertAttribs );
+	m_octree->buildFromFile( filename, PointReader::SINGLE );
 	
 	cout << "Octree built." << endl;
 	
@@ -275,8 +273,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, vertAttribs,
-									 "shaders/tucano/" );
+	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, "shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;
 	

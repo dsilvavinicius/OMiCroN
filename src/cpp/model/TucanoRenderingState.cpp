@@ -2,9 +2,10 @@
 
 namespace model
 {
-	TucanoRenderingState::TucanoRenderingState( Camera* camera, Camera* lightCamera, Mesh* mesh, const Attributes& attribs,
-												const string& shaderPath, const int& jfpbrFrameskip, const Effect& effect )
-	: RenderingState( attribs ),
+	TucanoRenderingState::TucanoRenderingState( Camera* camera, Camera* lightCamera, Mesh* mesh,
+												const string& shaderPath, const int& jfpbrFrameskip,
+											 const Effect& effect )
+	: RenderingState(),
 	m_camera( camera ),
 	m_lightCamera( lightCamera ),
 	m_mesh( mesh ),
@@ -69,8 +70,8 @@ namespace model
 	
 	inline unsigned int TucanoRenderingState::render()
 	{
-		// TODO: This code is inefficient with all these copies among vectors. Need to fix that.
-		// Also, it could be better to use indices for rendering. That would need some redesign of the octree classes.
+		// TODO: This code is really inefficient with all these copies among vectors. Need to fix that.
+		// TODO: Indices are not needed unless the Octree itself uses indices.
 		++m_nFrames;
 		
 		unsigned long nPoints = RenderingState::m_positions.size();
@@ -86,7 +87,15 @@ namespace model
 		m_mesh->loadVertices( vertData );
 		m_mesh->loadIndices( indices );
 		
-		if( RenderingState::m_attribs & Attributes::COLORS  )
+		vector< Vector3f > normalData( nPoints );
+		for( int i = 0; i < nPoints; ++i )
+		{
+			Vec3 normal = RenderingState::m_normals[ i ];
+			normalData[ i ] = Vector3f( normal.x, normal.y, normal.z );
+		}
+		m_mesh->loadNormals( normalData );
+		
+		if( m_colors.size() > 0  )
 		{
 			for( int i = 0; i < nPoints; ++i )
 			{
@@ -95,18 +104,7 @@ namespace model
 			}
 			m_mesh->loadColors( vertData );
 		}
-		
-		if( RenderingState::m_attribs & Attributes::NORMALS )
-		{
-			vector< Vector3f > normalData( nPoints );
-			for( int i = 0; i < nPoints; ++i )
-			{
-				Vec3 normal = RenderingState::m_normals[ i ];
-				normalData[ i ] = Vector3f( normal.x, normal.y, normal.z );
-			}
-			m_mesh->loadNormals( normalData );
-		}
-		
+
 		switch( m_effect )
 		{
 			case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightCamera ); break;

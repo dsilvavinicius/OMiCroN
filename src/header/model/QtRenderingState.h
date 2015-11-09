@@ -14,7 +14,7 @@ namespace model
 	: public RenderingState
 	{
 	public:
-		QtRenderingState( const Attributes& attribs ) : RenderingState( attribs ) {  }
+		QtRenderingState() : RenderingState() {  }
 		
 		virtual ~QtRenderingState() = 0;
 		

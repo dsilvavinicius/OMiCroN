@@ -12,7 +12,7 @@ namespace model
 	: public QtRenderingState
 	{
 	public:
-		TransientRenderingState( QGLPainter* painter, const QSize& viewportSize, const Attributes& attribs );
+		TransientRenderingState( QGLPainter* painter, const QSize& viewportSize );
 		~TransientRenderingState() {}
 		
 		unsigned int render();

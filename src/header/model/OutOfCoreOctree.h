@@ -80,8 +80,8 @@ namespace model
 		/** Builds octree using the database. */
 		virtual void build();
 		
-		virtual void buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
-									const Attributes& attribs ) override;
+		virtual void buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision )
+									override;
 		
 		SQLiteManager& getSQLiteManager() { return m_sqLite; }
 		
@@ -200,8 +200,7 @@ namespace model
 	
 	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
 	void OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >
-	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision,
-					 const Attributes& attribs )
+	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision )
 	{
 		clock_t buildStart = clock();
 		
@@ -213,7 +212,7 @@ namespace model
 		
 		// The points are read in two passes. First to calculate octree boundaries and second to populate leaf nodes.
 		// First pass: whenever a point is full read, update the boundary variables.
-		auto *reader = new PlyPointReader(
+		auto *reader = new PlyPointReader( plyFileName,
 			[ & ]( const Point& point )
 			{
 				const Vec3& pos = point.getPos();
@@ -228,9 +227,7 @@ namespace model
 		
 		cout << "===== Starting first .ply file reading for octree boundaries calculation =====" << endl << endl;
 		
-		reader->read( plyFileName, precision, attribs );
-		
-		cout << "Attributes:" << reader->getAttributes() << endl << endl;
+		reader->read( precision );
 		
 		// Save boundary info.
 		*ParentOctree::m_origin = minCoords;
@@ -239,7 +236,7 @@ namespace model
 									( ( Float )1 / ( ( unsigned long long )1 << ParentOctree::m_maxLevel ) );
 		
 		// Second pass: whenever a point is full read, inserts it in the hierarchy.
-		*reader = PlyPointReader(
+		*reader = PlyPointReader( plyFileName,
 			[ & ]( const Point& point )
 			{
 				insertPointInLeaf( makeManaged< Point >( point ) );
@@ -248,7 +245,7 @@ namespace model
 		
 		cout << "===== Starting second .ply file reading for octree point insertion =====" << endl << endl;
 		
-		reader->read( plyFileName, precision, attribs );
+		reader->read( precision );
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.
 		delete reader;

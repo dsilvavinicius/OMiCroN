@@ -20,7 +20,7 @@ namespace ui
 		m_renderTime( 0.f )
 	{
 		m_octree = new Octree( 1, 10 );
-		m_octree->buildFromFile( "../../src/data/real/prova5M.ply", SimplePointReader::SINGLE, COLORS );
+		m_octree->buildFromFile( "../../src/data/real/prova5M.ply", SimplePointReader::SINGLE );
 	}
 	
 	PointRendererWindow::~PointRendererWindow()
@@ -44,7 +44,7 @@ namespace ui
 		// Render the scene one time to init m_renderTime for future projection threshold adaptations.
 		clock_t timing = clock();
 		
-		TransientRenderingState renderingState( painter, size(), m_attribs );
+		TransientRenderingState renderingState( painter, size() );
 		m_octree->traverse( renderingState, m_projThresh );
 		timing = clock() - timing;
 		m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
@@ -73,7 +73,7 @@ namespace ui
 		// Render the scene.
 		clock_t timing = clock();
 		//OctreeStats stats = m_octree->traverse( painter, m_attribs, m_projThresh );
-		TransientRenderingState renderer( painter, size(), m_attribs );
+		TransientRenderingState renderer( painter, size() );
 		
 		//renderer. template drawBoundaries <
 		//	ShallowFrontOctree< float, vec3, Point< float, vec3 >, unordered_set< ShallowMortonCode > >,

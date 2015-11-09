@@ -15,8 +15,8 @@ namespace model
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
 	public:
-		TucanoDebugRenderer( Camera* camera, Camera* lightCam, Mesh* mesh, const Attributes& attribs,
-							 const string& shaderPath, const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
+		TucanoDebugRenderer( Camera* camera, Camera* lightCam, Mesh* mesh, const string& shaderPath,
+							 const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
 		
 		virtual void setupRendering() override;
 		
@@ -29,9 +29,9 @@ namespace model
 	
 	template< typename Point >
 	TucanoDebugRenderer< Point >::TucanoDebugRenderer( Camera* camera, Camera* lightCam , Mesh* mesh,
-													   const Attributes& attribs, const string& shaderPath,
-													const int& jfpbrFrameskip, const Effect& effect )
-	: TucanoRenderingState( camera, lightCam, mesh, attribs, shaderPath, jfpbrFrameskip, effect )
+													   const string& shaderPath, const int& jfpbrFrameskip,
+													const Effect& effect )
+	: TucanoRenderingState( camera, lightCam, mesh, shaderPath, jfpbrFrameskip, effect )
 	{
 		m_textEffect.initialize( shaderPath + "/../Inconsolata.otf" );
 	}

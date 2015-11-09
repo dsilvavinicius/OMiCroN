@@ -26,21 +26,28 @@ namespace util
 			DOUBLE = 0x2
 		};
 		
-		/** @param onPointDone is a function that process a read point. */
-		PlyPointReader( const function< void( const Point& ) >& onPointDone );
+		/** Checks if the file is valid, opens it, reads its header and discovers the number of points in it.
+		 * @throws runtime_error if the file or its header cannot be read.
+		 * @param onPointDone is a function that process a read point. */
+		PlyPointReader( const string& fileName, const function< void( const Point& ) >& onPointDone );
+		
+		/** Copies the header of the file managed by this reader to other p_ply handler. */
+		void copyHeader( p_ply& other );
 		
 		/** Reads a .ply file. . 
 		 * @param precision specifies the desired precision for read points. It must agree with the template
 		 * parameters of this method. */
-		void read( const string& fileName, Precision precision, Attributes attribs );
-		
-		Attributes getAttributes(){ return m_attribs; }
+		void read( Precision precision );
+	
+		long getNumPoints() { return m_numPoints; }
 	
 	protected:
+		void readHeader();
+		
 		/** Internal customizable reading method. Should setup reading needed data, callbacks, do the reading itself and free reading
 		 * needed data.
 		 * @returns ply_read() return code. */
-		virtual int doRead( p_ply& ply, const Precision& precision, const bool& colorsNeeded, const bool& normalsNeeded );
+		virtual int doRead( p_ply& ply, const Precision& precision );
 		
 		/** Internal method that calculates the property flag for each invocation of the reading vertex callback. */
 		static unsigned int getPropFlag( const unsigned int& propIndex, const Precision& precision );
@@ -48,91 +55,120 @@ namespace util
 		/** Method used as RPly vertex callback. */
 		static int vertexCB( p_ply_argument argument );
 		
-		Attributes m_attribs;
+		long m_numPoints;
 		
 		function< void( const Point& ) > m_onPointDone;
+		
+		p_ply m_ply;
 	};
 	
 	template< typename Point >
-	PlyPointReader< Point >::PlyPointReader( const function< void( const Point& ) >& onPointDone )
+	PlyPointReader< Point >
+	::PlyPointReader( const string& fileName, const function< void( const Point& ) >& onPointDone )
 	: m_onPointDone( onPointDone )
-	{}
-	
-	template< typename Point >
-	void PlyPointReader< Point >::read( const string& fileName, Precision precision, Attributes attribs )
 	{
-		/* Save application locale */
-		const char *old_locale = setlocale( LC_NUMERIC, NULL );
-		/* Change to PLY standard */
-		setlocale( LC_NUMERIC, "C" );
-
-		p_ply ply = ply_open( fileName.c_str(), NULL, 0, NULL );
-		if( !ply )
+		m_ply = ply_open( fileName.c_str(), NULL, 0, NULL );
+		if( !m_ply )
 		{
-			setlocale( LC_NUMERIC, old_locale );
 			throw runtime_error( fileName + ": cannot open .ply point file." );
 		}
-		if( !ply_read_header( ply ) )
-		{
-			ply_close( ply );
-			setlocale( LC_NUMERIC, old_locale );
-			throw runtime_error( "Cannot read point file header." );
-		}
+		
+		readHeader();
 		
 		// Verify the properties of the vertex element in the .ply file in order to set the normal flag.
-		p_ply_element vertexElement = ply_get_next_element( ply, NULL );
+		p_ply_element vertexElement = ply_get_next_element( m_ply, NULL );
 		p_ply_property  property = ply_get_next_property( vertexElement, NULL );
 		
-		bool colorsNeeded = attribs & COLORS;
-		bool normalsNeeded = attribs & NORMALS;
-		int rawAttribs = 0x0;
-		
-		{
-			long nPoints;
-			ply_get_element_info( vertexElement, NULL, &nPoints );
-			cout << "Points in file: " << nPoints << endl;
-		}
+		ply_get_element_info( vertexElement, NULL, &m_numPoints );
+		cout << "Points in file: " << m_numPoints << endl;
 		
 		while( property != NULL )
 		{
 			char* name;
 			ply_get_property_info( property, const_cast< const char** >( &name ), NULL, NULL, NULL );
-			
-			if( colorsNeeded && !strcmp( name, "red\0" ) )
-			{
-				rawAttribs |= model::COLORS;
-				m_attribs = Attributes( rawAttribs );
-			}
-			
-			if( normalsNeeded && !strcmp( name, "nx\0" ) )
-			{
-				rawAttribs |= model::NORMALS;
-				m_attribs = Attributes( rawAttribs );
-			}
-			
 			cout << "Prop name: " << name << endl;
 			property = ply_get_next_property( vertexElement, property );
 		}
 		cout << endl;
+	}
+	
+	template< typename Point >
+	void PlyPointReader< Point >::readHeader()
+	{
+		if( !ply_read_header( m_ply ) )
+		{
+			ply_close( m_ply );
+			throw runtime_error( "Cannot read point file header." );
+		}
+	}
+	
+	template< typename Point >
+	void PlyPointReader< Point >::copyHeader( p_ply& other )
+	{
+		readHeader();
 		
-		int resultCode = doRead( ply, precision, colorsNeeded, normalsNeeded );
+		p_ply_element element = NULL;
+		
+		/* iterate over all elements in input file */
+		while( ( element = ply_get_next_element( m_ply, element ) ) )
+		{
+			p_ply_property property = NULL;
+			long ninstances = 0;
+			const char *element_name;
+			ply_get_element_info( element, &element_name, &ninstances );
+			
+			/* add this element to output file */
+			if( !ply_add_element( other, element_name, ninstances ) )
+			{
+				throw runtime_error( "Cannot copy element to .ply header." );
+			}
+			
+			/* iterate over all properties of current element */
+			while( ( property = ply_get_next_property( element, property ) ) )
+			{
+				const char *property_name;
+				e_ply_type type, length_type, value_type;
+				ply_get_property_info(property, &property_name, &type, &length_type, &value_type);
+				
+				/* add this property to output file */
+				if( !ply_add_property( other, property_name, type, length_type, value_type ) )
+				{
+					throw runtime_error( "Cannot copy property to .ply header." );
+				}
+			}
+		}
+		
+		if( !ply_write_header( other ) )
+		{
+			throw runtime_error( "Cannot write .ply header." );
+		}
+	}
+	
+	template< typename Point >
+	void PlyPointReader< Point >::read( Precision precision )
+	{
+		/* Save application locale */
+		const char *old_locale = setlocale( LC_NUMERIC, NULL );
+		/* Change to PLY standard */
+		setlocale( LC_NUMERIC, "C" );
+		
+		int resultCode = doRead( m_ply, precision );
 		
 		if( !resultCode )
 		{
-			ply_close( ply );
+			ply_close( m_ply );
 			setlocale( LC_NUMERIC, old_locale );
 			throw runtime_error( "Problem while reading points." );
 		}
 		
-		ply_close( ply );
+		ply_close( m_ply );
 		
 		/* Restore application locale when done */
 		setlocale( LC_NUMERIC, old_locale );
 	}
 	
 	template< typename Point >
-	int PlyPointReader< Point >::doRead( p_ply& ply, const Precision& precision, const bool& colorsNeeded,
-													   const bool& normalsNeeded )
+	int PlyPointReader< Point >::doRead( p_ply& ply, const Precision& precision )
 	{
 		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
 		Point tempPoint;
@@ -142,26 +178,19 @@ namespace util
 		ply_set_read_cb( ply, "vertex", "y", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 1, precision ) );
 		ply_set_read_cb( ply, "vertex", "z", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 2, precision ) );
 		
-		if( normalsNeeded )
-		{
-			ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 3, precision ) );
-			ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
-			ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
-		}
+		ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 3, precision ) );
+		ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
+		ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
 		
-		if( colorsNeeded )
-		{
-			ply_set_read_cb( ply, "vertex", "red", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 6, precision ) );
-			ply_set_read_cb( ply, "vertex", "green", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 7, precision ) );
-			ply_set_read_cb( ply, "vertex", "blue", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 8, precision ) );
-		}
+		ply_set_read_cb( ply, "vertex", "red", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 6, precision ) );
+		ply_set_read_cb( ply, "vertex", "green", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 7, precision ) );
+		ply_set_read_cb( ply, "vertex", "blue", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 8, precision ) );
 		
 		return ply_read( ply );
 	}
 	
 	template< typename Point >
-	inline unsigned int PlyPointReader< Point >::getPropFlag( const unsigned int& propIndex,
-																		   const Precision& precision )
+	inline unsigned int PlyPointReader< Point >::getPropFlag( const unsigned int& propIndex, const Precision& precision )
 	{
 		return propIndex | ( precision << 4 );
 	}

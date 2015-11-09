@@ -44,8 +44,7 @@ namespace model
 			::initInstance( 200 * sizeof( OctreeNode< PointVector > ) );
 			
 			SPOpS_OutOfCoreOctree octree( 1, 10, "Octree.db", SPOpS_OutOfCoreOctree::MemorySetup( 0.8f, 0.8999f, 1, 1, 1 ) );
-			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
-								  Attributes::COLORS );
+			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE );
 			
 			testCreation( octree );
 		}
@@ -56,8 +55,7 @@ namespace model
 			::initInstance( 50 * sizeof( OctreeNode< PointVector > ) );
 			
 			SPOpS_OutOfCoreOctree octree( 1, 10, "Octree.db", SPOpS_OutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
-			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
-								  Attributes::COLORS );
+			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE );
 			
 			testCreation( octree );
 		}
@@ -68,8 +66,7 @@ namespace model
 			::initInstance( 100 * sizeof( OctreeNode< PointVector > ) );
 			
 			SPOpS_OutOfCoreOctree octree( 1, 10, "Octree.db", SPOpS_OutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 1, 1, 1 ) );
-			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
-								  Attributes::COLORS );
+			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE );
 			
 			testCreation( octree );
 		}
@@ -80,8 +77,7 @@ namespace model
 			::initInstance( 50 * sizeof( OctreeNode< PointVector > ) );
 			
 			SPOpS_OutOfCoreOctree octree( 1, 10, "Octree.db", SPOpS_OutOfCoreOctree::MemorySetup( 0.1f, 0.2f, 5, 5, 5 ) );
-			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE,
-								  Attributes::COLORS );
+			octree.buildFromFile( "data/simple_point_octree.ply", SimplePointReader::SINGLE );
 			
 			testCreation( octree );
 		}
