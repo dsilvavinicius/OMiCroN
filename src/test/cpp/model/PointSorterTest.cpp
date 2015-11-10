@@ -18,13 +18,23 @@ namespace model
 		TEST_F( PointSorterTest, Sort )
 		{
 			using M = MediumMortonCode;
-			using P = ExtendedPoint;
+			using P = Point;
+			using PointSorter = model::PointSorter< M, P >;
 			
-			PointSorter< M, P > sorter( "data/extended_point_octree.ply", 20 );
-			sorter.sort( "data/sorted_extended_point_octree.ply" );
+			clock_t start = clock();
+			
+			PointSorter sorter( "../../../src/data/real/tempietto_sub_tot.ply", 20 );
+			
+			cout << "Sorting." << endl << endl;
+			
+			sorter.sort( "../../../src/data/real/sorted_tempietto_sub_tot.ply" );
+			
+			cout << "Sorting time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
+			
+			cout << "Validating result." << endl << endl;
 			
 			vector< P > sortedPoints;
-			PlyPointReader< P > reader( "data/sorted_extended_point_octree.ply" );
+			PlyPointReader< P > reader( "../../../src/data/real/sorted_tempietto_sub_tot.ply" );
 			reader.read( PlyPointReader< P >::SINGLE,
 				[ & ]( const P& p )
 				{
@@ -32,7 +42,12 @@ namespace model
 				}
 			);
 			
-			cout << "Sorted points: " << endl << sortedPoints << endl << endl;
+			typename PointSorter::PointComp comp = sorter.comparator();
+			
+			for( int i = 0; i < sortedPoints.size() - 1; ++i )
+			{
+				ASSERT_TRUE( comp( sortedPoints[ i ], sortedPoints[ i + 1 ] ) );
+			}
 		}
 	}
 }

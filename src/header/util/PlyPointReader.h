@@ -167,6 +167,7 @@ namespace util
 	void PlyPointReader< Point >::read( Precision precision, const function< void( const Point& ) >& onPointDone )
 	{
 		openPly();
+		readHeader();
 		
 		m_onPointDone = onPointDone;
 		

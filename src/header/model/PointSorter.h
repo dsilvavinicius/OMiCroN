@@ -9,72 +9,7 @@ using namespace util;
 
 namespace model
 {
-	/** Sorts a point .ply file in z order.
-	 * @param M is the MortonCode type.
-	 * @param P is the Point type. */
-	template< typename M, typename P >
-	class PointSorter
-	{
-		using Reader = PlyPointReader< P >;
-		
-	public:
-		PointSorter( const string& input, uint zCurveLvl );
-		~PointSorter();
-		void sort( const string& outFilename );
-	
-	private:
-		M calcMorton( const P& point );
-		void write( const Point& p );
-		void write( const ExtendedPoint& p );
-		
-		Reader* m_reader;
-		p_ply m_output;
-		
-		P* m_points;
-		long m_nPoints;
-		
-		Vec3 m_origin;
-		Vec3 m_leafSize;
-		uint m_zCurveLvl;
-	};
-	
-	template< typename M, typename P >
-	PointSorter< M, P >::PointSorter( const string& input, uint zCurveLvl )
-	: m_zCurveLvl( zCurveLvl )
-	{
-		m_reader = new Reader( input );
-		m_nPoints = m_reader->getNumPoints();
-		m_points = ( P* ) malloc( sizeof( P ) * m_nPoints );
-		
-		Float negInf = -numeric_limits< Float >::max();
-		Float posInf = numeric_limits< Float >::max();
-		m_origin = Vec3( posInf, posInf, posInf );
-		Vec3 maxCoords( negInf, negInf, negInf );
-		
-		long i = 0;
-		m_reader->read( Reader::SINGLE,
-			[ & ]( const P& p )
-			{
-				m_points[ i++ ] = p;
-				Vec3 pos = p.getPos();
-				for( int i = 0; i < 3; ++i )
-				{
-					m_origin[ i ] = glm::min( m_origin[ i ], pos[ i ] );
-					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
-				}
-			}
-		);
-		
-		m_leafSize = ( maxCoords - m_origin ) * ( ( Float )1 / ( ( unsigned long long )1 << zCurveLvl ) );
-	}
-	
-	template< typename M, typename P >
-	PointSorter< M, P >::~ PointSorter()
-	{
-		free( m_points );
-		delete m_reader;
-	}
-	
+	/** Compare point by their morton codes. */
 	template< typename M, typename P >
 	class PointComp
 	{
@@ -105,15 +40,83 @@ namespace model
 		uint m_zCurveLvl;
 	};
 	
+	/** Sorts a point .ply file in z order.
+	 * @param M is the MortonCode type.
+	 * @param P is the Point type. */
+	template< typename M, typename P >
+	class PointSorter
+	{
+	public:
+		using Reader = PlyPointReader< P >;
+		using PointComp = model::PointComp< M, P >;
+		
+		PointSorter( const string& input, uint zCurveLvl );
+		~PointSorter();
+		void sort( const string& outFilename );
+		PointComp& comparator() { return *m_comp; }
+		
+	private:
+		M calcMorton( const P& point );
+		void write( const Point& p );
+		void write( const ExtendedPoint& p );
+		
+		Reader* m_reader;
+		p_ply m_output;
+		
+		P* m_points;
+		long m_nPoints;
+		
+		PointComp* m_comp;
+	};
+	
+	template< typename M, typename P >
+	PointSorter< M, P >::PointSorter( const string& input, uint zCurveLvl )
+	{
+		m_reader = new Reader( input );
+		m_nPoints = m_reader->getNumPoints();
+		m_points = ( P* ) malloc( sizeof( P ) * m_nPoints );
+		
+		Float negInf = -numeric_limits< Float >::max();
+		Float posInf = numeric_limits< Float >::max();
+		Vec3 origin = Vec3( posInf, posInf, posInf );
+		Vec3 maxCoords( negInf, negInf, negInf );
+		
+		cout << "Reading points." << endl << endl;
+		
+		long i = 0;
+		m_reader->read( Reader::SINGLE,
+			[ & ]( const P& p )
+			{
+				m_points[ i++ ] = p;
+				Vec3 pos = p.getPos();
+				for( int i = 0; i < 3; ++i )
+				{
+					origin[ i ] = glm::min( origin[ i ], pos[ i ] );
+					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+				}
+			}
+		);
+		
+		Vec3 leafSize = ( maxCoords - origin ) * ( ( Float )1 / ( ( unsigned long long )1 << zCurveLvl ) );
+		m_comp = new PointComp( origin, leafSize, zCurveLvl );
+	}
+	
+	template< typename M, typename P >
+	PointSorter< M, P >::~ PointSorter()
+	{
+		free( m_points );
+		delete m_reader;
+		delete m_comp;
+	}
+	
 	template< typename M, typename P >
 	void PointSorter< M, P >::sort( const string& outFilename )
 	{
-		PointComp< M, P > comp( m_origin, m_leafSize, m_zCurveLvl );
-		std::sort( m_points, m_points + m_nPoints, comp );
+		std::sort( m_points, m_points + m_nPoints, *m_comp );
 		
 		// Write output file
 		m_output = m_reader->copyHeader( outFilename );
-		for( int i = 0; i < m_nPoints; ++i )
+		for( long i = 0; i < m_nPoints; ++i )
 		{
 			write( m_points[ i ] );
 		}
