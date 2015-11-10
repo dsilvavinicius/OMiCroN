@@ -46,7 +46,9 @@ namespace model
 			
 			for( int i = 0; i < sortedPoints.size() - 1; ++i )
 			{
-				ASSERT_TRUE( comp( sortedPoints[ i ], sortedPoints[ i + 1 ] ) );
+				M morton0 = comp.calcMorton( sortedPoints[ i ] );
+				M morton1 = comp.calcMorton( sortedPoints[ i + 1 ] );
+				ASSERT_TRUE( morton0 < morton1 || morton0 == morton1 );
 			}
 		}
 	}

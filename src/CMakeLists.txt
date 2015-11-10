@@ -61,7 +61,7 @@ setup_package(GLEW)
 setup_package(Eigen3)
 setup_package(SQLite3)
 setup_package(Freetype)
-setup_package(TBB)
+#setup_package(TBB)
 
 # Set Qt dirs.
 find_package (Qt5Core REQUIRED)
@@ -142,7 +142,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	${TBB_LIBRARIES}
+	#${TBB_LIBRARIES}
 	RPly
 	Tlsf)
 

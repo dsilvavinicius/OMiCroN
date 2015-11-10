@@ -1,3 +1,4 @@
+/*
 #ifndef CONCURRENT_OCTREE_MAP_TYPES
 #define CONCURRENT_OCTREE_MAP_TYPES
 
@@ -24,4 +25,4 @@ namespace model
 		ManagedAllocator< pair< shared_ptr< Morton >, shared_ptr< Node > > > >;
 }
 
-#endif
+#endif*/
