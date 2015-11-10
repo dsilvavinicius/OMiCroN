@@ -29,7 +29,7 @@ namespace model
 			
 			sorter.sort( "../../../src/data/real/sorted_tempietto_sub_tot.ply" );
 			
-			cout << "Sorting time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
+			cout << "Total sorting time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
 			
 			cout << "Validating result." << endl << endl;
 			
