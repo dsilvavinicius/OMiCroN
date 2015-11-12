@@ -126,25 +126,29 @@ namespace model
 	template< typename T >
 	inline void* MortonCode< T >::operator new( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocMorton();
+		return ManagedAllocator< MortonCode< T > >().allocate( 1 );
 	}
 	
 	template< typename T >
 	inline void* MortonCode< T >::operator new[]( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocMortonArray( size );
+		return ManagedAllocator< MortonCode< T > >().allocate( size / sizeof( MortonCode< T > ) );
 	}
 	
 	template< typename T >
 	inline void MortonCode< T >::operator delete( void* p )
 	{
-		SingletonMemoryManager::instance().deallocMorton( p );
+		ManagedAllocator< MortonCode< T > >().deallocate(
+			static_cast< typename ManagedAllocator< MortonCode< T > >::pointer >( p ), 1
+		);
 	}
 	
 	template< typename T >
 	inline void MortonCode< T>::operator delete[]( void* p )
 	{
-		SingletonMemoryManager::instance().deallocMortonArray( p );
+		ManagedAllocator< MortonCode< T > >().deallocate(
+			static_cast< typename ManagedAllocator< MortonCode< T > >::pointer >( p ), 2
+		);
 	}
 	
 	template <typename T>

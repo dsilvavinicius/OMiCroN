@@ -61,7 +61,7 @@ setup_package(GLEW)
 setup_package(Eigen3)
 setup_package(SQLite3)
 setup_package(Freetype)
-#setup_package(TBB)
+setup_package(TBB)
 
 # Set Qt dirs.
 find_package (Qt5Core REQUIRED)
@@ -114,7 +114,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h				${CPP_DIR}/${MODEL_DIR}/ExtendedPoint.cpp
 	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h					${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
 	${HEADER_DIR}/${MODEL_DIR}/IMemoryManager.h				${CPP_DIR}/${MODEL_DIR}/IMemoryManager.cpp
-	${HEADER_DIR}/${MODEL_DIR}/BitMapMemoryManager.h
+	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h				${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h						${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h						${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h				${CPP_DIR}/${MODEL_DIR}/RenderingState.cpp
@@ -142,7 +142,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	#${TBB_LIBRARIES}
+	${TBB_tbbmalloc_LIBRARY_RELEASE}
 	RPly
 	Tlsf)
 

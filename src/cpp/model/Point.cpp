@@ -57,22 +57,26 @@ namespace model
 	
 	void* Point::operator new( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocPoint();
+		return ManagedAllocator< Point >().allocate( 1 );
 	}
 	
 	void* Point::operator new[]( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocPointArray( size );
+		return ManagedAllocator< Point >().allocate( size / sizeof( Point ) );
 	}
 	
 	void Point::operator delete( void* p )
 	{
-		SingletonMemoryManager::instance().deallocPoint( p );
+		ManagedAllocator< Point >().deallocate(
+			static_cast< ManagedAllocator< Point >::pointer >( p ), 1
+		);
 	}
 	
 	void Point::operator delete[]( void* p )
 	{
-		SingletonMemoryManager::instance().deallocPointArray( p );
+		ManagedAllocator< Point >().deallocate(
+			static_cast< ManagedAllocator< Point >::pointer >( p ), 2
+		);
 	}
 	
 	Vec3& Point::getColor() { return m_color; }

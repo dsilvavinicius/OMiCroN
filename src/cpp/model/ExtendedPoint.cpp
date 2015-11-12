@@ -57,22 +57,26 @@ namespace model
 	
 	void* ExtendedPoint::operator new( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocPoint();
+		return ManagedAllocator< ExtendedPoint >().allocate( 1 );
 	}
 	
 	void* ExtendedPoint::operator new[]( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocPointArray( size );
+		return ManagedAllocator< ExtendedPoint >().allocate( size / sizeof( ExtendedPoint ) );
 	}
 	
 	void ExtendedPoint::operator delete( void* p )
 	{
-		SingletonMemoryManager::instance().deallocPoint( p );
+		ManagedAllocator< ExtendedPoint >().deallocate(
+			static_cast< ManagedAllocator< ExtendedPoint >::pointer >( p ), 1
+		);
 	}
 	
 	void ExtendedPoint::operator delete[]( void* p )
 	{
-		SingletonMemoryManager::instance().deallocPointArray( p );
+		ManagedAllocator< ExtendedPoint >().deallocate(
+			static_cast< ManagedAllocator< ExtendedPoint >::pointer >( p ), 2
+		);
 	}
 	
 	Vec3& ExtendedPoint::getNormal() { return m_normal; }

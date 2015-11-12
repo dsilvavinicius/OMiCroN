@@ -74,25 +74,29 @@ namespace model
 	template< typename Contents >
 	void* OctreeNode< Contents >::operator new( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocNode();
+		return ManagedAllocator< OctreeNode< Contents > >().allocate( 1 );
 	}
 	
 	template< typename Contents >
 	void* OctreeNode< Contents >::operator new[]( size_t size )
 	{
-		return SingletonMemoryManager::instance().allocNodeArray( size );
+		return ManagedAllocator< OctreeNode< Contents > >().allocate( size / sizeof( OctreeNode< Contents > ) );
 	}
 	
 	template< typename Contents >
 	void OctreeNode< Contents >::operator delete( void* p )
 	{
-		SingletonMemoryManager::instance().deallocNode( p );
+		ManagedAllocator< OctreeNode< Contents > >().deallocate(
+			static_cast< typename ManagedAllocator< OctreeNode< Contents > >::pointer >( p ), 1
+		);
 	}
 	
 	template< typename Contents >
 	void OctreeNode< Contents >::operator delete[]( void* p )
 	{
-		SingletonMemoryManager::instance().deallocNodeArray( p );
+		ManagedAllocator< OctreeNode< Contents > >().deallocate(
+			static_cast< typename ManagedAllocator< OctreeNode< Contents > >::pointer >( p ), 2
+		);
 	}
 	
 	template < typename Contents >

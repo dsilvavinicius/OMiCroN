@@ -11,6 +11,7 @@ namespace model
 {
 	namespace test
 	{
+		/*
         class Ken12MemoryManagerTest : public ::testing::Test
 		{};
 		
@@ -112,6 +113,6 @@ namespace model
 			map.clear();
 			
 			ASSERT_EQ( manager.usedMemory(), ( size_t ) 0 );
-		}
+		}*/
 	}
 }
