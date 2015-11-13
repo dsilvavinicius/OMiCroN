@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QTimer>
 
+// TODO: Replace clock_t timings by C++'s high resolution clock. The logic is in util::Profiler.
 PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtFreecameraWidget( parent ),
 m_projThresh( 0.001f ),

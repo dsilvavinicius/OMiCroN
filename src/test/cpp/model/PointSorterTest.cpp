@@ -2,8 +2,10 @@
 #include <iostream>
 #include "PointSorter.h"
 #include "Stream.h"
+#include "Profiler.h"
 
 using namespace std;
+using namespace util;
 
 namespace model
 {
@@ -21,7 +23,7 @@ namespace model
 			using P = Point;
 			using PointSorter = model::PointSorter< M, P >;
 			
-			clock_t start = clock();
+			auto start = Profiler::now();
 			
 			PointSorter sorter( "../../../src/data/real/tempietto_sub_tot.ply", 20 );
 			
@@ -29,7 +31,7 @@ namespace model
 			
 			sorter.sort( "../../../src/data/real/sorted_tempietto_sub_tot.ply" );
 			
-			cout << "Total sorting time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
+			cout << "Total sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			
 			cout << "Validating result." << endl << endl;
 			

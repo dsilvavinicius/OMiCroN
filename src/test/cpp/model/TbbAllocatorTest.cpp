@@ -1,11 +1,13 @@
-#include "TbbAllocator.h"
-#include <Point.h>
-
 #include <gtest/gtest.h>
 #include <iostream>
 #include <omp.h>
+#include <chrono>
+#include "Point.h"
+#include "TbbAllocator.h"
+#include "Profiler.h"
 
 using namespace std;
+using namespace util;
 
 namespace model
 {
@@ -64,6 +66,8 @@ namespace model
 			using ThreadVector = typename TypeParam::ThreadVector;
 			using TestVector = typename TypeParam::TestVector;
 			
+			auto start = Profiler::now();
+			
 			int nThreads = 8;
 			
 			{
@@ -75,13 +79,12 @@ namespace model
 				for( int i = 0; i < nThreads; i++ )
 				{
 					ThreadVector threadVector; initVector( threadVector, vectorsPerThread );
-					PointVector points; initVector( points, pointsPerIter );
 					
 					int j = 0;
 					while( j < vectorsPerThread )
 					{
-						threadVector[ j ] = points;
-						++j;
+						PointVector points; initVector( points, pointsPerIter );
+						threadVector[ j++ ] = points;
 					}
 					
 					vectors[ i ] = threadVector;
@@ -94,7 +97,7 @@ namespace model
 										)
 									);
 				size_t allocated = AllocStatistics::totalAllocated();
-				cout << "Expected: " << expected << ", Allocated: " << allocated << ", overhead: "
+				cout << "Expected (b): " << expected << ", Allocated (b): " << allocated << ", fragmentation (%): "
 					 << float( allocated - expected ) / expected << endl << endl;
 					 
 				#pragma omp parallel for
@@ -103,7 +106,7 @@ namespace model
 					int j = 0;
 					while( j < vectorsPerThread )
 					{
-						releaseVector( vectors[ i ][ j ] );
+						releaseVector( vectors[ i ][ j++ ] );
 					}
 					
 					releaseVector( vectors[ i ] );
@@ -111,6 +114,8 @@ namespace model
 				
 				releaseVector( vectors );
 			}
+			
+			cout << "Elapsed time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			
 			ASSERT_EQ( AllocStatistics::totalAllocated(), 0 );
 		}

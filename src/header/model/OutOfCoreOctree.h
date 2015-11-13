@@ -5,6 +5,7 @@
 #include "FrontOctree.h"
 #include "PlyPointReader.h"
 #include "SQLiteManager.h"
+#include "Profiler.h"
 
 using namespace std;
 using namespace util;
@@ -202,7 +203,7 @@ namespace model
 	void OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >
 	::buildFromFile( const string& plyFileName, const typename PlyPointReader::Precision& precision )
 	{
-		clock_t buildStart = clock();
+		auto start = Profiler::now();
 		
 		// Octree boundary variables.
 		Float negInf = -numeric_limits< Float >::max();
@@ -253,11 +254,11 @@ namespace model
 		// Persist all leaves in order to start bottom-up octree creation.
 		persistAllLeaves();
 		
-		cout << "Leaf construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
+		cout << "Leaf construction time (ms):" << Profiler::elapsedTime( start ) << endl << endl;
 		
 		build();
 		
-		cout << "Total Hierarchy construction time:" << float( clock() - buildStart ) / CLOCKS_PER_SEC << "s" << endl << endl;
+		cout << "Total Hierarchy construction time (ms):" << Profiler::elapsedTime( start ) << endl << endl;
 	}
 	
 	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
@@ -570,7 +571,7 @@ namespace model
 		{
 			cout << "========== Octree construction, level " << level << " ==========" << endl << endl;
 			
-			clock_t timing = clock();
+			auto start = Profiler::now();
 			
 			// The idea behind this boundary is to get the minimum morton code that is from one level deeper than
 			// the current one.
@@ -663,8 +664,8 @@ namespace model
 			// Persists all nodes in left dirty in this lvl before proceeding one lvl up.
 			persistAllDirty();
 			
-			cout << "========== End of level " << level << ". Time spent: "
-				 << float( clock() - timing ) / CLOCKS_PER_SEC << "s ==========" << endl << endl;
+			cout << "========== End of level " << level << ". Time spent (ms): "
+				 << Profiler::elapsedTime( start ) << "==========" << endl << endl;
 		}
 	}
 	

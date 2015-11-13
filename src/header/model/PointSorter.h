@@ -3,6 +3,7 @@
 
 #include "MortonCode.h"
 #include "PlyPointReader.h"
+#include <Profiler.h>
 
 using namespace std;
 using namespace util;
@@ -82,7 +83,7 @@ namespace model
 		Vec3 maxCoords( negInf, negInf, negInf );
 		
 		cout << "Reading points." << endl << endl;
-		clock_t start = clock();
+		auto start = Profiler::now();
 		
 		long i = 0;
 		m_reader->read( Reader::SINGLE,
@@ -98,7 +99,7 @@ namespace model
 			}
 		);
 		
-		cout << "Reading time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
+		cout << "Reading time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		Vec3 leafSize = ( maxCoords - origin ) * ( ( Float )1 / ( ( unsigned long long )1 << zCurveLvl ) );
 		m_comp = new PointComp( origin, leafSize, zCurveLvl );
@@ -116,15 +117,15 @@ namespace model
 	void PointSorter< M, P >::sort( const string& outFilename )
 	{
 		cout << "In-memory sort. " << endl << endl;
-		clock_t start = clock();
+		auto start = Profiler::now();
 		
 		std::sort( m_points, m_points + m_nPoints, *m_comp );
 		
-		cout << "Sorting time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
+		cout << "Sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		cout << "Writing. " << endl << endl;
 		
-		start = clock();
+		start = Profiler::now();
 		// Write output file
 		m_output = m_reader->copyHeader( outFilename );
 		for( long i = 0; i < m_nPoints; ++i )
@@ -132,7 +133,7 @@ namespace model
 			write( m_points[ i ] );
 		}
 		
-		cout << "Writing time: " << float( clock() - start ) / CLOCKS_PER_SEC << "s." << endl << endl;
+		cout << "Writing time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		ply_close( m_output );
 	}
