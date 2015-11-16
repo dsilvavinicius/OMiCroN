@@ -84,6 +84,9 @@ namespace model
 	
 	/** Ptr for Vector of Points. */
 	using PointVectorPtr = shared_ptr< PointVector >;
+	
+	/** Array of Points. */
+	using PointArray = Array< PointPtr >;
 }
 
 #endif

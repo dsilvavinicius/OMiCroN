@@ -62,6 +62,9 @@ namespace model
 	
 	/** Ptr for Vector of ExtendedPoints. */
 	using ExtendedPointVectorPtr = shared_ptr< ExtendedPointVector >;
+	
+	/** Array of ExtendedPoints. */
+	using ExtendedPointArray = Array< ExtendedPointPtr >;
 }
 
 #endif

@@ -2,6 +2,7 @@
 #define O1_OCTREE_NODE_H
 
 #include <memory>
+#include "Array.h"
 #include "OctreeMapTypes.h"
 #include "ConcurrentOctreeMapTypes.h"
 
@@ -9,100 +10,137 @@ using namespace std;
 
 namespace model
 {
-	/** Base for octree node that has O(1) complexity for all operations.
-	 * @param Contents is the content type of the node. */
-	template< typename Contents >
-	class O1OctreeNodeBase
+	/** Octree node that provide all operations in O(1) time. Expects that sibling groups are allocated continuously in
+	 * memory. Each node is responsable only of children resources.
+	 * @param Contents is the element type of the array member. */
+	template< typename Contents, typename Alloc = TbbAllocator< Contents > >
+	class O1OctreeNode
 	{
 	public:
-		Contents& getContents();
-		void setContents( const Contents& contents );
-	
-	protected:
-		Contents m_contents;
+		using NodeArray = Array< O1OctreeNode, Alloc >;
+		
+		O1OctreeNode( NodeArray& contents, bool isLeaf )
+		: m_contents( contents ),
+		m_isLeaf( isLeaf ),
+		m_parent( nullptr ),
+		m_children( 0 )
+		{}
+		
+		void* operator new( size_t size );
+		void* operator new[]( size_t size );
+		void operator delete( void* p );
+		void operator delete[]( void* p );
+		
+		Array< Contents >& getContents() { return m_contents; }
+		
+		/** Gets a pointer for the parent of this node. */
+		O1OctreeNode* parent() const { return m_parent; }
+		
+		/** Gets a pointer for the left sibling of this node. The caller must know if the pointer is dereferenceable. */
+		O1OctreeNode* leftSibling() const { return this + 1; }
+		
+		/** Gets a pointer for the right sibling of this node. The caller must know if the pointer is dereferenceable. */
+		O1OctreeNode* rightSibling() const { return this - 1; };
+		
+		/** Gets the pointer for left-most child of this node. */
+		NodeArray& child() const { return m_children; }
+		
+		bool isLeaf() const { return m_isLeaf; }
+		
+		/** Sets parent pointer. */
+		void setParent( const O1OctreeNode* parent ) { m_parent = parent; }
+		
+		/** Sets the array of children. */
+		void setChildren( const NodeArray& children )
+		{
+			m_children = children;
+		}
+		
+		void setChildren( NodeArray&& children )
+		{
+			m_children = children;
+		}
+		
+		template< typename C >
+		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
+		
+		size_t serialize( byte** serialization ) const;
+		
+		static O1OctreeNode deserialize( byte* serialization );
+		
+	private:
+		Array< Contents > m_contents;
+		
+		// CACHE INVARIANT. Parent pointer. Is always corrent after octree bottom-up creation, since octree cache release
+		// is bottom-up.
+		O1OctreeNode* m_parent; 
+		
+		// CACHE VARIANT. Array with all children of this nodes. Can be empty even if the node is not leaf, since
+		// children can be released from octree cache.
+		NodeArray m_children;
+		
+		// CACHE INVARIANT. Indicates if the node is leaf.
+		bool m_isLeaf; 
 	};
 	
-	/** O1OctreeNodeBase node that uses no hierarchy at all, so no random node access is not granted. A node except
-	 * root can only be accessed by its parent, children or left sibling.
-	 * @param Contents is the content type of the node.
-	 * @param Morton is the morton code used in the OctreeMap. */
-	template< typename Contents, typename Morton >
-	class O1OctreeNode
-	: O1OctreeNodeBase< Contents >
+	template< typename Contents, typename Alloc >
+	inline void* O1OctreeNode< Contents, Alloc >::operator new( size_t size )
 	{
-// 		using Accessor = typename Hierarchy::iterator;
-// 	
-// 	public:
-// 		O1OctreeNode( const Hierarchy& hierarchy );
-// 		
-// 		Accessor getParent() const;
-// 		Accessor getSibling( const Hierarchy& hierarchy ) const;
-// 		Accessor getChild() const;
-// 		
-// 		/** Set parent, given its morton code and the hierarchy. */
-// 		void setParent( const Morton& morton, const Hierarchy& hierarchy );
-// 		
-// 		/** Set child, given the Acessor for this OctreeNode inside hierarchy and a flag indicating
-// 		 * if the Acessor should be advanced or not. */
-// 		void setChild( const Hierarchy& hierarchy, const bool& advance );
-// 		
-// 		/** @returns true if there is no m_parent set, false otherwise */
-// 		bool isRoot( const Hierarchy& hierarchy ) const;
-// 		
-// 		/** @returns true if there is no m_firstChild set, false otherwise */
-// 		bool isLeaf( const Hierarchy& hierarchy ) const;
-// 		
-// 		template< typename C, typename M >
-// 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C, M >& node );
-// 		
-// 		size_t serialize( byte** serialization ) const;
-// 		
-// 		static O1OctreeNode deserialize( byte* serialization, const Accessor& parent, const Accessor& sibling );
-// 		
-// 	private:
-// 		Accessor m_parent; // parent.
-// 		Accessor m_child; // first child.
-	};
+		return Alloc().allocate( 1 );
+	}
 	
-	/** O1OctreeNode that uses an OctreeMap as hierarchy.
-	 * @param Contents is the content type of the node.
-	 * @param Morton is the morton code used in the OctreeMap. */
-	template< typename Contents, typename Morton >
-	class ParallelO1OctreeNode
-	: O1OctreeNodeBase< Contents >
+	template< typename Contents, typename Alloc >
+	inline void* O1OctreeNode< Contents, Alloc >::operator new[]( size_t size )
 	{
-// 		using Hierarchy = ConcurrentOctreeMap< Morton, ParallelO1OctreeNode >;
-// 		using Accessor = typename Hierarchy::accessor;
-// 	
-// 	public:
-// 		ParallelO1OctreeNode( const Hierarchy& hierarchy );
-// 		
-// 		Accessor getParent() const;
-// 		Accessor getSibling() const;
-// 		Accessor getChild() const;
-// 		
-// 		void setParent( const Accessor& parent );
-// 		void setSibling( const Accessor& sibling );
-// 		void setChild( const Accessor& child );
-// 		
-// 		/** @returns true if there is no m_parent set, false otherwise */
-// 		bool isRoot( const Hierarchy& hierarchy ) const;
-// 		
-// 		/** @returns true if there is no m_firstChild set, false otherwise */
-// 		bool isLeaf( const Hierarchy& hierarchy ) const;
-// 		
-// 		template< typename C, typename M >
-// 		friend ostream& operator<<( ostream& out, const ParallelO1OctreeNode< C, M >& node );
-// 		
-// 		size_t serialize( byte** serialization ) const;
-// 		
-// 		static ParallelO1OctreeNode deserialize( byte* serialization, const Accessor& parent, const Accessor& sibling );
-// 		
-// 	private:
-// 		Accessor m_parent; // parent.
-// 		Accessor m_sibling; // next sibling.
-// 		Accessor m_child; // first child.
-	};
+		return Alloc().allocate( size / sizeof( O1OctreeNode< Contents > ) );
+	}
+	
+	template< typename Contents, typename Alloc >
+	inline void O1OctreeNode< Contents, Alloc >::operator delete( void* p )
+	{
+		Alloc().deallocate( static_cast< typename ManagedAllocator< O1OctreeNode< Contents > >::pointer >( p ), 1 );
+	}
+	
+	template< typename Contents, typename Alloc >
+	inline void O1OctreeNode< Contents, Alloc >::operator delete[]( void* p )
+	{
+		Alloc().deallocate( static_cast< typename ManagedAllocator< O1OctreeNode< Contents > >::pointer >( p ), 2 );
+	}
+	
+	template< typename Contents, typename Alloc >
+	inline size_t O1OctreeNode< Contents, Alloc >::serialize( byte** serialization ) const
+	{
+		byte* content;
+		size_t contentSize = Serializer::serialize( getContents(), &content );
+		
+		size_t flagSize = sizeof( bool );
+		size_t nodeSize = flagSize + contentSize;
+		
+		*serialization = new byte[ nodeSize ];
+		byte* tempPtr = *serialization;
+		memcpy( tempPtr, &m_isLeaf, flagSize );
+		tempPtr += flagSize;
+		memcpy( tempPtr, content, contentSize );
+		
+		Serializer::dispose( content );
+		
+		return nodeSize;
+	}
+	
+	template< typename Contents, typename Alloc >
+	inline O1OctreeNode< Contents, Alloc > O1OctreeNode< Contents, Alloc >::deserialize( byte* serialization )
+	{
+		bool flag;
+		size_t flagSize = sizeof( bool );
+		memcpy( &flag, serialization, flagSize );
+		byte* tempPtr = serialization + flagSize;
+		
+		Array< Contents > contents;
+		Serializer::deserialize( tempPtr, contents );
+		
+		auto node = O1OctreeNode< Contents, Alloc >( contents, flag );
+		return node;
+	}
 }
 
 #endif
