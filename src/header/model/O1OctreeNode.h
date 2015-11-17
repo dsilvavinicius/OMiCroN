@@ -11,15 +11,18 @@ using namespace std;
 namespace model
 {
 	/** Octree node that provide all operations in O(1) time. Expects that sibling groups are allocated continuously in
-	 * memory. Each node is responsable only of children resources.
-	 * @param Contents is the element type of the array member. */
-	template< typename Contents, typename Alloc = TbbAllocator< Contents > >
+	 * memory. Each node is responsable only for children resources.
+	 * @param Contents is the element type of the array member.
+	 * @param ContentsAlloc is the allocator used for Contents type. */
+	template< typename Contents, typename ContentsAlloc = TbbAllocator< Contents > >
 	class O1OctreeNode
 	{
 	public:
-		using NodeArray = Array< O1OctreeNode, Alloc >;
+		using ContentsArray = Array< Contents, ContentsAlloc >;
+		using NodeAlloc = typename ContentsAlloc:: template rebind< O1OctreeNode >::other;
+		using NodeArray = Array< O1OctreeNode, NodeAlloc >;
 		
-		O1OctreeNode( NodeArray& contents, bool isLeaf )
+		O1OctreeNode( ContentsArray& contents, bool isLeaf )
 		: m_contents( contents ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
@@ -31,24 +34,24 @@ namespace model
 		void operator delete( void* p );
 		void operator delete[]( void* p );
 		
-		Array< Contents >& getContents() { return m_contents; }
+		ContentsArray& getContents() { return m_contents; }
 		
 		/** Gets a pointer for the parent of this node. */
 		O1OctreeNode* parent() const { return m_parent; }
 		
 		/** Gets a pointer for the left sibling of this node. The caller must know if the pointer is dereferenceable. */
-		O1OctreeNode* leftSibling() const { return this + 1; }
+		O1OctreeNode* leftSibling() { return this + 1; }
 		
 		/** Gets a pointer for the right sibling of this node. The caller must know if the pointer is dereferenceable. */
-		O1OctreeNode* rightSibling() const { return this - 1; };
+		O1OctreeNode* rightSibling() { return this - 1; };
 		
 		/** Gets the pointer for left-most child of this node. */
-		NodeArray& child() const { return m_children; }
+		NodeArray& child() { return m_children; }
 		
 		bool isLeaf() const { return m_isLeaf; }
 		
 		/** Sets parent pointer. */
-		void setParent( const O1OctreeNode* parent ) { m_parent = parent; }
+		void setParent( O1OctreeNode* parent ) { m_parent = parent; }
 		
 		/** Sets the array of children. */
 		void setChildren( const NodeArray& children )
@@ -69,7 +72,7 @@ namespace model
 		static O1OctreeNode deserialize( byte* serialization );
 		
 	private:
-		Array< Contents > m_contents;
+		ContentsArray m_contents;
 		
 		// CACHE INVARIANT. Parent pointer. Is always corrent after octree bottom-up creation, since octree cache release
 		// is bottom-up.
@@ -83,32 +86,32 @@ namespace model
 		bool m_isLeaf; 
 	};
 	
-	template< typename Contents, typename Alloc >
-	inline void* O1OctreeNode< Contents, Alloc >::operator new( size_t size )
+	template< typename Contents, typename ContentsAlloc >
+	inline void* O1OctreeNode< Contents, ContentsAlloc >::operator new( size_t size )
 	{
-		return Alloc().allocate( 1 );
+		return NodeAlloc().allocate( 1 );
 	}
 	
-	template< typename Contents, typename Alloc >
-	inline void* O1OctreeNode< Contents, Alloc >::operator new[]( size_t size )
+	template< typename Contents, typename ContentsAlloc >
+	inline void* O1OctreeNode< Contents, ContentsAlloc >::operator new[]( size_t size )
 	{
-		return Alloc().allocate( size / sizeof( O1OctreeNode< Contents > ) );
+		return NodeAlloc().allocate( size / sizeof( O1OctreeNode< Contents > ) );
 	}
 	
-	template< typename Contents, typename Alloc >
-	inline void O1OctreeNode< Contents, Alloc >::operator delete( void* p )
+	template< typename Contents, typename ContentsAlloc >
+	inline void O1OctreeNode< Contents, ContentsAlloc >::operator delete( void* p )
 	{
-		Alloc().deallocate( static_cast< typename ManagedAllocator< O1OctreeNode< Contents > >::pointer >( p ), 1 );
+		NodeAlloc().deallocate( static_cast< typename NodeAlloc::pointer >( p ), 1 );
 	}
 	
-	template< typename Contents, typename Alloc >
-	inline void O1OctreeNode< Contents, Alloc >::operator delete[]( void* p )
+	template< typename Contents, typename ContentsAlloc >
+	inline void O1OctreeNode< Contents, ContentsAlloc >::operator delete[]( void* p )
 	{
-		Alloc().deallocate( static_cast< typename ManagedAllocator< O1OctreeNode< Contents > >::pointer >( p ), 2 );
+		NodeAlloc().deallocate( static_cast< typename NodeAlloc::pointer >( p ), 2 );
 	}
 	
-	template< typename Contents, typename Alloc >
-	inline size_t O1OctreeNode< Contents, Alloc >::serialize( byte** serialization ) const
+	template< typename Contents, typename ContentsAlloc >
+	inline size_t O1OctreeNode< Contents, ContentsAlloc >::serialize( byte** serialization ) const
 	{
 		byte* content;
 		size_t contentSize = Serializer::serialize( getContents(), &content );
@@ -127,8 +130,9 @@ namespace model
 		return nodeSize;
 	}
 	
-	template< typename Contents, typename Alloc >
-	inline O1OctreeNode< Contents, Alloc > O1OctreeNode< Contents, Alloc >::deserialize( byte* serialization )
+	template< typename Contents, typename ContentsAlloc >
+	inline O1OctreeNode< Contents, ContentsAlloc > O1OctreeNode< Contents, ContentsAlloc >
+	::deserialize( byte* serialization )
 	{
 		bool flag;
 		size_t flagSize = sizeof( bool );
@@ -138,7 +142,7 @@ namespace model
 		Array< Contents > contents;
 		Serializer::deserialize( tempPtr, contents );
 		
-		auto node = O1OctreeNode< Contents, Alloc >( contents, flag );
+		auto node = O1OctreeNode< Contents, ContentsAlloc >( contents, flag );
 		return node;
 	}
 }

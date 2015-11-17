@@ -40,8 +40,8 @@ namespace model
 		
 		Array& operator=( const Array& other )
 		{
-			~Array();
-			m_size = other.size;
+			this->~Array();
+			m_size = other.m_size;
 			m_array = A().allocate( m_size );
 			
 			for( int i = 0; i < m_size; ++i )
@@ -84,6 +84,11 @@ namespace model
 		}
 		
 		T& operator[]( uint i )
+		{
+			return m_array[ i ];
+		}
+		
+		const T& operator[]( uint i ) const
 		{
 			return m_array[ i ];
 		}

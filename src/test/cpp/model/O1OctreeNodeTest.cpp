@@ -49,8 +49,9 @@ namespace model
 		
 		TYPED_TEST( O1OctreeNodeTest, CreationAndLinks )
 		{
-			using PointArray = Array< shared_ptr< TypeParam > >;
-			using OctreeNode = O1OctreeNode< PointArray >;
+			using PointPtr = shared_ptr< TypeParam >;
+			using PointArray = Array< PointPtr >;
+			using OctreeNode = O1OctreeNode< PointPtr >;
 			using ChildArray = Array< OctreeNode >;
 			
 			{
@@ -80,7 +81,7 @@ namespace model
 					children[ i ] = OctreeNode( childPoints, true );
 				}
 				
-				node->setChildren( children, nChildren );
+				node->setChildren( children );
 				
 				ASSERT_EQ( node->child(), children.data() );
 				ASSERT_EQ( node->parent(), parent );
@@ -91,9 +92,9 @@ namespace model
 				ASSERT_EQ( node->parent()->getContents(), parentPoints );
 				ASSERT_EQ( node->leftSibling()->getContents(), points );
 				ASSERT_EQ( node->rightSibling()->getContents(), points );
-				ASSERT_EQ( node->child()->getContents(), childPointArrays[ 0 ] );
-				ASSERT_EQ( node->child()->rightSibling()->getContents, childPointArrays[ 1 ] );
-				ASSERT_EQ( node->child()->rightSibling()->rightSibling()->getContents, childPointArrays[ 2 ] );
+				ASSERT_EQ( node->child()[ 0 ].getContents(), childPointArrays[ 0 ] );
+				ASSERT_EQ( node->child()[ 0 ].rightSibling()->getContents(), childPointArrays[ 1 ] );
+				ASSERT_EQ( node->child()[ 0 ].rightSibling()->rightSibling()->getContents(), childPointArrays[ 2 ] );
 				
 				delete parent;
 			}
