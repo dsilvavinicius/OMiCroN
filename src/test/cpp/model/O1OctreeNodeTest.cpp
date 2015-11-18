@@ -83,7 +83,7 @@ namespace model
 				
 				node->setChildren( children );
 				
-				ASSERT_EQ( node->child(), children.data() );
+				ASSERT_EQ( node->child().data(), children.data() );
 				ASSERT_EQ( node->parent(), parent );
 				ASSERT_EQ( node->leftSibling(), siblings.data() );
 				ASSERT_EQ( node->rightSibling(), node + 1 );

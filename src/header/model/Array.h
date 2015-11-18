@@ -93,7 +93,7 @@ namespace model
 			return m_array[ i ];
 		}
 		
-		bool operator==( const Array< T >& other )
+		bool operator==( const Array< T >& other ) const
 		{
 			if( m_size != other.m_size ) { return false; }
 			for( int i = 0; i < m_size; i++ )

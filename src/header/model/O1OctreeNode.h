@@ -34,7 +34,7 @@ namespace model
 		void operator delete( void* p );
 		void operator delete[]( void* p );
 		
-		ContentsArray& getContents() { return m_contents; }
+		const ContentsArray& getContents() const { return m_contents; }
 		
 		/** Gets a pointer for the parent of this node. */
 		O1OctreeNode* parent() const { return m_parent; }
