@@ -22,12 +22,69 @@ namespace model
 		using NodeAlloc = typename ContentsAlloc:: template rebind< O1OctreeNode >::other;
 		using NodeArray = Array< O1OctreeNode, NodeAlloc >;
 		
+		/** Initializes and empty unusable node. */
+		O1OctreeNode()
+		: m_contents(),
+		m_isLeaf( false ),
+		m_parent( nullptr ),
+		m_children()
+		{}
+		
 		O1OctreeNode( ContentsArray& contents, bool isLeaf )
 		: m_contents( contents ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
-		m_children( 0 )
+		m_children()
 		{}
+		
+		O1OctreeNode( ContentsArray&& contents, bool isLeaf )
+		: m_contents( contents ),
+		m_isLeaf( isLeaf ),
+		m_parent( nullptr ),
+		m_children()
+		{}
+		
+		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
+		 * resources. */
+		O1OctreeNode( O1OctreeNode& other )
+		: m_contents( other.m_contents ),
+		m_children( other.m_children ),
+		m_parent( other.m_parent ),
+		m_isLeaf( other.m_isLeaf )
+		{}
+		
+		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
+		 * resources. */
+		O1OctreeNode& operator=( O1OctreeNode& other )
+		{
+			m_contents = other.m_contents;
+			m_children = other.m_children;
+			m_parent = other.m_parent;
+			m_isLeaf = other.m_isLeaf;
+			
+			return *this;
+		}
+		
+		O1OctreeNode( O1OctreeNode&& other )
+		: m_contents( std::move( other.m_contents ) ),
+		m_children( std::move( other.m_children ) ),
+		m_parent( other.m_parent ),
+		m_isLeaf( other.m_isLeaf )
+		{
+			other.parent = nullptr;
+		}
+		
+		O1OctreeNode& operator=( O1OctreeNode&& other )
+		{
+			m_contents = std::move( other.m_contents );
+			m_children = std::move( other.m_children );
+			m_parent = other.m_parent;
+			m_isLeaf = other.m_isLeaf;
+			
+			other.m_parent = nullptr;
+			
+			return *this;
+		}
 		
 		void* operator new( size_t size );
 		void* operator new[]( size_t size );
@@ -40,10 +97,10 @@ namespace model
 		O1OctreeNode* parent() const { return m_parent; }
 		
 		/** Gets a pointer for the left sibling of this node. The caller must know if the pointer is dereferenceable. */
-		O1OctreeNode* leftSibling() { return this + 1; }
+		O1OctreeNode* leftSibling() { return this - 1; }
 		
 		/** Gets a pointer for the right sibling of this node. The caller must know if the pointer is dereferenceable. */
-		O1OctreeNode* rightSibling() { return this - 1; };
+		O1OctreeNode* rightSibling() { return this + 1; };
 		
 		/** Gets the pointer for left-most child of this node. */
 		NodeArray& child() { return m_children; }
@@ -144,6 +201,15 @@ namespace model
 		
 		auto node = O1OctreeNode< Contents, ContentsAlloc >( contents, flag );
 		return node;
+	}
+	
+	template< typename C >
+	ostream& operator<<( ostream& out, const O1OctreeNode< C >& node )
+	{
+		out << "points: " << endl << node.m_contents << endl
+			<< "is leaf? " << node.m_isLeaf << endl << endl;
+			
+		return out;
 	}
 }
 

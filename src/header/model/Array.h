@@ -1,5 +1,6 @@
 #ifndef ARRAY_H
 #define ARRAY_H
+#include "Stream.h"
 #include "TbbAllocator.h"
 
 namespace model
@@ -21,32 +22,56 @@ namespace model
 		Array( uint size )
 		: m_size( size ),
 		m_array( A().allocate( size ) )
-		{}
+		{
+			assert( m_size != 0 && "Array::Array( uint ) does not accept size 0. To create an empty array use "
+					"Array::Array()" );
+			
+			initArray();
+		}
 		
 		/** Ctor that takes resposibility of a given array with the given size. */
 		Array( uint size, T* array )
 		: m_size( size ),
 		m_array( array )
-		{}
+		{
+			assert( m_size != 0 && "Array::Array( uint, T* ) does not accept size 0. To create an empty array use "
+					"Array::Array()" );
+		}
 		
 		Array( const Array& other )
-		: Array( other.m_size )
 		{
-			for( int i = 0; i < m_size; ++i )
+			if( other.m_size == 0 )
 			{
-				m_array[ i ] = other[ i ];
+				m_size = 0;
+				m_array = nullptr;
+			}
+			else
+			{
+				m_size = other.m_size;
+				m_array = A().allocate( m_size );
+				initArray();
+				
+				for( int i = 0; i < m_size; ++i )
+				{
+					m_array[ i ] = other[ i ];
+				}
 			}
 		}
 		
 		Array& operator=( const Array& other )
 		{
 			this->~Array();
-			m_size = other.m_size;
-			m_array = A().allocate( m_size );
 			
-			for( int i = 0; i < m_size; ++i )
+			if( other.m_size != 0 )
 			{
-				m_array[ i ] = other[ i ];
+				m_size = other.m_size;
+				m_array = A().allocate( m_size );
+				initArray();
+				
+				for( int i = 0; i < m_size; ++i )
+				{
+					m_array[ i ] = other.m_array[ i ];
+				}
 			}
 			
 			return *this;
@@ -72,7 +97,7 @@ namespace model
 		
 		~Array()
 		{
-			if( m_array != nullptr )
+			if( m_size != 0 )
 			{
 				for( int i = 0; i < m_size; i++ )
 				{
@@ -80,6 +105,9 @@ namespace model
 				}
 				
 				A().deallocate( m_array );
+				
+				m_size = 0;
+				m_array = nullptr;
 			}
 		}
 		
@@ -96,21 +124,60 @@ namespace model
 		bool operator==( const Array< T >& other ) const
 		{
 			if( m_size != other.m_size ) { return false; }
+			
 			for( int i = 0; i < m_size; i++ )
 			{
 				if( m_array[ i ] != other.m_array[ i ] ) { return false; }
 			}
+			
 			return true;
 		}
 		
-		uint size() { return m_size; }
+		uint size() const { return m_size; }
 		
 		T* data() { return m_array; }
 		
+		template< typename Type, typename Alloc >
+		friend ostream& operator<<( ostream& out, const Array< Type, Alloc >& array );
+		
+		template< typename Type, typename Alloc >
+		friend ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array );
+		
 	private:
+		/** Inits the internal array. */
+		void initArray()
+		{
+			for( int i = 0; i < m_size; ++i )
+			{
+				A().construct( m_array + i );
+			}
+		}
+		
 		T* m_array;
 		uint m_size;
 	};
+	
+	template< typename Type, typename Alloc >
+	ostream& operator<<( ostream& out, const Array< Type, Alloc >& array )
+	{
+		for( int i = 0; i < array.m_size; ++i )
+		{
+			out << array[ i ] << endl;
+		}
+		out << endl;
+		return out;
+	}
+	
+	template< typename Type, typename Alloc >
+	ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array )
+	{
+		for( int i = 0; i < array.m_size; ++i )
+		{
+			out << *array[ i ] << endl;
+		}
+		out << endl;
+		return out;
+	}
 }
 
 #endif

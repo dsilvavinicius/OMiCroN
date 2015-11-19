@@ -7,7 +7,7 @@
 namespace model
 {
 	template< typename T >
-	using ManagedAllocator = DefaultManagedAllocator< T >;
+	using ManagedAllocator = TbbAllocator< T >;
 }
 
 #endif

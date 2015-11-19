@@ -14,10 +14,10 @@ using namespace std;
 namespace model
 {
 	template< typename T >
-	class DefaultManagedAllocator;
+	class TbbAllocator;
 	
 	template< typename T >
-	using ManagedAllocator = DefaultManagedAllocator< T >;
+	using ManagedAllocator = TbbAllocator< T >;
 	
 	class Point;
 	using PointPtr = shared_ptr< Point >;

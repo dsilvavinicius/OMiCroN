@@ -11,7 +11,7 @@
 #include <QSize>
 #include <Eigen/Geometry>
 #include "Point.h"
-#include <ExtendedPoint.h>
+#include "ExtendedPoint.h"
 
 using namespace std;
 using namespace glm;

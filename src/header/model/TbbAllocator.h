@@ -80,6 +80,9 @@ namespace model
 			ScalableAlloc().deallocate( p, 0 );
 		}
 		
+		template< class U, class... Args >
+		void construct( U* p, Args&&... args ) { ScalableAlloc().construct( p, std::forward< Args >( args )... ); }
+		
 		template< typename U >
 		void destroy( U* p ){ ScalableAlloc().destroy( p ); }
 		

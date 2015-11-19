@@ -19,9 +19,9 @@ namespace model
 
 		using testing::Types;
 		
-		void initPoints( PointArray& points, int offset )
+		void initPoints( Array< PointPtr >& points, int offset )
 		{
-			for( int i = 0; i < points.size(); ++i )
+			for( int i = 0; i < points.size(); i++ )
 			{
 				float value = offset + i;
 				Vec3 vec( value, value, value );
@@ -31,9 +31,9 @@ namespace model
 			}
 		}
 		
-		void initPoints( ExtendedPointArray& points, int offset )
+		void initPoints( Array< ExtendedPointPtr >& points, int offset )
 		{
-			for( int i = 0; i < points.size(); ++i )
+			for( int i = 0; i < points.size(); i++ )
 			{
 				float value = offset + i;
 				Vec3 vec( value, value, value );
@@ -55,11 +55,12 @@ namespace model
 			using ChildArray = Array< OctreeNode >;
 			
 			{
-				int nPoints = 100;
+				int nPoints = 10;
 				PointArray points( nPoints ); initPoints( points, 0 );
 				
-				ChildArray siblings( 3 );
-				for( int i = 0; i < 3; ++i )
+				int nSiblings = 3;
+				ChildArray siblings( nSiblings );
+				for( int i = 0; i < nSiblings; ++i )
 				{
 					OctreeNode sibling( points, false );
 					siblings[ i ] = sibling;
@@ -68,7 +69,8 @@ namespace model
 				OctreeNode* node = siblings.data() + 1;
 				
 				PointArray parentPoints( nPoints ); initPoints( parentPoints, nPoints );
-				auto parent = new OctreeNode( points, false );
+				
+				auto parent = new OctreeNode( parentPoints, false );
 				node->setParent( parent );
 				
 				int nChildren = 3;
@@ -77,13 +79,12 @@ namespace model
 				for( int i = 0; i < nChildren; ++i )
 				{
 					PointArray childPoints( nPoints ); initPoints( childPoints, nPoints * ( i + 1 ) );
-					childPointArrays[ i ] = std::move( childPoints );
-					children[ i ] = OctreeNode( childPoints, true );
+					childPointArrays[ i ] = childPoints;
+					children[ i ] = OctreeNode( std::move( childPoints ), true );
 				}
 				
 				node->setChildren( children );
 				
-				ASSERT_EQ( node->child().data(), children.data() );
 				ASSERT_EQ( node->parent(), parent );
 				ASSERT_EQ( node->leftSibling(), siblings.data() );
 				ASSERT_EQ( node->rightSibling(), node + 1 );
@@ -102,9 +103,9 @@ namespace model
 			ASSERT_EQ( AllocStatistics::totalAllocated(), 0 );
 		}
 		
-		TYPED_TEST( O1OctreeNodeTest, Serialization )
+		/*TYPED_TEST( O1OctreeNodeTest, Serialization )
 		{
 			
-		}
+		}*/
 	}
 }

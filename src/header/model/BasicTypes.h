@@ -3,7 +3,6 @@
 
 #include <glm/glm.hpp>
 #include <memory>
-#include "Array.h"
 
 using namespace std;
 using namespace glm;
