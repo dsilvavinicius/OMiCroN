@@ -54,6 +54,8 @@ namespace model
 			using OctreeNode = O1OctreeNode< PointPtr >;
 			using ChildArray = Array< OctreeNode >;
 			
+			ASSERT_EQ( AllocStatistics::totalAllocated(), 0 );
+			
 			{
 				int nPoints = 10;
 				PointArray points( nPoints ); initPoints( points, 0 );

@@ -62,10 +62,12 @@ namespace model
 								+ sizeof( MapInternals ) + 3 * ( sizeof( PointPtr ) ) )
 								+ nPoints * sizeof( PointPtrInternals );
 			
-			initManager< Morton, Point, Node >( maxMemToUse, TypeParam() );
+			/*initManager< Morton, Point, Node >( maxMemToUse, TypeParam() );
 			IMemoryManager& manager = SingletonMemoryManager::instance();
 			
-			ASSERT_EQ( 0, manager.usedMemory() );
+			ASSERT_EQ( 0, manager.usedMemory() );*/
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			OctreeMap map;
 			
@@ -82,7 +84,8 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( maxMemToUse, manager.usedMemory() );
+			//ASSERT_EQ( maxMemToUse, manager.usedMemory() );
+			ASSERT_EQ( maxMemToUse, AllocStatistics::totalAllocated() );
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
@@ -94,7 +97,8 @@ namespace model
 			
 			map.clear();
 			
-			ASSERT_EQ( 0, manager.usedMemory() );
+			//ASSERT_EQ( 0, manager.usedMemory() );
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
 		TYPED_TEST( MemoryManagerTest, ManagedTypes1 )
@@ -121,10 +125,11 @@ namespace model
 								+ sizeof( MapInternals ) + 3 * ( sizeof( PointPtr ) ) )
 								+ nPoints * sizeof( PointPtrInternals );
 			
-			initManager< Morton, Point, Node >( maxMemToUse, TypeParam() );
-			IMemoryManager& manager = SingletonMemoryManager::instance();
+			/*initManager< Morton, Point, Node >( maxMemToUse, TypeParam() );
+			IMemoryManager& manager = SingletonMemoryManager::instance();*/
 			
-			ASSERT_EQ( 0, manager.usedMemory() );
+			//ASSERT_EQ( 0, manager.usedMemory() );
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			OctreeMap map;
 			
@@ -141,7 +146,8 @@ namespace model
 				map[ mortonCode ] = node;
 			}
 			
-			ASSERT_EQ( maxMemToUse, manager.usedMemory() );
+			//ASSERT_EQ( maxMemToUse, manager.usedMemory() );
+			ASSERT_EQ( maxMemToUse, AllocStatistics::totalAllocated() );
 			
 			for( unsigned int i = 0u; i < nNodes; ++i )
 			{
@@ -153,229 +159,8 @@ namespace model
 			
 			map.clear();
 			
-			ASSERT_EQ( 0, manager.usedMemory() );
-		}
-		
-		TYPED_TEST( MemoryManagerTest, SimpleArrays )
-		{
-			using Morton = ShallowMortonCode;
-			using Point = model::Point;
-			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-			using Node = OctreeNode< PointVector >;
-			using NodeVector = vector< Node >;
-			
-			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
-			
-			initManager< Morton, Point, Node >( 1024 * 1024, TypeParam() );
-			
-			Morton* mortonArrays[ 5 ];
-			Point* pointArrays[ 5 ];
-			NodeVector nodeArrays[ 5 ];
-			
-			for( int i = 0; i < 5; ++i )
-			{
-				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
-				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
-				nodeArrays[ i ] = NodeVector( arraySizes[ i ], Node( true ) );
-			}
-			
-			// Checking if arrays are being allocated to pointers as expected.
-			uint sameBlockElements = arraySizes[ 0 ] + 1;
-			for( int i = 1; i < 5; ++i )
-			{
-				sameBlockElements += arraySizes[ i ] + 1;
-				if( sameBlockElements > BIT_MAP_SIZE )
-				{
-					sameBlockElements = arraySizes[ i ] + 1;
-				}
-				else
-				{
-					//cout << "array " << i << endl << endl;
-					ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
-					ASSERT_EQ( pointArrays[ i ] - pointArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
-					ASSERT_EQ( nodeArrays[ i ].data() - nodeArrays[ i - 1 ].data(), arraySizes[ i - 1 ] + 1 );
-				}
-			}
-			
-			// After validation, the acquired pointers are set as the expected value for allocation return.
-			Morton* expectedMortonArrays[ 5 ];
-			Point* expectedPointArrays[ 5 ];
-			Node* expectedNodeArrays[ 5 ];
-			
-			for( int i = 0; i < 5; ++i )
-			{
-				expectedMortonArrays[ i ] = mortonArrays[ i ];
-				expectedPointArrays[ i ] = pointArrays[ i ];
-				expectedNodeArrays[ i ] = nodeArrays[ i ].data();
-			}
-			
-			// Deleting some arrays in order to check if remaining pointers are correct afterwards.
-			for( int i = 0; i < 3; ++i )
-			{
-				delete[] mortonArrays[ i ];
-				delete[] pointArrays[ i ];
-				nodeArrays[ i ] = NodeVector();
-				
-				// Dereferencing attempt to check integrity after deletes.
-				for( int j = i + 1; j < 5; ++j )
-				{
-					ASSERT_NO_THROW( Morton morton = mortonArrays[ j ][ 0 ] );
-					ASSERT_NO_THROW( Point point = pointArrays[ j ][ 0 ] );
-					ASSERT_NO_THROW( Node node = nodeArrays[ j ][ 0 ] );
-				}
-			}
-			
-			// Creating arrays after deletions in order to check if memory is handled correctly after deletions.
-			for( int i = 0; i < 3; ++i )
-			{
-				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
-				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
-				nodeArrays[ i ] = NodeVector( arraySizes[ i ], Node( true ) );
-				
-				int modPrev = ( ( i - 1 ) % 5 + 5 ) % 5;
-				
-				ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ modPrev  ] - arraySizes[ modPrev ] - 1, 0 );
-				ASSERT_EQ( pointArrays[ i ] - pointArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
-				ASSERT_EQ( nodeArrays[ i ].data() - nodeArrays[ modPrev ].data() - arraySizes[ modPrev ] - 1, 0 );
-			}
-			
-			// Deleting all arrays to setup the case where the pool could be lost because all ArrayMemoryInfo are erased.
-			for( int i = 0; i < 5; ++i )
-			{
-				delete[] mortonArrays[ i ];
-				delete[] pointArrays[ i ];
-				nodeArrays[ i ] = NodeVector();
-			}
-			
-			// Alloc again to check if memory is reused after deletion.
-			for( int i = 0; i < 5; ++i )
-			{
-				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
-				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
-				nodeArrays[ i ] = NodeVector( arraySizes[ i ], Node( true ) );
-				
-				ASSERT_EQ( mortonArrays[ i ] - expectedMortonArrays[ i ], 0 );
-				ASSERT_EQ( pointArrays[ i ] - expectedPointArrays[ i ], 0 );
-				ASSERT_EQ( nodeArrays[ i ].data() - expectedNodeArrays[ i ], 0 );
-			}
-			
-			for( int i = 0; i < 5; ++i )
-			{
-				delete[] mortonArrays[ i ];
-				delete[] pointArrays[ i ];
-			}
-		}
-		
-		TYPED_TEST( MemoryManagerTest, ComplexArrays )
-		{
-			using Morton = MediumMortonCode;
-			using Point = model::ExtendedPoint;
-			using PointPtr = shared_ptr< Point >;
-			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-			using Node = OctreeNode< PointVector >;
-			using NodeVector = vector< Node >;
-			
-			uint arraySizes[ 5 ] = { 100000u, 150000u, 50000u, 70000u, 120000u };
-			
-			initManager< Morton, Point, Node >( 1024 * 1024, TypeParam() );
-			
-			Morton* mortonArrays[ 5 ];
-			Point* pointArrays[ 5 ];
-			NodeVector nodeArrays[ 5 ];
-			
-			for( int i = 0; i < 5; ++i )
-			{
-				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
-				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
-				nodeArrays[ i ] = NodeVector( arraySizes[ i ], true );
-			}
-			
-			// Checking if arrays are being allocated to pointers as expected.
-			uint sameBlockElements = arraySizes[ 0 ] + 1;
-			for( int i = 1; i < 5; ++i )
-			{
-				sameBlockElements += arraySizes[ i ] + 1;
-				if( sameBlockElements > BIT_MAP_SIZE )
-				{
-					sameBlockElements = arraySizes[ i ] + 1;
-				}
-				else
-				{
-					//cout << "array " << i << endl << endl;
-					ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
-					ASSERT_EQ( pointArrays[ i ] - pointArrays[ i - 1 ], arraySizes[ i - 1 ] + 1 );
-					ASSERT_EQ( nodeArrays[ i ].data() - nodeArrays[ i - 1 ].data(), arraySizes[ i - 1 ] + 1 );
-				}
-			}
-			
-			// After validation, the acquired pointers are set as the expected value for allocation return.
-			Morton* expectedMortonArrays[ 5 ];
-			Point* expectedPointArrays[ 5 ];
-			Node* expectedNodeArrays[ 5 ];
-			
-			for( int i = 0; i < 5; ++i )
-			{
-				expectedMortonArrays[ i ] = mortonArrays[ i ];
-				expectedPointArrays[ i ] = pointArrays[ i ];
-				expectedNodeArrays[ i ] = nodeArrays[ i ].data();
-			}
-			
-			// Deleting some arrays in order to check if remaining pointers are correct afterwards.
-			for( int i = 0; i < 3; ++i )
-			{
-				delete[] mortonArrays[ i ];
-				delete[] pointArrays[ i ];
-				nodeArrays[ i ] = NodeVector();
-				
-				// Dereferencing attempt to check integrity after deletes.
-				for( int j = i + 1; j < 5; ++j )
-				{
-					ASSERT_NO_THROW( Morton morton = mortonArrays[ j ][ 0 ] );
-					ASSERT_NO_THROW( Point point = pointArrays[ j ][ 0 ] );
-					ASSERT_NO_THROW( Node point = nodeArrays[ j ][ 0 ] );
-				}
-			}
-			
-			// Creating arrays after deletions in order to check if memory is handled correctly after deletions.
-			for( int i = 0; i < 3; ++i )
-			{
-				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
-				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
-				nodeArrays[ i ] = NodeVector( arraySizes[ i ], Node( true ) );
-				
-				int modPrev = ( ( i - 1 ) % 5 + 5 ) % 5;
-				
-				ASSERT_EQ( mortonArrays[ i ] - mortonArrays[ modPrev  ] - arraySizes[ modPrev ] - 1, 0 );
-				ASSERT_EQ( pointArrays[ i ] - pointArrays[ modPrev ] - arraySizes[ modPrev ] - 1, 0 );
-				ASSERT_EQ( nodeArrays[ i ].data() - nodeArrays[ modPrev ].data() - arraySizes[ modPrev ] - 1, 0 );
-			}
-			
-			// Deleting all arrays to setup the case where the pool could be lost because all ArrayMemoryInfo are erased.
-			for( int i = 0; i < 5; ++i )
-			{
-				delete[] mortonArrays[ i ];
-				delete[] pointArrays[ i ];
-				nodeArrays[ i ] = NodeVector();
-			}
-			
-			// Alloc again to check if memory is reused after deletion.
-			for( int i = 0; i < 5; ++i )
-			{
-				mortonArrays[ i ] = new Morton[ arraySizes[ i ] ];
-				pointArrays[ i ] = new Point[ arraySizes[ i ] ];
-				nodeArrays[ i ] = NodeVector( arraySizes[ i ], Node( true ) );
-				
-				ASSERT_EQ( mortonArrays[ i ] - expectedMortonArrays[ i ], 0 );
-				ASSERT_EQ( pointArrays[ i ] - expectedPointArrays[ i ], 0 );
-				ASSERT_EQ( nodeArrays[ i ].data() - expectedNodeArrays[ i ], 0 );
-			}
-			
-			for( int i = 0; i < 5; ++i )
-			{
-				delete[] mortonArrays[ i ];
-				delete[] pointArrays[ i ];
-			}
+			//ASSERT_EQ( 0, manager.usedMemory() );
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
 		TYPED_TEST( MemoryManagerTest, AllocatorShallowPointVector )
@@ -402,7 +187,7 @@ namespace model
 										+ 2 * sizeof( NodePtrInternals ) + 2 * sizeof( MapInternals );
 			
 			//BitMapMemoryManager< Morton, Point, Inner, Leaf >::initInstance( expectedMemUsage );
-			initManager< Morton, Point, Node >( expectedMemUsage, TypeParam() );
+			//initManager< Morton, Point, Node >( expectedMemUsage, TypeParam() );
 			
 			PointVector points( nPoints );
 			for( int i = 0; i < nPoints; ++i )
@@ -423,7 +208,8 @@ namespace model
 			map[ morton0 ] = inner;
 			map[ morton1 ] = leaf;
 			
-			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
+			ASSERT_EQ( expectedMemUsage, AllocStatistics::totalAllocated() );
+			//ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 		
 		TYPED_TEST( MemoryManagerTest, AllocatorsMediumExtendedIndex )
@@ -451,7 +237,7 @@ namespace model
 										+ sizeof( PointPtr ) + 3 * sizeof( Index ) + 2 * sizeof( MortonPtrInternals )
 										+ 2 * sizeof( NodePtrInternals ) + 2 * sizeof( MapInternals );
 			
-			initManager< Morton, Point, Node >( expectedMemUsage, TypeParam() );
+			//initManager< Morton, Point, Node >( expectedMemUsage, TypeParam() );
 			
 			PointVector points( nPoints );
 			IndexVector indices( nPoints );
@@ -473,7 +259,8 @@ namespace model
 			map[ morton0 ] = inner;
 			map[ morton1 ] = leaf;
 			
-			ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
+			ASSERT_EQ( expectedMemUsage, AllocStatistics::totalAllocated() );
+			//ASSERT_EQ( SingletonMemoryManager::instance().usedMemory(), expectedMemUsage );
 		}
 	}
 }

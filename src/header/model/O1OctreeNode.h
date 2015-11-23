@@ -13,7 +13,8 @@ namespace model
 	/** Octree node that provide all operations in O(1) time. Expects that sibling groups are allocated continuously in
 	 * memory. Each node is responsable only for children resources.
 	 * @param Contents is the element type of the array member.
-	 * @param ContentsAlloc is the allocator used for Contents type. */
+	 * @param ContentsAlloc is the allocator used for Contents type. The default allocator provides multithreaded
+	 * environment support. */
 	template< typename Contents, typename ContentsAlloc = TbbAllocator< Contents > >
 	class O1OctreeNode
 	{
