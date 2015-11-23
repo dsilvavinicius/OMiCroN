@@ -17,6 +17,8 @@ namespace model
 	class OctreeNode
 	{
 	public:
+		OctreeNode() {}
+		
 		OctreeNode( const bool& isLeaf )
 		: m_isLeaf( isLeaf ) {}
 		
@@ -49,7 +51,7 @@ namespace model
 		size_t serialize( byte** serialization ) const;
 		
 		/** Deserializes a byte sequence into an OctreeNode. The pointer is owned by the caller. */
-		static OctreeNodePtr< Contents > deserialize( byte* serialization );
+		static OctreeNode deserialize( byte* serialization );
 		
 	private:
 		Contents m_contents;
@@ -112,17 +114,17 @@ namespace model
 	}
 	
 	template< typename Contents >
-	inline OctreeNodePtr< Contents > OctreeNode< Contents >::deserialize( byte* serialization )
+	inline OctreeNode< Contents > OctreeNode< Contents >::deserialize( byte* serialization )
 	{
 		bool flag;
 		size_t flagSize = sizeof( bool );
 		memcpy( &flag, serialization, flagSize );
 		byte* tempPtr = serialization + flagSize;
 		
-		auto node = makeManaged< OctreeNode< Contents > >( flag );
+		auto node = OctreeNode< Contents >( flag );
 		Contents contents;
 		Serializer::deserialize( tempPtr, contents );
-		node->setContents( contents );
+		node.setContents( contents );
 		return node;
 	}
 	

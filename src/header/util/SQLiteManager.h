@@ -31,8 +31,10 @@ namespace util
 		
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		
+		using IdNode = model::IdNode< MortonCode, OctreeNode >;
+		using IdNodeVector = vector< IdNode >;
 		using ManagedIdNode = model::ManagedIdNode< MortonCode, OctreeNode >;
-		using IdNodeVector = vector< ManagedIdNode >;
+		using ManagedIdNodeVector = vector< ManagedIdNode >;
 		using SQLiteQuery = util::SQLiteQuery< ManagedIdNode >;
 		using unordered_set = std::unordered_set< MortonInterval, hash< MortonInterval >,
 												  MortonIntervalComparator< MortonInterval > >;
@@ -66,8 +68,9 @@ namespace util
 		
 		/** Searches the node in the database, given its morton code.
 		 *	@param morton is the node morton code id.
-		 *	@returns the acquired node or nullptr if no node is found.*/
-		OctreeNode getNode(  const MortonCode& morton  );
+		 *	@returns a pair in which the first element indicates if the node was found and the second is the acquired
+		 * node or a default constructed node if not found. */
+		pair< bool, OctreeNode > getNode( const MortonCode& morton );
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param a is the minor boundary of the morton code closed interval.
@@ -82,13 +85,13 @@ namespace util
 		vector< OctreeNode > getNodes( const MortonCode& a, const MortonCode& b );
 		
 		/** Returns all nodes in database. */
-		IdNodeVector getManagedIdNodes();
+		ManagedIdNodeVector getManagedIdNodes();
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param a is the minor boundary of the morton code closed interval.
 		 *	@param b is the major boundary of the morton closed interval.
 		 *	@returns pairs of acquired nodes and morton id. The ownership of the node pointers is caller's. */
-		IdNodeVector getManagedIdNodes( const MortonCode& a, const MortonCode& b );
+		ManagedIdNodeVector getManagedIdNodes( const MortonCode& a, const MortonCode& b );
 		
 		/** Returns a query for all nodes in database. Appropriate for big queries. */
 		SQLiteQuery getManagedIdNodesQuery();
@@ -113,7 +116,7 @@ namespace util
 		/** Get results available from earlier async node requests.
 		 * @param maxResults maximum number of results to be returned.
 		 * @returns a vector which each entry represents the results of one async request. */
-		vector< IdNodeVector > getRequestResults( const unsigned int& maxResults );
+		vector< ManagedIdNodeVector > getRequestResults( const unsigned int& maxResults );
 		
 		string output();
 		
@@ -190,7 +193,7 @@ namespace util
 		mutex m_resultLock;
 		
 		// Requests result container.
-		queue< IdNodeVector > m_requestsResults;
+		queue< ManagedIdNodeVector > m_requestsResults;
 		
 		// Indicates that request were generated for requestManager.
 		condition_variable m_requestFlag;
@@ -240,7 +243,7 @@ namespace util
 					{
 						MortonInterval interval = *it;
 						
-						IdNodeVector idNodes = getManagedIdNodes( *interval.first, *interval.second );
+						ManagedIdNodeVector idNodes = getManagedIdNodes( *interval.first, *interval.second );
 						{
 							lock_guard< mutex > resultLock( m_resultLock );
 							m_requestsResults.push( idNodes );
@@ -326,20 +329,37 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	shared_ptr< OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getManagedNode( const MortonCode& morton )
+	pair< bool, OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeQuery, 1, morton.getBits() ), SQLITE_OK );
-		bool isNodeFound = safeStep( m_nodeQuery );
 		
-		OctreeNodePtr node = nullptr;
-		if( isNodeFound )
+		if( safeStep( m_nodeQuery ) )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
-			node = OctreeNode::deserialize( blob );
+			auto query = pair< bool, OctreeNode >( true, OctreeNode::deserialize( blob ) );
+			safeReset( m_nodeQuery );
+			return std::move( query );
 		}
 		
 		safeReset( m_nodeQuery );
-		return node;
+		return pair< bool, OctreeNode >( false, OctreeNode() );
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	shared_ptr< OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getManagedNode( const MortonCode& morton )
+	{
+		OctreeNodePtr node = nullptr;
+		
+		pair< bool, OctreeNode > query = getNode( morton );
+		
+		if( query.first )
+		{
+			return makeManaged< OctreeNode >( std::move( query.second ) );
+		}
+		else
+		{
+			return nullptr;
+		}
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -354,7 +374,7 @@ namespace util
 		while( safeStep( m_nodeIntervalQuery ) )
 		{
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalQuery, 0 );
-			OctreeNodePtr node = OctreeNode::deserialize( blob );
+			OctreeNodePtr node = makeManaged< OctreeNode >( OctreeNode::deserialize( blob ) );
 			nodes.push_back( node );
 		}
 		
@@ -367,7 +387,7 @@ namespace util
 	::getManagedIdNodes()
 	{
 		SQLiteQuery query = getManagedIdNodesQuery();
-		IdNodeVector queried;
+		ManagedIdNodeVector queried;
 		
 		ManagedIdNode idNode;
 		while( query.step( &idNode ) )
@@ -383,7 +403,7 @@ namespace util
 	::getManagedIdNodes( const MortonCode& a, const MortonCode& b )
 	{
 		SQLiteQuery query = getManagedIdNodesQuery( a, b );
-		IdNodeVector queried;
+		ManagedIdNodeVector queried;
 		
 		ManagedIdNode idNode;
 		while( query.step( &idNode ) )
@@ -453,7 +473,7 @@ namespace util
 	::getRequestResults( const unsigned int& maxResults )
 	{
 		lock_guard< mutex > locker( m_resultLock );
-		vector< IdNodeVector > results;
+		vector< ManagedIdNodeVector > results;
 		
 		for( unsigned int i = 0; i < maxResults && !m_requestsResults.empty(); ++i )
 		{
@@ -467,7 +487,7 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	string SQLiteManager< Point, MortonCode, OctreeNode >::output()
 	{
-		IdNodeVector nodes = getManagedIdNodes();
+		ManagedIdNodeVector nodes = getManagedIdNodes();
 		stringstream ss;
 		ss  << "=== SQLite ===" << endl << endl
 			<< "Size: " << nodes.size() << endl << endl;
@@ -640,7 +660,7 @@ namespace util
 			code->build( mortonBits );
 			
 			byte* blob = ( byte* ) sqlite3_column_blob( stmt, 1 );
-			OctreeNodePtr node = OctreeNode::deserialize( blob );
+			OctreeNodePtr node = makeManaged< OctreeNode >( OctreeNode::deserialize( blob ) );
 			
 			*queried = ManagedIdNode( code, node );
 		}

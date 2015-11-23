@@ -86,7 +86,7 @@ namespace model
 			
 			node.serialize( &bytes );
 			auto nodePtr = Node::deserialize( bytes );
-			Contents resultContents = nodePtr->getContents();
+			Contents resultContents = nodePtr.getContents();
 			
 			ASSERT_EQ( resultContents, contents );
 			Serializer::dispose( bytes );
@@ -109,7 +109,7 @@ namespace model
 			
 			node.serialize( &bytes );
 			auto nodePtr = Node::deserialize( bytes );
-			Contents resultContents = nodePtr->getContents();
+			Contents resultContents = nodePtr.getContents();
 			
 			ASSERT_EQ( resultContents, contents );
 			Serializer::dispose( bytes );
@@ -135,8 +135,8 @@ namespace model
 			byte* bytes;
 			node->serialize( &bytes );
 			
-			NodePtr deserializedNode = Node::deserialize( bytes );
-			PointVector deserializedPoints = deserializedNode->getContents();
+			auto deserializedNode = Node::deserialize( bytes );
+			PointVector deserializedPoints = deserializedNode.getContents();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )
@@ -170,8 +170,8 @@ namespace model
 			byte* bytes;
 			node->serialize( &bytes );
 			
-			NodePtr deserializedNode = Node::deserialize( bytes );
-			PointVector deserializedPoints = deserializedNode->getContents();
+			auto deserializedNode = Node::deserialize( bytes );
+			PointVector deserializedPoints = deserializedNode.getContents();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )
