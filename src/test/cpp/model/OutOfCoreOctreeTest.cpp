@@ -20,8 +20,8 @@ namespace model
 			using Point = typename OutOfCoreOctree::Point;
 			using OctreeNode = typename OutOfCoreOctree::OctreeNode;
 			using OctreeMapPtr = typename OutOfCoreOctree::OctreeMapPtr;
-			using IdNode = model::IdNode< MortonCode, OctreeNode >;
-			using IdNodeVector = model::IdNodeVector< MortonCode, OctreeNode >;
+			using IdNode = model::ManagedIdNode< MortonCode, OctreeNode >;
+			using IdNodeVector = model::ManagedIdNodeVector< MortonCode, OctreeNode >;
 			
 			OctreeMapPtr hierarchy = octree.getHierarchy();
 			SQLiteManager< Point, MortonCode, OctreeNode >& sqLite = octree.getSQLiteManager();

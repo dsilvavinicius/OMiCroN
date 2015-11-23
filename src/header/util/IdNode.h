@@ -10,13 +10,13 @@ using namespace std;
 namespace model
 {
 	template< typename MortonCode, typename OctreeNode >
-	using IdNode = pair< shared_ptr< MortonCode >, shared_ptr< OctreeNode > >;
+	using ManagedIdNode = pair< shared_ptr< MortonCode >, shared_ptr< OctreeNode > >;
 	
 	template< typename MortonCode, typename OctreeNode >
-	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode > >;
+	using ManagedIdNodeVector = vector< ManagedIdNode< MortonCode, OctreeNode > >;
 	
 	template< typename MortonCode, typename OctreeNode >
-	ostream& operator<<( ostream& out, const IdNode< MortonCode, OctreeNode >& idNode )
+	ostream& operator<<( ostream& out, const ManagedIdNode< MortonCode, OctreeNode >& idNode )
 	{
 		out << idNode.first->getPathToRoot( true );
 		return out;

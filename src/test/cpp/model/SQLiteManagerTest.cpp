@@ -117,7 +117,7 @@ namespace model
 			using Contents = IndexVector;
 			using Node = OctreeNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< Point, ShallowMortonCode, Node >;
-			using IdNode = model::IdNode< ShallowMortonCode, Node >;
+			using IdNode = model::ManagedIdNode< ShallowMortonCode, Node >;
 			
 			SPI_DefaultManager::initInstance( 1000000 );
 			
@@ -230,7 +230,7 @@ namespace model
 			using Contents = ExtendedPointVector;
 			using Node = OctreeNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, Node >;
-			using IdNode = model::IdNode< ShallowMortonCode, Node >;
+			using IdNode = model::ManagedIdNode< ShallowMortonCode, Node >;
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
@@ -280,11 +280,12 @@ namespace model
 		
 		template< typename Point, typename MortonCode, typename OctreeNode >
 		void checkRequestResults( util::SQLiteManager< Point, MortonCode, OctreeNode >& sqLite,
-								  const IdNode< MortonCode, OctreeNode >& code0, const IdNode< MortonCode, OctreeNode >& code1 )
+								  const ManagedIdNode< MortonCode, OctreeNode >& code0,
+							const ManagedIdNode< MortonCode, OctreeNode >& code1 )
 		{
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-			using IdNodeVector = model::IdNodeVector< MortonCode, OctreeNode >;
+			using IdNodeVector = model::ManagedIdNodeVector< MortonCode, OctreeNode >;
 			
 			vector< IdNodeVector > results = sqLite.getRequestResults( 10 );
 	
@@ -338,7 +339,7 @@ namespace model
 			using Node = OctreeNode< Contents >;
 			using NodePtr = shared_ptr< Node >;
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, Node >;
-			using IdNode = model::IdNode< ShallowMortonCode, Node >;
+			using IdNode = model::ManagedIdNode< ShallowMortonCode, Node >;
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			//SEV_Ken12MemoryManager::initInstance( 100000, 100000, 100000, 100000 );

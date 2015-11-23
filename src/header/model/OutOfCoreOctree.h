@@ -36,8 +36,8 @@ namespace model
 		using ParentOctree = model::FrontOctree< OctreeParams, Front, FrontInsertionContainer >;
 		using PlyPointReader = util::PlyPointReader< Point >;
 		using SQLiteManager = util::SQLiteManager< Point, MortonCode, OctreeNode >;
-		using IdNode = model::IdNode< MortonCode, OctreeNode >;
-		using IdNodeVector = model::IdNodeVector< MortonCode, OctreeNode >;
+		using IdNode = model::ManagedIdNode< MortonCode, OctreeNode >;
+		using IdNodeVector = model::ManagedIdNodeVector< MortonCode, OctreeNode >;
 		using SQLiteQuery = util::SQLiteQuery< IdNode >;
 		
 		/** Encapsulates memory management setup parameters. */
@@ -354,7 +354,7 @@ namespace model
 	}
 	
 	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
-	inline SQLiteQuery< IdNode< typename OctreeParams::Morton, typename OctreeParams::Node > >
+	inline SQLiteQuery< ManagedIdNode< typename OctreeParams::Morton, typename OctreeParams::Node > >
 	OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >
 	::getRangeInDB(  const MortonCodePtr& a, const MortonCodePtr& b  )
 	{
