@@ -68,10 +68,10 @@ namespace model
 			
 			sqLite.insertNode( innerCode, innerNode );
 			
-			NodePtr queriedNode = sqLite.getNode( leafCode );
+			NodePtr queriedNode = sqLite.getManagedNode( leafCode );
 			ASSERT_EQ( queriedNode->getContents(), leafPoints );
 			
-			queriedNode = sqLite.getNode( innerCode );
+			queriedNode = sqLite.getManagedNode( innerCode );
 			ASSERT_EQ( queriedNode->getContents(), innerPoints );
 		}
 		
@@ -101,7 +101,7 @@ namespace model
 			
 			sqLite.insertNode( code, node );
 			
-			NodePtr queriedNode = sqLite.getNode( code );
+			NodePtr queriedNode = sqLite.getManagedNode( code );
 			
 			float epsilon = 1.e-15;
 			PointVector queriedPoints = queriedNode->getContents();
@@ -142,7 +142,7 @@ namespace model
 			sqLite.insertNode( code0, node0 );
 			sqLite.insertNode( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getIdNodes( code0, intervalEnd );
+			vector< IdNode > queried = sqLite.getManagedIdNodes( code0, intervalEnd );
 			
 			ShallowMortonCode queriedId = *queried[ 0 ].first;
 			ASSERT_EQ( queriedId, code0 );
@@ -178,7 +178,7 @@ namespace model
 			sqLite.insertNode( code3, node3 );
 			
 			sqLite.deleteNodes( code1, code2 );
-			vector< NodePtr > queried = sqLite.getNodes( code0, code3 );
+			vector< NodePtr > queried = sqLite.getManagedNodes( code0, code3 );
 			
 			ASSERT_EQ( queried.size(), 2 );
 			ASSERT_EQ( queried[ 0 ]->getContents(), Contents( 3, 0 ) );
@@ -214,7 +214,7 @@ namespace model
 			
 			sqLite.insertNode( code, node );
 			
-			NodePtr queriedNode = sqLite.getNode( code );
+			NodePtr queriedNode = sqLite.getManagedNode( code );
 			
 			float epsilon = 1.e-15;
 			PointVector queriedPoints = queriedNode->getContents();
@@ -263,11 +263,11 @@ namespace model
 			sqLite.insertNode( code0, node0 );
 			sqLite.insertNode( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getIdNodes( code0, code0 );
+			vector< IdNode > queried = sqLite.getManagedIdNodes( code0, code0 );
 			ASSERT_EQ( queried.size(), 1 );
 			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
-			queried = sqLite.getIdNodes( code0, intervalEnd );
+			queried = sqLite.getManagedIdNodes( code0, intervalEnd );
 			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
 			float epsilon = 1.e-15;

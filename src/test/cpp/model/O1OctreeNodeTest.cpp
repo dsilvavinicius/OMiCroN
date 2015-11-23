@@ -2,8 +2,10 @@
 #include <iostream>
 
 #include "O1OctreeNode.h"
+#include "SQLiteManager.h"
 
 using namespace std;
+using namespace util;
 
 namespace model
 {
@@ -57,7 +59,7 @@ namespace model
 			ASSERT_EQ( AllocStatistics::totalAllocated(), 0 );
 			
 			{
-				int nPoints = 10;
+				int nPoints = 1000;
 				PointArray points( nPoints ); initPoints( points, 0 );
 				
 				int nSiblings = 3;
@@ -105,9 +107,33 @@ namespace model
 			ASSERT_EQ( AllocStatistics::totalAllocated(), 0 );
 		}
 		
-		/*TYPED_TEST( O1OctreeNodeTest, Serialization )
+		TYPED_TEST( O1OctreeNodeTest, Serialization )
 		{
+			/*
+			using PointPtr = shared_ptr< TypeParam >;
+			using PointArray = Array< PointPtr >;
+			using Node = O1OctreeNode< PointPtr >;
+			using NodePtr = shared_ptr< Node >;
+			using Morton = ShallowMortonCode;
+			using SqlManager = SQLiteManager< TypeParam, Morton, Node >;
 			
-		}*/
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				int nPoints = 1000;
+				PointArray points( nPoints ); initPoints( points, nPoints );
+				Node node( points, true );
+				Morton code;
+				code.build( 1, 2, 3, 4 );
+				
+				SqlManager sql( "Octree.db" );
+				sql.insertNode( code, node );
+				
+				NodePtr queried = sql.getManagedNode( code );
+				ASSERT_EQ( node, *queried );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );*/
+		}
 	}
 }

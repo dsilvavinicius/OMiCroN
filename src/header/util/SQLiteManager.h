@@ -62,25 +62,25 @@ namespace util
 		/** Searches the node in the database, given its morton code.
 		 *	@param morton is the node morton code id.
 		 *	@returns the acquired node or nullptr if no node is found. The pointer ownership is caller's. */
-		OctreeNodePtr getNode( const MortonCode& morton );
+		OctreeNodePtr getManagedNode( const MortonCode& morton );
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param a is the minor boundary of the morton code closed interval.
 		 *	@param b is the major boundary of the morton closed interval.
 		 *	@returns the acquired nodes. The ownership of the node pointers is caller's. */
-		vector< OctreeNodePtr > getNodes( const MortonCode& a, const MortonCode& b );
+		vector< OctreeNodePtr > getManagedNodes( const MortonCode& a, const MortonCode& b );
 		
 		/** Returns all nodes in database. */
-		IdNodeVector getIdNodes();
+		IdNodeVector getManagedIdNodes();
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b].
 		 *	@param a is the minor boundary of the morton code closed interval.
 		 *	@param b is the major boundary of the morton closed interval.
 		 *	@returns pairs of acquired nodes and morton id. The ownership of the node pointers is caller's. */
-		IdNodeVector getIdNodes( const MortonCode& a, const MortonCode& b );
+		IdNodeVector getManagedIdNodes( const MortonCode& a, const MortonCode& b );
 		
 		/** Returns a query for all nodes in database. Appropriate for big queries. */
-		SQLiteQuery getIdNodesQuery();
+		SQLiteQuery getManagedIdNodesQuery();
 		
 		/** Searches for a range of nodes in the database, given the morton code interval [a, b]. This version returns
 		 * a query for stepping and should be used for probable big queries or to avoid the performance penalty of
@@ -88,7 +88,7 @@ namespace util
 		 *	@param a is the minor boundary of the morton code closed interval.
 		 *	@param b is the major boundary of the morton closed interval.
 		 *	@returns a query that can be iterated for IdNodeAcquisition. */
-		SQLiteQuery getIdNodesQuery( const MortonCode& a, const MortonCode& b );
+		SQLiteQuery getManagedIdNodesQuery( const MortonCode& a, const MortonCode& b );
 		
 		/** Deletes a range of nodes in the database, given the morton code interval [ a, b ]
 		 * @param a is the minor boundary of the morton code closed interval.
@@ -229,7 +229,7 @@ namespace util
 					{
 						MortonInterval interval = *it;
 						
-						IdNodeVector idNodes = getIdNodes( *interval.first, *interval.second );
+						IdNodeVector idNodes = getManagedIdNodes( *interval.first, *interval.second );
 						{
 							lock_guard< mutex > resultLock( m_resultLock );
 							m_requestsResults.push( idNodes );
@@ -315,7 +315,7 @@ namespace util
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	shared_ptr< OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getNode( const MortonCode& morton )
+	shared_ptr< OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >::getManagedNode( const MortonCode& morton )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeQuery, 1, morton.getBits() ), SQLITE_OK );
 		bool isNodeFound = safeStep( m_nodeQuery );
@@ -333,7 +333,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	vector< shared_ptr< OctreeNode > > SQLiteManager< Point, MortonCode, OctreeNode >
-	::getNodes( const MortonCode& a, const MortonCode& b )
+	::getManagedNodes( const MortonCode& a, const MortonCode& b )
 	{
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 1, a.getBits() ), SQLITE_OK );
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 2, b.getBits() ), SQLITE_OK );
@@ -353,9 +353,9 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	IdNodeVector< MortonCode, OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >
-	::getIdNodes()
+	::getManagedIdNodes()
 	{
-		SQLiteQuery query = getIdNodesQuery();
+		SQLiteQuery query = getManagedIdNodesQuery();
 		IdNodeVector queried;
 		
 		IdNode idNode;
@@ -369,9 +369,9 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	IdNodeVector< MortonCode, OctreeNode > SQLiteManager< Point, MortonCode, OctreeNode >
-	::getIdNodes( const MortonCode& a, const MortonCode& b )
+	::getManagedIdNodes( const MortonCode& a, const MortonCode& b )
 	{
-		SQLiteQuery query = getIdNodesQuery( a, b );
+		SQLiteQuery query = getManagedIdNodesQuery( a, b );
 		IdNodeVector queried;
 		
 		IdNode idNode;
@@ -385,7 +385,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	SQLiteQuery< IdNode< MortonCode, OctreeNode > > SQLiteManager< Point, MortonCode, OctreeNode >
-	::getIdNodesQuery()
+	::getManagedIdNodesQuery()
 	{
 		SQLiteQuery query(
 			[ & ] ( IdNode* queried )
@@ -400,7 +400,7 @@ namespace util
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	SQLiteQuery< IdNode< MortonCode, OctreeNode > > SQLiteManager< Point, MortonCode, OctreeNode >
-	::getIdNodesQuery( const MortonCode& a, const MortonCode& b )
+	::getManagedIdNodesQuery( const MortonCode& a, const MortonCode& b )
 	{
 		assert( a <= b && "a <= b should holds in order to define an interval." );
 		
@@ -456,7 +456,7 @@ namespace util
 	template< typename Point, typename MortonCode, typename OctreeNode >
 	string SQLiteManager< Point, MortonCode, OctreeNode >::output()
 	{
-		IdNodeVector nodes = getIdNodes();
+		IdNodeVector nodes = getManagedIdNodes();
 		stringstream ss;
 		ss  << "=== SQLite ===" << endl << endl
 			<< "Size: " << nodes.size() << endl << endl;

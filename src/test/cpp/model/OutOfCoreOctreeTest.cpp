@@ -28,7 +28,7 @@ namespace model
 			
 			//cout << "DB after octree creation: " << endl << sqLite.output< PointVector >() << endl;
 			
-			IdNodeVector nodes = sqLite.getIdNodes();
+			IdNodeVector nodes = sqLite.getManagedIdNodes();
 			
 			for( IdNode node : nodes )
 			{

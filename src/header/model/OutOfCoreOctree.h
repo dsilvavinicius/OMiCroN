@@ -306,7 +306,7 @@ namespace model
 		}
 		else
 		{
-			OctreeNodePtr node = m_sqLite.getNode( *code );
+			OctreeNodePtr node = m_sqLite.getManagedNode( *code );
 			( *hierarchy )[ code ] = node;
 			if( node )
 			{
@@ -358,7 +358,7 @@ namespace model
 	OutOfCoreOctree< OctreeParams, Front, FrontInsertionContainer >
 	::getRangeInDB(  const MortonCodePtr& a, const MortonCodePtr& b  )
 	{
-		return m_sqLite.getIdNodesQuery( *a, *b );
+		return m_sqLite.getManagedIdNodesQuery( *a, *b );
 	}
 	
 	template< typename OctreeParams, typename Front, typename FrontInsertionContainer >
