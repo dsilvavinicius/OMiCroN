@@ -13,13 +13,14 @@ namespace model
 	using IdNode = pair< MortonCode, OctreeNode >;
 	
 	template< typename MortonCode, typename OctreeNode >
-	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode > >;
+	using IdNodeVector = vector< IdNode< MortonCode, OctreeNode >, ManagedAllocator< IdNode< MortonCode, OctreeNode > > >;
 	
 	template< typename MortonCode, typename OctreeNode >
 	using ManagedIdNode = pair< shared_ptr< MortonCode >, shared_ptr< OctreeNode > >;
 	
 	template< typename MortonCode, typename OctreeNode >
-	using ManagedIdNodeVector = vector< ManagedIdNode< MortonCode, OctreeNode > >;
+	using ManagedIdNodeVector = vector< ManagedIdNode< MortonCode, OctreeNode >,
+										ManagedAllocator< ManagedIdNode< MortonCode, OctreeNode > > >;
 	
 	template< typename MortonCode, typename OctreeNode >
 	ostream& operator<<( ostream& out, const ManagedIdNode< MortonCode, OctreeNode >& idNode )

@@ -785,7 +785,8 @@ namespace model
 		releaseNodesAtFrontTracking();
 		
 		// Add requested nodes to hierarchy.
-		vector< IdNodeVector > queries = m_sqLite.getRequestResults( m_memSetup.m_maxNodeRequestsPerFrame );
+		typename SQLiteManager::QueryResultsVector queries
+			= m_sqLite.getRequestResults( m_memSetup.m_maxNodeRequestsPerFrame );
 		OctreeMapPtr hierarchy = ParentOctree::m_hierarchy;
 		
 		for( IdNodeVector query : queries )

@@ -142,7 +142,7 @@ namespace model
 			sqLite.insertNode( code0, node0 );
 			sqLite.insertNode( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getManagedIdNodes( code0, intervalEnd );
+			SQLiteManager::ManagedIdNodeVector queried = sqLite.getManagedIdNodes( code0, intervalEnd );
 			
 			ShallowMortonCode queriedId = *queried[ 0 ].first;
 			ASSERT_EQ( queriedId, code0 );
@@ -178,7 +178,7 @@ namespace model
 			sqLite.insertNode( code3, node3 );
 			
 			sqLite.deleteNodes( code1, code2 );
-			vector< NodePtr > queried = sqLite.getManagedNodes( code0, code3 );
+			SQLiteManager::NodePtrVector queried = sqLite.getManagedNodes( code0, code3 );
 			
 			ASSERT_EQ( queried.size(), 2 );
 			ASSERT_EQ( queried[ 0 ]->getContents(), Contents( 3, 0 ) );
@@ -230,7 +230,6 @@ namespace model
 			using Contents = ExtendedPointVector;
 			using Node = OctreeNode< Contents >;
 			using SQLiteManager = util::SQLiteManager< ExtendedPoint, ShallowMortonCode, Node >;
-			using IdNode = model::ManagedIdNode< ShallowMortonCode, Node >;
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
@@ -263,7 +262,7 @@ namespace model
 			sqLite.insertNode( code0, node0 );
 			sqLite.insertNode( code1, node1 );
 			
-			vector< IdNode > queried = sqLite.getManagedIdNodes( code0, code0 );
+			SQLiteManager::ManagedIdNodeVector queried = sqLite.getManagedIdNodes( code0, code0 );
 			ASSERT_EQ( queried.size(), 1 );
 			ASSERT_EQ( *queried[ 0 ].first, code0 );
 			
@@ -285,12 +284,12 @@ namespace model
 		{
 			using PointPtr = shared_ptr< Point >;
 			using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-			using IdNodeVector = model::ManagedIdNodeVector< MortonCode, OctreeNode >;
+			using SQLite = util::SQLiteManager< Point, MortonCode, OctreeNode >;
 			
-			vector< IdNodeVector > results = sqLite.getRequestResults( 10 );
+			typename SQLite::QueryResultsVector results = sqLite.getRequestResults( 10 );
 	
 			float epsilon = 1.e-15;
-			for( IdNodeVector queryResult : results )
+			for( typename SQLite::ManagedIdNodeVector queryResult : results )
 			{
 				int resultSize = queryResult.size();
 				ASSERT_TRUE( resultSize == 1 || resultSize == 2 );
