@@ -134,7 +134,7 @@ namespace model
 			return true;
 		}
 		
-		size_t serialize( byte** serialization )
+		size_t serialize( byte** serialization ) const
 		{
 			return serialize( m_array, serialization );
 		}
@@ -173,7 +173,7 @@ namespace model
 		}
 		
 		template< typename U >
-		size_t serialize( shared_ptr< U >*, byte** serialization )
+		size_t serialize( shared_ptr< U >*, byte** serialization ) const
 		{
 			size_t countSize = sizeof( decltype( m_size ) );
 			

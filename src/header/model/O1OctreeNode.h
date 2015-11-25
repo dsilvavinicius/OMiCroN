@@ -47,7 +47,7 @@ namespace model
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
 		 * resources. */
-		O1OctreeNode( O1OctreeNode& other )
+		O1OctreeNode( const O1OctreeNode& other )
 		: m_contents( other.m_contents ),
 		m_children( other.m_children ),
 		m_parent( other.m_parent ),
@@ -56,7 +56,7 @@ namespace model
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
 		 * resources. */
-		O1OctreeNode& operator=( O1OctreeNode& other )
+		O1OctreeNode& operator=( const O1OctreeNode& other )
 		{
 			m_contents = other.m_contents;
 			m_children = other.m_children;
@@ -72,7 +72,7 @@ namespace model
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf )
 		{
-			other.parent = nullptr;
+			other.m_parent = nullptr;
 		}
 		
 		O1OctreeNode& operator=( O1OctreeNode&& other )

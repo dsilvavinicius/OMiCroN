@@ -109,11 +109,9 @@ namespace model
 		
 		TYPED_TEST( O1OctreeNodeTest, Serialization )
 		{
-			/*
 			using PointPtr = shared_ptr< TypeParam >;
 			using PointArray = Array< PointPtr >;
 			using Node = O1OctreeNode< PointPtr >;
-			using NodePtr = shared_ptr< Node >;
 			using Morton = ShallowMortonCode;
 			using SqlManager = SQLiteManager< TypeParam, Morton, Node >;
 			
@@ -129,11 +127,22 @@ namespace model
 				SqlManager sql( "Octree.db" );
 				sql.insertNode( code, node );
 				
-				NodePtr queried = sql.getManagedNode( code );
-				ASSERT_EQ( node, *queried );
+				pair< bool, Node > queried = sql.getNode( code );
+				ASSERT_TRUE( queried.first );
+				ASSERT_EQ( node.isLeaf(), queried.second.isLeaf() );
+				
+				PointArray expectedPoints = node.getContents();
+				PointArray serializedPoints = queried.second.getContents();
+				
+				ASSERT_EQ( expectedPoints.size(), serializedPoints.size() );
+				
+				for( int i = 0; i < expectedPoints.size(); ++i )
+				{
+					ASSERT_TRUE( expectedPoints[ i ]->equal( *serializedPoints[ i ], 1.e-15 ) );
+				}
 			}
 			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );*/
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 	}
 }

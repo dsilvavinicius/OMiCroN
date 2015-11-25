@@ -355,7 +355,7 @@ namespace util
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeQuery, 0 );
 			auto query = pair< bool, OctreeNode >( true, OctreeNode::deserialize( blob ) );
 			safeReset( m_nodeQuery );
-			return std::move( query );
+			return query;
 		}
 		
 		safeReset( m_nodeQuery );
