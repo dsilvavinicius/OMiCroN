@@ -386,7 +386,7 @@ namespace util
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 1, a.getBits() ), SQLITE_OK );
 		checkReturnCode( sqlite3_bind_int64( m_nodeIntervalQuery, 2, b.getBits() ), SQLITE_OK );
 		
-		vector< OctreeNode > nodes;
+		vector< OctreeNode > tempNodes;
 		
 		int nNodes = 0;
 		while( safeStep( m_nodeIntervalQuery ) )
@@ -394,14 +394,14 @@ namespace util
 			++nNodes;
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalQuery, 0 );
 			OctreeNode node = OctreeNode::deserialize( blob );
-			nodes.push_back( node );
+			tempNodes.push_back( node );
 		}
 		
-		/*model::Array
+		NodeArray nodes( nNodes );
 		for( int i = 0; i < nNodes; ++i )
 		{
-			
-		}*/
+			nodes[ i ] = tempNodes[ i ];
+		}
 		
 		safeReset( m_nodeIntervalQuery );
 		return nodes;

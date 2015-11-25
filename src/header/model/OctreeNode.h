@@ -102,7 +102,7 @@ namespace model
 		size_t flagSize = sizeof( bool );
 		size_t nodeSize = flagSize + contentSize;
 		
-		*serialization = new byte[ nodeSize ];
+		*serialization = Serializer::newByteArray( nodeSize );
 		byte* tempPtr = *serialization;
 		memcpy( tempPtr, &flag, flagSize );
 		tempPtr += flagSize;

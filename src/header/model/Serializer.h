@@ -29,7 +29,10 @@ namespace model
 		template< typename T >
 		static void deserialize( byte* serialization, Vector< T >& out );
 		
-		/** Disposes the byte sequence created by serialize(). */
+		/** Creates a byte array for serialization purposes. */
+		static byte* newByteArray( const size_t& size ) { return new byte[ size ]; }
+		
+		/** Disposes the byte sequence created by newByteArray(). */
 		static void dispose( byte* serialization ) { delete[] serialization; }
 	};
 	
@@ -42,7 +45,7 @@ namespace model
 		size_t vecSize = count * elemSize;
 		size_t serializationSize = countSize + vecSize;
 		
-		*serialization = new byte[ serializationSize ];
+		*serialization = newByteArray( serializationSize );
 		byte* tempPointer = *serialization;
 		
 		memcpy( tempPointer, &count, countSize );
@@ -66,7 +69,7 @@ namespace model
 			size_t vecSize = count * elemSize;
 			size_t serializationSize = countSize + vecSize;
 			
-			*serialization = new byte[ serializationSize ];
+			*serialization = newByteArray( serializationSize );
 			byte* tempPointer = *serialization;
 			memcpy( tempPointer, &count, countSize );
 			tempPointer += countSize;
@@ -87,7 +90,7 @@ namespace model
 		else
 		{
 			size_t serializationSize = countSize;
-			*serialization = new byte[ serializationSize ];
+			*serialization = newByteArray( serializationSize );
 			memcpy( *serialization, &count, countSize );
 			
 			return serializationSize;
@@ -108,7 +111,7 @@ namespace model
 			size_t vecSize = count * elemSize;
 			size_t serializationSize = countSize + vecSize;
 			
-			*serialization = new byte[ serializationSize ];
+			*serialization = newByteArray( serializationSize );
 			byte* tempPointer = *serialization;
 			memcpy( tempPointer, &count, countSize );
 			tempPointer += countSize;
@@ -129,7 +132,7 @@ namespace model
 		else
 		{
 			size_t serializationSize = countSize;
-			*serialization = new byte[ serializationSize ];
+			*serialization = newByteArray( serializationSize );
 			memcpy( *serialization, &count, countSize );
 			
 			return serializationSize;

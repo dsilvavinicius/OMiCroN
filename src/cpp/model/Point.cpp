@@ -1,5 +1,6 @@
 #include "Point.h"
 #include <MemoryManager.h>
+#include <Serializer.h>
 
 namespace model
 {
@@ -131,7 +132,7 @@ namespace model
 		size_t sizeOfVec3 = sizeof( Vec3 );
 		size_t sizeOfPoint = 2 * sizeOfVec3;
 		
-		*serialization = new byte[ sizeOfPoint ];
+		*serialization = Serializer::newByteArray( sizeOfPoint );
 		memcpy( *serialization, &m_color ,sizeOfVec3 );
 		memcpy( *serialization + sizeOfVec3, &m_pos, sizeOfVec3 );
 		

@@ -1,5 +1,6 @@
 #include "ExtendedPoint.h"
 #include <MemoryManager.h>
+#include <Serializer.h>
 
 namespace model
 {
@@ -132,7 +133,7 @@ namespace model
 		Vec3 pos = Point::m_pos;
 		Vec3 normal = m_normal;
 		
-		*serialization = new byte[ sizeOfPoint ];
+		*serialization = Serializer::newByteArray( sizeOfPoint );
 		memcpy( *serialization, &color ,sizeOfVec3 );
 		memcpy( *serialization + sizeOfVec3, &pos, sizeOfVec3 );
 		memcpy( *serialization + 2 * sizeOfVec3, &normal, sizeOfVec3 );

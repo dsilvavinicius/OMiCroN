@@ -172,12 +172,12 @@ namespace model
 	inline size_t O1OctreeNode< Contents, ContentsAlloc >::serialize( byte** serialization ) const
 	{
 		byte* content;
-		size_t contentSize = Serializer::serialize( getContents(), &content );
+		size_t contentSize = getContents().serialize( &content );
 		
 		size_t flagSize = sizeof( bool );
 		size_t nodeSize = flagSize + contentSize;
 		
-		*serialization = new byte[ nodeSize ];
+		*serialization = Serializer::newByteArray( nodeSize );
 		byte* tempPtr = *serialization;
 		memcpy( tempPtr, &m_isLeaf, flagSize );
 		tempPtr += flagSize;
@@ -197,8 +197,7 @@ namespace model
 		memcpy( &flag, serialization, flagSize );
 		byte* tempPtr = serialization + flagSize;
 		
-		Array< Contents > contents;
-		Serializer::deserialize( tempPtr, contents );
+		auto contents = Array< Contents >::deserialize( tempPtr );
 		
 		auto node = O1OctreeNode< Contents, ContentsAlloc >( contents, flag );
 		return node;

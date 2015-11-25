@@ -2,6 +2,7 @@
 #define ARRAY_H
 #include "Stream.h"
 #include "TbbAllocator.h"
+#include "Serializer.h"
 
 namespace model
 {
@@ -133,6 +134,24 @@ namespace model
 			return true;
 		}
 		
+		size_t serialize( byte** serialization )
+		{
+			return serialize( m_array, serialization );
+		}
+		
+		static Array deserialize( byte* serialization )
+		{
+			uint count;
+			size_t countSize = sizeof( m_size );
+			memcpy( &count, serialization, countSize );
+			serialization += countSize;
+			
+			Array array( count );
+			array.deserialize( array.m_array, serialization );
+			
+			return array;
+		}
+		
 		uint size() const { return m_size; }
 		
 		T* data() { return m_array; }
@@ -150,6 +169,61 @@ namespace model
 			for( int i = 0; i < m_size; ++i )
 			{
 				A().construct( m_array + i );
+			}
+		}
+		
+		template< typename U >
+		size_t serialize( shared_ptr< U >*, byte** serialization )
+		{
+			size_t countSize = sizeof( decltype( m_size ) );
+			
+			if( m_size > 0 )
+			{
+				byte* elemBytes;
+				size_t elemSize = m_array[ 0 ]->serialize( &elemBytes );
+				
+				size_t vecSize = m_size * elemSize;
+				size_t serializationSize = countSize + vecSize;
+				
+				*serialization = Serializer::newByteArray( serializationSize );
+				byte* tempPointer = *serialization;
+				memcpy( tempPointer, &m_size, countSize );
+				tempPointer += countSize;
+				memcpy( tempPointer, elemBytes, elemSize );
+				Serializer::dispose( elemBytes );
+				
+				for( int i = 1; i < m_size; ++i )
+				{
+					shared_ptr< U > elem = m_array[ i ];
+					tempPointer += elemSize;
+					
+					elem->serialize( &elemBytes );
+					memcpy( tempPointer, elemBytes, elemSize );
+					Serializer::dispose( elemBytes );
+				}
+				
+				return serializationSize;
+			}
+			else
+			{
+				size_t serializationSize = countSize;
+				*serialization = Serializer::newByteArray( serializationSize );
+				memcpy( *serialization, &m_size, countSize );
+				
+				return serializationSize;
+			}
+		}
+		
+		template< typename U >
+		inline void deserialize( shared_ptr< U >*, byte* serialization )
+		{
+			byte* tempPtr0 = serialization;
+			byte* tempPtr1 = nullptr;
+			
+			for( int i = 0; i < m_size; ++i )
+			{
+				m_array[ i ] = makeManaged< U >( tempPtr0, tempPtr1 );
+				swap( tempPtr0, tempPtr1 );
 			}
 		}
 		
