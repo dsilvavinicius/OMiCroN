@@ -107,6 +107,24 @@ namespace model
 			ASSERT_EQ( AllocStatistics::totalAllocated(), 0 );
 		}
 		
+		template< typename N >
+		void assertNode( const N& expected, const N& other )
+		{
+			using PointArray = decltype( expected.getContents() );
+			
+			ASSERT_EQ( expected.isLeaf(), other.isLeaf() );
+			
+			PointArray expectedPoints = expected.getContents();
+			PointArray otherPoints = other.getContents();
+			
+			ASSERT_EQ( expectedPoints.size(), otherPoints.size() );
+			
+			for( int i = 0; i < expectedPoints.size(); ++i )
+			{
+				ASSERT_TRUE( expectedPoints[ i ]->equal( *otherPoints[ i ], 1.e-15 ) );
+			}
+		}
+		
 		TYPED_TEST( O1OctreeNodeTest, Serialization )
 		{
 			using PointPtr = shared_ptr< TypeParam >;
@@ -119,27 +137,29 @@ namespace model
 			
 			{
 				int nPoints = 1000;
-				PointArray points( nPoints ); initPoints( points, nPoints );
-				Node node( points, true );
-				Morton code;
-				code.build( 1, 2, 3, 4 );
+				
+				PointArray points0( nPoints ); initPoints( points0, 0 );
+				Node node0( points0, true );
+				Morton code0; code0.build( 0x1000 );
+				
+				PointArray points1( nPoints ); initPoints( points1, nPoints );
+				Node node1( points0, true );
+				Morton code1; code1.build( 0x1001 );
 				
 				SqlManager sql( "Octree.db" );
-				sql.insertNode( code, node );
+				sql.insertNode( code0, node0 );
+				sql.insertNode( code1, node1 );
 				
-				pair< bool, Node > queried = sql.getNode( code );
+				pair< bool, Node > queried = sql.getNode( code0 );
 				ASSERT_TRUE( queried.first );
-				ASSERT_EQ( node.isLeaf(), queried.second.isLeaf() );
 				
-				PointArray expectedPoints = node.getContents();
-				PointArray serializedPoints = queried.second.getContents();
+				assertNode( node0, queried.second );
 				
-				ASSERT_EQ( expectedPoints.size(), serializedPoints.size() );
+				Array< Node > queriedNodes = sql.getNodes( code0, code1 );
 				
-				for( int i = 0; i < expectedPoints.size(); ++i )
-				{
-					ASSERT_TRUE( expectedPoints[ i ]->equal( *serializedPoints[ i ], 1.e-15 ) );
-				}
+				ASSERT_EQ( 2, queriedNodes.size() );
+				assertNode( node0, queriedNodes[ 0 ] );
+				assertNode( node1, queriedNodes[ 1 ] );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
