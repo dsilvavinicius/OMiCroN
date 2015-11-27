@@ -3,44 +3,14 @@
 
 #include "MortonCode.h"
 #include "PlyPointReader.h"
-#include <Profiler.h>
+#include "OctreeDimensions.h"
+#include "Profiler.h"
 
 using namespace std;
 using namespace util;
 
 namespace model
 {
-	/** Compare point by their morton codes. */
-	template< typename M, typename P >
-	class PointComp
-	{
-	public:
-		PointComp( const Vec3& origin, const Vec3& leafSize, uint zCurveLvl )
-		: m_origin( m_origin ),
-		m_leafSize( leafSize ),
-		m_zCurveLvl( zCurveLvl )
-		{}
-		
-		M calcMorton( const P& point ) const
-		{
-			const Vec3& pos = point.getPos();
-			Vec3 index = ( pos - m_origin ) / m_leafSize;
-			M code;
-			code.build( index.x, index.y, index.z, m_zCurveLvl );
-			
-			return code;
-		}
-		
-		bool operator()( const P& p0, const P& p1 )
-		{
-			return calcMorton( p0 ) < calcMorton( p1 );
-		}
-		
-		Vec3 m_origin;
-		Vec3 m_leafSize;
-		uint m_zCurveLvl;
-	};
-	
 	/** Sorts a point .ply file in z order.
 	 * @param M is the MortonCode type.
 	 * @param P is the Point type. */
@@ -49,12 +19,12 @@ namespace model
 	{
 	public:
 		using Reader = PlyPointReader< P >;
-		using PointComp = model::PointComp< M, P >;
+		using OctreeDim = model::OctreeDimensions< M, P >;
 		
-		PointSorter( const string& input, uint zCurveLvl );
+		PointSorter( const string& input, uint leafLvl );
 		~PointSorter();
 		void sort( const string& outFilename );
-		PointComp& comparator() { return *m_comp; }
+		OctreeDim& comparator() { return m_comp; }
 		
 	private:
 		M calcMorton( const P& point );
@@ -67,11 +37,11 @@ namespace model
 		P* m_points;
 		long m_nPoints;
 		
-		PointComp* m_comp;
+		OctreeDim m_comp;
 	};
 	
 	template< typename M, typename P >
-	PointSorter< M, P >::PointSorter( const string& input, uint zCurveLvl )
+	PointSorter< M, P >::PointSorter( const string& input, uint leafLvl )
 	{
 		m_reader = new Reader( input );
 		m_nPoints = m_reader->getNumPoints();
@@ -101,8 +71,9 @@ namespace model
 		
 		cout << "Reading time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
-		Vec3 leafSize = ( maxCoords - origin ) * ( ( Float )1 / ( ( unsigned long long )1 << zCurveLvl ) );
-		m_comp = new PointComp( origin, leafSize, zCurveLvl );
+		Vec3 octreeSize = maxCoords - origin;
+		Vec3 leafSize = octreeSize * ( ( Float )1 / ( ( unsigned long long )1 << leafLvl ) );
+		m_comp.init( origin, octreeSize, leafSize, leafLvl );
 	}
 	
 	template< typename M, typename P >
@@ -110,7 +81,6 @@ namespace model
 	{
 		free( m_points );
 		delete m_reader;
-		delete m_comp;
 	}
 	
 	template< typename M, typename P >
@@ -119,7 +89,7 @@ namespace model
 		cout << "In-memory sort. " << endl << endl;
 		auto start = Profiler::now();
 		
-		std::sort( m_points, m_points + m_nPoints, *m_comp );
+		std::sort( m_points, m_points + m_nPoints, m_comp );
 		
 		cout << "Sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		

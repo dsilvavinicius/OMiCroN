@@ -44,7 +44,7 @@ namespace model
 				}
 			);
 			
-			typename PointSorter::PointComp comp = sorter.comparator();
+			typename PointSorter::OctreeDim comp = sorter.comparator();
 			
 			for( int i = 0; i < sortedPoints.size() - 1; ++i )
 			{

@@ -107,6 +107,9 @@ namespace model
 		/** Gets the last code of a given lvl. */
 		static MortonCode< T > getLvlLast( const unsigned int& lvl );
 		
+		/** Returns the maximum allowed lvl for this MortonCode type. */
+		static uint maxLvl(); 
+		
 		template< typename Precision >
 		friend ostream& operator<<( ostream& out, const MortonCode<Precision>& dt );
 		
@@ -413,6 +416,12 @@ namespace model
 		return x;
 	}
 	
+	template<>
+	inline uint MortonCode< uint >::maxLvl()
+	{
+		return 10;
+	}
+	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
 	template <>
@@ -439,6 +448,12 @@ namespace model
 		x = (x ^ x >> 32UL) & 0x00000000001fffffUL;
 		
 		return x;
+	}
+	
+	template<>
+	inline uint MortonCode< ulong >::maxLvl()
+	{
+		return 21;
 	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
