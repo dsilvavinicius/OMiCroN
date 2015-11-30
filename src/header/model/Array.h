@@ -39,6 +39,18 @@ namespace model
 					"Array::Array()" );
 		}
 		
+		/** Moves each vector element to the array, clearing up v afterwards. */
+		Array( vector< T >&& v )
+		: Array( v.size() )
+		{
+			for( int i = 0; i < v.size(); ++i )
+			{
+				m_array[ i ] = std::move( v[ i ] );
+			}
+			
+			v.clear();
+		}
+		
 		Array( const Array& other )
 		{
 			if( other.m_size == 0 )

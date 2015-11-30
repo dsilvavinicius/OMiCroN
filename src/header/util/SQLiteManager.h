@@ -242,7 +242,7 @@ namespace util
 			SQLITE_OK
 		);
 		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
-		sqlite3_exec( m_db, "PRAGMA journal_mode = MEMORY", NULL, NULL, NULL );
+		sqlite3_exec( m_db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL );
 		
 		dropTables();
 		createTables();
