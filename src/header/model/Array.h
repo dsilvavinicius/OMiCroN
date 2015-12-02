@@ -3,6 +3,7 @@
 #include "Stream.h"
 #include "TbbAllocator.h"
 #include "Serializer.h"
+#include <boost/concept_check.hpp>
 
 namespace model
 {
@@ -110,18 +111,7 @@ namespace model
 		
 		~Array()
 		{
-			if( m_size != 0 )
-			{
-				for( int i = 0; i < m_size; i++ )
-				{
-					( m_array + i )->~T();
-				}
-				
-				A().deallocate( m_array );
-				
-				m_size = 0;
-				m_array = nullptr;
-			}
+			clear();
 		}
 		
 		T& operator[]( uint i )
@@ -144,6 +134,23 @@ namespace model
 			}
 			
 			return true;
+		}
+		
+		/** Destructs all elements and deletes internal array. The empty Array cannot be resized and is useless. */
+		void clear()
+		{
+			if( m_size != 0 )
+			{
+				for( int i = 0; i < m_size; i++ )
+				{
+					( m_array + i )->~T();
+				}
+				
+				A().deallocate( m_array );
+				
+				m_size = 0;
+				m_array = nullptr;
+			}
 		}
 		
 		size_t serialize( byte** serialization ) const
