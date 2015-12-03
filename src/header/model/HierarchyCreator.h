@@ -12,14 +12,16 @@ using namespace util;
 
 namespace model
 {
+	// TODO: If this algorithm is the best one, change MortonCode API to get rid of shared_ptr.
 	/** Multithreaded massive octree hierarchy creator. */
 	template< typename Morton, typename Point >
 	class HierarchyCreator
 	{
 	public:
 		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr >;
+		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using Node = O1OctreeNode< PointPtr >;
+		using NodeVector = vector< Node, ManagedAllocator< Node > >;
 		
 		using OctreeDim = OctreeDimensions< Morton, Point >;
 		using Reader = PlyPointReader< Point >;
@@ -32,7 +34,7 @@ namespace model
 		// Array with lists that will be processed in a given creation loop iteration.
 		using IterArray = Array< NodeList >;
 		// Array of first-dirty-node-per-level info.
-		using DirtyArray = Array< MortonCode >;
+		using DirtyArray = Array< Morton >;
 		
 		/** Ctor.
 		 * @param sortedPlyFilename is a sorted .ply point filename.
@@ -42,12 +44,11 @@ namespace model
 		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
 		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
 						  const size_t memoryLimit )
-		: M_N_THREADS( 8 ),
-		m_plyFilename( sortedPlyFilename ), 
+		: m_plyFilename( sortedPlyFilename ), 
 		m_octreeDim( dim ),
 		m_expectedLoadPerThread( expectedLoadPerThread ),
 		m_perThreadFirstDirty( M_N_THREADS ),
-		m_firstDirty( dim.m_leafLvl ),
+		m_firstDirty( dim.m_nodeLvl ),
 		m_dbs( M_N_THREADS ),
 		m_memoryLimit( memoryLimit )
 		{
@@ -55,8 +56,8 @@ namespace model
 			
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
-				m_dbs[ i ].init( plyFilename.substr( 0, plyFilename.find_last_of( "." ) ).append( ".db" ) );
-				m_perThreadFirstDirty = DirtyArray( dim.m_leafLvl );
+				m_dbs[ i ].init( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" ) );
+				m_perThreadFirstDirty[ i ] = DirtyArray( dim.m_nodeLvl );
 			}
 			
 			for( int i = m_firstDirty.size() - 1; i > -1; --i )
@@ -85,13 +86,13 @@ namespace model
 		
 		void pushWork( NodeList&& workItem )
 		{
-			lock_guard< mutex >( m_listMutex );
+			lock_guard< mutex > lock( m_listMutex );
 			m_workList.push_back( workItem );
 		}
 		
 		NodeList popWork()
 		{
-			lock_guard< mutex >( m_listMutex );
+			lock_guard< mutex > lock( m_listMutex );
 			NodeList nodeList = std::move( m_workList.front() );
 			m_workList.pop_front();
 			return nodeList;
@@ -104,12 +105,12 @@ namespace model
 		{
 			if( nextProcessed.size() < m_expectedLoadPerThread )
 			{
-				if( *( --previousProcessed.end() ) == nextProcessed.begin() )
+				if( *( --previousProcessed.end() ) == *nextProcessed.begin() )
 				{
 					// Nodes from same sibling groups were in different threads
 					previousProcessed.pop_back();
 				}
-				previousProcessed.splice( previsouProcessed.end(), nextProcessed );
+				previousProcessed.splice( previousProcessed.end(), nextProcessed );
 			}
 			else
 			{
@@ -118,7 +119,7 @@ namespace model
 		}
 		
 		/** Creates an inner Node, given its children. */
-		Node createInnerNode( vector< Node >&& children ) const;
+		Node createInnerNode( NodeVector&& children ) const;
 		
 		/** Releases the sibling group, persisting it if the persistenceFlag is true.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
@@ -133,7 +134,7 @@ namespace model
 		void releaseSiblings( Array< Node >& node, const int threadIdx, const uint nodeLvl );
 		
 		/** Releases nodes in order to ease memory stress. */
-		releaseNodes( uint currentLvl );
+		void releaseNodes( uint currentLvl );
 		
 		/** Thread[ i ] uses database connection m_sql[ i ]. */
 		Array< Sql > m_dbs;
@@ -161,11 +162,11 @@ namespace model
 		
 		ulong m_expectedLoadPerThread;
 		
-		constexpr int M_N_THREADS;
+		static constexpr int M_N_THREADS = 8;
 	};
 	
 	template< typename Morton, typename Point >
-	HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >::create()
+	typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >::create()
 	{
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
 		bool leaflvlFinished;
@@ -189,15 +190,17 @@ namespace model
 					{
 						if( isReleasing )
 						{
-							unique_lock< mutex > lock( releaseMutex );
-								m_releaseFlag.wait( lock, []{ return !isReleasing; } );
+							{
+								unique_lock< mutex > lock( releaseMutex );
+									releaseFlag.wait( lock, [ & ]{ return !isReleasing; } );
+							}
 							
 							points.push_back( makeManaged< Point >( p ) );
 						}
 						else 
 						{
-							Morton code = dim.calcMorton( p );
-							Morton parent = code.getParent();
+							Morton code = m_octreeDim.calcMorton( p );
+							Morton parent = *code.traverseUp();
 							
 							if( parent != currentParent )
 							{
@@ -206,7 +209,8 @@ namespace model
 								
 								if( nodeList.size() == m_expectedLoadPerThread )
 								{
-									pushWork( nodeList );
+									pushWork( std::move( nodeList ) );
+									nodeList = NodeList();
 								}
 							}
 							
@@ -219,7 +223,7 @@ namespace model
 			}
 		);
 		
-		uint lvl = m_octreeDim.m_leafLvl;
+		uint lvl = m_octreeDim.m_nodeLvl;
 		
 		// Hierarchy construction loop.
 		while( lvl )
@@ -247,13 +251,13 @@ namespace model
 						{
 							Node& node = input.front();
 							input.pop_front();
-							Morton parentCode = m_octreeDim.calcMorton( node ).getParent();
+							Morton parentCode = *m_octreeDim.calcMorton( *node.getContents()[ 0 ] ).traverseUp();
 							
-							vector< Node > siblings( 8 );
+							NodeVector siblings( 8 );
 							siblings[ 0 ] = node;
 							int nSiblings = 1;
 							
-							while( !input.empty() && m_octreeDim.calcMorton( input.front() ).getParent() == parentCode )
+							while( !input.empty() && *m_octreeDim.calcMorton( *input.front().getContents()[ 0 ] ).traverseUp() == parentCode )
 							{
 								++nSiblings;
 								siblings[ nSiblings ] = input.front();
@@ -268,7 +272,7 @@ namespace model
 							else
 							{
 								// LOD
-								Node inner = createInnerNode( siblings );
+								Node inner = createInnerNode( std::move( siblings ) );
 								output.push_front( inner );
 							}
 						}
@@ -302,7 +306,7 @@ namespace model
 			swapWorkLists();
 		}
 		
-		return m_nextLvlWorkList[ 0 ][ 0 ];
+		return m_nextLvlWorkList.front().front();
 	}
 	
 	template< typename Morton, typename Point >
@@ -310,7 +314,7 @@ namespace model
 	::releaseAndPersistSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl,
 								 const Morton& firstSiblingMorton, const bool persistenceFlag )
 	{
-		Sql& sql = m_dbs[ i ];
+		Sql& sql = m_dbs[ threadIdx ];
 		if( persistenceFlag )
 		{
 			Morton siblingMorton = firstSiblingMorton;
@@ -379,10 +383,10 @@ namespace model
 		
 		while( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
-			IterArray iterVector( M_N_THREADS );
+			IterArray iterArray( M_N_THREADS );
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
-				iterVector[ i ] = *( workListIt-- );
+				iterArray[ i ] = *( workListIt-- );
 			}
 			
 			#pragma omp parallel for
@@ -399,7 +403,7 @@ namespace model
 				Sql& sql = m_dbs[ i ];
 				sql.beginTransaction();
 				
-				NodeList& nodeList = iterVector[ i ];
+				NodeList& nodeList = iterArray[ i ];
 				for( Node& node : nodeList )
 				{
 					if( !node.isLeaf() )
@@ -430,15 +434,16 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline Node HierarchyCreator< Morton, Point >::createInnerNode( vector< Node >&& vChildren ) const
+	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
+	::createInnerNode( NodeVector&& vChildren ) const
 	{
 		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
 		using MapEntry = typename Map::value_type;
 		
-		Array< Node > children( vChildren );
+		Array< Node > children( std::move( vChildren ) );
 		
 		int nPoints = 0;
-		Map prefixMap();
+		Map prefixMap;
 		for( int i = 0; i < children.size(); ++i )
 		{
 			Node& child = children[ i ];
@@ -453,8 +458,8 @@ namespace model
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
 			int choosenIdx = rand() % nPoints;
-			MapEntry choosenEntry = --prefixMap.upper_bound( choosenIdx );
-			selectedPoints[ i ] = choosenEntry.second.getContents[ choosenIdx - choosenEntry.first ];
+			MapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
+			selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
 		}
 		
 		return Node( selectedPoints, false );

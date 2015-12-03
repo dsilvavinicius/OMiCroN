@@ -14,9 +14,10 @@ namespace model
 	public:
 		using PointPtr = shared_ptr< Point >;
 		using Node = O1OctreeNode< PointPtr >;
+		using OctreeDims = OctreeDimensions< Morton, Point >;
 		using HierarchyCreator = model::HierarchyCreator< Morton, Point >;
 		
-		FastParallelOctree() : M_N_THREADS( 8 ) {}
+		FastParallelOctree() {}
 		
 		/**
 		 * Builds from a .ply file, generates a sorted file in the process which can be used with buildFromSortedFile()
@@ -31,7 +32,9 @@ namespace model
 		void buildFromSortedFile( const string& plyFilename );
 	
 		/** Gets dimensional info of this octree. */
-		const OctreeDimensions& dims() const;
+		const OctreeDims& dims() const;
+		
+		Node& root() { return m_root; }
 		
 		template< typename M, typename P >
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree );
@@ -40,19 +43,21 @@ namespace model
 		void setupNodeRendering( Node node, RenderingState& renderingState );
 		
 		/** Dimensional info of this octree. */
-		OctreeDimensions m_dim;
+		OctreeDims m_dim;
 		
 		/** Root node of the hierarchy. */
 		Node m_root;
 		
 		/** Number of threads used in octree construction and front tracking. The database thread is not part of the
 		 * group. */
-		constexpr int M_N_THREADS;
+		static constexpr int M_N_THREADS = 8;
 	};
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >::buildFromFile( const string& plyFileName, const int& maxLvl )
 	{
+		assert( maxLvl <= Morton::maxLvl() );
+		
 		PointSorter< Morton, Point > sorter( plyFileName, maxLvl );
 		
 		string sortedFileName = plyFileName;

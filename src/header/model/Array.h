@@ -41,7 +41,7 @@ namespace model
 		}
 		
 		/** Moves each vector element to the array, clearing up v afterwards. */
-		Array( vector< T >&& v )
+		Array( vector< T, ManagedAllocator< T > >&& v )
 		: Array( v.size() )
 		{
 			for( int i = 0; i < v.size(); ++i )

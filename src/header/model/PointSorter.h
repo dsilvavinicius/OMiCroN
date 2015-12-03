@@ -24,7 +24,7 @@ namespace model
 		PointSorter( const string& input, uint leafLvl );
 		~PointSorter();
 		void sort( const string& outFilename );
-		OctreeDim& comparator() { return m_comp; }
+		OctreeDim& comp() { return m_comp; }
 		
 	private:
 		M calcMorton( const P& point );

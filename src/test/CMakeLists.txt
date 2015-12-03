@@ -31,6 +31,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeTest.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/TextTestWidget.h		${CPP_DIR}/${MODEL_DIR}/TextTestWidget.cpp
 	${CPP_DIR}/${MODEL_DIR}/TextTest.cpp
