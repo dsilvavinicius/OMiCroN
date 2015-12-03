@@ -12,7 +12,7 @@ using namespace util;
 
 namespace model
 {
-	/** Manages all FastParallelOctree hierarchy creation. */
+	/** Multithreaded massive octree hierarchy creator. */
 	template< typename Morton, typename Point >
 	class HierarchyCreator
 	{
@@ -29,22 +29,21 @@ namespace model
 		using NodeList = list< Node, ManagedAllocator< Node > >;
 		// List of NodeLists.
 		using WorkList = list< NodeList, ManagedAllocator< Node > >;
-		// Vector with lists that will be processed in current iteration.
+		// Array with lists that will be processed in a given creation loop iteration.
 		using IterArray = Array< NodeList >;
-		// Array of first dirty per level info.
+		// Array of first-dirty-node-per-level info.
 		using DirtyArray = Array< MortonCode >;
 		
-		/** Direction of lvl processing. */
-		enum Direction
-		{
-			RIGHT = true,
-			LEFT = false
-		};
-		
-		HierarchyCreator( const string& plyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
+		/** Ctor.
+		 * @param sortedPlyFilename is a sorted .ply point filename.
+		 * @param dim is the OctreeDim of the octree to be constructed.
+		 * @param expectedLoadPerThread is the size of the NodeList that will be passed to each thread in the
+		 * hierarchy creation loop iterations.
+		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
+		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
 						  const size_t memoryLimit )
 		: M_N_THREADS( 8 ),
-		m_plyFilename( plyFilename ), 
+		m_plyFilename( sortedPlyFilename ), 
 		m_octreeDim( dim ),
 		m_expectedLoadPerThread( expectedLoadPerThread ),
 		m_perThreadFirstDirty( M_N_THREADS ),
@@ -73,9 +72,9 @@ namespace model
 			}
 		}
 		
-		/** Creates the hierarchy from a sorted file.
+		/** Creates the hierarchy.
 		 * @return hierarchy's root node. */
-		Node createFromSortedFile();
+		Node create();
 		
 	private:
 		void swapWorkLists()
@@ -166,11 +165,10 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	Node HierarchyCreator< Morton, Point >::
-	createFromSortedFile( const size_t maxUsedMemory )
+	HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >::create()
 	{
-		// SHARED. The disk access thread sets this true whenever it finishes reading all nodes from the current lvl.
-		bool lvlFinished;
+		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
+		bool leaflvlFinished;
 		
 		mutex releaseMutex;
 		bool isReleasing = false;
@@ -217,8 +215,7 @@ namespace model
 					}
 				);
 				
-				lvlFinished = true;
-				Direction direction = LEFT;
+				leaflvlFinished = true;
 			}
 		);
 		
@@ -227,7 +224,7 @@ namespace model
 		// Hierarchy construction loop.
 		while( lvl )
 		{
-			while( !lvlFinished )
+			while( true )
 			{
 				if( m_workList.size() > 0 )
 				{
@@ -284,7 +281,7 @@ namespace model
 					mergeOrPushWork( m_nextLvlWorkList.front(), iterOutput[ 0 ] );
 					
 					// Check memory stress and release memory if necessary.
-					if( AllocStatistics::totalAllocated() > maxUsedMemory )
+					if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
 						isReleasing = true;
 						releaseNodes( lvl );
@@ -292,11 +289,20 @@ namespace model
 						releaseFlag.notify_one();
 					}
 				}
+				else
+				{
+					if( leaflvlFinished )
+					{
+						break;
+					}
+				}
 			}
 				
 			--lvl;
 			swapWorkLists();
 		}
+		
+		return m_nextLvlWorkList[ 0 ][ 0 ];
 	}
 	
 	template< typename Morton, typename Point >
