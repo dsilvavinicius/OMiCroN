@@ -13,25 +13,25 @@ namespace model
 	public:
 		OctreeDimensions() {}
 		
-		OctreeDimensions( const Vec3& origin, const Vec3& octreeSize, const Vec3& leafSize, uint leafLvl )
+		OctreeDimensions( const Vec3& origin, const Vec3& octreeSize, uint nodeLvl )
 		: m_origin( m_origin ),
 		m_size( octreeSize ),
-		m_leafSize( leafSize ),
-		m_leafLvl( leafLvl )
+		m_nodeSize( m_size * ( ( Float )1 / ( ( unsigned long long ) 1 << nodeLvl ) ) ),
+		m_nodeLvl( nodeLvl )
 		{}
 		
 		void init( const Vec3& origin, const Vec3& octreeSize, const Vec3& leafSize, uint leafLvl )
 		{
 			m_origin = origin ;
 			m_size = octreeSize;
-			m_leafSize = leafSize;
-			m_leafLvl = leafLvl;
+			m_nodeSize = leafSize;
+			m_nodeLvl = leafLvl;
 		}
 		
 		M calcMorton( const P& point ) const
 		{
 			const Vec3& pos = point.getPos();
-			Vec3 index = ( pos - m_origin ) / m_leafSize;
+			Vec3 index = ( pos - m_origin ) / m_nodeSize;
 			M code;
 			code.build( index.x, index.y, index.z, m_leafLvl );
 			
@@ -70,8 +70,8 @@ namespace model
 		
 		Vec3 m_origin;
 		Vec3 m_size;
-		Vec3 m_leafSize;
-		uint m_leafLvl;
+		Vec3 m_nodeSize;
+		uint m_nodeLvl;
 	};
 }
 

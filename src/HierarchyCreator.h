@@ -30,7 +30,9 @@ namespace model
 		// List of NodeLists.
 		using WorkList = list< NodeList, ManagedAllocator< Node > >;
 		// Vector with lists that will be processed in current iteration.
-		using IterVector = vector< NodeList, ManagedAllocator< NodeList > >;
+		using IterArray = Array< NodeList >;
+		// Array of first dirty per level info.
+		using DirtyArray = Array< MortonCode >;
 		
 		/** Direction of lvl processing. */
 		enum Direction
@@ -45,6 +47,7 @@ namespace model
 		m_plyFilename( plyFilename ), 
 		m_octreeDim( dim ),
 		m_expectedLoadPerThread( expectedLoadPerThread ),
+		m_perThreadFirstDirty( M_N_THREADS ),
 		m_firstDirty( dim.m_leafLvl ),
 		m_dbs( M_N_THREADS ),
 		m_memoryLimit( memoryLimit )
@@ -54,6 +57,7 @@ namespace model
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
 				m_dbs[ i ].init( plyFilename.substr( 0, plyFilename.find_last_of( "." ) ).append( ".db" ) );
+				m_perThreadFirstDirty = DirtyArray( dim.m_leafLvl );
 			}
 			
 			for( int i = m_firstDirty.size() - 1; i > -1; --i )
@@ -117,11 +121,20 @@ namespace model
 		/** Creates an inner Node, given its children. */
 		Node createInnerNode( vector< Node >&& children ) const;
 		
-		/** Releases nodes in order to ease memory stress. */
-		releaseNodes( uint currentLvl );
+		/** Releases the sibling group, persisting it if the persistenceFlag is true.
+		 * @param siblings is the sibling group to be released and persisted if it is the case.
+		 * @param threadIdx is the index of the executing thread.
+		 * @param lvl is the hierarchy level of the sibling group.
+		 * @param firstSiblingMorton is the morton code of the first sibling.
+		 * @param persistenceFlag is true if the sibling group needs to be persisted too. */
+		void releaseAndPersistSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl,
+										const Morton& firstSiblingMorton, const bool persistenceFlag );
 		
 		/** Releases a given sibling group. */
-		void releaseSiblings( Array< Node >& node, Sql& sql, uint nodeLvl );
+		void releaseSiblings( Array< Node >& node, const int threadIdx, const uint nodeLvl );
+		
+		/** Releases nodes in order to ease memory stress. */
+		releaseNodes( uint currentLvl );
 		
 		/** Thread[ i ] uses database connection m_sql[ i ]. */
 		Array< Sql > m_dbs;
@@ -132,8 +145,11 @@ namespace model
 		/** SHARED. Holds the work list with nodes of the current lvl. Database thread and master thread have access. */
 		WorkList m_workList;
 		
+		/** m_perThreadFirstDirty[ i ] contains the first dirty array for thread i. */
+		Array< DirtyArray > m_perThreadFirstDirty;
+		
 		/** m_firstDirty[ i ] contains the first dirty (i.e. not persisted) Morton in lvl i. */
-		vector< MortonCode, ManagedAllocator< MortonCode > > m_firstDirty;
+		DirtyArray m_firstDirty;
 		
 		OctreeDim m_octreeDim;
 		
@@ -216,14 +232,14 @@ namespace model
 				if( m_workList.size() > 0 )
 				{
 					int dispatchedThreads = ( m_workList.size() > M_N_THREADS ) ? M_N_THREADS : m_workList.size();
-					IterVector iterInput( dispatchedThreads );
+					IterArray iterInput( dispatchedThreads );
 					
 					for( int i = dispatchedThreads - 1; i > -1; --i )
 					{
 						iterInput[ i ] = popWork();
 					}
 					
-					IterVector iterOutput( dispatchedThreads );
+					IterArray iterOutput( dispatchedThreads );
 					
 					#pragma omp parallel for
 					for( int i = 0; i < M_N_THREADS; ++i )
@@ -284,26 +300,67 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::releaseSiblings( Array< Node >& siblings, Sql& sql, uint nodeLvl )
+	inline void HierarchyCreator< Morton, Point >
+	::releaseAndPersistSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl,
+								 const Morton& firstSiblingMorton, const bool persistenceFlag )
 	{
-		for( int i = 0; i < siblings.size(); ++i )
+		Sql& sql = m_dbs[ i ];
+		if( persistenceFlag )
 		{
-			if( !siblings[ i ].isLeaf() )
+			Morton siblingMorton = firstSiblingMorton;
+			
+			for( int i = 0; i < siblings.size(); ++i )
 			{
-				releaseSiblings( siblings[ i ].children(), sql, nodeLvl + 1 );
+				if( !siblings[ i ].isLeaf() )
+				{
+					releaseSiblings( siblings[ i ].children(), sql, lvl + 1 );
+				}
+				
+				// Persisting node
+				sql.insertNode( siblingMorton, siblings[ i ] );
+				siblingMorton = siblingMorton.getNext();
 			}
-		}
-		
-		// CONTINUE HERE. Calculating morton from m_octreeDim is wrong since the lvls are different.
-		Morton firstSiblingMorton = m_octreeDim.calcMorton( siblings[ 0 ].getContents()[ 0 ] );
-		Morton lastSiblingMorton = m_octreeDim.calcMorton( siblings[ siblings.size() - 1 ].getContents[ 0 ] );
-		
-		if( ( m_octreeDim.m_leafLvl - nodeLvl ) % 2 )
-		{
-			if( firstSiblingMorton )
+			
+			// Updating thread dirtiness info.
+			DirtyArray& firstDirty = m_perThreadFirstDirty[ threadIdx ];
+			
+			if( ( m_octreeDim.m_nodeLvl - lvl ) % 2 )
+			{
+				firstDirty[ lvl ] = firstSiblingMorton.getPrevious();
+			}
+			else
+			{
+				firstDirty[ lvl ] = siblingMorton;
+			}
 		}
 		else
 		{
+			for( int i = 0; i < siblings.size(); ++i )
+			{
+				if( !siblings[ i ].isLeaf() )
+				{
+					releaseSiblings( siblings[ i ].children(), sql, lvl + 1 );
+				}
+			}
+		}
+	}
+	
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >
+	::releaseSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl )
+	{
+		OctreeDim currentLvlDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
+		Morton firstSiblingMorton = currentLvlDim.calcMorton( siblings[ 0 ].getContents()[ 0 ] );
+		
+		if( ( m_octreeDim.m_nodeLvl - lvl ) % 2 )
+		{
+			releaseAndPersistSiblings( siblings, threadIdx, lvl, firstSiblingMorton,
+									   firstSiblingMorton < m_firstDirty[ lvl ] );
+		}
+		else
+		{
+			releaseAndPersistSiblings( siblings, threadIdx, lvl, firstSiblingMorton,
+									   m_firstDirty[ lvl ] < firstSiblingMorton );
 		}
 		
 		siblings.clear();
@@ -316,7 +373,7 @@ namespace model
 		
 		while( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
-			IterVector iterVector( M_N_THREADS );
+			IterArray iterVector( M_N_THREADS );
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
 				iterVector[ i ] = *( workListIt-- );
@@ -325,6 +382,14 @@ namespace model
 			#pragma omp parallel for
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
+				int threadIdx = i;
+				
+				// Cleaning up thread dirtiness info.
+				for( int j = 0; j < m_octreeDim.m_lvl; ++j )
+				{
+					m_perThreadFirstDirty[ i ][ j ].build( 0 );
+				}
+				
 				Sql& sql = m_dbs[ i ];
 				sql.beginTransaction();
 				
@@ -333,11 +398,27 @@ namespace model
 				{
 					if( !node.isLeaf() )
 					{
-						releaseSiblings( node.children(), sql, currentLvl );
+						releaseSiblings( node.children(), threadIdx, currentLvl );
 					}
 				}
 				
 				sql.endTransaction();
+			}
+			
+			// Updating hierarchy dirtiness info.
+			for( int i = 0; i < M_N_THREADS; ++i )
+			{
+				for( int j = 0; j < m_octreeDim.m_lvl; ++j )
+				{
+					if( ( m_octreeDim.m_lvl - j ) % 2 )
+					{
+						m_firstDirty[ j ] = std::min( m_firstDirty[ j ], m_perThreadFirstDirty[ i ][ j ] );
+					}
+					else
+					{
+						m_firstDirty[ j ] = std::max( m_firstDirty[ j ], m_perThreadFirstDirty[ i ][ j ] );
+					}
+				}
 			}
 		}
 	}

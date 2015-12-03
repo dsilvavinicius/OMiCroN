@@ -72,8 +72,7 @@ namespace model
 		cout << "Reading time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		Vec3 octreeSize = maxCoords - origin;
-		Vec3 leafSize = octreeSize * ( ( Float )1 / ( ( unsigned long long )1 << leafLvl ) );
-		m_comp.init( origin, octreeSize, leafSize, leafLvl );
+		m_comp.init( origin, octreeSize, leafLvl );
 	}
 	
 	template< typename M, typename P >
