@@ -201,7 +201,7 @@ namespace util
 		// Async request manager associated data:
 		
 		// The manager itself.
-		thread m_requestManager;
+		//thread m_requestManager;
 		
 		// Lock to the request container.
 		mutex m_requestLock;
@@ -261,28 +261,28 @@ namespace util
 		createTables();
 		createStmts();
 		
-		m_requestManager = thread(
-			[ & ]()
-			{
-				while( !m_requestsDone )
-				{
-					unique_lock< mutex > requestLock( m_requestLock );
-					m_requestFlag.wait( requestLock, [ & ](){ return !m_requests.empty() || m_requestsDone; } );
-					
-					for( auto it = m_requests.begin(); it != m_requests.end(); )
-					{
-						MortonInterval interval = *it;
-						
-						ManagedIdNodeVector idNodes = getManagedIdNodes( *interval.first, *interval.second );
-						{
-							lock_guard< mutex > resultLock( m_resultLock );
-							m_requestsResults.push( idNodes );
-						}
-						m_requests.erase(it++);
-					}
-				}
-			}
-		);
+// 		m_requestManager = thread(
+// 			[ & ]()
+// 			{
+// 				while( !m_requestsDone )
+// 				{
+// 					unique_lock< mutex > requestLock( m_requestLock );
+// 					m_requestFlag.wait( requestLock, [ & ](){ return !m_requests.empty() || m_requestsDone; } );
+// 					
+// 					for( auto it = m_requests.begin(); it != m_requests.end(); )
+// 					{
+// 						MortonInterval interval = *it;
+// 						
+// 						ManagedIdNodeVector idNodes = getManagedIdNodes( *interval.first, *interval.second );
+// 						{
+// 							lock_guard< mutex > resultLock( m_resultLock );
+// 							m_requestsResults.push( idNodes );
+// 						}
+// 						m_requests.erase(it++);
+// 					}
+// 				}
+// 			}
+// 		);
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
@@ -617,7 +617,7 @@ namespace util
 	{
 		m_requestsDone = true;
 		m_requestFlag.notify_one();
-		m_requestManager.join();
+		//m_requestManager.join();
 		
 		dropTables();
 		
