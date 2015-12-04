@@ -8,13 +8,14 @@
 namespace model
 {
 	/** Out-of-core fast parallel octree. */
-	template< typename Morton, typename Point >
+	template< typename MortonCode, typename Point >
 	class FastParallelOctree
 	{
 	public:
+		using Morton = MortonCode;
 		using PointPtr = shared_ptr< Point >;
 		using Node = O1OctreeNode< PointPtr >;
-		using OctreeDims = OctreeDimensions< Morton, Point >;
+		using Dim = OctreeDimensions< Morton, Point >;
 		using HierarchyCreator = model::HierarchyCreator< Morton, Point >;
 		
 		FastParallelOctree() {}
@@ -32,7 +33,7 @@ namespace model
 		void buildFromSortedFile( const string& plyFilename );
 	
 		/** Gets dimensional info of this octree. */
-		const OctreeDims& dims() const;
+		const Dim& dim() const { return m_dim; }
 		
 		Node& root() { return m_root; }
 		
@@ -43,7 +44,7 @@ namespace model
 		void setupNodeRendering( Node node, RenderingState& renderingState );
 		
 		/** Dimensional info of this octree. */
-		OctreeDims m_dim;
+		Dim m_dim;
 		
 		/** Root node of the hierarchy. */
 		Node m_root;

@@ -105,6 +105,7 @@ namespace model
 		
 		/** Gets the pointer for left-most child of this node. */
 		NodeArray& child() { return m_children; }
+		const NodeArray& child() const { return m_children; }
 		
 		bool isLeaf() const { return m_isLeaf; }
 		
