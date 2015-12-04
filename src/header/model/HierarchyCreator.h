@@ -101,11 +101,12 @@ namespace model
 		/** Merge nextProcessed into previousProcessed if there is not enough work yet to form a WorkList or push it to
 		 * nextLvlWorkLists otherwise. Repetitions are checked while linking lists, since this case can occur when the
 		 * lists have nodes from the same sibling group. */
-		void mergeOrPushWork( NodeList& previousProcessed, const NodeList& nextProcessed )
+		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed )
 		{
 			if( nextProcessed.size() < m_expectedLoadPerThread )
 			{
-				if( *( --previousProcessed.end() ) == *nextProcessed.begin() )
+				if( m_octreeDim.calcMorton( *( --previousProcessed.end() )->getContents()[ 0 ] ) ==
+					m_octreeDim.calcMorton( *nextProcessed.begin()->getContents()[ 0 ] ) )
 				{
 					// Nodes from same sibling groups were in different threads
 					previousProcessed.pop_back();
@@ -323,12 +324,12 @@ namespace model
 			{
 				if( !siblings[ i ].isLeaf() )
 				{
-					releaseSiblings( siblings[ i ].children(), sql, lvl + 1 );
+					releaseSiblings( siblings[ i ].child(), threadIdx, lvl + 1 );
 				}
 				
 				// Persisting node
 				sql.insertNode( siblingMorton, siblings[ i ] );
-				siblingMorton = siblingMorton.getNext();
+				siblingMorton = *siblingMorton.getNext();
 			}
 			
 			// Updating thread dirtiness info.
@@ -336,7 +337,7 @@ namespace model
 			
 			if( ( m_octreeDim.m_nodeLvl - lvl ) % 2 )
 			{
-				firstDirty[ lvl ] = firstSiblingMorton.getPrevious();
+				firstDirty[ lvl ] = *firstSiblingMorton.getPrevious();
 			}
 			else
 			{
@@ -349,7 +350,7 @@ namespace model
 			{
 				if( !siblings[ i ].isLeaf() )
 				{
-					releaseSiblings( siblings[ i ].children(), sql, lvl + 1 );
+					releaseSiblings( siblings[ i ].child(), threadIdx, lvl + 1 );
 				}
 			}
 		}
@@ -360,7 +361,7 @@ namespace model
 	::releaseSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl )
 	{
 		OctreeDim currentLvlDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
-		Morton firstSiblingMorton = currentLvlDim.calcMorton( siblings[ 0 ].getContents()[ 0 ] );
+		Morton firstSiblingMorton = currentLvlDim.calcMorton( *siblings[ 0 ].getContents()[ 0 ] );
 		
 		if( ( m_octreeDim.m_nodeLvl - lvl ) % 2 )
 		{
@@ -379,14 +380,14 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >::releaseNodes( uint currentLvl )
 	{
-		auto workListIt = m_nextLvlWorkList.back();
+		auto workListIt = m_nextLvlWorkList.rbegin();
 		
 		while( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
 			IterArray iterArray( M_N_THREADS );
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
-				iterArray[ i ] = *( workListIt-- );
+				iterArray[ i ] = *( workListIt++ );
 			}
 			
 			#pragma omp parallel for
@@ -395,7 +396,7 @@ namespace model
 				int threadIdx = i;
 				
 				// Cleaning up thread dirtiness info.
-				for( int j = 0; j < m_octreeDim.m_lvl; ++j )
+				for( int j = 0; j < m_octreeDim.m_nodeLvl; ++j )
 				{
 					m_perThreadFirstDirty[ i ][ j ].build( 0 );
 				}
@@ -408,7 +409,7 @@ namespace model
 				{
 					if( !node.isLeaf() )
 					{
-						releaseSiblings( node.children(), threadIdx, currentLvl );
+						releaseSiblings( node.child(), threadIdx, currentLvl );
 					}
 				}
 				
@@ -418,9 +419,9 @@ namespace model
 			// Updating hierarchy dirtiness info.
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
-				for( int j = 0; j < m_octreeDim.m_lvl; ++j )
+				for( int j = 0; j < m_octreeDim.m_nodeLvl; ++j )
 				{
-					if( ( m_octreeDim.m_lvl - j ) % 2 )
+					if( ( m_octreeDim.m_nodeLvl - j ) % 2 )
 					{
 						m_firstDirty[ j ] = std::min( m_firstDirty[ j ], m_perThreadFirstDirty[ i ][ j ] );
 					}
