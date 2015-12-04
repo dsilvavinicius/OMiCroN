@@ -244,7 +244,7 @@ namespace model
 					IterArray iterOutput( dispatchedThreads );
 					
 					#pragma omp parallel for
-					for( int i = 0; i < M_N_THREADS; ++i )
+					for( int i = 0; i < dispatchedThreads; ++i )
 					{
 						NodeList& input = iterInput[ i ];
 						NodeList& output = iterOutput[ i ];
@@ -380,18 +380,35 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >::releaseNodes( uint currentLvl )
 	{
-		auto workListIt = m_nextLvlWorkList.rbegin();
-		
 		while( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
+			// The strategy is to release nodes without harming of next hierarchy creation iterations. So, any current
+			// lvl unprocessed and next lvl nodes are spared. Thus, the passes are:
+			// 1) Release children nodes of the next-lvl worklist.
+			// 2) Release children nodes of current-lvl worklist.
+			
+			int dispatchedThreads = 0;
 			IterArray iterArray( M_N_THREADS );
-			for( int i = 0; i < M_N_THREADS; ++i )
+			auto workListIt = m_nextLvlWorkList.rbegin();
+			
+			if( workListIt != m_nextLvlWorkList.rend() )
 			{
-				iterArray[ i ] = *( workListIt++ );
+				while( dispatchedThreads < M_N_THREADS && workListIt != m_nextLvlWorkList.rend() )
+				{
+					iterArray[ dispatchedThreads++ ] = *( workListIt++ );
+				}
+			}
+			else
+			{
+				workListIt = m_workList.rbegin();
+				while( dispatchedThreads < M_N_THREADS )
+				{
+					iterArray[ dispatchedThreads++ ] = *( workListIt++ );
+				}
 			}
 			
 			#pragma omp parallel for
-			for( int i = 0; i < M_N_THREADS; ++i )
+			for( int i = 0; i < dispatchedThreads; ++i )
 			{
 				int threadIdx = i;
 				
@@ -417,7 +434,7 @@ namespace model
 			}
 			
 			// Updating hierarchy dirtiness info.
-			for( int i = 0; i < M_N_THREADS; ++i )
+			for( int i = 0; i < dispatchedThreads; ++i )
 			{
 				for( int j = 0; j < m_octreeDim.m_nodeLvl; ++j )
 				{
