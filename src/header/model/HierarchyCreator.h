@@ -170,7 +170,7 @@ namespace model
 	typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >::create()
 	{
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
-		bool leaflvlFinished;
+		bool leaflvlFinished = false;
 		
 		mutex releaseMutex;
 		bool isReleasing = false;
@@ -191,12 +191,8 @@ namespace model
 					{
 						if( isReleasing )
 						{
-							{
-								unique_lock< mutex > lock( releaseMutex );
-									releaseFlag.wait( lock, [ & ]{ return !isReleasing; } );
-							}
-							
-							points.push_back( makeManaged< Point >( p ) );
+							unique_lock< mutex > lock( releaseMutex );
+								releaseFlag.wait( lock, [ & ]{ return !isReleasing; } );
 						}
 						else 
 						{
@@ -205,21 +201,27 @@ namespace model
 							
 							if( parent != currentParent )
 							{
-								nodeList.push_back( Node( std::move( points ), true ) );
-								points = PointVector();
-								
-								if( nodeList.size() == m_expectedLoadPerThread )
+								if( points.size() > 0 )
 								{
-									pushWork( std::move( nodeList ) );
-									nodeList = NodeList();
+									nodeList.push_back( Node( std::move( points ), true ) );
+									points = PointVector();
+									
+									if( nodeList.size() == m_expectedLoadPerThread )
+									{
+										pushWork( std::move( nodeList ) );
+										nodeList = NodeList();
+									}
 								}
+								currentParent = parent;
 							}
-							
-							points.push_back( makeManaged< Point >( p ) );
 						}
+						
+						points.push_back( makeManaged< Point >( p ) );
 					}
 				);
 				
+				nodeList.push_back( Node( std::move( points ), true ) );
+				pushWork( std::move( nodeList ) );
 				leaflvlFinished = true;
 			}
 		);
@@ -251,17 +253,17 @@ namespace model
 						while( !input.empty() )
 						{
 							Node& node = input.front();
-							input.pop_front();
 							Morton parentCode = *m_octreeDim.calcMorton( *node.getContents()[ 0 ] ).traverseUp();
 							
 							NodeVector siblings( 8 );
-							siblings[ 0 ] = node;
+							siblings[ 0 ] = std::move( node );
+							input.pop_front();
 							int nSiblings = 1;
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( *input.front().getContents()[ 0 ] ).traverseUp() == parentCode )
 							{
 								++nSiblings;
-								siblings[ nSiblings ] = input.front();
+								siblings[ nSiblings ] = std::move( input.front() );
 								input.pop_front();
 							}	
 							
@@ -279,11 +281,21 @@ namespace model
 						}
 					}
 
-					for( int i = dispatchedThreads - 1; i > -1; --i )
+					if( dispatchedThreads > 1 )
 					{
-						mergeOrPushWork( iterOutput[ i - 1 ], iterOutput[ i ] );
+						for( int i = dispatchedThreads - 1; i > -1; --i )
+						{
+							mergeOrPushWork( iterOutput[ i - 1 ], iterOutput[ i ] );
+						}
 					}
-					mergeOrPushWork( m_nextLvlWorkList.front(), iterOutput[ 0 ] );
+					if( !m_nextLvlWorkList.empty() )
+					{
+						mergeOrPushWork( m_nextLvlWorkList.front(), iterOutput[ 0 ] );
+					}
+					else
+					{
+						m_nextLvlWorkList.push_front( std::move( iterOutput[ 0 ] ) );
+					}
 					
 					// Check memory stress and release memory if necessary.
 					if( AllocStatistics::totalAllocated() > m_memoryLimit )
@@ -307,7 +319,8 @@ namespace model
 			swapWorkLists();
 		}
 		
-		return m_nextLvlWorkList.front().front();
+		Node root = m_workList.front().front();
+		return root;
 	}
 	
 	template< typename Morton, typename Point >
@@ -467,6 +480,17 @@ namespace model
 			Node& child = children[ i ];
 			prefixMap.insert( prefixMap.end(), MapEntry( nPoints, child ) );
 			nPoints += child.getContents().size();
+			
+			// Set parental relationship of children.
+			if( !child.isLeaf() )
+			{
+				Array< Node >& grandChildren = child.child();
+				for( int j = 0; j < grandChildren.size(); ++j )
+				{
+					Node& grandChild = grandChildren[ j ];
+					grandChild.setParent( &child );
+				}
+			}
 		}
 		
 		// LoD has 1/8 of children points.
@@ -480,7 +504,10 @@ namespace model
 			selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
 		}
 		
-		return Node( selectedPoints, false );
+		Node node( selectedPoints, false );
+		node.setChildren( std::move( children ) );
+		
+		return node;
 	}
 }
 

@@ -43,8 +43,11 @@ set (CMAKE_INCLUDE_CURRENT_DIR ON)
 # Instruct CMake to run moc automatically when needed.
 set (CMAKE_AUTOMOC ON)
 
+#OpenMP thread number environment variable.
+set (ENV{OMP_NUM_THREADS} 8)
+
 # Necessary flags for C++11, linkage to Qt5, OpenMP and Eigen setup.
-SET (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -fopenmp -D_GLIBCXX_PARALLEL -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
+set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -fopenmp -D_GLIBCXX_PARALLEL -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 
 set (HEADER_DIR "header")
 set (CPP_DIR "cpp")

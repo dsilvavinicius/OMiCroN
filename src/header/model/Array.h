@@ -16,29 +16,29 @@ namespace model
 	public:
 		/** Ctor to construct an empty non-usable array. */
 		Array()
-		: m_size( 0 ),
-		m_array( nullptr )
+		: Array( 0 )
 		{}
 		
 		/** Ctor that allocates a new array with the given size. */
 		Array( uint size )
-		: m_size( size ),
-		m_array( A().allocate( size ) )
+		: m_size( size )
 		{
-			assert( m_size != 0 && "Array::Array( uint ) does not accept size 0. To create an empty array use "
-					"Array::Array()" );
-			
-			initArray();
+			if( m_size )
+			{
+				m_array = A().allocate( size );
+				initArray();
+			}
+			else
+			{
+				m_array = nullptr;
+			}
 		}
 		
 		/** Ctor that takes resposibility of a given array with the given size. */
 		Array( uint size, T* array )
 		: m_size( size ),
 		m_array( array )
-		{
-			assert( m_size != 0 && "Array::Array( uint, T* ) does not accept size 0. To create an empty array use "
-					"Array::Array()" );
-		}
+		{}
 		
 		/** Moves each vector element to the array, clearing up v afterwards. */
 		Array( vector< T, ManagedAllocator< T > >&& v )

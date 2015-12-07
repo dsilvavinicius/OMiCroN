@@ -55,24 +55,36 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >::buildFromFile( const string& plyFileName, const int& maxLvl )
+	void FastParallelOctree< Morton, Point >::buildFromFile( const string& plyFilename, const int& maxLvl )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
-		PointSorter< Morton, Point > sorter( plyFileName, maxLvl );
+		PointSorter< Morton, Point > sorter( plyFilename, maxLvl );
 		
-		string sortedFileName = plyFileName;
-		sortedFileName.insert( 0, "sorted_" );
-		sorter.sort( sortedFileName );
+		int slashIdx = plyFilename.find_last_of( "/" );
+		string sortedFilename = plyFilename;
+		if( slashIdx != plyFilename.npos )
+		{
+			sortedFilename.insert( slashIdx + 1, "sorted_" );
+		}
+		else
+		{
+			sortedFilename.insert( 0, "sorted_" );
+		}
+		
+		cout << sortedFilename << endl << endl;
+		
+		sorter.sort( sortedFilename );
 		m_dim = sorter.comp();
 		
-		buildFromSortedFile( sortedFileName );
+		buildFromSortedFile( sortedFilename );
 	}
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >::buildFromSortedFile( const string& plyFilename )
 	{
-		HierarchyCreator creator( plyFilename, m_dim, 1024 , 1024 * 1024 * 1024 * 8 );
+		size_t memoryLimit = 1024 * 1024 * 8;
+		HierarchyCreator creator( plyFilename, m_dim, 1024, memoryLimit );
 		m_root = creator.create();
 	}
 }
