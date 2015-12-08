@@ -46,9 +46,10 @@ namespace model
 						  const size_t memoryLimit )
 		: m_plyFilename( sortedPlyFilename ), 
 		m_octreeDim( dim ),
+		m_leafLvl( m_octreeDim.m_nodeLvl ),
 		m_expectedLoadPerThread( expectedLoadPerThread ),
 		m_perThreadFirstDirty( M_N_THREADS ),
-		m_firstDirty( dim.m_nodeLvl ),
+		m_firstDirty( m_octreeDim.m_nodeLvl + 1 ),
 		m_dbs( M_N_THREADS ),
 		m_memoryLimit( memoryLimit )
 		{
@@ -57,12 +58,12 @@ namespace model
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
 				m_dbs[ i ].init( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" ) );
-				m_perThreadFirstDirty[ i ] = DirtyArray( dim.m_nodeLvl );
+				m_perThreadFirstDirty[ i ] = DirtyArray( m_leafLvl + 1 );
 			}
 			
-			for( int i = m_firstDirty.size() - 1; i > -1; --i )
+			for( int i = m_leafLvl; i > 0; --i )
 			{
-				if( ( m_firstDirty.size() - i ) % 2 )
+				if( ( m_leafLvl - i ) % 2 )
 				{
 					m_firstDirty[ i ] = Morton::getLvlLast( i );
 				}
@@ -152,7 +153,10 @@ namespace model
 		/** m_firstDirty[ i ] contains the first dirty (i.e. not persisted) Morton in lvl i. */
 		DirtyArray m_firstDirty;
 		
+		/** Current lvl octree dimensions. */
 		OctreeDim m_octreeDim;
+		/** Leaf lvl. */
+		uint m_leafLvl;
 		
 		string m_plyFilename;
 		
@@ -225,6 +229,7 @@ namespace model
 				leaflvlFinished = true;
 			}
 		);
+		diskAccessThread.detach();
 		
 		uint lvl = m_octreeDim.m_nodeLvl;
 		
@@ -316,6 +321,7 @@ namespace model
 			}
 				
 			--lvl;
+			m_octreeDim = OctreeDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
 			swapWorkLists();
 		}
 		
@@ -348,7 +354,7 @@ namespace model
 			// Updating thread dirtiness info.
 			DirtyArray& firstDirty = m_perThreadFirstDirty[ threadIdx ];
 			
-			if( ( m_octreeDim.m_nodeLvl - lvl ) % 2 )
+			if( ( m_leafLvl - lvl ) % 2 )
 			{
 				firstDirty[ lvl ] = *firstSiblingMorton.getPrevious();
 			}
@@ -373,10 +379,10 @@ namespace model
 	inline void HierarchyCreator< Morton, Point >
 	::releaseSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl )
 	{
-		OctreeDim currentLvlDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
-		Morton firstSiblingMorton = currentLvlDim.calcMorton( *siblings[ 0 ].getContents()[ 0 ] );
+		OctreeDim siblingsLvlDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
+		Morton firstSiblingMorton = siblingsLvlDim.calcMorton( *siblings[ 0 ].getContents()[ 0 ] );
 		
-		if( ( m_octreeDim.m_nodeLvl - lvl ) % 2 )
+		if( ( m_leafLvl - lvl ) % 2 )
 		{
 			releaseAndPersistSiblings( siblings, threadIdx, lvl, firstSiblingMorton,
 									   firstSiblingMorton < m_firstDirty[ lvl ] );
@@ -426,7 +432,7 @@ namespace model
 				int threadIdx = i;
 				
 				// Cleaning up thread dirtiness info.
-				for( int j = 0; j < m_octreeDim.m_nodeLvl; ++j )
+				for( int j = 1; j <= m_leafLvl; ++j )
 				{
 					m_perThreadFirstDirty[ i ][ j ].build( 0 );
 				}
@@ -449,9 +455,9 @@ namespace model
 			// Updating hierarchy dirtiness info.
 			for( int i = 0; i < dispatchedThreads; ++i )
 			{
-				for( int j = 0; j < m_octreeDim.m_nodeLvl; ++j )
+				for( int j = 1; j <= m_leafLvl; ++j )
 				{
-					if( ( m_octreeDim.m_nodeLvl - j ) % 2 )
+					if( ( m_leafLvl - j ) % 2 )
 					{
 						m_firstDirty[ j ] = std::min( m_firstDirty[ j ], m_perThreadFirstDirty[ i ][ j ] );
 					}
