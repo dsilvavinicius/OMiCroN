@@ -18,7 +18,17 @@ namespace model
 		using Dim = OctreeDimensions< Morton, Point >;
 		using HierarchyCreator = model::HierarchyCreator< Morton, Point >;
 		
-		FastParallelOctree() {}
+		FastParallelOctree()
+		: m_root( nullptr )
+		{}
+		
+		~FastParallelOctree()
+		{
+			if( m_root )
+			{
+				delete m_root;
+			}
+		}
 		
 		/**
 		 * Builds from a .ply file, generates a sorted file in the process which can be used with buildFromSortedFile()
@@ -35,7 +45,7 @@ namespace model
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
 		
-		Node& root() { return m_root; }
+		Node& root() { return *m_root; }
 		
 		template< typename M, typename P >
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree );
@@ -47,7 +57,7 @@ namespace model
 		Dim m_dim;
 		
 		/** Root node of the hierarchy. */
-		Node m_root;
+		Node* m_root;
 		
 		/** Number of threads used in octree construction and front tracking. The database thread is not part of the
 		 * group. */

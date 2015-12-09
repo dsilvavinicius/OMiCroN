@@ -20,6 +20,13 @@ namespace model
 		m_nodeLvl( nodeLvl )
 		{}
 		
+		OctreeDimensions( const OctreeDimensions& other, uint newLvl )
+		: m_origin( other.m_origin ),
+		m_size( other.m_size ),
+		m_nodeSize( m_size * ( ( Float ) 1 / ( ( unsigned long long ) 1 << newLvl ) ) ),
+		m_nodeLvl( newLvl )
+		{}
+		
 		void init( const Vec3& origin, const Vec3& octreeSize, uint nodeLvl )
 		{
 			m_origin = origin ;
@@ -66,6 +73,15 @@ namespace model
 		bool operator()( const P& p0, const P& p1 ) const
 		{
 			return calcMorton( p0 ) < calcMorton( p1 );
+		}
+		
+		friend ostream& operator<<( ostream& out, const OctreeDimensions& dim )
+		{
+			out << "origin: " << dim.m_origin << endl
+				<< "octree size:" << dim.m_size << endl
+				<< "node lvl size:" << dim.m_nodeSize << endl
+				<< "node lvl:" << dim.m_nodeLvl << endl;
+			return out;
 		}
 		
 		Vec3 m_origin;

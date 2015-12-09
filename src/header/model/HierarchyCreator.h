@@ -21,6 +21,7 @@ namespace model
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using Node = O1OctreeNode< PointPtr >;
+		using NodeArray = Array< Node >;
 		using NodeVector = vector< Node, ManagedAllocator< Node > >;
 		
 		using OctreeDim = OctreeDimensions< Morton, Point >;
@@ -75,8 +76,8 @@ namespace model
 		}
 		
 		/** Creates the hierarchy.
-		 * @return hierarchy's root node. */
-		Node create();
+		 * @return hierarchy's root node. The pointer ownership is caller's. */
+		Node* create();
 		
 	private:
 		void swapWorkLists()
@@ -129,11 +130,11 @@ namespace model
 		 * @param lvl is the hierarchy level of the sibling group.
 		 * @param firstSiblingMorton is the morton code of the first sibling.
 		 * @param persistenceFlag is true if the sibling group needs to be persisted too. */
-		void releaseAndPersistSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl,
+		void releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const uint lvl,
 										const Morton& firstSiblingMorton, const bool persistenceFlag );
 		
 		/** Releases a given sibling group. */
-		void releaseSiblings( Array< Node >& node, const int threadIdx, const uint nodeLvl );
+		void releaseSiblings( NodeArray& node, const int threadIdx, const uint nodeLvl );
 		
 		/** Releases nodes in order to ease memory stress. */
 		void releaseNodes( uint currentLvl );
@@ -171,7 +172,7 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >::create()
+	typename HierarchyCreator< Morton, Point >::Node* HierarchyCreator< Morton, Point >::create()
 	{
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
 		bool leaflvlFinished = false;
@@ -236,6 +237,8 @@ namespace model
 		// Hierarchy construction loop.
 		while( lvl )
 		{
+			cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
+			
 			while( true )
 			{
 				if( m_workList.size() > 0 )
@@ -260,25 +263,42 @@ namespace model
 							Node& node = input.front();
 							Morton parentCode = *m_octreeDim.calcMorton( *node.getContents()[ 0 ] ).traverseUp();
 							
-							NodeVector siblings( 8 );
-							siblings[ 0 ] = std::move( node );
+							// Debug
+							{
+								cout << "Processing: " << m_octreeDim.calcMorton( *node.getContents()[ 0 ] ).getPathToRoot( true )
+									 << "Parent: " << parentCode.getPathToRoot( true ) << endl;
+							}
+							//
+							
+							NodeVector siblings;
+							siblings.push_back( std::move( node ) );
 							input.pop_front();
 							int nSiblings = 1;
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( *input.front().getContents()[ 0 ] ).traverseUp() == parentCode )
 							{
 								++nSiblings;
-								siblings[ nSiblings ] = std::move( input.front() );
+								siblings.push_back( std::move( input.front() ) );
 								input.pop_front();
 							}	
 							
-							if( nSiblings == 1 )
+							if( nSiblings == 1 && siblings[ 0 ].isLeaf() )
 							{
+								// Debug
+								{
+									cout << "Merging: " << m_octreeDim.calcMorton( *siblings[ 0 ].getContents()[ 0 ] ).getPathToRoot( true ) << endl;
+								}
+								//
+								
 								// Merging, just put the node to be processed in next level.
-								output.push_front( siblings[ 0 ] );
+								output.push_front( std::move( siblings[ 0 ] ) );
 							}
 							else
 							{
+								{
+									cout << "LOD" << endl << endl;
+								}
+								
 								// LOD
 								Node inner = createInnerNode( std::move( siblings ) );
 								output.push_front( inner );
@@ -321,17 +341,48 @@ namespace model
 			}
 				
 			--lvl;
-			m_octreeDim = OctreeDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
+			
+			// Debug
+			{
+				cout << "Prev dim: " << m_octreeDim << endl;
+			}
+			//
+			
+			m_octreeDim = OctreeDim( m_octreeDim, lvl );
+			
+			// Debug
+			{
+				cout << "Current dim: " << m_octreeDim << endl;
+				
+				cout << "Lvl processed: " << endl;
+				for( Node& node : m_nextLvlWorkList.front() )
+				{
+					cout << "Point: " << *node.getContents()[ 0 ] << endl 
+						 << "Morton: " << m_octreeDim.calcMorton( *node.getContents()[ 0 ] ).getPathToRoot( true ) << endl;
+				}
+				cout << endl;
+			}
+			//
+			
 			swapWorkLists();
 		}
 		
-		Node root = m_workList.front().front();
+		
+		Node* root = new Node( std::move( m_workList.front().front() ) );
+		
+		// Fixing root's child parent pointers.
+		NodeArray& rootChild = root->child();
+		for( int i = 0; i < rootChild.size(); ++i )
+		{
+			rootChild[ i ].setParent( root );
+		}
+		
 		return root;
 	}
 	
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::releaseAndPersistSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl,
+	::releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const uint lvl,
 								 const Morton& firstSiblingMorton, const bool persistenceFlag )
 	{
 		Sql& sql = m_dbs[ threadIdx ];
@@ -377,7 +428,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::releaseSiblings( Array< Node >& siblings, const int threadIdx, const uint lvl )
+	::releaseSiblings( NodeArray& siblings, const int threadIdx, const uint lvl )
 	{
 		OctreeDim siblingsLvlDim( m_octreeDim.m_origin, m_octreeDim.m_size, lvl );
 		Morton firstSiblingMorton = siblingsLvlDim.calcMorton( *siblings[ 0 ].getContents()[ 0 ] );
@@ -477,7 +528,22 @@ namespace model
 		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
 		using MapEntry = typename Map::value_type;
 		
-		Array< Node > children( std::move( vChildren ) );
+		// Depending on lvl, the sibling vector can be reversed.
+		NodeArray children( vChildren.size() );
+		if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
+		{
+			for( int i = 0; i < children.size(); ++i )
+			{
+				children[ i ] = std::move( vChildren[ children.size() - 1 - i ] );
+			}
+		}
+		else
+		{
+			for( int i = 0; i < children.size(); ++i )
+			{
+				children[ i ] = std::move( vChildren[ i ] );
+			}
+		}
 		
 		int nPoints = 0;
 		Map prefixMap;
@@ -490,11 +556,11 @@ namespace model
 			// Set parental relationship of children.
 			if( !child.isLeaf() )
 			{
-				Array< Node >& grandChildren = child.child();
+				NodeArray& grandChildren = child.child();
 				for( int j = 0; j < grandChildren.size(); ++j )
 				{
 					Node& grandChild = grandChildren[ j ];
-					grandChild.setParent( &child );
+					grandChild.setParent( children.data() + i );
 				}
 			}
 		}
