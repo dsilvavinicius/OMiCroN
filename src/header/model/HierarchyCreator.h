@@ -307,7 +307,7 @@ namespace model
 
 					if( dispatchedThreads > 1 )
 					{
-						for( int i = dispatchedThreads - 1; i > -1; --i )
+						for( int i = dispatchedThreads - 1; i > 0; --i )
 						{
 							mergeOrPushWork( iterOutput[ i - 1 ], iterOutput[ i ] );
 						}
@@ -324,6 +324,12 @@ namespace model
 					// Check memory stress and release memory if necessary.
 					if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
+						// Debug
+						{
+							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
+						}
+						//
+						
 						isReleasing = true;
 						releaseNodes( lvl );
 						isReleasing = false;
@@ -451,20 +457,26 @@ namespace model
 	{
 		while( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
-			// The strategy is to release nodes without harming of next hierarchy creation iterations. So, any current
+			// Debug
+			{
+				cout << "Alloc: " << AllocStatistics::totalAllocated() << endl << endl;
+			}
+			//
+			
+			// The strategy is to release nodes without harming of the next hierarchy creation iterations. So, any current
 			// lvl unprocessed and next lvl nodes are spared. Thus, the passes are:
 			// 1) Release children nodes of the next-lvl worklist.
 			// 2) Release children nodes of current-lvl worklist.
 			
 			int dispatchedThreads = 0;
-			IterArray iterArray( M_N_THREADS );
+			Array< NodeList* > iterArray( M_N_THREADS );
 			auto workListIt = m_nextLvlWorkList.rbegin();
 			
 			if( workListIt != m_nextLvlWorkList.rend() )
 			{
 				while( dispatchedThreads < M_N_THREADS && workListIt != m_nextLvlWorkList.rend() )
 				{
-					iterArray[ dispatchedThreads++ ] = *( workListIt++ );
+					iterArray[ dispatchedThreads++ ] = &*( workListIt++ );
 				}
 			}
 			else
@@ -472,7 +484,7 @@ namespace model
 				workListIt = m_workList.rbegin();
 				while( dispatchedThreads < M_N_THREADS )
 				{
-					iterArray[ dispatchedThreads++ ] = *( workListIt++ );
+					iterArray[ dispatchedThreads++ ] = &*( workListIt++ );
 				}
 			}
 			
@@ -490,7 +502,7 @@ namespace model
 				Sql& sql = m_dbs[ i ];
 				sql.beginTransaction();
 				
-				NodeList& nodeList = iterArray[ i ];
+				NodeList& nodeList = *iterArray[ i ];
 				for( Node& node : nodeList )
 				{
 					if( !node.isLeaf() )
