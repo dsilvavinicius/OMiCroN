@@ -36,11 +36,13 @@ namespace model
 		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Lesser values incur in
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
-		void buildFromFile( const string& plyFilename, const int& maxLvl );
+		void buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread = 1024,
+							size_t memoryLimit = 1024 * 1024 * 8 );
 		
-		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Use buildFromFile() to generate the
-		 * sorted .ply file. */
-		void buildFromSortedFile( const string& plyFilename );
+		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Also, the octree dimensions are expected
+		 * to be known. */
+		void buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread = 1024,
+								  size_t memoryLimit = 1024 * 1024 * 8 );
 	
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
@@ -65,7 +67,8 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >::buildFromFile( const string& plyFilename, const int& maxLvl )
+	void FastParallelOctree< Morton, Point >
+	::buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread, size_t memoryLimit )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
@@ -87,14 +90,16 @@ namespace model
 		sorter.sort( sortedFilename );
 		m_dim = sorter.comp();
 		
-		buildFromSortedFile( sortedFilename );
+		HierarchyCreator creator( sortedFilename, m_dim, loadPerThread, memoryLimit );
+		m_root = creator.create();
 	}
 	
 	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >::buildFromSortedFile( const string& plyFilename )
+	void FastParallelOctree< Morton, Point >
+	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, size_t memoryLimit )
 	{
-		size_t memoryLimit = 1024 * 1024 * 8;
-		HierarchyCreator creator( plyFilename, m_dim, 1024, memoryLimit );
+		m_dim = dim;
+		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit );
 		m_root = creator.create();
 	}
 }
