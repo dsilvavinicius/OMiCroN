@@ -175,6 +175,8 @@ namespace model
 		
 		T* data() { return m_array; }
 		
+		const T* data() const { return m_array; }
+		
 		template< typename Type, typename Alloc >
 		friend ostream& operator<<( ostream& out, const Array< Type, Alloc >& array );
 		

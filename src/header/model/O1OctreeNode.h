@@ -39,7 +39,7 @@ namespace model
 		{}
 		
 		O1OctreeNode( ContentsArray&& contents, bool isLeaf )
-		: m_contents( contents ),
+		: m_contents( std::move( contents ) ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children()
@@ -120,7 +120,7 @@ namespace model
 		
 		void setChildren( NodeArray&& children )
 		{
-			m_children = children;
+			m_children = std::move( children );
 		}
 		
 		template< typename C >

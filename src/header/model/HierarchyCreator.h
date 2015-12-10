@@ -22,7 +22,6 @@ namespace model
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using Node = O1OctreeNode< PointPtr >;
 		using NodeArray = Array< Node >;
-		using NodeVector = vector< Node, ManagedAllocator< Node > >;
 		
 		using OctreeDim = OctreeDimensions< Morton, Point >;
 		using Reader = PlyPointReader< Point >;
@@ -89,7 +88,7 @@ namespace model
 		void pushWork( NodeList&& workItem )
 		{
 			lock_guard< mutex > lock( m_listMutex );
-			m_workList.push_back( workItem );
+			m_workList.push_back( std::move( workItem ) );
 		}
 		
 		NodeList popWork()
@@ -121,8 +120,8 @@ namespace model
 			}
 		}
 		
-		/** Creates an inner Node, given its children. */
-		Node createInnerNode( NodeVector&& children ) const;
+		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
+		Node createInnerNode( NodeArray&& inChildren, uint nChildren ) const;
 		
 		/** Releases the sibling group, persisting it if the persistenceFlag is true.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
@@ -270,15 +269,15 @@ namespace model
 							}
 							//
 							
-							NodeVector siblings;
-							siblings.push_back( std::move( node ) );
+							NodeArray siblings( 8 );
+							siblings[ 0 ] = std::move( node );
 							input.pop_front();
 							int nSiblings = 1;
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( *input.front().getContents()[ 0 ] ).traverseUp() == parentCode )
 							{
+								siblings[ nSiblings ] = std::move( input.front() );
 								++nSiblings;
-								siblings.push_back( std::move( input.front() ) );
 								input.pop_front();
 							}	
 							
@@ -286,7 +285,7 @@ namespace model
 							{
 								// Debug
 								{
-									cout << "Merging: " << m_octreeDim.calcMorton( *siblings[ 0 ].getContents()[ 0 ] ).getPathToRoot( true ) << endl;
+									cout << "Merging" << endl << endl;
 								}
 								//
 								
@@ -300,8 +299,8 @@ namespace model
 								}
 								
 								// LOD
-								Node inner = createInnerNode( std::move( siblings ) );
-								output.push_front( inner );
+								Node inner = createInnerNode( std::move( siblings ), nSiblings );
+								output.push_front( std::move( inner ) );
 							}
 						}
 					}
@@ -523,25 +522,25 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createInnerNode( NodeVector&& vChildren ) const
+	::createInnerNode( NodeArray&& inChildren, uint nChildren ) const
 	{
 		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
 		using MapEntry = typename Map::value_type;
 		
 		// Depending on lvl, the sibling vector can be reversed.
-		NodeArray children( vChildren.size() );
+		NodeArray children( nChildren );
 		if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
 		{
 			for( int i = 0; i < children.size(); ++i )
 			{
-				children[ i ] = std::move( vChildren[ children.size() - 1 - i ] );
+				children[ i ] = std::move( inChildren[ children.size() - 1 - i ] );
 			}
 		}
 		else
 		{
 			for( int i = 0; i < children.size(); ++i )
 			{
-				children[ i ] = std::move( vChildren[ i ] );
+				children[ i ] = std::move( inChildren[ i ] );
 			}
 		}
 		
@@ -550,6 +549,14 @@ namespace model
 		for( int i = 0; i < children.size(); ++i )
 		{
 			Node& child = children[ i ];
+			
+			// Debug
+			{
+				cout << "Child: " << m_octreeDim.calcMorton( *child.getContents()[ 0 ] ).getPathToRoot( true )
+					 << "addr: " << &child << endl << endl;
+			}
+			//
+			
 			prefixMap.insert( prefixMap.end(), MapEntry( nPoints, child ) );
 			nPoints += child.getContents().size();
 			
@@ -560,6 +567,15 @@ namespace model
 				for( int j = 0; j < grandChildren.size(); ++j )
 				{
 					Node& grandChild = grandChildren[ j ];
+					
+					// Debug
+					{
+						OctreeDim grandChildLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+						cout << "GrandChild: " << grandChildLvlDim.calcMorton( *grandChild.getContents()[ 0 ] ).getPathToRoot( true )
+							 << "Setting parent as: " << children.data() + i << endl << endl;
+					}
+					//
+					
 					grandChild.setParent( children.data() + i );
 				}
 			}
