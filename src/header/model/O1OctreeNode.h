@@ -123,6 +123,13 @@ namespace model
 			m_children = std::move( children );
 		}
 		
+		/** Transforms the node into a leaf, releasing all child nodes. */
+		void turnLeaf()
+		{
+			m_isLeaf = true;
+			m_children.clear();
+		}
+		
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
 		

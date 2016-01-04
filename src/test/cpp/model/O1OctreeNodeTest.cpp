@@ -101,6 +101,10 @@ namespace model
 				ASSERT_EQ( node->child()[ 0 ].rightSibling()->getContents(), childPointArrays[ 1 ] );
 				ASSERT_EQ( node->child()[ 0 ].rightSibling()->rightSibling()->getContents(), childPointArrays[ 2 ] );
 				
+				parent->turnLeaf();
+				ASSERT_EQ( 0, parent->child().size() );
+				ASSERT_EQ( true, parent->isLeaf() );
+				
 				delete parent;
 			}
 			

@@ -143,23 +143,6 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MultiThread_Shallow_Point )
-		{
-			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-			
-			{
-				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2 );
-				OctreeTestWrapper< Octree > wrapper( octree );
-				
-				checkHierarchy( wrapper );
-			}
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-		}
-		
 		TEST( FastParallelOctree, Creation_MonoThread_Shallow_Extended )
 		{
 			using Octree = FastParallelOctree< ShallowMortonCode, ExtendedPoint >;
@@ -202,6 +185,23 @@ namespace model
 				Octree octree;
 				
 				octree.buildFromFile( "data/extended_point_octree.ply", 21 );
+				OctreeTestWrapper< Octree > wrapper( octree );
+				
+				checkHierarchy( wrapper );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+		}
+		
+		TEST( FastParallelOctree, Creation_MultiThread_Shallow_Point )
+		{
+			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				Octree octree;
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2 );
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
 				checkHierarchy( wrapper );

@@ -45,6 +45,12 @@ namespace model
 			return code;
 		}
 		
+		template< typename Node >
+		M calcMorton( const Node& node ) const
+		{
+			return calcMorton( *node.getContents()[ 0 ] );
+		}
+		
 		/** Returns the boundaries of the node identified by the given MortonCode */
 		pair< Vec3, Vec3 > getBoundaries( const M& code ) const
 		{
