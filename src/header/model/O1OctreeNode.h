@@ -115,11 +115,13 @@ namespace model
 		/** Sets the array of children. */
 		void setChildren( const NodeArray& children )
 		{
+			m_children.~NodeArray();
 			m_children = children;
 		}
 		
 		void setChildren( NodeArray&& children )
 		{
+			m_children.~NodeArray();
 			m_children = std::move( children );
 		}
 		

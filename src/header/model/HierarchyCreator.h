@@ -99,6 +99,24 @@ namespace model
 			return nodeList;
 		}
 		
+		/** Sets the parent pointer for all children of a given node. */
+		void setParent( Node& node ) const
+		{
+			NodeArray& children = node.child();
+			for( int i = 0; i < children.size(); ++i )
+			{
+				// Debug
+// 				{
+// 					OctreeDim grandChildDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+// 					cout << "Setting parent of " << grandChildDim.calcMorton( grandChildren[ j ] ).getPathToRoot( true )
+// 						<< ": " << m_octreeDim.calcMorton( child ).getPathToRoot( true )
+// 						<< "addr: " << child.data() + i << endl << endl;
+// 				}
+				
+				children[ i ].setParent( &node );
+			}
+		}
+		
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const
 		{
@@ -173,10 +191,14 @@ namespace model
 				for( int i = 0; i < lesserMortonChild->size(); ++i )
 				{
 					mergedChild[ i ] = std::move( ( *lesserMortonChild )[ i ] );
+					// Parent pointer fix can be needed.
+					setParent( mergedChild[ i ] );
 				}
 				for( int i = 0; i < greaterMortonChild->size(); ++i )
 				{
 					mergedChild[ lesserMortonChild->size() + i ] = std::move( ( *greaterMortonChild )[ i ] );
+					// Parent pointer fix can be needed.
+					setParent( mergedChild[ i ] );
 				}
 				
 				nextLastNode.setChildren( std::move( mergedChild ) );
@@ -763,20 +785,7 @@ namespace model
 			// Set parental relationship of children.
 			if( !child.isLeaf() )
 			{
-				NodeArray& grandChildren = child.child();
-				for( int j = 0; j < grandChildren.size(); ++j )
-				{
-					// Debug
-					{
-						OctreeDim grandChildDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-						cout << "Parent of " << grandChildDim.calcMorton( grandChildren[ j ] ).getPathToRoot( true )
-							 << ": " << m_octreeDim.calcMorton( child ).getPathToRoot( true )
-							 << "addr: " << children.data() + i << endl << endl;
-					}
-					
-					Node& grandChild = grandChildren[ j ];
-					grandChild.setParent( children.data() + i );
-				}
+				setParent( child );
 			}
 		}
 		
@@ -791,7 +800,7 @@ namespace model
 			selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
 		}
 		
-		Node node( selectedPoints, false );
+		Node node( std::move( selectedPoints ), false );
 		node.setChildren( std::move( children ) );
 		
 		return node;

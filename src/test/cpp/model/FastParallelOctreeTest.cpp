@@ -24,14 +24,24 @@ namespace model
 			{
 				Morton expectedMorton; expectedMorton.build( expectedMortonBits );
 				SCOPED_TRACE( expectedMorton.getPathToRoot( true ) );
-				cout << "Node: " << expectedMorton.getPathToRoot( true ) << endl;
+				
+				// Debug
+				{
+					cout << "Checking node: " << expectedMorton.getPathToRoot( true );
+					if( parent )
+					{
+						Dim parentLvlDim( m_octree.dim(), expectedMorton.getLevel() - 1 );
+						cout << "Expected parent: " << parentLvlDim.calcMorton( *parent ).getPathToRoot( true )
+							 << "Addr: " << parent << endl << endl;
+					}
+				}
 				
 				ASSERT_EQ( parent, node.parent() );
 				ASSERT_EQ( node.isLeaf(), node.child().size() == 0 );
 				
 				Dim expectedLvlDim( m_octree.dim(), expectedMorton.getLevel() );
 				
-				NodeContents contents = node.getContents();
+				const NodeContents& contents = node.getContents();
 				for( int i = 0; i < contents.size(); ++i )
 				{
 					Morton nodeMorton = expectedLvlDim.calcMorton( *contents[ i ] );
@@ -45,7 +55,7 @@ namespace model
 				{
 					Morton nodeMorton; nodeMorton.build( expectedChildMortonBits[ 0 ] );
 					Dim expectedLvlDim( m_octree.dim(), nodeMorton.traverseUp()->getLevel() );
-					cout << "Checking child of " << expectedLvlDim.calcMorton( *node.getContents()[ 0 ] ).getPathToRoot( true );
+					cout << "Checking children of " << expectedLvlDim.calcMorton( *node.getContents()[ 0 ] ).getPathToRoot( true );
 				}
 				
 				NodeArray& child = node.child();
@@ -53,11 +63,8 @@ namespace model
 				
 				for( int i = 0; i < child.size(); ++i )
 				{
-					cout << "Child " << i << " node addr: " << child.data() + i << endl;
 					checkNode( child[ i ], &node, expectedChildMortonBits[ i ] );
 				}
-				
-				cout << endl;
 			}
 			
 			Octree& m_octree;
