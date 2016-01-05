@@ -99,9 +99,42 @@ namespace model
 			return nodeList;
 		}
 		
+		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
+		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const
+		{
+			Node& firstNode = list.front();
+			NodeArray& firstNodeChild = firstNode.child();
+			if( firstNodeChild.size() == 1 && firstNodeChild[ 0 ].isLeaf() )
+			{
+				// Debug
+				{
+					cout << "Turning into leaf: " << nextLvlDim.calcMorton( firstNode ).getPathToRoot( true )
+							<< endl;
+				}
+				//
+				
+				firstNode.turnLeaf();
+			}
+			
+			Node& lastNode = list.back();
+			NodeArray& lastNodeChild = lastNode.child();
+			if( lastNodeChild.size() == 1 && lastNodeChild[ 0 ].isLeaf() )
+			{
+				// Debug
+				{
+					cout << "Turning into leaf: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true )
+							<< endl;
+				}
+				//
+				
+				lastNode.turnLeaf();
+			}
+		}
+		
 		/** If needed, removes the boundary duplicate node that can occur if nodes from the same sibling group are
 		 * processed in different threads. */
-		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim ) const
+		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim )
+		const
 		{
 			Node& prevFirstNode = previousProcessed.front();
 			Node& nextLastNode = nextProcessed.back();
@@ -150,31 +183,8 @@ namespace model
 				
 				previousProcessed.pop_front();
 			}
-			else
-			{
-				if( prevFirstNodeChild.size() == 1 && prevFirstNodeChild[ 0 ].isLeaf() )
-				{
-					// Debug
-					{
-						cout << "Turning into leaf: " << nextLvlDim.calcMorton( prevFirstNode ).getPathToRoot( true )
-							 << endl;
-					}
-					//
-					
-					prevFirstNode.turnLeaf();
-				}
-				if( nextLastNodeChild.size() == 1 && nextLastNodeChild[ 0 ].isLeaf() )
-				{
-					// Debug
-					{
-						cout << "Turning into leaf: " << nextLvlDim.calcMorton( nextLastNode ).getPathToRoot( true )
-							 << endl;
-					}
-					//
-					
-					nextLastNode.turnLeaf();
-				}
-			}
+			
+			collapseBoundaries( previousProcessed, nextLvlDim );
 		}
 		
 		/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
@@ -362,6 +372,8 @@ namespace model
 		{
 			cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
 			
+			OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+			
 			while( true )
 			{
 				if( m_workList.size() > 0 )
@@ -431,8 +443,6 @@ namespace model
 						}
 					}
 					
-					OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
-					
 					// Debug
 // 					{
 // 						cout << "Before work merge:" << endl;
@@ -468,6 +478,8 @@ namespace model
 // 						cout << "Pushing last list to next lvl." << endl << endl;
 // 					}
 					
+					// The last thread NodeList is not collapsed, since the last node can be in a sibling group not
+					// entirely processed in this iteration.
 					if( !m_nextLvlWorkList.empty() )
 					{
 						removeBoundaryDuplicate( m_nextLvlWorkList.front(), iterOutput[ 0 ], nextLvlDim );
@@ -525,6 +537,8 @@ namespace model
 				{
 					if( leaflvlFinished )
 					{
+						// The last NodeList is not collapsed yet.
+						collapseBoundaries( m_nextLvlWorkList.front(), nextLvlDim );
 						break;
 					}
 				}
