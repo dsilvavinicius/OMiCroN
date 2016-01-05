@@ -53,7 +53,7 @@ namespace model
 				
 				for( int i = 0; i < child.size(); ++i )
 				{
-					cout << "Node addr: " << child.data() + i << endl;
+					cout << "Child " << i << " node addr: " << child.data() + i << endl;
 					checkNode( child[ i ], &node, expectedChildMortonBits[ i ] );
 				}
 				

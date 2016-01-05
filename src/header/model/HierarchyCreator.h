@@ -115,7 +115,8 @@ namespace model
 				//Debug
 				{
 					Morton duplicateCode = nextLvlDim.calcMorton( previousProcessed.front() );
-					cout << "Removing duplicate:" << duplicateCode.getPathToRoot( true ) << endl << endl;
+					cout << "Same sibling group in different threads. Removing duplicate:" << endl
+						 << duplicateCode.getPathToRoot( true ) << endl << endl;
 				}
 				
 				NodeArray mergedChild( prevFirstNodeChild.size() + nextLastNodeChild.size() );
@@ -136,13 +137,6 @@ namespace model
 					greaterMortonChild = &nextLastNodeChild;
 				}
 				
-				// Debug
-				{
-					cout << "prev size: " << prevFirstNodeChild.size() << endl
-							<< "next size: " << nextLastNodeChild.size() << endl
-							<< "merged size: " << mergedChild.size() << endl << endl;
-				}
-				
 				for( int i = 0; i < lesserMortonChild->size(); ++i )
 				{
 					mergedChild[ i ] = std::move( ( *lesserMortonChild )[ i ] );
@@ -160,10 +154,24 @@ namespace model
 			{
 				if( prevFirstNodeChild.size() == 1 && prevFirstNodeChild[ 0 ].isLeaf() )
 				{
+					// Debug
+					{
+						cout << "Turning into leaf: " << nextLvlDim.calcMorton( prevFirstNode ).getPathToRoot( true )
+							 << endl;
+					}
+					//
+					
 					prevFirstNode.turnLeaf();
 				}
 				if( nextLastNodeChild.size() == 1 && nextLastNodeChild[ 0 ].isLeaf() )
 				{
+					// Debug
+					{
+						cout << "Turning into leaf: " << nextLvlDim.calcMorton( nextLastNode ).getPathToRoot( true )
+							 << endl;
+					}
+					//
+					
 					nextLastNode.turnLeaf();
 				}
 			}
@@ -175,18 +183,18 @@ namespace model
 		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim )
 		{
 			// Debug
-			{
-				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
-					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
-			}
+// 			{
+// 				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
+// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
+// 			}
 			
 			if( previousProcessed.size() < m_expectedLoadPerThread )
 			{
 				// Debug
-				{
-					cout << "Moving prev to next" << endl << endl;
-				}
+// 				{
+// 					cout << "Moving prev to next" << endl << endl;
+// 				}
 				
 				removeBoundaryDuplicate( previousProcessed, nextProcessed, nextLvlDim );
 				
@@ -195,9 +203,9 @@ namespace model
 			else
 			{
 				// Debug
-				{
-					cout << "Pushing next to global worklist." << endl << endl;
-				}
+// 				{
+// 					cout << "Pushing next to global worklist." << endl << endl;
+// 				}
 				
 				removeBoundaryDuplicate( m_nextLvlWorkList.front(), previousProcessed, nextLvlDim );
 				
@@ -205,11 +213,11 @@ namespace model
 			}
 			
 			// Debug
-			{
-				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
-					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
-			}
+// 			{
+// 				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
+// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
+// 			}
 		}
 		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
@@ -359,9 +367,9 @@ namespace model
 				if( m_workList.size() > 0 )
 				{
 					// Debug
-					{
-						cout << "iter start" << endl << endl;
-					}
+// 					{
+// 						cout << "iter start" << endl << endl;
+// 					}
 					
 					int dispatchedThreads = ( m_workList.size() > M_N_THREADS ) ? M_N_THREADS : m_workList.size();
 					IterArray iterInput( dispatchedThreads );
@@ -386,10 +394,9 @@ namespace model
 							Morton parentCode = *m_octreeDim.calcMorton( node ).traverseUp();
 							
 							// Debug
-							{
-								cout << "Processing: " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
-									 << "Parent: " << parentCode.getPathToRoot( true ) << endl;
-							}
+ 							{
+ 								cout << "Processing: " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+ 							}
 							//
 							
 							NodeArray siblings( 8 );
@@ -427,23 +434,23 @@ namespace model
 					OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
 					
 					// Debug
-					{
-						cout << "Before work merge:" << endl;
-						for( int i = 0; i < iterOutput.size(); ++i )
-						{
-							cout << "output " << i << endl
-								 << nodeListToString( iterOutput[ i ], nextLvlDim );
-						}
-						cout << endl;
-					}
+// 					{
+// 						cout << "Before work merge:" << endl;
+// 						for( int i = 0; i < iterOutput.size(); ++i )
+// 						{
+// 							cout << "output " << i << endl
+// 								 << nodeListToString( iterOutput[ i ], nextLvlDim );
+// 						}
+// 						cout << endl;
+// 					}
 					
 					
 					if( !m_nextLvlWorkList.empty() )
 					{
 						// Debug
-						{
-							cout << "Merge next lvl not empty" << endl << endl;
-						}
+// 						{
+// 							cout << "Merge next lvl not empty" << endl << endl;
+// 						}
 						
 						NodeList nextLvlFront = std::move( m_nextLvlWorkList.front() );
 						m_nextLvlWorkList.pop_front();
@@ -457,9 +464,10 @@ namespace model
 					}
 					
 					// Debug
-					{
-						cout << "Pushing last list to next lvl." << endl << endl;
-					}
+// 					{
+// 						cout << "Pushing last list to next lvl." << endl << endl;
+// 					}
+					
 					if( !m_nextLvlWorkList.empty() )
 					{
 						removeBoundaryDuplicate( m_nextLvlWorkList.front(), iterOutput[ 0 ], nextLvlDim );
@@ -467,45 +475,45 @@ namespace model
 					m_nextLvlWorkList.push_front( std::move( iterOutput[ 0 ] ) );
 					
 					// Debug
-					{
-						bool started = false;
-						Node* prevNode;
-						cout << "next lvl after merge " << endl;
-						for( NodeList& work : m_nextLvlWorkList )
-						{
-							cout << "nodelist " << endl;
-							for( Node& node : work )
-							{
-								if( started )
-								{
-									Morton prevMorton = nextLvlDim.calcMorton( *prevNode );
-									Morton nodeMorton = nextLvlDim.calcMorton( node );
-									cout << "prev: " << prevMorton.getPathToRoot( true ) << "node: "
-										 << nodeMorton.getPathToRoot( true ) << endl;
-									
-									if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
-									{
-										assert( prevMorton < nodeMorton );
-									}
-									else
-									{
-										assert( nodeMorton < prevMorton );
-									}
-								}
-								prevNode = &node;
-								started = true;
-							}
-						}
-						cout << endl;
-					}
+// 					{
+// 						bool started = false;
+// 						Node* prevNode;
+// 						cout << "next lvl after merge " << endl;
+// 						for( NodeList& work : m_nextLvlWorkList )
+// 						{
+// 							cout << "nodelist " << endl;
+// 							for( Node& node : work )
+// 							{
+// 								if( started )
+// 								{
+// 									Morton prevMorton = nextLvlDim.calcMorton( *prevNode );
+// 									Morton nodeMorton = nextLvlDim.calcMorton( node );
+// 									cout << "prev: " << prevMorton.getPathToRoot( true ) << "node: "
+// 										 << nodeMorton.getPathToRoot( true ) << endl;
+// 									
+// 									if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
+// 									{
+// 										assert( prevMorton < nodeMorton );
+// 									}
+// 									else
+// 									{
+// 										assert( nodeMorton < prevMorton );
+// 									}
+// 								}
+// 								prevNode = &node;
+// 								started = true;
+// 							}
+// 						}
+// 						cout << endl;
+// 					}
 					
 					// Check memory stress and release memory if necessary.
 					if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
 						// Debug
-						{
-							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
-						}
+// 						{
+// 							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
+// 						}
 						
 						isReleasing = true;
 						releaseNodes( lvl );
@@ -525,19 +533,19 @@ namespace model
 			--lvl;
 			
 			// Debug
-			{
-				cout << "Prev dim: " << m_octreeDim << endl;
-			}
+// 			{
+// 				cout << "Prev dim: " << m_octreeDim << endl;
+// 			}
 			//
 			
 			m_octreeDim = OctreeDim( m_octreeDim, lvl );
 			
 			// Debug
-			{
-				cout << "Current dim: " << m_octreeDim << endl
-					 << "Lvl processed: " << endl
-					 << workListToString( m_nextLvlWorkList, m_octreeDim );
-			}
+// 			{
+// 				cout << "Current dim: " << m_octreeDim << endl
+// 					 << "Lvl processed: " << endl
+// 					 << workListToString( m_nextLvlWorkList, m_octreeDim );
+// 			}
 			//
 			
 			swapWorkLists();
@@ -629,9 +637,9 @@ namespace model
 		while( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
 			// Debug
-			{
-				cout << "Alloc: " << AllocStatistics::totalAllocated() << endl << endl;
-			}
+// 			{
+// 				cout << "Alloc: " << AllocStatistics::totalAllocated() << endl << endl;
+// 			}
 			//
 			
 			// The strategy is to release nodes without harming of the next hierarchy creation iterations. So, any current
@@ -744,6 +752,14 @@ namespace model
 				NodeArray& grandChildren = child.child();
 				for( int j = 0; j < grandChildren.size(); ++j )
 				{
+					// Debug
+					{
+						OctreeDim grandChildDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+						cout << "Parent of " << grandChildDim.calcMorton( grandChildren[ j ] ).getPathToRoot( true )
+							 << ": " << m_octreeDim.calcMorton( child ).getPathToRoot( true )
+							 << "addr: " << children.data() + i << endl << endl;
+					}
+					
 					Node& grandChild = grandChildren[ j ];
 					grandChild.setParent( children.data() + i );
 				}
