@@ -49,13 +49,12 @@ namespace model
 				}
 			}
 			
-			void checkChild( Node& node, const vector< ulong >& expectedChildMortonBits ) const
+			void checkChild( Node& node, const int nodeLvl, const vector< ulong >& expectedChildMortonBits ) const
 			{
-				if( !expectedChildMortonBits.empty() )
+				// Debug
 				{
-					Morton nodeMorton; nodeMorton.build( expectedChildMortonBits[ 0 ] );
-					Dim expectedLvlDim( m_octree.dim(), nodeMorton.traverseUp()->getLevel() );
-					cout << "Checking children of " << expectedLvlDim.calcMorton( *node.getContents()[ 0 ] ).getPathToRoot( true );
+					Dim nodeLvlDim( m_octree.dim(), nodeLvl );
+					cout << "Checking children of " << nodeLvlDim.calcMorton( node ).getPathToRoot( true ) << endl;
 				}
 				
 				NodeArray& child = node.child();
@@ -97,40 +96,40 @@ namespace model
 			wrapper.checkNode( octree.root(), nullptr, 0x1 );
 			
 			// lvl 1
-			wrapper.checkChild( octree.root(), { 0xa, 0xc, 0xe } );
+			wrapper.checkChild( octree.root(), 0, { 0xa, 0xc, 0xe } );
 			
 			// lvl 2
-			wrapper.checkChild( octree.root().child()[ 0 ], { 0x53 } );
-			wrapper.checkChild( octree.root().child()[ 1 ], { 0x61, 0x67  } );
-			wrapper.checkChild( octree.root().child()[ 2 ], { 0x70, 0x71, 0x73, 0x76 } );
+			wrapper.checkChild( octree.root().child()[ 0 ], 1, { 0x53 } );
+			wrapper.checkChild( octree.root().child()[ 1 ], 1, { 0x61, 0x67  } );
+			wrapper.checkChild( octree.root().child()[ 2 ], 1, { 0x70, 0x71, 0x73, 0x76 } );
 			
 			// lvl 3
-			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ], { 0x29b } );
-			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ], { 0x30c } );
-			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 1 ], {} );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 0 ], {} );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 1 ], {} );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 2 ], { 0x39d, 0x39f } );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ], { 0x3b0 } );
+			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ], 2, { 0x29b } );
+			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ], 2, { 0x30c } );
+			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 1 ], 2, {} );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 0 ], 2, {} );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 1 ], 2, {} );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 2 ], 2, { 0x39d, 0x39f } );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ], 2, { 0x3b0 } );
 			
 			// lvl 4
-			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ], { 0x14d8 } );
-			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ], { 0x1864 } );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 2 ].child()[ 0 ], {} );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 2 ].child()[ 1 ], {} );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ].child()[ 0 ], { 0x1d80, 0x1d82 } );
+			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ], 3, { 0x14d8 } );
+			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ], 3, { 0x1864 } );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 2 ].child()[ 0 ], 3, {} );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 2 ].child()[ 1 ], 3, {} );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ].child()[ 0 ], 3, { 0x1d80, 0x1d82 } );
 			
 			// lvl 5
-			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], { 0xa6c0, 0xa6c3 } );
-			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], { 0xc320, 0xc325 } );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ].child()[ 0 ].child()[ 0 ], {} );
-			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ].child()[ 0 ].child()[ 1 ], {} );
+			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], 4, { 0xa6c0, 0xa6c3 } );
+			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], 4, { 0xc320, 0xc325 } );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ].child()[ 0 ].child()[ 0 ], 4, {} );
+			wrapper.checkChild( octree.root().child()[ 2 ].child()[ 3 ].child()[ 0 ].child()[ 1 ], 4, {} );
 			
 			// lvl 6
-			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], {} );
-			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 1 ], {} );
-			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], {} );
-			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 1 ], {} );
+			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], 5, {} );
+			wrapper.checkChild( octree.root().child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 1 ], 5, {} );
+			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 0 ], 5, {} );
+			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 1 ], 5, {} );
 		}
 		
 		TEST( FastParallelOctree, Creation_MonoThread_Shallow_Point )

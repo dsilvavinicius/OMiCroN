@@ -122,35 +122,51 @@ namespace model
 			}
 		}
 		
+		// TODO: If the list has just one element there is no need to check collapse in back.
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const
 		{
-			Node& firstNode = list.front();
-			NodeArray& firstNodeChild = firstNode.child();
-			if( firstNodeChild.size() == 1 && firstNodeChild[ 0 ].isLeaf() )
+			if( !list.empty() )
 			{
+				Node& firstNode = list.front();
+				NodeArray& firstNodeChild = firstNode.child();
+				
 				// Debug
 				{
-					cout << "Turning into leaf: " << nextLvlDim.calcMorton( firstNode ).getPathToRoot( true )
-							<< endl;
+					cout << "Checking for collapse list with size " << list.size() << ":" << endl;
+					cout << nextLvlDim.calcMorton( firstNode ).getPathToRoot( true ) << endl;
 				}
-				//
 				
-				firstNode.turnLeaf();
-			}
-			
-			Node& lastNode = list.back();
-			NodeArray& lastNodeChild = lastNode.child();
-			if( lastNodeChild.size() == 1 && lastNodeChild[ 0 ].isLeaf() )
-			{
+				if( firstNodeChild.size() == 1 && firstNodeChild[ 0 ].isLeaf() )
+				{
+					// Debug
+					{
+						cout << "Collapsing." << endl << endl;
+					}
+					//
+					
+					firstNode.turnLeaf();
+				}
+				
+				Node& lastNode = list.back();
+				NodeArray& lastNodeChild = lastNode.child();
+				
 				// Debug
 				{
-					cout << "Turning into leaf: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true )
-							<< endl;
+					cout << "Checking for collapse: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true ) << endl;
 				}
-				//
 				
-				lastNode.turnLeaf();
+				if( lastNodeChild.size() == 1 && lastNodeChild[ 0 ].isLeaf() )
+				{
+					// Debug
+					{
+						cout << "Turning into leaf: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true )
+								<< endl;
+					}
+					//
+					
+					lastNode.turnLeaf();
+				}
 			}
 		}
 		
@@ -229,6 +245,13 @@ namespace model
 			}
 			
 			collapseBoundaries( previousProcessed, nextLvlDim );
+			
+			// If needed, collapse the last node of nextProcessed
+			NodeArray& nextLastNodeChild = nextLastNode.child();
+			if( nextLastNodeChild.size() == 1 && nextLastNodeChild[ 0 ].isLeaf() )
+			{
+				nextLastNode.turnLeaf();
+			}
 		}
 		
 		/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
@@ -237,20 +260,20 @@ namespace model
 		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim )
 		{
 			// Debug
-// 			{
-// 				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
-// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
-// 			}
+			{
+				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
+					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
+			}
 			
+			removeBoundaryDuplicate( previousProcessed, nextProcessed, nextLvlDim );
+		
 			if( previousProcessed.size() < m_expectedLoadPerThread )
 			{
 				// Debug
 // 				{
 // 					cout << "Moving prev to next" << endl << endl;
 // 				}
-				
-				removeBoundaryDuplicate( previousProcessed, nextProcessed, nextLvlDim );
 				
 				nextProcessed.splice( nextProcessed.end(), previousProcessed );
 			}
@@ -267,11 +290,11 @@ namespace model
 			}
 			
 			// Debug
-// 			{
-// 				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
-// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
-// 			}
+			{
+				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
+					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+					<< "nextLvlWorkList:" << endl << workListToString( m_nextLvlWorkList, nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
+			}
 		}
 		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
@@ -423,9 +446,9 @@ namespace model
 				if( m_workList.size() > 0 )
 				{
 					// Debug
-// 					{
-// 						cout << "iter start" << endl << endl;
-// 					}
+					{
+						cout << "iter start" << endl << endl;
+					}
 					
 					int dispatchedThreads = ( m_workList.size() > M_N_THREADS ) ? M_N_THREADS : m_workList.size();
 					IterArray iterInput( dispatchedThreads );
@@ -436,6 +459,10 @@ namespace model
 					}
 					
 					IterArray iterOutput( dispatchedThreads );
+					
+					// Debug
+					mutex logMutex;
+					//
 					
 					#pragma omp parallel for
 					for( int i = 0; i < dispatchedThreads; ++i )
@@ -449,23 +476,32 @@ namespace model
 							Node& node = input.front();
 							Morton parentCode = *m_octreeDim.calcMorton( node ).traverseUp();
 							
-							// Debug
- 							{
- 								cout << "Thread " << omp_get_thread_num() << " processing: "
-									 << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
- 							}
-							//
-							
 							NodeArray siblings( 8 );
 							siblings[ 0 ] = std::move( node );
 							input.pop_front();
 							int nSiblings = 1;
+							
+							// Debug
+							{
+								lock_guard< mutex > lock( logMutex );
+ 								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
+									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+ 							}
+							//
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
 							{
 								siblings[ nSiblings ] = std::move( input.front() );
 								++nSiblings;
 								input.pop_front();
+								
+								// Debug
+								{
+									lock_guard< mutex > lock( logMutex );
+									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
+										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+								}
+								//
 							}	
 							
 							if( input.empty() )
@@ -473,13 +509,33 @@ namespace model
 								isBoundarySiblingGroup = true;
 							}
 							
+							// Debug
+							{
+								lock_guard< mutex > lock( logMutex );
+								cout << "Thread " << omp_get_thread_num() << " nSiblings: " << nSiblings
+									 << " is leaf: " << siblings[ 0 ].isLeaf() << " is boundary: "
+									 << isBoundarySiblingGroup << endl << endl;
+							}
+							
 							if( nSiblings == 1 && siblings[ 0 ].isLeaf() && !isBoundarySiblingGroup )
 							{
-								// Merging, just put the node to be processed in next level.
+								// Debug
+								{
+									lock_guard< mutex > lock( logMutex );
+									cout << "Thread " << omp_get_thread_num() << " collapse." << endl << endl;
+								}
+								
+								// Collapse: just put the node to be processed in next level.
 								output.push_front( std::move( siblings[ 0 ] ) );
 							}
 							else
 							{
+								// Debug
+								{
+									lock_guard< mutex > lock( logMutex );
+									cout << "Thread " << omp_get_thread_num() << " LOD." << endl << endl;
+								}
+								
 								// LOD
 								Node inner = createInnerNode( std::move( siblings ), nSiblings );
 								output.push_front( std::move( inner ) );
