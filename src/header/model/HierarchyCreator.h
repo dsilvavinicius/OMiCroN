@@ -102,16 +102,21 @@ namespace model
 		/** Sets the parent pointer for all children of a given node. */
 		void setParent( Node& node ) const
 		{
+			// Debug
+			{
+				cout << "Setting children parents of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+			}
+			
 			NodeArray& children = node.child();
 			for( int i = 0; i < children.size(); ++i )
 			{
 				// Debug
-// 				{
-// 					OctreeDim grandChildDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-// 					cout << "Setting parent of " << grandChildDim.calcMorton( grandChildren[ j ] ).getPathToRoot( true )
-// 						<< ": " << m_octreeDim.calcMorton( child ).getPathToRoot( true )
-// 						<< "addr: " << child.data() + i << endl << endl;
-// 				}
+				{
+					OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+					cout << "Setting parent of " << childDim.calcMorton( children[ i ] ).getPathToRoot( true )
+						<< ": " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
+						<< "addr: " << &node << endl << endl;
+				}
 				
 				children[ i ].setParent( &node );
 			}
@@ -149,25 +154,26 @@ namespace model
 			}
 		}
 		
-		/** If needed, removes the boundary duplicate node that can occur if nodes from the same sibling group are
-		 * processed in different threads. */
+		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
+		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim )
 		const
 		{
 			Node& prevFirstNode = previousProcessed.front();
 			Node& nextLastNode = nextProcessed.back();
-			NodeArray& prevFirstNodeChild = prevFirstNode.child();
-			NodeArray& nextLastNodeChild = nextLastNode.child();
 			
 			if( nextLvlDim.calcMorton( prevFirstNode ) == nextLvlDim.calcMorton( nextLastNode ) )
 			{
 				// Nodes from same sibling groups were in different threads
 				
-				//Debug
+				NodeArray& prevFirstNodeChild = prevFirstNode.child();
+				NodeArray& nextLastNodeChild = nextLastNode.child();
+				
+				// Debug
 				{
-					Morton duplicateCode = nextLvlDim.calcMorton( previousProcessed.front() );
-					cout << "Same sibling group in different threads. Removing duplicate:" << endl
-						 << duplicateCode.getPathToRoot( true ) << endl << endl;
+					cout << "Prev merged child: " << m_octreeDim.calcMorton( prevFirstNodeChild[ 0 ] ).getPathToRoot( true )
+						 << endl << "Next merged child: "
+						 << m_octreeDim.calcMorton( nextLastNodeChild[ 0 ] ).getPathToRoot( true ) << endl;
 				}
 				
 				NodeArray mergedChild( prevFirstNodeChild.size() + nextLastNodeChild.size() );
@@ -188,17 +194,33 @@ namespace model
 					greaterMortonChild = &nextLastNodeChild;
 				}
 				
+				// Debug
+				{
+					cout << "Less merged child: " << m_octreeDim.calcMorton( ( *lesserMortonChild )[ 0 ] ).getPathToRoot( true )
+						 << endl << "Great merged child: "
+						 << m_octreeDim.calcMorton( ( *greaterMortonChild )[ 0 ] ).getPathToRoot( true ) << endl;
+				}
+				
+				//Debug
+				{
+					Morton duplicateCode = nextLvlDim.calcMorton( previousProcessed.front() );
+					cout << "Same sibling group in different threads. Removing duplicate:" << endl
+						 << duplicateCode.getPathToRoot( true ) << "resulting node size: "
+						 << lesserMortonChild->size() + greaterMortonChild->size() << endl << endl;
+				}
+				
 				for( int i = 0; i < lesserMortonChild->size(); ++i )
 				{
 					mergedChild[ i ] = std::move( ( *lesserMortonChild )[ i ] );
-					// Parent pointer fix can be needed.
+					// Parent pointer needs to be fixed.
 					setParent( mergedChild[ i ] );
 				}
 				for( int i = 0; i < greaterMortonChild->size(); ++i )
 				{
-					mergedChild[ lesserMortonChild->size() + i ] = std::move( ( *greaterMortonChild )[ i ] );
-					// Parent pointer fix can be needed.
-					setParent( mergedChild[ i ] );
+					int idx = lesserMortonChild->size() + i;
+					mergedChild[ idx ] = std::move( ( *greaterMortonChild )[ i ] );
+					// Parent pointer needs to be fixed.
+					setParent( mergedChild[ idx ] );
 				}
 				
 				nextLastNode.setChildren( std::move( mergedChild ) );
@@ -429,7 +451,8 @@ namespace model
 							
 							// Debug
  							{
- 								cout << "Processing: " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+ 								cout << "Thread " << omp_get_thread_num() << " processing: "
+									 << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
  							}
 							//
 							
@@ -480,9 +503,9 @@ namespace model
 					if( !m_nextLvlWorkList.empty() )
 					{
 						// Debug
-// 						{
-// 							cout << "Merge next lvl not empty" << endl << endl;
-// 						}
+						{
+							cout << "Merging nextLvl front and output " << dispatchedThreads - 1 << endl << endl;
+						}
 						
 						NodeList nextLvlFront = std::move( m_nextLvlWorkList.front() );
 						m_nextLvlWorkList.pop_front();
@@ -492,6 +515,11 @@ namespace model
 					
 					for( int i = dispatchedThreads - 1; i > 0; --i )
 					{
+						// Debug
+						{
+							cout << "Merging output " << i << " and " << i - 1 << endl << endl;
+						}
+						
 						mergeOrPushWork( iterOutput[ i ], iterOutput[ i - 1 ], nextLvlDim );
 					}
 					
