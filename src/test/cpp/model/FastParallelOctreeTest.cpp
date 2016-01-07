@@ -215,5 +215,22 @@ namespace model
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
+		
+		TEST( FastParallelOctree, Creation_MultiThread_Release )
+		{
+			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				Octree octree;
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2, 1000 );
+				OctreeTestWrapper< Octree > wrapper( octree );
+				
+				checkHierarchy( wrapper );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+		}
 	}
 }

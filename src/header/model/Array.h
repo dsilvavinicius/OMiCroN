@@ -173,6 +173,8 @@ namespace model
 		
 		uint size() const { return m_size; }
 		
+		bool empty() const { return m_size == 0; }
+		
 		T* data() { return m_array; }
 		
 		const T* data() const { return m_array; }

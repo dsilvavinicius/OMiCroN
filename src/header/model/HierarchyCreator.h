@@ -778,6 +778,10 @@ namespace model
 			Array< NodeList* > iterArray( M_N_THREADS );
 			auto workListIt = m_nextLvlWorkList.rbegin();
 			
+			// Debug
+			bool releaseFromNextLvl = true;
+			//
+			
 			if( workListIt != m_nextLvlWorkList.rend() )
 			{
 				while( dispatchedThreads < M_N_THREADS && workListIt != m_nextLvlWorkList.rend() )
@@ -787,11 +791,20 @@ namespace model
 			}
 			else
 			{
+				// Debug
+				releaseFromNextLvl = false;
+				//
+				
 				workListIt = m_workList.rbegin();
 				while( dispatchedThreads < M_N_THREADS )
 				{
 					iterArray[ dispatchedThreads++ ] = &*( workListIt++ );
 				}
+			}
+			
+			// Debug
+			{
+				cout << "Release from next lvl: " << releaseFromNextLvl << endl << endl;
 			}
 			
 			#pragma omp parallel for
@@ -811,8 +824,21 @@ namespace model
 				NodeList& nodeList = *iterArray[ i ];
 				for( Node& node : nodeList )
 				{
-					if( !node.isLeaf() )
+					if( !node.child().empty() )
 					{
+						// Debug
+						{
+							if( releaseFromNextLvl )
+							{
+								OctreeDim dim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+								cout << "Release children of " << dim.calcMorton( node ).getPathToRoot( true ) << endl << endl;
+							}
+							else
+							{
+								cout << "Release children of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl << endl;
+							}
+						}
+						
 						releaseSiblings( node.child(), threadIdx, currentLvl );
 					}
 				}
