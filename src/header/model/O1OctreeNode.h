@@ -31,14 +31,14 @@ namespace model
 		m_children()
 		{}
 		
-		O1OctreeNode( ContentsArray& contents, bool isLeaf )
+		O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
 		: m_contents( contents ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children()
 		{}
 		
-		O1OctreeNode( ContentsArray&& contents, bool isLeaf )
+		O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
 		: m_contents( std::move( contents ) ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),

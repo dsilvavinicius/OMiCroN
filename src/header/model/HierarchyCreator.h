@@ -124,7 +124,6 @@ namespace model
 			}
 		}
 		
-		// TODO: If the list has just one element there is no need to check collapse in back.
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const
 		{
@@ -183,6 +182,7 @@ namespace model
 			if( nextLvlDim.calcMorton( prevFirstNode ) == nextLvlDim.calcMorton( nextLastNode ) )
 			{
 				// Nodes from same sibling groups were in different threads
+				// TODO: the merge operation needs to select again the points in nextLastNode.
 				
 				NodeArray& prevFirstNodeChild = prevFirstNode.child();
 				NodeArray& nextLastNodeChild = nextLastNode.child();
@@ -838,63 +838,78 @@ namespace model
 		}
 	}
 	
-	// TODO: In the case when nChildren == 1, there is no need to make the random point selection and the contents of
-	// the new inner node can be just a copy of its child node contents.
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
 	::createInnerNode( NodeArray&& inChildren, uint nChildren ) const
 	{
-		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
-		using MapEntry = typename Map::value_type;
-		
-		// Depending on lvl, the sibling vector can be reversed.
-		NodeArray children( nChildren );
-		if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
+		if( inChildren.size() == 1 )
 		{
-			for( int i = 0; i < children.size(); ++i )
-			{
-				children[ i ] = std::move( inChildren[ children.size() - 1 - i ] );
-			}
-		}
-		else
-		{
-			for( int i = 0; i < children.size(); ++i )
-			{
-				children[ i ] = std::move( inChildren[ i ] );
-			}
-		}
-		
-		int nPoints = 0;
-		Map prefixMap;
-		for( int i = 0; i < children.size(); ++i )
-		{
-			Node& child = children[ i ];
-			
-			prefixMap.insert( prefixMap.end(), MapEntry( nPoints, child ) );
-			nPoints += child.getContents().size();
-			
-			// Set parental relationship of children.
+			// Set parental link in grand-children.
+			Node& child = inChildren[ 0 ];
 			if( !child.isLeaf() )
 			{
 				setParent( child );
 			}
+			
+			Node node( child.getContents(), false );
+			node.setChildren( std::move( inChildren ) );
+			
+			return node;
 		}
-		
-		// LoD has 1/8 of children points.
-		int numSamplePoints = std::max( 1., nPoints * 0.125 );
-		Array< PointPtr > selectedPoints( numSamplePoints );
-		
-		for( int i = 0; i < numSamplePoints; ++i )
+		else
 		{
-			int choosenIdx = rand() % nPoints;
-			MapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
-			selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
+			using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
+			using MapEntry = typename Map::value_type;
+			
+			// Depending on lvl, the sibling vector can be reversed.
+			NodeArray children( nChildren );
+			if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
+			{
+				for( int i = 0; i < children.size(); ++i )
+				{
+					children[ i ] = std::move( inChildren[ children.size() - 1 - i ] );
+				}
+			}
+			else
+			{
+				for( int i = 0; i < children.size(); ++i )
+				{
+					children[ i ] = std::move( inChildren[ i ] );
+				}
+			}
+			
+			int nPoints = 0;
+			Map prefixMap;
+			for( int i = 0; i < children.size(); ++i )
+			{
+				Node& child = children[ i ];
+				
+				prefixMap.insert( prefixMap.end(), MapEntry( nPoints, child ) );
+				nPoints += child.getContents().size();
+				
+				// Set parental relationship of children.
+				if( !child.isLeaf() )
+				{
+					setParent( child );
+				}
+			}
+			
+			// LoD has 1/8 of children points.
+			int numSamplePoints = std::max( 1., nPoints * 0.125 );
+			Array< PointPtr > selectedPoints( numSamplePoints );
+			
+			for( int i = 0; i < numSamplePoints; ++i )
+			{
+				int choosenIdx = rand() % nPoints;
+				MapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
+				selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
+			}
+			
+			Node node( std::move( selectedPoints ), false );
+			node.setChildren( std::move( children ) );
+			
+			return node;
 		}
-		
-		Node node( std::move( selectedPoints ), false );
-		node.setChildren( std::move( children ) );
-		
-		return node;
 	}
 }
 
