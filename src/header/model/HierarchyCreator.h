@@ -85,12 +85,14 @@ namespace model
 			m_nextLvlWorkList = WorkList();
 		}
 		
+		// TODO: The lock can be avoided after the disk thread has finished its work.
 		void pushWork( NodeList&& workItem )
 		{
 			lock_guard< mutex > lock( m_listMutex );
 			m_workList.push_back( std::move( workItem ) );
 		}
 		
+		// TODO: The lock can be avoided after the disk thread has finished its work.
 		NodeList popWork()
 		{
 			lock_guard< mutex > lock( m_listMutex );
@@ -381,6 +383,9 @@ namespace model
 		bool isReleasing = false;
 		// SHARED. Indicates when a node release is ocurring.
 		condition_variable releaseFlag;
+		// Debug
+		//mutex logMutex;
+		//
 		
 		// Thread that loads data from sorted file or database.
 		thread diskAccessThread(
@@ -427,6 +432,7 @@ namespace model
 				
 				nodeList.push_back( Node( std::move( points ), true ) );
 				pushWork( std::move( nodeList ) );
+				
 				leaflvlFinished = true;
 			}
 		);
@@ -443,14 +449,21 @@ namespace model
 			
 			while( true )
 			{
-				if( m_workList.size() > 0 )
+				size_t workListSize;
+				{
+					// This lock is need so m_workList.size() access is not optimized, returning outdated results.
+					lock_guard< mutex > lock( m_listMutex );
+					workListSize = m_workList.size();
+				}
+				
+				if( workListSize > 0 )
 				{
 					// Debug
 // 					{
 // 						cout << "iter start" << endl << endl;
 // 					}
 					
-					int dispatchedThreads = ( m_workList.size() > M_N_THREADS ) ? M_N_THREADS : m_workList.size();
+					int dispatchedThreads = ( workListSize > M_N_THREADS ) ? M_N_THREADS : workListSize;
 					IterArray iterInput( dispatchedThreads );
 					
 					for( int i = dispatchedThreads - 1; i > -1; --i )
@@ -459,10 +472,6 @@ namespace model
 					}
 					
 					IterArray iterOutput( dispatchedThreads );
-					
-					// Debug
-					mutex logMutex;
-					//
 					
 					#pragma omp parallel for
 					for( int i = 0; i < dispatchedThreads; ++i )
@@ -501,7 +510,6 @@ namespace model
 // 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
 // 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
 // 								}
-								//
 							}	
 							
 							if( input.empty() )
@@ -629,9 +637,9 @@ namespace model
 					if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
 						// Debug
-// 						{
-// 							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
-// 						}
+						{
+							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
+						}
 						
 						isReleasing = true;
 						releaseNodes( lvl );
@@ -670,7 +678,6 @@ namespace model
 			
 			swapWorkLists();
 		}
-		
 		
 		Node* root = new Node( std::move( m_workList.front().front() ) );
 		
