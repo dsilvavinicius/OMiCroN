@@ -256,6 +256,14 @@ namespace util
 		);
 		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
 		sqlite3_exec( m_db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL );
+		sqlite3_busy_handler( m_db,
+			[]( void*, int )
+			{
+				// Always try again to make the database access
+				return 1;
+			},
+			NULL
+		);
 		
 		dropTables();
 		createTables();

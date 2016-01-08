@@ -218,16 +218,30 @@ namespace model
 		
 		TEST( FastParallelOctree, Creation_MultiThread_Release )
 		{
-			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
+			using Morton = ShallowMortonCode;
+			using Octree = FastParallelOctree< Morton, Point >;
+			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+			using NodeArray = typename Sql::NodeArray;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
 				Octree octree;
 				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2, 1000 );
-				OctreeTestWrapper< Octree > wrapper( octree );
+				cout << octree << endl;
 				
-				checkHierarchy( wrapper );
+				// Nodes released are just in the database
+ 				Sql sql( "data/sorted_simple_point_octree.db" );
+ 				Morton a; a.build( 0x1 );
+ 				Morton b = Morton::getLvlLast( 10 );
+ 				NodeArray nodes = sql.getNodes( a, b );
+// 				
+// 				for( int i = 0; i < nodes.size(); ++i )
+// 				{
+// 					
+// 				}
+				
+				ASSERT_EQ( 23, nodes.size() );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );

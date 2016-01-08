@@ -8,15 +8,17 @@
 namespace model
 {
 	/** Out-of-core fast parallel octree. */
-	template< typename MortonCode, typename Point >
+	template< typename MortonCode, typename P >
 	class FastParallelOctree
 	{
 	public:
 		using Morton = MortonCode;
+		using Point = P;
 		using PointPtr = shared_ptr< Point >;
-		using Node = O1OctreeNode< PointPtr >;
-		using Dim = OctreeDimensions< Morton, Point >;
 		using HierarchyCreator = model::HierarchyCreator< Morton, Point >;
+		using Node = typename HierarchyCreator::Node;
+		using NodeArray = typename HierarchyCreator::NodeArray;
+		using Dim = typename HierarchyCreator::OctreeDim;
 		
 		FastParallelOctree()
 		: m_root( nullptr )
@@ -49,11 +51,13 @@ namespace model
 		
 		Node& root() { return *m_root; }
 		
-		template< typename M, typename P >
-		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree );
+		template< typename M, typename Pt >
+		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, Pt >& octree );
 		
 	private:
 		void setupNodeRendering( Node node, RenderingState& renderingState );
+		
+		string toString( const Node& node, const Dim& nodeLvlDim ) const;
 		
 		/** Dimensional info of this octree. */
 		Dim m_dim;
@@ -101,6 +105,35 @@ namespace model
 		m_dim = dim;
 		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit );
 		m_root = creator.create();
+	}
+	
+	template< typename Morton, typename Point >
+	string FastParallelOctree< Morton, Point >::toString( const Node& node, const Dim& nodeLvlDim ) const
+	{
+		stringstream ss;
+		for( int i = 0; i < int( nodeLvlDim.m_nodeLvl ) - 1; ++i )
+		{
+			ss << "	";
+		}
+		
+		ss << nodeLvlDim.calcMorton( node ).getPathToRoot( true );
+		
+		Dim childLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl + 1 );
+		NodeArray child = node.child();
+		for( int i = 0; i < child.size(); ++i )
+		{
+			ss << toString( child[ i ], childLvlDim );
+		}
+		
+		return ss.str();
+	}
+	
+	template< typename M, typename P >
+	ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree )
+	{
+		using Dim = typename FastParallelOctree< M, P >::Dim;
+		out << octree.toString( *octree.m_root, Dim( octree.dim(), 0 ) );
+		return out;
 	}
 }
 
