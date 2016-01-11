@@ -33,8 +33,6 @@ namespace model
 		using WorkList = list< NodeList, ManagedAllocator< Node > >;
 		// Array with lists that will be processed in a given creation loop iteration.
 		using IterArray = Array< NodeList >;
-		// Array of first-dirty-node-per-level info.
-		using DirtyArray = Array< Morton >;
 		
 		/** Ctor.
 		 * @param sortedPlyFilename is a sorted .ply point filename.
@@ -48,8 +46,6 @@ namespace model
 		m_octreeDim( dim ),
 		m_leafLvl( m_octreeDim.m_nodeLvl ),
 		m_expectedLoadPerThread( expectedLoadPerThread ),
-		m_perThreadFirstDirty( M_N_THREADS ),
-		m_firstDirty( m_octreeDim.m_nodeLvl + 1 ),
 		m_dbs( M_N_THREADS ),
 		m_memoryLimit( memoryLimit )
 		{
@@ -58,19 +54,6 @@ namespace model
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
 				m_dbs[ i ].init( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" ) );
-				m_perThreadFirstDirty[ i ] = DirtyArray( m_leafLvl + 1 );
-			}
-			
-			for( int i = m_leafLvl; i > 0; --i )
-			{
-				if( ( m_leafLvl - i ) % 2 )
-				{
-					m_firstDirty[ i ] = Morton::getLvlLast( i );
-				}
-				else
-				{
-					m_firstDirty[ i ] = Morton::getLvlFirst( i );
-				}
 			}
 		}
 		
@@ -176,6 +159,9 @@ namespace model
 		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim )
 		const
 		{
+			assert( !previousProcessed.empty() && "previousProcessed empty." );
+			assert( !nextProcessed.empty() && "nextProcessed empty." );
+			
 			Node& prevFirstNode = previousProcessed.front();
 			Node& nextLastNode = nextProcessed.back();
 			
@@ -286,7 +272,10 @@ namespace model
 // 					cout << "Pushing next to global worklist." << endl << endl;
 // 				}
 				
-				removeBoundaryDuplicate( m_nextLvlWorkList.front(), previousProcessed, nextLvlDim );
+				if( !m_nextLvlWorkList.empty() )
+				{
+					removeBoundaryDuplicate( m_nextLvlWorkList.front(), previousProcessed, nextLvlDim );
+				}
 				
 				m_nextLvlWorkList.push_front( std::move( previousProcessed ) );
 			}
@@ -302,16 +291,11 @@ namespace model
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
 		Node createInnerNode( NodeArray&& inChildren, uint nChildren ) const;
 		
-		/** Releases the sibling group, persisting it if the persistenceFlag is true.
+		/** Releases and persists a given sibling group.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
 		 * @param threadIdx is the index of the executing thread.
-		 * @param dim is the dimensions of the octree for the sibling lvl.
-		 * @param persistenceFlag is true if the sibling group needs to be persisted too. */
-		void releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim,
-										const bool persistenceFlag );
-		
-		/** Releases a given sibling group. */
-		void releaseSiblings( NodeArray& node, const int threadIdx, const OctreeDim& dim );
+		 * @param dim is the dimensions of the octree for the sibling lvl. */
+		void releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim );
 		
 		/** Releases nodes in order to ease memory stress. */
 		void releaseNodes();
@@ -348,12 +332,6 @@ namespace model
 		
 		/** SHARED. Holds the work list with nodes of the current lvl. Database thread and master thread have access. */
 		WorkList m_workList;
-		
-		/** m_perThreadFirstDirty[ i ] contains the first dirty array for thread i. */
-		Array< DirtyArray > m_perThreadFirstDirty;
-		
-		/** m_firstDirty[ i ] contains the first dirty (i.e. not persisted) Morton in lvl i. */
-		DirtyArray m_firstDirty;
 		
 		/** Current lvl octree dimensions. */
 		OctreeDim m_octreeDim;
@@ -459,9 +437,9 @@ namespace model
 				if( workListSize > 0 )
 				{
 					// Debug
-// 					{
-// 						cout << "iter start" << endl << endl;
-// 					}
+					{
+						cout << "iter start" << endl << endl;
+					}
 					
 					int dispatchedThreads = ( workListSize > M_N_THREADS ) ? M_N_THREADS : workListSize;
 					IterArray iterInput( dispatchedThreads );
@@ -693,98 +671,28 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim,
-								 const bool persistenceFlag )
-	{
-		Sql& sql = m_dbs[ threadIdx ];
-		if( persistenceFlag )
-		{
-			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Persistence triggered " << endl << endl;
-			}
-			
-			Morton firstSiblingMorton = dim.calcMorton( siblings[ 0 ] );
-			Morton siblingMorton;
-			
-			for( int i = 0; i < siblings.size(); ++i )
-			{
-				Node& sibling = siblings[ i ];
-				NodeArray& children = sibling.child();
-				if( !children.empty() )
-				{
-					releaseSiblings( children, threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
-				}
-				
-				siblingMorton = dim.calcMorton( sibling );
-				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "Persisting sibling " << i << ": " << siblingMorton.getPathToRoot( true ) << endl << endl;
-				}
-				
-				// Persisting node
-				sql.insertNode( siblingMorton, sibling );
-			}
-			
-			// Updating thread dirtiness info.
-			DirtyArray& firstDirty = m_perThreadFirstDirty[ threadIdx ];
-			
-			if( ( m_leafLvl - dim.m_nodeLvl ) % 2 )
-			{
-				firstDirty[ dim.m_nodeLvl ] = *firstSiblingMorton.getPrevious();
-			}
-			else
-			{
-				firstDirty[ dim.m_nodeLvl ] = siblingMorton;
-			}
-		}
-		else
-		{
-			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "No persistence needed" << endl << endl;
-			}
-			
-			for( int i = 0; i < siblings.size(); ++i )
-			{
-				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "Not persisted " << i << ": " << dim.calcMorton( siblings[ i ] ).getPathToRoot( true )
-						 << endl << endl;
-				}
-				
-				if( siblings[ i ].child().size() > 0 )
-				{
-					releaseSiblings( siblings[ i ].child(), threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
-				}
-			}
-		}
-	}
-	
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >
 	::releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim )
 	{
-		Morton firstSiblingMorton = dim.calcMorton( siblings[ 0 ] );
-		
-		// Debug
+		Sql& sql = m_dbs[ threadIdx ];
+
+		for( int i = 0; i < siblings.size(); ++i )
 		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "First dirty lvl " << dim.m_nodeLvl << ": " << m_firstDirty[ dim.m_nodeLvl ].getPathToRoot( true )
-					<< endl << endl;
-		}
-		
-		if( ( m_leafLvl - dim.m_nodeLvl ) % 2 )
-		{
-			releaseAndPersistSiblings( siblings, threadIdx, dim, firstSiblingMorton < m_firstDirty[ dim.m_nodeLvl ] );
-		}
-		else
-		{
-			releaseAndPersistSiblings( siblings, threadIdx, dim, m_firstDirty[ dim.m_nodeLvl ] < firstSiblingMorton );
+			Node& sibling = siblings[ i ];
+			NodeArray& children = sibling.child();
+			if( !children.empty() )
+			{
+				releaseSiblings( children, threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
+			}
+			
+			Morton siblingMorton = dim.calcMorton( sibling );
+			// Debug
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "Persisting sibling " << i << ": " << siblingMorton.getPathToRoot( true ) << endl << endl;
+			}
+			
+			// Persisting node
+			sql.insertNode( siblingMorton, sibling );
 		}
 		
 		siblings.clear();
@@ -827,12 +735,6 @@ namespace model
 			{
 				int threadIdx = i;
 				
-				// Cleaning up thread dirtiness info.
-				for( int j = 1; j <= m_leafLvl; ++j )
-				{
-					m_perThreadFirstDirty[ i ][ j ].build( 0 );
-				}
-				
 				Sql& sql = m_dbs[ i ];
 				sql.beginTransaction();
 				
@@ -868,22 +770,6 @@ namespace model
 				}
 				
 				sql.endTransaction();
-			}
-			
-			// Updating hierarchy dirtiness info.
-			for( int i = 0; i < dispatchedThreads; ++i )
-			{
-				for( int j = 1; j <= m_leafLvl; ++j )
-				{
-					if( ( m_leafLvl - j ) % 2 )
-					{
-						m_firstDirty[ j ] = std::min( m_firstDirty[ j ], m_perThreadFirstDirty[ i ][ j ] );
-					}
-					else
-					{
-						m_firstDirty[ j ] = std::max( m_firstDirty[ j ], m_perThreadFirstDirty[ i ][ j ] );
-					}
-				}
 			}
 			
 			if( workListIt == m_workList.rend() )

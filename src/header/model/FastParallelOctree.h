@@ -119,7 +119,7 @@ namespace model
 		ss << nodeLvlDim.calcMorton( node ).getPathToRoot( true );
 		
 		Dim childLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl + 1 );
-		NodeArray child = node.child();
+		const NodeArray& child = node.child();
 		for( int i = 0; i < child.size(); ++i )
 		{
 			ss << toString( child[ i ], childLvlDim );
