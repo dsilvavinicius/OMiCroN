@@ -305,14 +305,13 @@ namespace model
 		/** Releases the sibling group, persisting it if the persistenceFlag is true.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
 		 * @param threadIdx is the index of the executing thread.
-		 * @param lvl is the hierarchy level of the sibling group.
-		 * @param firstSiblingMorton is the morton code of the first sibling.
+		 * @param dim is the dimensions of the octree for the sibling lvl.
 		 * @param persistenceFlag is true if the sibling group needs to be persisted too. */
-		void releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const uint lvl,
-										const Morton& firstSiblingMorton, const bool persistenceFlag );
+		void releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim,
+										const bool persistenceFlag );
 		
 		/** Releases a given sibling group. */
-		void releaseSiblings( NodeArray& node, const int threadIdx, const uint nodeLvl );
+		void releaseSiblings( NodeArray& node, const int threadIdx, const OctreeDim& dim );
 		
 		/** Releases nodes in order to ease memory stress. */
 		void releaseNodes();
@@ -366,6 +365,10 @@ namespace model
 		/** Mutex for the work list. */
 		mutex m_listMutex;
 		
+		// Debug
+		mutex m_logMutex;
+		//
+		
 		size_t m_memoryLimit;
 		
 		ulong m_expectedLoadPerThread;
@@ -383,9 +386,6 @@ namespace model
 		bool isReleasing = false;
 		// SHARED. Indicates when a node release is ocurring.
 		condition_variable releaseFlag;
-		// Debug
-		mutex logMutex;
-		//
 		
 		// Thread that loads data from sorted file or database.
 		thread diskAccessThread(
@@ -492,7 +492,7 @@ namespace model
 							
 							// Debug
 							{
-								lock_guard< mutex > lock( logMutex );
+								lock_guard< mutex > lock( m_logMutex );
  								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
 									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
  							}
@@ -506,7 +506,7 @@ namespace model
 								
 								// Debug
 								{
-									lock_guard< mutex > lock( logMutex );
+									lock_guard< mutex > lock( m_logMutex );
 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
 								}
@@ -693,55 +693,73 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const uint lvl,
-								 const Morton& firstSiblingMorton, const bool persistenceFlag )
+	::releaseAndPersistSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim,
+								 const bool persistenceFlag )
 	{
 		Sql& sql = m_dbs[ threadIdx ];
 		if( persistenceFlag )
 		{
-			Morton siblingMorton = firstSiblingMorton;
-			
 			// Debug
 			{
-				cout << "First sibling morton: " << siblingMorton.getPathToRoot( true ) << endl << endl;
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "Persistence triggered " << endl << endl;
 			}
+			
+			Morton firstSiblingMorton = dim.calcMorton( siblings[ 0 ] );
+			Morton siblingMorton;
 			
 			for( int i = 0; i < siblings.size(); ++i )
 			{
-				if( !siblings[ i ].child().empty() )
+				Node& sibling = siblings[ i ];
+				NodeArray& children = sibling.child();
+				if( !children.empty() )
 				{
-					releaseSiblings( siblings[ i ].child(), threadIdx, lvl + 1 );
+					releaseSiblings( children, threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
 				}
 				
+				siblingMorton = dim.calcMorton( sibling );
 				// Debug
 				{
-					cout << "Persisting sibling" << i << ": " << siblingMorton.getPathToRoot( true ) << endl << endl;
+					lock_guard< mutex > lock( m_logMutex );
+					cout << "Persisting sibling " << i << ": " << siblingMorton.getPathToRoot( true ) << endl << endl;
 				}
 				
 				// Persisting node
-				sql.insertNode( siblingMorton, siblings[ i ] );
-				siblingMorton = *siblingMorton.getNext();
+				sql.insertNode( siblingMorton, sibling );
 			}
 			
 			// Updating thread dirtiness info.
 			DirtyArray& firstDirty = m_perThreadFirstDirty[ threadIdx ];
 			
-			if( ( m_leafLvl - lvl ) % 2 )
+			if( ( m_leafLvl - dim.m_nodeLvl ) % 2 )
 			{
-				firstDirty[ lvl ] = *firstSiblingMorton.getPrevious();
+				firstDirty[ dim.m_nodeLvl ] = *firstSiblingMorton.getPrevious();
 			}
 			else
 			{
-				firstDirty[ lvl ] = siblingMorton;
+				firstDirty[ dim.m_nodeLvl ] = siblingMorton;
 			}
 		}
 		else
 		{
+			// Debug
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "No persistence needed" << endl << endl;
+			}
+			
 			for( int i = 0; i < siblings.size(); ++i )
 			{
+				// Debug
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					cout << "Not persisted " << i << ": " << dim.calcMorton( siblings[ i ] ).getPathToRoot( true )
+						 << endl << endl;
+				}
+				
 				if( siblings[ i ].child().size() > 0 )
 				{
-					releaseSiblings( siblings[ i ].child(), threadIdx, lvl + 1 );
+					releaseSiblings( siblings[ i ].child(), threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
 				}
 			}
 		}
@@ -749,20 +767,24 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::releaseSiblings( NodeArray& siblings, const int threadIdx, const uint lvl )
+	::releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim )
 	{
-		OctreeDim siblingsLvlDim( m_octreeDim, lvl );
-		Morton firstSiblingMorton = siblingsLvlDim.calcMorton( siblings[ 0 ] );
+		Morton firstSiblingMorton = dim.calcMorton( siblings[ 0 ] );
 		
-		if( ( m_leafLvl - lvl ) % 2 )
+		// Debug
 		{
-			releaseAndPersistSiblings( siblings, threadIdx, lvl, firstSiblingMorton,
-									   firstSiblingMorton < m_firstDirty[ lvl ] );
+			lock_guard< mutex > lock( m_logMutex );
+			cout << "First dirty lvl " << dim.m_nodeLvl << ": " << m_firstDirty[ dim.m_nodeLvl ].getPathToRoot( true )
+					<< endl << endl;
+		}
+		
+		if( ( m_leafLvl - dim.m_nodeLvl ) % 2 )
+		{
+			releaseAndPersistSiblings( siblings, threadIdx, dim, firstSiblingMorton < m_firstDirty[ dim.m_nodeLvl ] );
 		}
 		else
 		{
-			releaseAndPersistSiblings( siblings, threadIdx, lvl, firstSiblingMorton,
-									   m_firstDirty[ lvl ] < firstSiblingMorton );
+			releaseAndPersistSiblings( siblings, threadIdx, dim, m_firstDirty[ dim.m_nodeLvl ] < firstSiblingMorton );
 		}
 		
 		siblings.clear();
@@ -817,25 +839,31 @@ namespace model
 				NodeList& nodeList = *iterArray[ i ];
 				for( Node& node : nodeList )
 				{
+					// Debug
+					{
+						OctreeDim dim( m_octreeDim, releaseLvl );
+						lock_guard< mutex > lock( m_logMutex );
+						if( dim.m_nodeLvl == m_octreeDim.m_nodeLvl - 1 )
+						{
+							cout << "Thread " << omp_get_thread_num() << ": Next lvl release: children of "
+								 << dim.calcMorton( node ).getPathToRoot( true ) << endl;
+						}
+						else
+						{
+							cout << "Thread " << omp_get_thread_num() <<  ": Current Lvl release: children of "
+									<< dim.calcMorton( node ).getPathToRoot( true ) << endl;
+						}
+					}
+					
 					if( !node.child().empty() )
 					{
 						// Debug
 						{
-							if( releaseLvl == m_octreeDim.m_nodeLvl - 1 )
-							{
-								
-								OctreeDim dim( m_octreeDim, releaseLvl );
-								cout << "Next lvl release: children of " << dim.calcMorton( node ).getPathToRoot( true )
-									 << endl << endl;
-							}
-							else
-							{
-								cout << "Current Lvl release: children of "
-									 << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl << endl;
-							}
+							lock_guard< mutex > lock( m_logMutex );
+							cout << "Thread " << omp_get_thread_num() <<  ": Has children" << endl << endl;
 						}
 						
-						releaseSiblings( node.child(), threadIdx, releaseLvl + 1 );
+						releaseSiblings( node.child(), threadIdx, OctreeDim( m_octreeDim, releaseLvl + 1 ) );
 					}
 				}
 				
@@ -864,6 +892,12 @@ namespace model
 			}
 			else if( std::next( workListIt ) == m_nextLvlWorkList.rend() )
 			{
+				// Debug
+				{
+					OctreeDim dim( m_octreeDim, releaseLvl );
+					cout << "Skiped worklist: " << nodeListToString( *workListIt, dim ) << endl;
+				}
+				
 				releaseLvl += 1;
 				workListIt = m_workList.rbegin();
 			}
