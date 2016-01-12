@@ -3,6 +3,7 @@
 #include "SQLiteManager.h"
 #include "MortonCode.h"
 #include <MemoryManagerTypes.h>
+#include <O1OctreeNode.h>
 
 namespace model
 {
@@ -332,7 +333,7 @@ namespace model
 			}
 		}
 		
-		TEST_F( SQLiteManagerTest, AsyncAPI )
+		TEST_F( SQLiteManagerTest, DISABLED_AsyncAPI )
 		{
 			using Contents = ExtendedPointVector;
 			using Node = OctreeNode< Contents >;
@@ -406,6 +407,54 @@ namespace model
 			
 			this_thread::sleep_for( std::chrono::milliseconds( 50 ) );
 			checkRequestResults( sqLite, idNode0, idNode1  );
+		}
+		
+		TEST_F( SQLiteManagerTest, MultiThread )
+		{
+			using Node = O1OctreeNode< PointPtr >;
+			using NodeArray = Array< Node >;
+			using Morton = ShallowMortonCode;
+			using Sql = util::SQLiteManager< Point, Morton, Node >;
+			
+			int nThreads = 8;
+			Array< Sql > connections( 8 );
+			for( int i = 0; i < nThreads; ++i )
+			{
+				connections[ i ].init( "test.db" );
+			}
+			
+			int codeOffset = 10;
+			
+			#pragma omp parallel for
+			for( int index = 0; index < nThreads; ++index )
+			{
+				int i = omp_get_thread_num();
+				int code = codeOffset + i;
+				
+				PointPtr p = makeManaged< Point >( Vec3( code, code, code ), Vec3( code, code, code ) );
+				Array< PointPtr > points( 1 );
+				points[ 0 ] = p;
+				Node node( points, true );
+				Morton morton; morton.build( code );
+				
+				connections[ i ].beginTransaction();
+				connections[ i ].insertNode( morton, node );
+				connections[ i ].endTransaction();
+			}
+			
+			Morton a = Morton::getLvlFirst( 1 );
+			Morton b = Morton::getLvlLast( 10 );
+			
+			NodeArray nodes = connections[ 0 ].getNodes( a, b );
+			
+			ASSERT_EQ( nThreads, nodes.size() );
+			
+			for( int i = 0; i < nThreads; ++i )
+			{
+				int code = codeOffset + i;
+				Point expectedPoint( Vec3( code, code, code ), Vec3( code, code, code ) );
+				ASSERT_TRUE( expectedPoint.equal( *nodes[ i ].getContents()[ 0 ], 1.e-15 ) );
+			}
 		}
 	}
 }

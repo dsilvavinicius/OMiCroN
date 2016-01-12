@@ -59,6 +59,12 @@ namespace model
 		m_reader->read( Reader::SINGLE,
 			[ & ]( const P& p )
 			{
+				// Debug
+				if( i >= m_nPoints )
+				{
+					cout << "i = " << i << " nPoints = " << m_nPoints << endl << endl;
+				}
+				
 				m_points[ i++ ] = p;
 				Vec3 pos = p.getPos();
 				for( int i = 0; i < 3; ++i )

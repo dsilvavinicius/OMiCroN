@@ -216,7 +216,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MultiThread_Release )
+		TEST( FastParallelOctree, Creation_MultiThread_SmallerWorklist_Release )
 		{
 			using Morton = ShallowMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
@@ -231,17 +231,89 @@ namespace model
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
- 				Sql sql( "data/sorted_simple_point_octree.db" );
+ 				Sql sql( "data/sorted_simple_point_octree.db", false );
  				Morton a; a.build( 0x1 );
  				Morton b = Morton::getLvlLast( 10 );
- 				NodeArray nodes = sql.getNodes( a, b );
-// 				
-// 				for( int i = 0; i < nodes.size(); ++i )
-// 				{
-// 					
-// 				}
 				
-				ASSERT_EQ( 23, nodes.size() );
+				sql.beginTransaction();
+				NodeArray nodes = sql.getNodes( a, b );
+				sql.endTransaction();
+				
+				ASSERT_EQ( 16, nodes.size() );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+		}
+		
+		TEST( FastParallelOctree, Creation_MultiThread_BiggerWorklist_Release )
+		{
+			using Morton = ShallowMortonCode;
+			using Octree = FastParallelOctree< Morton, Point >;
+			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+			using NodeArray = typename Sql::NodeArray;
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				Octree octree;
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 4, 1000 );
+				cout << octree << endl;
+				
+				// Nodes released are just in the database
+ 				Sql sql( "data/sorted_simple_point_octree.db", false );
+ 				Morton a; a.build( 0x1 );
+ 				Morton b = Morton::getLvlLast( 10 );
+				
+				sql.beginTransaction();
+				NodeArray nodes = sql.getNodes( a, b );
+				sql.endTransaction();
+				
+				ASSERT_EQ( 0, nodes.size() );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+		}
+		
+		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoAll )
+		{
+			using Morton = ShallowMortonCode;
+			using Octree = FastParallelOctree< Morton, Point >;
+			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+			using NodeArray = typename Sql::NodeArray;
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				Octree octree;
+				octree.buildFromFile( "../../../src/data/real/tempietto_all.ply", 10, 1024, 1024ul * 1024ul * 1024ul * 10ul );
+				
+				// Nodes released are just in the database
+ 				Sql sql( "../../../src/data/real/sorted_tempietto_all.db", false );
+ 				Morton a; a.build( 0x1 );
+ 				Morton b = Morton::getLvlLast( 10 );
+				
+				sql.beginTransaction();
+				NodeArray nodes = sql.getNodes( a, b );
+				sql.endTransaction();
+				
+				ASSERT_EQ( 0, nodes.size() );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+		}
+		
+		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoSubTot )
+		{
+			using Morton = MediumMortonCode;
+			using Octree = FastParallelOctree< Morton, Point >;
+			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+			using NodeArray = typename Sql::NodeArray;
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				Octree octree;
+				octree.buildFromFile( "../../../src/data/real/tempietto_sub_tot.ply", 15, 1024, 1024ul * 1024ul * 1024ul * 8ul );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );

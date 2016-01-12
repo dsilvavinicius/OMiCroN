@@ -49,9 +49,14 @@ namespace util
 												  MortonIntervalComparator< MortonInterval > >;
 		
 		SQLiteManager();
-		SQLiteManager( const string& dbFileName );
 		
-		void init( const string& dbFileName );
+		/** Ctor.
+		 * @param dropTables is true if the tables are dropped before creation, thus erasing all contents. */
+		SQLiteManager( const string& dbFileName, const bool dropTableFlag = true );
+		
+		/** Init the connection.
+		* @param dropTables is true if the tables are dropped before creation, thus erasing all contents. */
+		void init( const string& dbFileName, const bool dropTableFlag = true );
 		
 		~SQLiteManager();
 		
@@ -129,6 +134,9 @@ namespace util
 		 * @param b is the major boundary of the morton closed interval.*/
 		void deleteNodes( const MortonCode& a, const MortonCode& b );
 		
+		/** Drops all needed tables. */
+		void dropTables();
+		
 		/** Async request the closed interval of nodes. They will be available later on and can be acessed using
 		 * getRequestResults(). */
 		void requestNodesAsync( const MortonInterval& interval );
@@ -146,9 +154,6 @@ namespace util
 		
 		/** Creates the needed tables in the database. */
 		void createTables();
-		
-		/** Drops all needed tables. */
-		void dropTables();
 		
 		/** Creates the needed statements for database operations. */
 		void createStmts();
@@ -240,14 +245,14 @@ namespace util
 	m_requestsDone( false ) {}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager( const string& dbFileName )
+	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager( const string& dbFileName, const bool dropTableFlag )
 	: SQLiteManager()
 	{
-		init( dbFileName );
+		init( dbFileName, dropTableFlag );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	void SQLiteManager< Point, MortonCode, OctreeNode >::init( const string& dbFileName )
+	void SQLiteManager< Point, MortonCode, OctreeNode >::init( const string& dbFileName, const bool dropTableFlag )
 	{
 		checkReturnCode(
 			sqlite3_open_v2( dbFileName.c_str(), &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
@@ -265,7 +270,10 @@ namespace util
 			NULL
 		);
 		
-		dropTables();
+		if( dropTableFlag )
+		{
+			dropTables();
+		}
 		createTables();
 		createStmts();
 		
@@ -627,7 +635,7 @@ namespace util
 		m_requestFlag.notify_one();
 		//m_requestManager.join();
 		
-		dropTables();
+		//dropTables();
 		
 		unsafeFinalize( m_pointInsertion );
 		unsafeFinalize( m_pointQuery );

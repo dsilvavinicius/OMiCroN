@@ -41,7 +41,7 @@ namespace model
 		 * hierarchy creation loop iterations.
 		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
 		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
-						  const size_t memoryLimit )
+						  const ulong memoryLimit )
 		: m_plyFilename( sortedPlyFilename ), 
 		m_octreeDim( dim ),
 		m_leafLvl( m_octreeDim.m_nodeLvl ),
@@ -51,9 +51,16 @@ namespace model
 		{
 			srand( 1 );
 			
+			string dbFilename = m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" );
+			
+			// Debug
+// 			{
+// 				cout << "DB filename: " << dbFilename << endl << endl;
+// 			}
+			
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
-				m_dbs[ i ].init( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" ) );
+				m_dbs[ i ].init( dbFilename );
 			}
 		}
 		
@@ -347,7 +354,7 @@ namespace model
 		mutex m_logMutex;
 		//
 		
-		size_t m_memoryLimit;
+		ulong m_memoryLimit;
 		
 		ulong m_expectedLoadPerThread;
 		
@@ -437,9 +444,9 @@ namespace model
 				if( workListSize > 0 )
 				{
 					// Debug
-					{
-						cout << "iter start" << endl << endl;
-					}
+// 					{
+// 						cout << "iter start" << endl << endl;
+// 					}
 					
 					int dispatchedThreads = ( workListSize > M_N_THREADS ) ? M_N_THREADS : workListSize;
 					IterArray iterInput( dispatchedThreads );
@@ -447,6 +454,11 @@ namespace model
 					for( int i = dispatchedThreads - 1; i > -1; --i )
 					{
 						iterInput[ i ] = popWork();
+						
+						// Debug
+						{
+							cout << "t " << i << " size: " << iterInput[ i ].size() << endl << endl; 
+						}
 					}
 					
 					IterArray iterOutput( dispatchedThreads );
@@ -469,11 +481,11 @@ namespace model
 							int nSiblings = 1;
 							
 							// Debug
-							{
-								lock_guard< mutex > lock( m_logMutex );
- 								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
-									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
- 							}
+// 							{
+// 								lock_guard< mutex > lock( m_logMutex );
+//  								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
+// 									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+//  							}
 							//
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -483,11 +495,11 @@ namespace model
 								input.pop_front();
 								
 								// Debug
-								{
-									lock_guard< mutex > lock( m_logMutex );
-									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
-										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-								}
+// 								{
+// 									lock_guard< mutex > lock( m_logMutex );
+// 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
+// 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+// 								}
 							}	
 							
 							if( input.empty() )
@@ -615,9 +627,9 @@ namespace model
 					if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
 						// Debug
-						{
-							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
-						}
+// 						{
+// 							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
+// 						}
 						
 						isReleasing = true;
 						releaseNodes();
@@ -686,10 +698,11 @@ namespace model
 			
 			Morton siblingMorton = dim.calcMorton( sibling );
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Persisting sibling " << i << ": " << siblingMorton.getPathToRoot( true ) << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Thread " << threadIdx << ": persisting sibling " << i << ": "
+// 					 << siblingMorton.getPathToRoot( true ) << endl << endl;
+// 			}
 			
 			// Persisting node
 			sql.insertNode( siblingMorton, sibling );
@@ -733,7 +746,7 @@ namespace model
 			#pragma omp parallel for
 			for( int i = 0; i < dispatchedThreads; ++i )
 			{
-				int threadIdx = i;
+				int threadIdx = omp_get_thread_num();
 				
 				Sql& sql = m_dbs[ i ];
 				sql.beginTransaction();
@@ -742,28 +755,28 @@ namespace model
 				for( Node& node : nodeList )
 				{
 					// Debug
-					{
-						OctreeDim dim( m_octreeDim, releaseLvl );
-						lock_guard< mutex > lock( m_logMutex );
-						if( dim.m_nodeLvl == m_octreeDim.m_nodeLvl - 1 )
-						{
-							cout << "Thread " << omp_get_thread_num() << ": Next lvl release: children of "
-								 << dim.calcMorton( node ).getPathToRoot( true ) << endl;
-						}
-						else
-						{
-							cout << "Thread " << omp_get_thread_num() <<  ": Current Lvl release: children of "
-									<< dim.calcMorton( node ).getPathToRoot( true ) << endl;
-						}
-					}
+// 					{
+// 						OctreeDim dim( m_octreeDim, releaseLvl );
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						if( dim.m_nodeLvl == m_octreeDim.m_nodeLvl - 1 )
+// 						{
+// 							cout << "Thread " << threadIdx << ": Next lvl release: children of "
+// 								 << dim.calcMorton( node ).getPathToRoot( true ) << endl;
+// 						}
+// 						else
+// 						{
+// 							cout << "Thread " << omp_get_thread_num() <<  ": Current Lvl release: children of "
+// 									<< dim.calcMorton( node ).getPathToRoot( true ) << endl;
+// 						}
+// 					}
 					
 					if( !node.child().empty() )
 					{
 						// Debug
-						{
-							lock_guard< mutex > lock( m_logMutex );
-							cout << "Thread " << omp_get_thread_num() <<  ": Has children" << endl << endl;
-						}
+// 						{
+// 							lock_guard< mutex > lock( m_logMutex );
+// 							cout << "Thread " << omp_get_thread_num() <<  ": Has children" << endl << endl;
+// 						}
 						
 						releaseSiblings( node.child(), threadIdx, OctreeDim( m_octreeDim, releaseLvl + 1 ) );
 					}
@@ -779,14 +792,19 @@ namespace model
 			else if( std::next( workListIt ) == m_nextLvlWorkList.rend() )
 			{
 				// Debug
-				{
-					OctreeDim dim( m_octreeDim, releaseLvl );
-					cout << "Skiped worklist: " << nodeListToString( *workListIt, dim ) << endl;
-				}
+// 				{
+// 					OctreeDim dim( m_octreeDim, releaseLvl );
+// 					cout << "Skiped worklist: " << nodeListToString( *workListIt, dim ) << endl;
+// 				}
 				
 				releaseLvl += 1;
 				workListIt = m_workList.rbegin();
 			}
+		}
+		
+		// Debug
+		{
+			cout << "Used mem: " << AllocStatistics::totalAllocated() << endl << endl;
 		}
 	}
 	

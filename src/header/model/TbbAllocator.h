@@ -18,7 +18,7 @@ namespace model
 	class AllocStatistics
 	{
 	public:
-		using map = unordered_map< thread::id, long >;
+		using map = unordered_map< thread::id, ulong >;
 		
 		static void notifyAlloc( size_t bytes )
 		{
@@ -30,9 +30,9 @@ namespace model
 			m_stats[ this_thread::get_id() ] -= bytes;
 		}
 		
-		static size_t totalAllocated()
+		static ulong totalAllocated()
 		{
-			long allocated = 0;
+			ulong allocated = 0;
 			for( map::value_type entry : m_stats ) 
 			{
 				allocated += entry.second;

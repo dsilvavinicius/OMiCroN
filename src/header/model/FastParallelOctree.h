@@ -39,12 +39,12 @@ namespace model
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
 		void buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread = 1024,
-							size_t memoryLimit = 1024 * 1024 * 8 );
+							ulong memoryLimit = 1024 * 1024 * 8 );
 		
 		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Also, the octree dimensions are expected
 		 * to be known. */
 		void buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread = 1024,
-								  size_t memoryLimit = 1024 * 1024 * 8 );
+								  ulong memoryLimit = 1024 * 1024 * 8 );
 	
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
@@ -72,7 +72,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread, size_t memoryLimit )
+	::buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
@@ -100,7 +100,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, size_t memoryLimit )
+	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit )
 	{
 		m_dim = dim;
 		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit );
@@ -132,7 +132,7 @@ namespace model
 	ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree )
 	{
 		using Dim = typename FastParallelOctree< M, P >::Dim;
-		out << octree.toString( *octree.m_root, Dim( octree.dim(), 0 ) );
+// 		out << octree.toString( *octree.m_root, Dim( octree.dim(), 0 ) );
 		return out;
 	}
 }
