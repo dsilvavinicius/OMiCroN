@@ -272,6 +272,22 @@ namespace model
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
 		Node createInnerNode( NodeArray&& inChildren, uint nChildren ) const;
 		
+		/** Checks if all work is finished in all lvls. */
+		bool checkAllWorkFinished()
+		{
+			lock_guard< mutex > lock( m_listMutex );
+			
+			for( int i = 1; i < m_lvlWorkLists.size(); ++i )
+			{
+				if( !m_lvlWorkLists.empty() )
+				{
+					return false;
+				}
+			}
+			
+			return true;
+		}
+		
 		/** Releases and persists a given sibling group.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
 		 * @param threadIdx is the index of the executing thread.
@@ -316,6 +332,7 @@ namespace model
 		
 		string m_plyFilename;
 		
+		// TODO: m_listMutex can be replaced by a per-lvl mutex.
 		/** Mutex for the work list. */
 		mutex m_listMutex;
 		
@@ -334,7 +351,7 @@ namespace model
 	typename HierarchyCreator< Morton, Point >::Node* HierarchyCreator< Morton, Point >::create()
 	{
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
-		bool leaflvlFinished = false;
+		bool leafLvlLoaded = false;
 		
 		mutex releaseMutex;
 		bool isReleasing = false;
@@ -388,255 +405,274 @@ namespace model
 				nodeList.push_back( Node( std::move( points ), true ) );
 				pushWork( leafLvl, std::move( nodeList ) );
 				
-				leaflvlFinished = true;
+				leafLvlLoaded = true;
 			}
 		);
 		diskAccessThread.detach();
 		
-		uint lvl = m_octreeDim.m_nodeLvl;
+		uint leafLvl = m_octreeDim.m_nodeLvl;
 		
-		// Hierarchy construction loop.
-		while( lvl )
+		while( !leafLvlLoaded && checkAllWorkFinished() )
 		{
-			cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
+			uint lvl = leafLvl;
+			m_octreeDim = OctreeDim( m_octreeDim, lvl );
 			
-			OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
-			
-			while( true )
+			// Hierarchy construction loop.
+			while( lvl )
 			{
-				size_t workListSize;
-				{
-					// This lock is need so m_workList.size() access is not optimized, returning outdated results.
-					lock_guard< mutex > lock( m_listMutex );
-					workListSize = m_lvlWorkLists[ lvl ].size();
-				}
+				cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
 				
-				if( workListSize > 0 )
+				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+				
+				while( true )
 				{
-					// Debug
-// 					{
-// 						cout << "iter start" << endl << endl;
-// 					}
-					
-					int dispatchedThreads = ( workListSize > M_N_THREADS ) ? M_N_THREADS : workListSize;
-					IterArray iterInput( dispatchedThreads );
-					
-					for( int i = dispatchedThreads - 1; i > -1; --i )
+					size_t workListSize;
 					{
-						iterInput[ i ] = popWork( lvl );
-						
-						// Debug
-// 						{
-// 							cout << "t " << i << " size: " << iterInput[ i ].size() << endl << endl; 
-// 						}
+						// This lock is need so m_workList.size() access is not optimized, returning outdated results.
+						lock_guard< mutex > lock( m_listMutex );
+						workListSize = m_lvlWorkLists[ lvl ].size();
 					}
 					
-					IterArray iterOutput( dispatchedThreads );
-					
-					#pragma omp parallel for
-					for( int i = 0; i < dispatchedThreads; ++i )
+					if( workListSize > 0 )
 					{
-						NodeList& input = iterInput[ i ];
-						NodeList& output = iterOutput[ i ];
-						bool isBoundarySiblingGroup = true;
+						// Debug
+	// 					{
+	// 						cout << "iter start" << endl << endl;
+	// 					}
 						
-						while( !input.empty() )
+						int dispatchedThreads = ( workListSize > M_N_THREADS ) ? M_N_THREADS : workListSize;
+						IterArray iterInput( dispatchedThreads );
+						
+						for( int i = dispatchedThreads - 1; i > -1; --i )
 						{
-							Node& node = input.front();
-							Morton parentCode = *m_octreeDim.calcMorton( node ).traverseUp();
-							
-							NodeArray siblings( 8 );
-							siblings[ 0 ] = std::move( node );
-							input.pop_front();
-							int nSiblings = 1;
+							iterInput[ i ] = popWork( lvl );
 							
 							// Debug
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-//  								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
-// 									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-//  							}
-							//
+	// 						{
+	// 							cout << "t " << i << " size: " << iterInput[ i ].size() << endl << endl; 
+	// 						}
+						}
+						
+						IterArray iterOutput( dispatchedThreads );
+						
+						#pragma omp parallel for
+						for( int i = 0; i < dispatchedThreads; ++i )
+						{
+							NodeList& input = iterInput[ i ];
+							NodeList& output = iterOutput[ i ];
+							bool isBoundarySiblingGroup = true;
 							
-							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
+							while( !input.empty() )
 							{
-								siblings[ nSiblings ] = std::move( input.front() );
-								++nSiblings;
+								Node& node = input.front();
+								Morton parentCode = *m_octreeDim.calcMorton( node ).traverseUp();
+								
+								NodeArray siblings( 8 );
+								siblings[ 0 ] = std::move( node );
 								input.pop_front();
+								int nSiblings = 1;
 								
 								// Debug
-// 								{
-// 									lock_guard< mutex > lock( m_logMutex );
-// 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
-// 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-// 								}
-							}	
-							
-							if( input.empty() )
-							{
-								isBoundarySiblingGroup = true;
-							}
-							
-							// Debug
-// 							{
-// 								lock_guard< mutex > lock( logMutex );
-// 								cout << "Thread " << omp_get_thread_num() << " nSiblings: " << nSiblings
-// 									 << " is leaf: " << siblings[ 0 ].isLeaf() << " is boundary: "
-// 									 << isBoundarySiblingGroup << endl << endl;
-// 							}
-							
-							if( nSiblings == 1 && siblings[ 0 ].isLeaf() && !isBoundarySiblingGroup )
-							{
-								// Debug
-// 								{
-// 									lock_guard< mutex > lock( logMutex );
-// 									cout << "Thread " << omp_get_thread_num() << " collapse." << endl << endl;
-// 								}
+	// 							{
+	// 								lock_guard< mutex > lock( m_logMutex );
+	//  								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
+	// 									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+	//  							}
+								//
 								
-								// Collapse: just put the node to be processed in next level.
-								output.push_back( std::move( siblings[ 0 ] ) );
-							}
-							else
-							{
-								// Debug
-// 								{
-// 									lock_guard< mutex > lock( logMutex );
-// 									cout << "Thread " << omp_get_thread_num() << " LOD." << endl << endl;
-// 								}
+								while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
+								{
+									siblings[ nSiblings ] = std::move( input.front() );
+									++nSiblings;
+									input.pop_front();
+									
+									// Debug
+	// 								{
+	// 									lock_guard< mutex > lock( m_logMutex );
+	// 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
+	// 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+	// 								}
+								}	
 								
-								// LOD
-								Node inner = createInnerNode( std::move( siblings ), nSiblings );
-								output.push_back( std::move( inner ) );
-								isBoundarySiblingGroup = false;
+								// ================
+								// START FROM HERE.
+								// ================
+								// Need to know what to do about releasing. Mainly, what to do about boundary siblings.
+								
+								if( input.empty() )
+								{
+									isBoundarySiblingGroup = true;
+								}
+								
+								// Debug
+	// 							{
+	// 								lock_guard< mutex > lock( logMutex );
+	// 								cout << "Thread " << omp_get_thread_num() << " nSiblings: " << nSiblings
+	// 									 << " is leaf: " << siblings[ 0 ].isLeaf() << " is boundary: "
+	// 									 << isBoundarySiblingGroup << endl << endl;
+	// 							}
+								
+								if( nSiblings == 1 && siblings[ 0 ].isLeaf() && !isBoundarySiblingGroup )
+								{
+									// Debug
+	// 								{
+	// 									lock_guard< mutex > lock( logMutex );
+	// 									cout << "Thread " << omp_get_thread_num() << " collapse." << endl << endl;
+	// 								}
+									
+									// Collapse: just put the node to be processed in next level.
+									output.push_back( std::move( siblings[ 0 ] ) );
+								}
+								else
+								{
+									// Debug
+	// 								{
+	// 									lock_guard< mutex > lock( logMutex );
+	// 									cout << "Thread " << omp_get_thread_num() << " LOD." << endl << endl;
+	// 								}
+									
+									// LOD
+									Node inner = createInnerNode( std::move( siblings ), nSiblings );
+									output.push_back( std::move( inner ) );
+									isBoundarySiblingGroup = false;
+								}
 							}
 						}
-					}
-					
-					// Debug
-// 					{
-// 						cout << "Before work merge:" << endl;
-// 						for( int i = 0; i < iterOutput.size(); ++i )
-// 						{
-// 							cout << "output " << i << endl
-// 								 << nodeListToString( iterOutput[ i ], nextLvlDim );
-// 						}
-// 						cout << endl;
-// 					}
-					
-					
-					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
-					
-					if( !nextLvlWorkList.empty() )
-					{
+						
 						// Debug
-// 						{
-// 							cout << "Merging nextLvl back and output " << dispatchedThreads - 1 << endl << endl;
-// 						}
+	// 					{
+	// 						cout << "Before work merge:" << endl;
+	// 						for( int i = 0; i < iterOutput.size(); ++i )
+	// 						{
+	// 							cout << "output " << i << endl
+	// 								 << nodeListToString( iterOutput[ i ], nextLvlDim );
+	// 						}
+	// 						cout << endl;
+	// 					}
 						
-						NodeList nextLvlBack = std::move( nextLvlWorkList.back() );
-						nextLvlWorkList.pop_back();
 						
-						mergeOrPushWork( nextLvlBack, iterOutput[ dispatchedThreads - 1 ], nextLvlDim );
-					}
-					
-					for( int i = dispatchedThreads - 1; i > 0; --i )
-					{
+						WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
+						
+						if( !nextLvlWorkList.empty() )
+						{
+							// Debug
+	// 						{
+	// 							cout << "Merging nextLvl back and output " << dispatchedThreads - 1 << endl << endl;
+	// 						}
+							
+							NodeList nextLvlBack = std::move( nextLvlWorkList.back() );
+							nextLvlWorkList.pop_back();
+							
+							mergeOrPushWork( nextLvlBack, iterOutput[ dispatchedThreads - 1 ], nextLvlDim );
+						}
+						
+						for( int i = dispatchedThreads - 1; i > 0; --i )
+						{
+							// Debug
+	// 						{
+	// 							cout << "Merging output " << i << " and " << i - 1 << endl << endl;
+	// 						}
+							
+							mergeOrPushWork( iterOutput[ i ], iterOutput[ i - 1 ], nextLvlDim );
+						}
+						
 						// Debug
-// 						{
-// 							cout << "Merging output " << i << " and " << i - 1 << endl << endl;
-// 						}
+	// 					{
+	// 						cout << "Pushing last list to next lvl." << endl << endl;
+	// 					}
 						
-						mergeOrPushWork( iterOutput[ i ], iterOutput[ i - 1 ], nextLvlDim );
-					}
-					
-					// Debug
-// 					{
-// 						cout << "Pushing last list to next lvl." << endl << endl;
-// 					}
-					
-					// The last thread NodeList is not collapsed, since the last node can be in a sibling group not
-					// entirely processed in this iteration.
-					if( !nextLvlWorkList.empty() )
-					{
-						removeBoundaryDuplicate( nextLvlWorkList.back(), iterOutput[ 0 ], nextLvlDim );
-					}
-					nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
-					
-					// Debug
-// 					{
-// 						bool started = false;
-// 						Node* prevNode;
-// 						cout << "next lvl after merge " << endl;
-// 						for( NodeList& work : m_nextLvlWorkList )
-// 						{
-// 							cout << "nodelist " << endl;
-// 							for( Node& node : work )
-// 							{
-// 								if( started )
-// 								{
-// 									Morton prevMorton = nextLvlDim.calcMorton( *prevNode );
-// 									Morton nodeMorton = nextLvlDim.calcMorton( node );
-// 									cout << "prev: " << prevMorton.getPathToRoot( true ) << "node: "
-// 										 << nodeMorton.getPathToRoot( true ) << endl;
-// 									
-// 									if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
-// 									{
-// 										assert( prevMorton < nodeMorton );
-// 									}
-// 									else
-// 									{
-// 										assert( nodeMorton < prevMorton );
-// 									}
-// 								}
-// 								prevNode = &node;
-// 								started = true;
-// 							}
-// 						}
-// 						cout << endl;
-// 					}
-					
-					// Check memory stress and release memory if necessary.
-					if( AllocStatistics::totalAllocated() > m_memoryLimit )
-					{
+						// The last thread NodeList is not collapsed, since the last node can be in a sibling group not
+						// entirely processed in this iteration.
+						if( !nextLvlWorkList.empty() )
+						{
+							removeBoundaryDuplicate( nextLvlWorkList.back(), iterOutput[ 0 ], nextLvlDim );
+						}
+						nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
+						
 						// Debug
-// 						{
-// 							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
-// 						}
+	// 					{
+	// 						bool started = false;
+	// 						Node* prevNode;
+	// 						cout << "next lvl after merge " << endl;
+	// 						for( NodeList& work : m_nextLvlWorkList )
+	// 						{
+	// 							cout << "nodelist " << endl;
+	// 							for( Node& node : work )
+	// 							{
+	// 								if( started )
+	// 								{
+	// 									Morton prevMorton = nextLvlDim.calcMorton( *prevNode );
+	// 									Morton nodeMorton = nextLvlDim.calcMorton( node );
+	// 									cout << "prev: " << prevMorton.getPathToRoot( true ) << "node: "
+	// 										 << nodeMorton.getPathToRoot( true ) << endl;
+	// 									
+	// 									if( ( m_leafLvl - m_octreeDim.m_nodeLvl ) % 2 )
+	// 									{
+	// 										assert( prevMorton < nodeMorton );
+	// 									}
+	// 									else
+	// 									{
+	// 										assert( nodeMorton < prevMorton );
+	// 									}
+	// 								}
+	// 								prevNode = &node;
+	// 								started = true;
+	// 							}
+	// 						}
+	// 						cout << endl;
+	// 					}
 						
-						isReleasing = true;
-						releaseNodes();
-						isReleasing = false;
-						releaseFlag.notify_one();
+						if( isReleasing )
+						{
+							if( AllocStatistics::totalAllocated() < m_memoryLimit )
+							{
+								isReleasing = false;
+								releaseFlag.notify_one();
+							}
+						}
+						else if( AllocStatistics::totalAllocated() > m_memoryLimit )
+						{
+							// Check memory stress and release memory if necessary.
+							
+							// Debug
+	// 						{
+	// 							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
+	// 						}
+							
+							isReleasing = true;
+							//releaseNodes();
+						}
 					}
-				}
-				else
-				{
-					if( leaflvlFinished )
+					else
 					{
-						// The last NodeList is not collapsed yet.
-						collapseBoundaries( m_lvlWorkLists[ lvl - 1 ].back(), nextLvlDim );
+						if( leafLvlLoaded )
+						{
+							// The last NodeList is not collapsed yet.
+							collapseBoundaries( m_lvlWorkLists[ lvl - 1 ].back(), nextLvlDim );
+						}
+						
 						break;
 					}
 				}
-			}
+					
+				--lvl;
 				
-			--lvl;
-			
-			// Debug
-// 			{
-// 				cout << "Prev dim: " << m_octreeDim << endl;
-// 			}
-			//
-			
-			m_octreeDim = OctreeDim( m_octreeDim, lvl );
-			
-			// Debug
-// 			{
-// 				cout << "Current dim: " << m_octreeDim << endl
-// 					 << "Lvl processed: " << endl
-// 					 << workListToString( m_nextLvlWorkList, m_octreeDim );
-// 			}
-			//
+				// Debug
+	// 			{
+	// 				cout << "Prev dim: " << m_octreeDim << endl;
+	// 			}
+				//
+				
+				m_octreeDim = OctreeDim( m_octreeDim, lvl );
+				
+				// Debug
+	// 			{
+	// 				cout << "Current dim: " << m_octreeDim << endl
+	// 					 << "Lvl processed: " << endl
+	// 					 << workListToString( m_nextLvlWorkList, m_octreeDim );
+	// 			}
+				//
+			}
 		}
 		
 		Node* root = new Node( std::move( m_lvlWorkLists[ 0 ].front().front() ) );
