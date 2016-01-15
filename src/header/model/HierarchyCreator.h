@@ -43,8 +43,8 @@ namespace model
 		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
 						  const ulong memoryLimit )
 		: m_plyFilename( sortedPlyFilename ), 
+		m_lvlWorkLists( dim.m_nodeLvl + 1 ),
 		m_octreeDim( dim ),
-		m_leafLvl( m_octreeDim.m_nodeLvl ),
 		m_expectedLoadPerThread( expectedLoadPerThread ),
 		m_dbs( M_N_THREADS ),
 		m_memoryLimit( memoryLimit )
@@ -69,25 +69,19 @@ namespace model
 		Node* create();
 		
 	private:
-		void swapWorkLists()
+		// TODO: The lock can be avoided after the disk thread has finished its work.
+		void pushWork( const int lvl, NodeList&& workItem )
 		{
-			m_workList = std::move( m_nextLvlWorkList );
-			m_nextLvlWorkList = WorkList();
+			lock_guard< mutex > lock( m_listMutex );
+			m_lvlWorkLists[ lvl ].push_back( std::move( workItem ) );
 		}
 		
 		// TODO: The lock can be avoided after the disk thread has finished its work.
-		void pushWork( NodeList&& workItem )
+		NodeList popWork( const int lvl )
 		{
 			lock_guard< mutex > lock( m_listMutex );
-			m_workList.push_back( std::move( workItem ) );
-		}
-		
-		// TODO: The lock can be avoided after the disk thread has finished its work.
-		NodeList popWork()
-		{
-			lock_guard< mutex > lock( m_listMutex );
-			NodeList nodeList = std::move( m_workList.front() );
-			m_workList.pop_front();
+			NodeList nodeList = std::move( m_lvlWorkLists[ lvl ].front() );
+			m_lvlWorkLists[ lvl ].pop_front();
 			return nodeList;
 		}
 		
@@ -257,12 +251,14 @@ namespace model
 // 					cout << "Pushing next to global worklist." << endl << endl;
 // 				}
 				
-				if( !m_nextLvlWorkList.empty() )
+				WorkList& workList = m_lvlWorkLists[ nextLvlDim.m_nodeLvl ];
+				
+				if( !workList.empty() )
 				{
-					removeBoundaryDuplicate( m_nextLvlWorkList.back(), previousProcessed, nextLvlDim );
+					removeBoundaryDuplicate( workList.back(), previousProcessed, nextLvlDim );
 				}
 				
-				m_nextLvlWorkList.push_back( std::move( previousProcessed ) );
+				workList.push_back( std::move( previousProcessed ) );
 			}
 			
 			// Debug
@@ -312,16 +308,11 @@ namespace model
 		/** Thread[ i ] uses database connection m_sql[ i ]. */
 		Array< Sql > m_dbs;
 		
-		/** Holds the work list with nodes of the lvl above the current one. */
-		WorkList m_nextLvlWorkList;
-		
-		/** SHARED. Holds the work list with nodes of the current lvl. Database thread and master thread have access. */
-		WorkList m_workList;
+		/** Worklists for every level in the hierarchy. m_lvlWorkLists[ i ] corresponds to lvl i. */
+		Array< WorkList > m_lvlWorkLists;
 		
 		/** Current lvl octree dimensions. */
 		OctreeDim m_octreeDim;
-		/** Leaf lvl. */
-		uint m_leafLvl;
 		
 		string m_plyFilename;
 		
@@ -354,6 +345,7 @@ namespace model
 		thread diskAccessThread(
 			[ & ]()
 			{
+				int leafLvl = m_octreeDim.m_nodeLvl;
 				NodeList nodeList;
 				PointVector points;
 				
@@ -381,7 +373,7 @@ namespace model
 									
 									if( nodeList.size() == m_expectedLoadPerThread )
 									{
-										pushWork( std::move( nodeList ) );
+										pushWork( leafLvl, std::move( nodeList ) );
 										nodeList = NodeList();
 									}
 								}
@@ -394,7 +386,7 @@ namespace model
 				);
 				
 				nodeList.push_back( Node( std::move( points ), true ) );
-				pushWork( std::move( nodeList ) );
+				pushWork( leafLvl, std::move( nodeList ) );
 				
 				leaflvlFinished = true;
 			}
@@ -416,7 +408,7 @@ namespace model
 				{
 					// This lock is need so m_workList.size() access is not optimized, returning outdated results.
 					lock_guard< mutex > lock( m_listMutex );
-					workListSize = m_workList.size();
+					workListSize = m_lvlWorkLists[ lvl ].size();
 				}
 				
 				if( workListSize > 0 )
@@ -431,7 +423,7 @@ namespace model
 					
 					for( int i = dispatchedThreads - 1; i > -1; --i )
 					{
-						iterInput[ i ] = popWork();
+						iterInput[ i ] = popWork( lvl );
 						
 						// Debug
 // 						{
@@ -532,15 +524,17 @@ namespace model
 // 					}
 					
 					
-					if( !m_nextLvlWorkList.empty() )
+					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
+					
+					if( !nextLvlWorkList.empty() )
 					{
 						// Debug
 // 						{
 // 							cout << "Merging nextLvl back and output " << dispatchedThreads - 1 << endl << endl;
 // 						}
 						
-						NodeList nextLvlBack = std::move( m_nextLvlWorkList.back() );
-						m_nextLvlWorkList.pop_back();
+						NodeList nextLvlBack = std::move( nextLvlWorkList.back() );
+						nextLvlWorkList.pop_back();
 						
 						mergeOrPushWork( nextLvlBack, iterOutput[ dispatchedThreads - 1 ], nextLvlDim );
 					}
@@ -562,11 +556,11 @@ namespace model
 					
 					// The last thread NodeList is not collapsed, since the last node can be in a sibling group not
 					// entirely processed in this iteration.
-					if( !m_nextLvlWorkList.empty() )
+					if( !nextLvlWorkList.empty() )
 					{
-						removeBoundaryDuplicate( m_nextLvlWorkList.back(), iterOutput[ 0 ], nextLvlDim );
+						removeBoundaryDuplicate( nextLvlWorkList.back(), iterOutput[ 0 ], nextLvlDim );
 					}
-					m_nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
+					nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
 					
 					// Debug
 // 					{
@@ -620,7 +614,7 @@ namespace model
 					if( leaflvlFinished )
 					{
 						// The last NodeList is not collapsed yet.
-						collapseBoundaries( m_nextLvlWorkList.back(), nextLvlDim );
+						collapseBoundaries( m_lvlWorkLists[ lvl - 1 ].back(), nextLvlDim );
 						break;
 					}
 				}
@@ -643,11 +637,9 @@ namespace model
 // 					 << workListToString( m_nextLvlWorkList, m_octreeDim );
 // 			}
 			//
-			
-			swapWorkLists();
 		}
 		
-		Node* root = new Node( std::move( m_workList.front().front() ) );
+		Node* root = new Node( std::move( m_lvlWorkLists[ 0 ].front().front() ) );
 		
 		// Fixing root's child parent pointers.
 		NodeArray& rootChild = root->child();
@@ -698,8 +690,8 @@ namespace model
 		}
 		
 		// IMPORTANT: Nodes in next lvl work list back cannot be released because they can have pendent collapses.
-		auto workListIt = std::next( m_nextLvlWorkList.rbegin() );
 		int releaseLvl = m_octreeDim.m_nodeLvl - 1;
+		auto workListIt = std::next( m_lvlWorkLists[ releaseLvl ].rbegin() );
 		
 		// Debug
 // 		{
@@ -717,19 +709,9 @@ namespace model
 			int dispatchedThreads = 0;
 			Array< NodeList* > iterArray( M_N_THREADS );
 			
-			if( releaseLvl == m_octreeDim.m_nodeLvl - 1 )
+			while( dispatchedThreads < M_N_THREADS && workListIt != m_lvlWorkLists[ releaseLvl ].rend() )
 			{
-				while( dispatchedThreads < M_N_THREADS && workListIt != m_nextLvlWorkList.rend() )
-				{
-					iterArray[ dispatchedThreads++ ] = &*( workListIt++ );
-				}
-			}
-			else
-			{
-				while( dispatchedThreads < M_N_THREADS && workListIt != m_workList.rend() )
-				{
-					iterArray[ dispatchedThreads++ ] = &*( workListIt++ );
-				}
+				iterArray[ dispatchedThreads++ ] = &*( workListIt++ );
 			}
 			
 			#pragma omp parallel for
@@ -774,20 +756,23 @@ namespace model
 				sql.endTransaction();
 			}
 			
-			if( workListIt == m_workList.rend() )
+			if( releaseLvl == m_octreeDim.m_nodeLvl )
 			{
-				break;
+				if( workListIt == m_lvlWorkLists[ releaseLvl ].rend() )
+				{
+					break;
+				}
 			}
-			else if( workListIt == m_nextLvlWorkList.rend() )
+			else if( workListIt == m_lvlWorkLists[ releaseLvl ].rend() )
 			{
 				releaseLvl += 1;
-				workListIt = m_workList.rbegin();
+				workListIt = m_lvlWorkLists[ releaseLvl ].rbegin();
 			}
 		}
 		
 		// Debug
 		{
-			cout << "Visited all nodes: " <<  bool( workListIt == m_workList.rend() ) << endl
+			cout << "Visited all nodes: " <<  bool( workListIt == m_lvlWorkLists[ releaseLvl ].rend() ) << endl
 				 << "Mem after release: " << AllocStatistics::totalAllocated() << endl << endl;
 		}
 	}
