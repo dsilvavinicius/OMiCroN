@@ -132,7 +132,7 @@ namespace model
 	ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree )
 	{
 		using Dim = typename FastParallelOctree< M, P >::Dim;
-// 		out << octree.toString( *octree.m_root, Dim( octree.dim(), 0 ) );
+ 		out << octree.toString( *octree.m_root, Dim( octree.dim(), 0 ) );
 		return out;
 	}
 }

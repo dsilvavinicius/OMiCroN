@@ -146,7 +146,17 @@ namespace model
 					( m_array + i )->~T();
 				}
 				
+				// Debug
+// 				{
+// 					cout << "Deallocating. Before: " << AllocStatistics::totalAllocated() << endl;
+// 				}
+				
 				A().deallocate( m_array );
+				
+				// Debug
+// 				{
+// 					cout << "After: " << AllocStatistics::totalAllocated() << endl << endl;
+// 				}
 				
 				m_size = 0;
 				m_array = nullptr;
