@@ -73,6 +73,12 @@ namespace model
 		void pushWork( const int lvl, NodeList&& workItem )
 		{
 			lock_guard< mutex > lock( m_listMutex );
+			
+			// Debug
+			{
+				cout << "Pushing work. Size: " << workItem.size() << endl << endl;
+			}
+			
 			m_lvlWorkLists[ lvl ].push_back( std::move( workItem ) );
 		}
 		
@@ -279,10 +285,20 @@ namespace model
 			
 			for( int i = 1; i < m_lvlWorkLists.size(); ++i )
 			{
-				if( !m_lvlWorkLists.empty() )
+				if( !m_lvlWorkLists[ i ].empty() )
 				{
+					// Debug
+					{
+						cout << "Works remaining" << endl << endl;
+					}
+					
 					return false;
 				}
+			}
+			
+			// Debug
+			{
+				cout << "All work finished" << endl << endl;
 			}
 			
 			return true;
@@ -350,6 +366,11 @@ namespace model
 	template< typename Morton, typename Point >
 	typename HierarchyCreator< Morton, Point >::Node* HierarchyCreator< Morton, Point >::create()
 	{
+		// Debug
+		{
+			cout << "MEMORY BEFORE CREATING: " << AllocStatistics::totalAllocated() << endl << endl;
+		}
+		
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
 		bool leafLvlLoaded = false;
 		
@@ -358,11 +379,13 @@ namespace model
 		// SHARED. Indicates when a node release is ocurring.
 		condition_variable releaseFlag;
 		
+		OctreeDim leafLvlDim = m_octreeDim;
+		
 		// Thread that loads data from sorted file or database.
 		thread diskAccessThread(
 			[ & ]()
 			{
-				int leafLvl = m_octreeDim.m_nodeLvl;
+				OctreeDim leafLvlDimCpy = leafLvlDim; // Just to make sure it will be in thread local mem.
 				NodeList nodeList;
 				PointVector points;
 				
@@ -378,19 +401,25 @@ namespace model
 						}
 						else 
 						{
-							Morton code = m_octreeDim.calcMorton( p );
+							Morton code = leafLvlDimCpy.calcMorton( p );
 							Morton parent = *code.traverseUp();
 							
 							if( parent != currentParent )
 							{
 								if( points.size() > 0 )
 								{
+									// Debug
+									{
+										lock_guard< mutex > lock( m_logMutex );
+										cout << "Node work. points: " << points.size() << endl << endl;
+									}
+									
 									nodeList.push_back( Node( std::move( points ), true ) );
 									points = PointVector();
 									
 									if( nodeList.size() == m_expectedLoadPerThread )
 									{
-										pushWork( leafLvl, std::move( nodeList ) );
+										pushWork( leafLvlDimCpy.m_nodeLvl, std::move( nodeList ) );
 										nodeList = NodeList();
 									}
 								}
@@ -403,24 +432,37 @@ namespace model
 				);
 				
 				nodeList.push_back( Node( std::move( points ), true ) );
-				pushWork( leafLvl, std::move( nodeList ) );
+				pushWork( leafLvlDimCpy.m_nodeLvl, std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
+				
+				// Debug
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					cout << "Leaf lvl loaded" << endl << endl;
+				}
 			}
 		);
 		diskAccessThread.detach();
 		
-		uint leafLvl = m_octreeDim.m_nodeLvl;
-		
-		while( !leafLvlLoaded && checkAllWorkFinished() )
+		while( !leafLvlLoaded || !checkAllWorkFinished() )
 		{
-			uint lvl = leafLvl;
-			m_octreeDim = OctreeDim( m_octreeDim, lvl );
+			m_octreeDim = leafLvlDim;
+			uint lvl = leafLvlDim.m_nodeLvl;
+			
+			if( isReleasing )
+			{
+				isReleasing = false;
+			}
 			
 			// Hierarchy construction loop.
 			while( lvl )
 			{
-				cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
+				// Debug
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
+				}
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
 				
@@ -436,13 +478,16 @@ namespace model
 					if( workListSize > 0 )
 					{
 						// Debug
-	// 					{
-	// 						cout << "iter start" << endl << endl;
-	// 					}
+						{
+							lock_guard< mutex > lock( m_logMutex );
+							cout << "iter start" << endl << endl;
+						}
 						
 						int dispatchedThreads = ( workListSize > M_N_THREADS ) ? M_N_THREADS : workListSize;
 						IterArray iterInput( dispatchedThreads );
 						
+						// TODO: The last sibling group cannot be processed before the last iteration, since its remaining
+						// nodes reading can still be pending.
 						for( int i = dispatchedThreads - 1; i > -1; --i )
 						{
 							iterInput[ i ] = popWork( lvl );
@@ -473,11 +518,11 @@ namespace model
 								int nSiblings = 1;
 								
 								// Debug
-	// 							{
-	// 								lock_guard< mutex > lock( m_logMutex );
-	//  								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
-	// 									 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-	//  							}
+								{
+									lock_guard< mutex > lock( m_logMutex );
+	 								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
+										 << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+	 							}
 								//
 								
 								while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -487,17 +532,12 @@ namespace model
 									input.pop_front();
 									
 									// Debug
-	// 								{
-	// 									lock_guard< mutex > lock( m_logMutex );
-	// 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
-	// 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-	// 								}
-								}	
-								
-								// ================
-								// START FROM HERE.
-								// ================
-								// Need to know what to do about releasing. Mainly, what to do about boundary siblings.
+									{
+										lock_guard< mutex > lock( m_logMutex );
+										cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
+											<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+									}
+								}
 								
 								if( input.empty() )
 								{
@@ -515,10 +555,10 @@ namespace model
 								if( nSiblings == 1 && siblings[ 0 ].isLeaf() && !isBoundarySiblingGroup )
 								{
 									// Debug
-	// 								{
-	// 									lock_guard< mutex > lock( logMutex );
-	// 									cout << "Thread " << omp_get_thread_num() << " collapse." << endl << endl;
-	// 								}
+									{
+										lock_guard< mutex > lock( m_logMutex );
+										cout << "Thread " << omp_get_thread_num() << " collapse." << endl << endl;
+									}
 									
 									// Collapse: just put the node to be processed in next level.
 									output.push_back( std::move( siblings[ 0 ] ) );
@@ -526,13 +566,30 @@ namespace model
 								else
 								{
 									// Debug
-	// 								{
-	// 									lock_guard< mutex > lock( logMutex );
-	// 									cout << "Thread " << omp_get_thread_num() << " LOD." << endl << endl;
-	// 								}
+									{
+										lock_guard< mutex > lock( m_logMutex );
+										cout << "Thread " << omp_get_thread_num() << " LOD." << endl << endl;
+									}
 									
 									// LOD
 									Node inner = createInnerNode( std::move( siblings ), nSiblings );
+									
+									if( isReleasing && !isBoundarySiblingGroup )
+									{
+										// Debug
+										{
+											lock_guard< mutex > lock( m_logMutex );
+											cout << "Thread " << omp_get_thread_num() << " will release" << endl << endl;
+										}
+										
+										releaseSiblings( inner.child(), omp_get_thread_num(), m_octreeDim );
+										
+										// Debug
+										{
+											cout << "MEMORY AFTER RELEASE: " << AllocStatistics::totalAllocated() << endl << endl;
+										}
+									}
+									
 									output.push_back( std::move( inner ) );
 									isBoundarySiblingGroup = false;
 								}
@@ -626,6 +683,10 @@ namespace model
 						{
 							if( AllocStatistics::totalAllocated() < m_memoryLimit )
 							{
+								{
+									cout << "===== RELEASE OFF =====" << endl << endl;
+								}
+								
 								isReleasing = false;
 								releaseFlag.notify_one();
 							}
@@ -635,9 +696,9 @@ namespace model
 							// Check memory stress and release memory if necessary.
 							
 							// Debug
-	// 						{
-	// 							cout << "===== RELEASE TRIGGERED =====" << endl << endl;
-	// 						}
+							{
+								cout << "===== RELEASE ON =====" << endl << endl;
+							}
 							
 							isReleasing = true;
 							//releaseNodes();
@@ -693,6 +754,11 @@ namespace model
 	{
 		Sql& sql = m_dbs[ threadIdx ];
 
+		// Debug
+		{
+			cout << "Thread " << threadIdx << " n siblings: " << siblings.size() << endl << endl;
+		}
+		
 		for( int i = 0; i < siblings.size(); ++i )
 		{
 			Node& sibling = siblings[ i ];
@@ -704,11 +770,11 @@ namespace model
 			
 			Morton siblingMorton = dim.calcMorton( sibling );
 			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Thread " << threadIdx << ": persisting sibling " << i << ": "
-// 					 << siblingMorton.getPathToRoot( true ) << endl << endl;
-// 			}
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "Thread " << threadIdx << ": persisting sibling " << i << ": "
+					 << siblingMorton.getPathToRoot( true ) << endl << endl;
+			}
 			
 			// Persisting node
 			sql.insertNode( siblingMorton, sibling );

@@ -227,7 +227,7 @@ namespace model
 			
 			{
 				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2, 1000 );
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 3, 1000 );
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
@@ -256,7 +256,7 @@ namespace model
 			
 			{
 				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 4, 1000 );
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 6, 1000 );
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
