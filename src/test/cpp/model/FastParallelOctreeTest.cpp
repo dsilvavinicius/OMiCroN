@@ -239,7 +239,7 @@ namespace model
 				NodeArray nodes = sql.getNodes( a, b );
 				sql.endTransaction();
 				
-				ASSERT_EQ( 11, nodes.size() );
+				ASSERT_EQ( 6, nodes.size() );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
