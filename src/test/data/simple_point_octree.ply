@@ -4,9 +4,9 @@ element vertex 11
 property float x
 property float y
 property float z
-property float red
-property float green
-property float blue
+property float nx
+property float ny
+property float nz
 end_header
 1.000 15.00 2.000 0.01 0.02 0.03 
 3.000 -31.0 4.000 0.04 0.05 0.06

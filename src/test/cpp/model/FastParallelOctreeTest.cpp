@@ -274,6 +274,34 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
+		TEST( FastParallelOctree, Creation_MultiThread_Real_StayPuff )
+		{
+			using Morton = ShallowMortonCode;
+			using Octree = FastParallelOctree< Morton, Point >;
+			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+			using NodeArray = typename Sql::NodeArray;
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+			
+			{
+				Octree octree;
+				octree.buildFromFile( "../data/example/staypuff.ply", 10, 1024, 1024ul * 1024ul * 100ul );
+				
+				// Nodes released are just in the database
+ 				Sql sql( "../data/example/staypuff.db", false );
+ 				Morton a; a.build( 0x1 );
+ 				Morton b = Morton::getLvlLast( 10 );
+				
+				sql.beginTransaction();
+				NodeArray nodes = sql.getNodes( a, b );
+				sql.endTransaction();
+				
+				ASSERT_EQ( 0, nodes.size() );
+			}
+			
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+		}
+		
 		TEST( FastParallelOctree, DISABLED_Creation_MultiThread_Real_TempiettoAll )
 		{
 			using Morton = ShallowMortonCode;

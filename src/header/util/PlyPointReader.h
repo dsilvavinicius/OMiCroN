@@ -45,10 +45,16 @@ namespace util
 		void openPly();
 		void readHeader();
 		
+		void setupAdditionalCallbacks( p_ply ply, const Precision& precision,
+									   pair< Point*, function< void( const Point& ) >* >& cbNeededData );
+		
 		/** Internal customizable reading method. Should setup reading needed data, callbacks, do the reading itself and free reading
 		 * needed data.
 		 * @returns ply_read() return code. */
 		virtual int doRead( p_ply& ply, const Precision& precision );
+		
+		/** Copies the property to out's header. */
+		void copyProperty( p_ply_property property, p_ply out );
 		
 		/** Internal method that calculates the property flag for each invocation of the reading vertex callback. */
 		static unsigned int getPropFlag( const unsigned int& propIndex, const Precision& precision );
@@ -141,15 +147,7 @@ namespace util
 			/* iterate over all properties of current element */
 			while( ( property = ply_get_next_property( element, property ) ) )
 			{
-				const char *property_name;
-				e_ply_type type, length_type, value_type;
-				ply_get_property_info(property, &property_name, &type, &length_type, &value_type);
-				
-				/* add this property to output file */
-				if( !ply_add_property( out, property_name, type, length_type, value_type ) )
-				{
-					throw runtime_error( "Cannot copy property to .ply header." );
-				}
+				copyProperty( property, out );
 			}
 		}
 		
@@ -206,9 +204,7 @@ namespace util
 		ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
 		ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
 		
-		ply_set_read_cb( ply, "vertex", "red", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 6, precision ) );
-		ply_set_read_cb( ply, "vertex", "green", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 7, precision ) );
-		ply_set_read_cb( ply, "vertex", "blue", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 8, precision ) );
+		setupAdditionalCallbacks( ply, precision, cbNeededData );
 		
 		return ply_read( ply );
 	}
