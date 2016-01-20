@@ -16,6 +16,7 @@ namespace util
 			return std::chrono::high_resolution_clock::now();
 		}
 		
+		/** @returns the elapsed time in milliseconds from a reference. */
 		static int elapsedTime( const chrono::system_clock::time_point& reference )
 		{
 			auto currentTime = now();

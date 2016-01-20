@@ -54,9 +54,9 @@ namespace model
 			string dbFilename = m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" );
 			
 			// Debug
-// 			{
-// 				cout << "DB filename: " << dbFilename << endl << endl;
-// 			}
+			{
+				cout << "Mem soft limit: " << m_memoryLimit << endl << endl;
+			}
 			
 			for( int i = 0; i < M_N_THREADS; ++i )
 			{
@@ -75,7 +75,7 @@ namespace model
 			
 			// Debug
 // 			{
-// 				cout << "Pushing work. Size: " << nodeListToString( workItem, OctreeDim( m_octreeDim, lvl ) ) << endl;
+// 				cout << "Pushing work." << endl << endl;
 // 			}
 			
 			m_lvlWorkLists[ m_leafLvlDim.m_nodeLvl ].push_back( std::move( workItem ) );
@@ -467,17 +467,22 @@ namespace model
 			{
 				lock_guard< mutex > lock( m_logMutex );
 				cout << "===== NEW ALGORITHM PASS. RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated()
-					 << " =====" << endl << endl;
+					 << " =====" << endl;
+				for( int i = 0; i < m_lvlWorkLists.size(); ++i )
+				{
+					cout << "Lvl " << i << " size: " << m_lvlWorkLists[ i ].size() << endl;
+				}
+				cout << endl;
 			}
 			
 			// BEGIN HIERARCHY CONSTRUCTION LOOP.
 			while( lvl )
 			{
 				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
+// 				}
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
 				
@@ -513,10 +518,10 @@ namespace model
 					}
 					
 					// Debug
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						cout << "Dispatched threads: " << dispatchedThreads << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						cout << "Dispatched threads: " << dispatchedThreads << endl << endl;
+// 					}
 					
 					IterArray iterInput( dispatchedThreads );
 					
@@ -699,7 +704,8 @@ namespace model
 					}
 					// END NODE RELEASE MANAGEMENT.
 					
-					if( !isLastPass && dispatchedThreads < M_N_THREADS && m_lvlWorkLists[ lvl - 1 ].size() < M_N_THREADS )
+					if( !isLastPass && dispatchedThreads < M_N_THREADS &&
+						m_lvlWorkLists[ lvl - 1 ].size() < dispatchedThreads )
 					{
 						// There is not enough work to feed all threads, in the current and next levels so make another
 						// algorithm pass starting from the bottom.

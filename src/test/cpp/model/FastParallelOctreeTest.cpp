@@ -284,25 +284,18 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
+				auto start = Profiler::now();
+				
 				Octree octree;
-				octree.buildFromFile( "../data/example/staypuff.ply", 10, 1024, 1024ul * 1024ul * 100ul );
+				octree.buildFromFile( "../data/example/staypuff.ply", 10, 256, 1024ul * 1024ul * 30ul );
 				
-				// Nodes released are just in the database
- 				Sql sql( "../data/example/staypuff.db", false );
- 				Morton a; a.build( 0x1 );
- 				Morton b = Morton::getLvlLast( 10 );
-				
-				sql.beginTransaction();
-				NodeArray nodes = sql.getNodes( a, b );
-				sql.endTransaction();
-				
-				ASSERT_EQ( 0, nodes.size() );
+				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, DISABLED_Creation_MultiThread_Real_TempiettoAll )
+		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoAll )
 		{
 			using Morton = ShallowMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
@@ -312,19 +305,12 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
+				auto start = Profiler::now();
+				
 				Octree octree;
-				octree.buildFromFile( "../../../src/data/real/tempietto_all.ply", 10, 1024, 1024ul * 1024ul * 1024ul * 2ul );
+				octree.buildFromFile( "../../../src/data/real/tempietto_all.ply", 10, 64, 1024ul * 1024ul * 1024ul * 2ul );
 				
-				// Nodes released are just in the database
- 				Sql sql( "../../../src/data/real/sorted_tempietto_all.db", false );
- 				Morton a; a.build( 0x1 );
- 				Morton b = Morton::getLvlLast( 10 );
-				
-				sql.beginTransaction();
-				NodeArray nodes = sql.getNodes( a, b );
-				sql.endTransaction();
-				
-				ASSERT_EQ( 0, nodes.size() );
+				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -340,8 +326,12 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
+				auto start = Profiler::now();
+				
 				Octree octree;
 				octree.buildFromFile( "../../../src/data/real/tempietto_sub_tot.ply", 15, 1024, 1024ul * 1024ul * 1024ul * 8ul );
+				
+				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
