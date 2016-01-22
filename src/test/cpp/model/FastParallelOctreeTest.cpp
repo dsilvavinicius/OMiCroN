@@ -141,6 +141,8 @@ namespace model
 			{
 				Octree octree;
 				octree.buildFromFile( "data/simple_point_octree.ply", 10 );
+				cout << octree << endl;
+				
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
 				checkHierarchy( wrapper );
@@ -158,6 +160,8 @@ namespace model
 			{
 				Octree octree;
 				octree.buildFromFile( "data/extended_point_octree.ply", 10 );
+				cout << octree << endl;
+				
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
 				checkHierarchy( wrapper );
@@ -173,8 +177,9 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			{
 				Octree octree;
-				
 				octree.buildFromFile( "data/simple_point_octree.ply", 21 );
+				cout << octree << endl;
+				
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
 				checkHierarchy( wrapper );
@@ -189,8 +194,9 @@ namespace model
 			
 			{
 				Octree octree;
-				
 				octree.buildFromFile( "data/extended_point_octree.ply", 21 );
+				cout << octree << endl;
+				
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
 				checkHierarchy( wrapper );
@@ -208,6 +214,7 @@ namespace model
 			{
 				Octree octree;
 				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2 );
+				cout << octree << endl;
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
 				checkHierarchy( wrapper );
@@ -227,7 +234,7 @@ namespace model
 			
 			{
 				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 3, 1000 );
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 3, 5000 );
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
@@ -256,7 +263,7 @@ namespace model
 			
 			{
 				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 6, 1000 );
+				octree.buildFromFile( "data/simple_point_octree.ply", 10, 6, 5000 );
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
@@ -287,7 +294,7 @@ namespace model
 				auto start = Profiler::now();
 				
 				Octree octree;
-				octree.buildFromFile( "../data/example/staypuff.ply", 10, 256, 1024ul * 1024ul * 30ul );
+				octree.buildFromFile( "../data/example/staypuff.ply", 10, 256, 1024ul * 1024ul * 20ul );
 				
 				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
@@ -297,7 +304,7 @@ namespace model
 		
 		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoAll )
 		{
-			using Morton = ShallowMortonCode;
+			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			using NodeArray = typename Sql::NodeArray;
@@ -308,7 +315,7 @@ namespace model
 				auto start = Profiler::now();
 				
 				Octree octree;
-				octree.buildFromFile( "../../../src/data/real/tempietto_all.ply", 10, 64, 1024ul * 1024ul * 1024ul * 2ul );
+				octree.buildFromFile( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 3ul );
 				
 				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
@@ -329,7 +336,7 @@ namespace model
 				auto start = Profiler::now();
 				
 				Octree octree;
-				octree.buildFromFile( "../../../src/data/real/tempietto_sub_tot.ply", 15, 1024, 1024ul * 1024ul * 1024ul * 8ul );
+				octree.buildFromFile( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 5ul );
 				
 				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
