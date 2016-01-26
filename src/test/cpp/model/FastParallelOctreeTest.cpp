@@ -281,28 +281,34 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MultiThread_Real_StayPuff )
+		typedef struct TestParam
 		{
-			using Morton = ShallowMortonCode;
-			using Octree = FastParallelOctree< Morton, Point >;
-			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
-			using NodeArray = typename Sql::NodeArray;
+			TestParam( const string& plyFilename, const int hierarchyLvl, const int workItemSize, const ulong memoryQuota )
+			: m_plyFilename( plyFilename ),
+			m_hierarchyLvl( hierarchyLvl ),
+			m_workItemSize( workItemSize ),
+			m_memoryQuota( memoryQuota )
+			{};
 			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-			
-			{
-				auto start = Profiler::now();
-				
-				Octree octree;
-				octree.buildFromFile( "../data/example/staypuff.ply", 10, 256, 1024ul * 1024ul * 20ul );
-				
-				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
-			}
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-		}
+			string m_plyFilename;
+			int m_hierarchyLvl;
+			int m_workItemSize;
+			ulong m_memoryQuota;
+		} TestParam;
 		
-		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoAll )
+		class FastParallelOctreeStressTest
+		: public ::testing::TestWithParam< TestParam >
+		{};
+		
+		INSTANTIATE_TEST_CASE_P( FastParallelOctreeStressTest, FastParallelOctreeStressTest,
+                        ::testing::Values(
+							TestParam( "../data/example/staypuff.ply", 20, 256, 1024ul * 1024ul * 20ul ),
+							TestParam( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 7ul ),
+							TestParam( "../../../src/data/real/tempietto_all.ply", 20, 256, 1024ul * 1024ul * 1024ul * 3ul ),
+							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 5ul )
+						) );
+		
+		TEST_P( FastParallelOctreeStressTest, Stress )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
@@ -312,31 +318,12 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
+				TestParam param = GetParam();
+				
 				auto start = Profiler::now();
 				
 				Octree octree;
-				octree.buildFromFile( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 3ul );
-				
-				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
-			}
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-		}
-		
-		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoSubTot )
-		{
-			using Morton = MediumMortonCode;
-			using Octree = FastParallelOctree< Morton, Point >;
-			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
-			using NodeArray = typename Sql::NodeArray;
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-			
-			{
-				auto start = Profiler::now();
-				
-				Octree octree;
-				octree.buildFromFile( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 5ul );
+				octree.buildFromFile( param.m_plyFilename, param.m_hierarchyLvl, param.m_workItemSize, param.m_memoryQuota );
 				
 				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
