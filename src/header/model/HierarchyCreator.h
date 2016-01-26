@@ -833,7 +833,8 @@ namespace model
 
 		// Debug
 // 		{
-// 			cout << "Thread " << threadIdx << " n siblings: " << siblings.size() << endl << endl;
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Thread " << threadIdx << ": rel sib size " << siblings.size() << endl << endl;
 // 		}
 		
 		for( int i = 0; i < siblings.size(); ++i )

@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <tbb/scalable_allocator.h>
 
 using namespace std;
@@ -19,30 +20,34 @@ namespace model
 	class AllocStatistics
 	{
 	public:
-		using map = unordered_map< thread::id, ulong >;
+		//using map = unordered_map< thread::id, ulong >;
 		
 		static void notifyAlloc( size_t bytes )
 		{
-			m_stats[ this_thread::get_id() ] += bytes;
+			//m_stats[ this_thread::get_id() ] += bytes;
+			m_allocated += bytes;
 		}
 		
 		static void notifyDealloc( size_t bytes )
 		{
-			m_stats[ this_thread::get_id() ] -= bytes;
+			//m_stats[ this_thread::get_id() ] -= bytes;
+			m_allocated -= bytes;
 		}
 		
 		static ulong totalAllocated()
 		{
-			ulong allocated = 0;
-			for( map::value_type entry : m_stats ) 
-			{
-				allocated += entry.second;
-			}
-			
-			return allocated;
+// 			ulong allocated = 0;
+// 			for( map::value_type entry : m_stats ) 
+// 			{
+// 				allocated += entry.second;
+// 			}
+// 			
+// 			return allocated;
+			return m_allocated.load();
 		}
 	private:
-		static map m_stats;
+		static atomic_ulong m_allocated;
+		//static map m_stats;
 	};
 	
 	/** Threading Building Blocks scalable_allocator wrapper. Reports allocations and deallocations in order to maintain

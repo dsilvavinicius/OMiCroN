@@ -2,5 +2,5 @@
 
 namespace model
 {
-	AllocStatistics::map AllocStatistics::m_stats;
+	atomic_ulong AllocStatistics::m_allocated( 0 );
 }

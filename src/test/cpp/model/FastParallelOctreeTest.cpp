@@ -323,7 +323,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, DISABLED_Creation_MultiThread_Real_TempiettoSubTot )
+		TEST( FastParallelOctree, Creation_MultiThread_Real_TempiettoSubTot )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
