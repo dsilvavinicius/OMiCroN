@@ -2,6 +2,7 @@
 #define HIERARCHY_CREATOR_H
 
 #include <mutex>
+#include <fstream>
 #include <condition_variable>
 #include "ManagedAllocator.h"
 #include "O1OctreeNode.h"
@@ -62,6 +63,11 @@ namespace model
 			{
 				m_dbs[ i ].init( dbFilename );
 			}
+			
+			// Debug
+			{
+				m_log.open( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".log" ) );
+			}
 		}
 		
 		/** Creates the hierarchy.
@@ -115,9 +121,14 @@ namespace model
 		/** Sets the parent pointer for all children of a given node. */
 		void setParent( Node& node ) const
 		{
+
 			// Debug
 // 			{
-// 				cout << "Setting children parents of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+// 				Morton morton; morton.build( 0x8 );
+// 				if( m_octreeDim.calcMorton( node ) == morton )
+// 				{
+// 					cout << "Setting children parents of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+// 				}
 // 			}
 			
 			NodeArray& children = node.child();
@@ -125,10 +136,14 @@ namespace model
 			{
 				// Debug
 // 				{
-// 					OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-// 					cout << "Setting parent of " << childDim.calcMorton( children[ i ] ).getPathToRoot( true )
-// 						<< ": " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
-// 						<< "addr: " << &node << endl << endl;
+// 					Morton morton; morton.build( 0x8 );
+// 					if( m_octreeDim.calcMorton( node ) == morton )
+// 					{
+// 						OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+// 						cout << "Setting parent of " << childDim.calcMorton( children[ i ] ).getPathToRoot( true )
+// 							<< ": " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
+// 							<< "addr: " << &node << endl << endl;
+// 					}
 // 				}
 				
 				children[ i ].setParent( &node );
@@ -359,7 +374,7 @@ namespace model
 			return ss.str();
 		}
 		
-		/** Thread[ i ] uses database connection m_sql[ i ]. */
+		/** Thread[ i ] uses database connection m_dbs[ i ]. */
 		Array< Sql > m_dbs;
 		
 		/** Worklists for every level in the hierarchy. m_lvlWorkLists[ i ] corresponds to lvl i. */
@@ -373,12 +388,11 @@ namespace model
 		
 		string m_plyFilename;
 		
-		// TODO: m_listMutex should be replaced by a per-lvl mutex.
-		/** Mutex for the work list. */
 		mutex m_listMutex;
 		
 		// Debug
 		mutex m_logMutex;
+		ofstream m_log;
 		//
 		
 		ulong m_memoryLimit;
@@ -467,6 +481,9 @@ namespace model
 			}
 		);
 		diskAccessThread.detach();
+		
+		// Debug
+		bool foundMarked = false;
 		
 		// BEGIN MULTIPASS CONSTRUCTION LOOP.
 		while( !leafLvlLoaded || !checkAllWorkFinished() )
@@ -594,7 +611,7 @@ namespace model
 							// Debug
 // 							{
 // 								lock_guard< mutex > lock( m_logMutex );
-// 								cout << "Thread " << omp_get_thread_num() << " sibling [ 0 ]: "
+// 								cout << "T " << omp_get_thread_num() << " sib[ 0 ]: "
 // 										<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
 // 							}
 							//
@@ -608,7 +625,7 @@ namespace model
 								// Debug
 // 								{
 // 									lock_guard< mutex > lock( m_logMutex );
-// 									cout << "Thread " << omp_get_thread_num() << " sibling [ " << nSiblings - 1 << " ]: "
+// 									cout << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1 << " ]: "
 // 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
 // 								}
 							}
@@ -637,7 +654,7 @@ namespace model
 									// Debug
 // 									{
 // 										lock_guard< mutex > lock( m_logMutex );
-// 										cout << "Thread " << omp_get_thread_num() << " collapse." << endl << endl;
+// 										cout << "T " << omp_get_thread_num() << " collapse." << endl << endl;
 // 									}
 									
 									output.push_back( createNodeFromSingleChild( std::move( siblings[ 0 ] ), true ) );
@@ -647,7 +664,7 @@ namespace model
 									// Debug
 // 									{
 // 										lock_guard< mutex > lock( m_logMutex );
-// 										cout << "Thread " << omp_get_thread_num() << " LOD." << endl << endl;
+// 										cout << "T " << omp_get_thread_num() << " LOD." << endl << endl;
 // 									}
 									
 									// LOD
@@ -658,16 +675,10 @@ namespace model
 										// Debug
 // 										{
 // 											lock_guard< mutex > lock( m_logMutex );
-// 											cout << "Thread " << omp_get_thread_num() << " will release. MEMORY BEFORE: "
-// 												 << AllocStatistics::totalAllocated() << endl << endl;
+// 											cout << "T " << omp_get_thread_num() << " release." << endl << endl;
 // 										}
 										
 										releaseSiblings( inner.child(), omp_get_thread_num(), m_octreeDim );
-										
-										// Debug
-// 										{
-// 											cout << "MEMORY AFTER RELEASE: " << AllocStatistics::totalAllocated() << endl << endl;
-// 										}
 									}
 									
 									output.push_back( std::move( inner ) );
@@ -679,6 +690,25 @@ namespace model
 						if( isReleasing )
 						{
 							m_dbs[ i ].endTransaction();
+							
+							// Debug 
+							{
+								Morton expectedMorton; expectedMorton.build( 0x20b2bffb54f9UL );
+								if( m_dbs[ i ].getNode( expectedMorton ).first == true )
+								{
+									if( foundMarked == false )
+									{
+										foundMarked = true;
+									}
+								}
+								else
+								{
+									if( foundMarked == true )
+									{
+										throw logic_error( "Node 0x20b2bffb54f9UL disappered from DB." );
+									}
+								}
+							}
 						}
 					}
 					// END PARALLEL WORKLIST PROCESSING.
@@ -746,9 +776,9 @@ namespace model
 						if( AllocStatistics::totalAllocated() < m_memoryLimit )
 						{
 							//Debug
-							{
-								cout << "===== RELEASE OFF: Mem " << AllocStatistics::totalAllocated() << " =====" << endl << endl;
-							}
+// 							{
+// 								cout << "===== RELEASE OFF: Mem " << AllocStatistics::totalAllocated() << " =====" << endl << endl;
+// 							}
 							
 // 							for( int i = 0; i < M_N_THREADS; ++i )
 // 							{
@@ -764,10 +794,10 @@ namespace model
 						// Check memory stress and release memory if necessary.
 						
 						// Debug
-						{
-							cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
-								 << endl;
-						}
+// 						{
+// 							cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
+// 								 << endl;
+// 						}
 						
 // 						for( int i = 0; i < M_N_THREADS; ++i )
 // 						{
@@ -848,11 +878,16 @@ namespace model
 			
 			Morton siblingMorton = dim.calcMorton( sibling );
 			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Thread " << threadIdx << ": persisting sibling " << i << ": "
-// 					 << siblingMorton.getPathToRoot( true ) << endl << endl;
-// 			}
+			{
+				Morton expectedParent; expectedParent.build( 0x41657ff6a9fUL );
+				Morton expectedA = *expectedParent.getFirstChild();
+				Morton expectedB = *expectedParent.getLastChild();
+				
+				if( expectedA <= siblingMorton && siblingMorton <= expectedB )
+				{
+					cout << "2DB: " << hex << siblingMorton.getPathToRoot( true ) << endl;
+				}
+			}
 			
 			// Persisting node
 			sql.insertNode( siblingMorton, sibling );
@@ -942,6 +977,21 @@ namespace model
 			
 			Node node( std::move( selectedPoints ), false );
 			node.setChildren( std::move( children ) );
+			
+			// Debug
+// 			{
+// 				Morton expectedMorton; expectedMorton.build( 0x8 );
+// 				NodeArray& children = node.child();
+// 				for( int i; i < children.size(); ++i  )
+// 				{
+// 					Morton nodeMorton = m_octreeDim.calcMorton( children[ i ] );
+// 					if( nodeMorton == expectedMorton )
+// 					{
+// 						cout << "FINAL NODE ADDR: " << &children[ i ] << endl << endl;
+// 						break;
+// 					}
+// 				}
+// 			}
 			
 			return node;
 		}

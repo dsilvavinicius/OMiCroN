@@ -52,11 +52,11 @@ namespace util
 		
 		/** Ctor.
 		 * @param dropTables is true if the tables are dropped before creation, thus erasing all contents. */
-		SQLiteManager( const string& dbFileName, const bool dropTableFlag = true );
+		SQLiteManager( const string& dbFileName, const bool deleteDbFileFlag = true );
 		
 		/** Init the connection.
 		* @param dropTables is true if the tables are dropped before creation, thus erasing all contents. */
-		void init( const string& dbFileName, const bool dropTableFlag = true );
+		void init( const string& dbFileName, const bool deleteDbFileFlag = true );
 		
 		~SQLiteManager();
 		
@@ -152,6 +152,9 @@ namespace util
 		/** Release all acquired resources. */
 		void release();
 		
+		/** Deletes the database file. */
+		void deleteFile( const string& dbFilename );
+		
 		/** Creates the needed tables in the database. */
 		void createTables();
 		
@@ -245,15 +248,20 @@ namespace util
 	m_requestsDone( false ) {}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager( const string& dbFileName, const bool dropTableFlag )
+	SQLiteManager< Point, MortonCode, OctreeNode >::SQLiteManager( const string& dbFileName, const bool deleteDbFileFlag )
 	: SQLiteManager()
 	{
-		init( dbFileName, dropTableFlag );
+		init( dbFileName, deleteDbFileFlag );
 	}
 	
 	template< typename Point, typename MortonCode, typename OctreeNode >
-	void SQLiteManager< Point, MortonCode, OctreeNode >::init( const string& dbFileName, const bool dropTableFlag )
+	void SQLiteManager< Point, MortonCode, OctreeNode >::init( const string& dbFileName, const bool deleteDbFileFlag )
 	{
+		if( deleteDbFileFlag )
+		{
+			deleteFile( dbFileName );
+		}
+		
 		checkReturnCode(
 			sqlite3_open_v2( dbFileName.c_str(), &m_db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX,
 							 NULL ),
@@ -270,10 +278,6 @@ namespace util
 			NULL
 		);
 		
-		if( dropTableFlag )
-		{
-			dropTables();
-		}
 		createTables();
 		createStmts();
 		
@@ -370,6 +374,18 @@ namespace util
 		
 		safeStep( m_nodeInsertion );
 		safeReset( m_nodeInsertion );
+		
+		// Debug
+		{
+			MortonCode expectedParent; expectedParent.build( 0x20b2bffb54faUL );
+			MortonCode expectedA = *expectedParent.getFirstChild();
+			MortonCode expectedB = *expectedParent.getLastChild();
+			
+			if( expectedA <= morton && morton <= expectedB )
+			{
+				cout << "Inserted: " << hex << morton.getPathToRoot( true ) << endl;
+			}
+		}
 		
 		delete[] serialization;
 	}
@@ -651,6 +667,16 @@ namespace util
 		if( m_db )
 		{
 			sqlite3_close( m_db );
+		}
+	}
+	
+	template< typename Point, typename MortonCode, typename OctreeNode >
+	void SQLiteManager< Point, MortonCode, OctreeNode >::deleteFile( const string& dbFilename )
+	{
+		int result = std::remove( dbFilename.c_str() );
+		if( result )
+		{
+			cerr << "Cannot delete DB file " << dbFilename << endl << endl;
 		}
 	}
 	

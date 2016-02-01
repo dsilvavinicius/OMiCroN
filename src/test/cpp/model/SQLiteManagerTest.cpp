@@ -278,6 +278,22 @@ namespace model
 			}
 		}
 		
+		TEST_F( SQLiteManagerTest, InsertAndGetSpecific )
+		{
+			using Morton = MediumMortonCode;
+			using Node = O1OctreeNode< PointPtr >;
+			
+			Array< PointPtr > points( 1 );
+			points[ 0 ] = makeManaged< Point >( Vec3(), Vec3() );
+			Node node( points, false );
+			
+			util::SQLiteManager< Point, Morton, Node > sql( "test.db" );
+			Morton morton; morton.build( 0x20b2bffb54f9UL );
+			sql.insertNode( morton, node );
+			
+			ASSERT_EQ( true, sql.getNode( morton ).first );
+		}
+		
 		template< typename Point, typename MortonCode, typename OctreeNode >
 		void checkRequestResults( util::SQLiteManager< Point, MortonCode, OctreeNode >& sqLite,
 								  const ManagedIdNode< MortonCode, OctreeNode >& code0,

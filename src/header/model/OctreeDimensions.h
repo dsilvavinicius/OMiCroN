@@ -11,6 +11,8 @@ namespace model
 	class OctreeDimensions
 	{
 	public:
+		using Morton = M;
+		
 		OctreeDimensions() {}
 		
 		OctreeDimensions( const Vec3& origin, const Vec3& octreeSize, uint nodeLvl )

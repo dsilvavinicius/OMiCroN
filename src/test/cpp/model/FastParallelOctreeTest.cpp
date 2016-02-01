@@ -302,16 +302,66 @@ namespace model
 		
 		INSTANTIATE_TEST_CASE_P( FastParallelOctreeStressTest, FastParallelOctreeStressTest,
                         ::testing::Values(
-							TestParam( "../data/example/staypuff.ply", 20, 256, 1024ul * 1024ul * 20ul ),
-							TestParam( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 7ul ),
-							TestParam( "../../../src/data/real/tempietto_all.ply", 20, 256, 1024ul * 1024ul * 1024ul * 3ul ),
-							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 5ul )
+// 							TestParam( "../data/example/staypuff.ply", 20, 128, 1024ul * 1024ul * 10ul ),
+// 							TestParam( "../data/example/staypuff.ply", 20, 512, 1024ul * 1024ul * 10ul ),
+// 							TestParam( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 7ul ),
+// 							TestParam( "../../../src/data/real/tempietto_all.ply", 20, 256, 1024ul * 1024ul * 1024ul * 3ul ),
+							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 256, 1024ul * 1024ul * 1024ul * 5ul )
+// 							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 6ul )
 						) );
+		
+		template< typename Node, typename Morton, typename OctreeDim, typename Sql >
+		void checkNodeGeneral( Node& node, const Morton& expectedMorton, const OctreeDim& dim, Sql& sql )
+		{
+			SCOPED_TRACE( expectedMorton.getPathToRoot( true ) );
+			
+			ASSERT_EQ( expectedMorton, dim.calcMorton( node ) );
+			
+			if( node.isLeaf() )
+			{
+				ASSERT_TRUE( node.child().empty() );
+			}
+			else
+			{
+				typename Node::NodeArray& children = node.child();
+				
+				bool fromDb = false;
+				OctreeDim nextLvlDim( dim, dim.m_nodeLvl + 1 );
+				pair< shared_ptr< Morton >, shared_ptr< Morton > > childInterval = expectedMorton.getChildInterval();
+				
+				if( children.size() == 0 )
+				{
+					fromDb = true;
+					children = sql.getNodes( *childInterval.first, *childInterval.second );
+				}
+				
+				ASSERT_NE( 0, children.size() );
+					
+				for( int i = 0; i < children.size(); ++i )
+				{
+					if( !fromDb )
+					{
+						ASSERT_EQ( &node, children[ i ].parent() );
+					}
+					
+					Morton childMorton = nextLvlDim.calcMorton( children[ i ] );
+					if( i < children.size() - 1 )
+					{
+						ASSERT_LT( childMorton, nextLvlDim.calcMorton( children[ i + 1 ] ) );
+					}
+					ASSERT_LE( *childInterval.first, childMorton );
+					ASSERT_LE( childMorton, *childInterval.second );
+					
+					checkNodeGeneral( children[ i ], childMorton, nextLvlDim, sql );
+				}
+			}
+		}
 		
 		TEST_P( FastParallelOctreeStressTest, Stress )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
+			using OctreeDim = Octree::Dim;
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			using NodeArray = typename Sql::NodeArray;
 			
@@ -319,13 +369,23 @@ namespace model
 			
 			{
 				TestParam param = GetParam();
-				
+				cout << "Starting building octree." << endl;
 				auto start = Profiler::now();
 				
 				Octree octree;
 				octree.buildFromFile( param.m_plyFilename, param.m_hierarchyLvl, param.m_workItemSize, param.m_memoryQuota );
 				
 				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
+				
+				string dbFilename = param.m_plyFilename;
+				dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
+				dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
+				
+				cout << "Sanity check..." << endl << endl;
+				
+				Sql sql( dbFilename, false );
+				Morton rootCode; rootCode.build( 0x1 );
+				checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );

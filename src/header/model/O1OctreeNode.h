@@ -3,8 +3,6 @@
 
 #include <memory>
 #include "Array.h"
-#include "OctreeMapTypes.h"
-#include "ConcurrentOctreeMapTypes.h"
 
 using namespace std;
 
