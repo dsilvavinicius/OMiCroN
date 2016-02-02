@@ -267,8 +267,10 @@ namespace util
 							 NULL ),
 			SQLITE_OK
 		);
-		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
-		sqlite3_exec( m_db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL );
+		
+		checkReturnCode( sqlite3_extended_result_codes( m_db, 1 ), SQLITE_OK );
+// 		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
+// 		sqlite3_exec( m_db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL );
 		sqlite3_busy_handler( m_db,
 			[]( void*, int )
 			{
@@ -686,8 +688,9 @@ namespace util
 	{
 		if( returnCode != expectedCode )
 		{
+			int errorCode = sqlite3_extended_errcode( m_db );
 			release();
-			throw runtime_error( sqlite3_errstr( returnCode ) );
+			throw runtime_error( sqlite3_errstr( errorCode ) );
 		}
 	}
 	

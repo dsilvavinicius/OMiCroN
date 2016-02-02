@@ -302,11 +302,11 @@ namespace model
 		
 		INSTANTIATE_TEST_CASE_P( FastParallelOctreeStressTest, FastParallelOctreeStressTest,
                         ::testing::Values(
-// 							TestParam( "../data/example/staypuff.ply", 20, 128, 1024ul * 1024ul * 10ul ),
+							TestParam( "../data/example/staypuff.ply", 20, 128, 1024ul * 1024ul * 10ul )//,
 // 							TestParam( "../data/example/staypuff.ply", 20, 512, 1024ul * 1024ul * 10ul ),
 // 							TestParam( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 7ul ),
 // 							TestParam( "../../../src/data/real/tempietto_all.ply", 20, 256, 1024ul * 1024ul * 1024ul * 3ul ),
-							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 256, 1024ul * 1024ul * 1024ul * 5ul )
+// 							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 256, 1024ul * 1024ul * 1024ul * 5ul ),
 // 							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 6ul )
 						) );
 		

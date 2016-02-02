@@ -78,6 +78,7 @@ namespace model
 				#pragma omp parallel for
 				for( int i = 0; i < nThreads; i++ )
 				{
+					int threadIdx = omp_get_thread_num();
 					ThreadVector threadVector; initVector( threadVector, vectorsPerThread );
 					
 					int j = 0;
@@ -87,7 +88,7 @@ namespace model
 						threadVector[ j++ ] = points;
 					}
 					
-					vectors[ i ] = threadVector;
+					vectors[ threadIdx ] = threadVector;
 				}
 				
 				size_t expected = 	nThreads * (
@@ -103,13 +104,14 @@ namespace model
 				#pragma omp parallel for
 				for( int i = 0; i < nThreads; i++ )
 				{
+					int threadIdx = omp_get_thread_num();
 					int j = 0;
 					while( j < vectorsPerThread )
 					{
-						releaseVector( vectors[ i ][ j++ ] );
+						releaseVector( vectors[ threadIdx ][ j++ ] );
 					}
 					
-					releaseVector( vectors[ i ] );
+					releaseVector( vectors[ threadIdx ] );
 				}
 				
 				releaseVector( vectors );

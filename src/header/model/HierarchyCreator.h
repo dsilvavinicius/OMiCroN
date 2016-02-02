@@ -589,13 +589,14 @@ namespace model
 					#pragma omp parallel for
 					for( int i = 0; i < dispatchedThreads; ++i )
 					{
-						NodeList& input = iterInput[ i ];
-						NodeList& output = iterOutput[ i ];
+						int threadIdx = omp_get_thread_num();
+						NodeList& input = iterInput[ threadIdx ];
+						NodeList& output = iterOutput[ threadIdx ];
 						bool isBoundarySiblingGroup = true;
 						
 						if( isReleasing )
 						{
-							m_dbs[ i ].beginTransaction();
+							m_dbs[ threadIdx ].beginTransaction();
 						}
 						
 						while( !input.empty() )
@@ -632,7 +633,7 @@ namespace model
 							
 							bool isLastSiblingGroup = input.empty();
 							
-							if( workListSize - dispatchedThreads == 0 && !isLastPass && i == 0 && isLastSiblingGroup )
+							if( workListSize - dispatchedThreads == 0 && !isLastPass && threadIdx == 0 && isLastSiblingGroup )
 							{
 								// Send this last sibling group to the lvl WorkList again.
 								NodeList lastSiblingsList;
@@ -678,7 +679,7 @@ namespace model
 // 											cout << "T " << omp_get_thread_num() << " release." << endl << endl;
 // 										}
 										
-										releaseSiblings( inner.child(), omp_get_thread_num(), m_octreeDim );
+										releaseSiblings( inner.child(), threadIdx, m_octreeDim );
 									}
 									
 									output.push_back( std::move( inner ) );
@@ -689,12 +690,12 @@ namespace model
 						
 						if( isReleasing )
 						{
-							m_dbs[ i ].endTransaction();
+							m_dbs[ threadIdx ].endTransaction();
 							
 							// Debug 
 							{
 								Morton expectedMorton; expectedMorton.build( 0x20b2bffb54f9UL );
-								if( m_dbs[ i ].getNode( expectedMorton ).first == true )
+								if( m_dbs[ threadIdx ].getNode( expectedMorton ).first == true )
 								{
 									if( foundMarked == false )
 									{
