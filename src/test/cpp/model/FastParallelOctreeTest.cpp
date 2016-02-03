@@ -283,32 +283,61 @@ namespace model
 		
 		typedef struct TestParam
 		{
-			TestParam( const string& plyFilename, const int hierarchyLvl, const int workItemSize, const ulong memoryQuota )
-			: m_plyFilename( plyFilename ),
+			TestParam( const string& plyFilename, const int nThreads, const int hierarchyLvl, const int workItemSize,
+					   const ulong memoryQuota )
+			: m_nThreads( nThreads ),
+			m_plyFilename( plyFilename ),
 			m_hierarchyLvl( hierarchyLvl ),
 			m_workItemSize( workItemSize ),
 			m_memoryQuota( memoryQuota )
 			{};
 			
+			friend ostream& operator<<( ostream &out, const TestParam &param );
+			
+			int m_nThreads;
 			string m_plyFilename;
 			int m_hierarchyLvl;
 			int m_workItemSize;
 			ulong m_memoryQuota;
 		} TestParam;
 		
+		ostream& operator<<( ostream &out, const TestParam &param )
+		{
+			out << param.m_plyFilename << endl << "Threads: " << param.m_nThreads << endl << "Max lvl: "
+				<< param.m_hierarchyLvl << endl << "Workitem size:" << param.m_workItemSize << endl
+				<< "Mem quota (in bytes):" << param.m_memoryQuota << endl;
+			return out;
+		}
+		
 		class FastParallelOctreeStressTest
 		: public ::testing::TestWithParam< TestParam >
 		{};
 		
+		vector< TestParam > createTestParams()
+		{
+			vector< TestParam > param;
+			
+			for( int nThreads = 1; nThreads <= 8; ++nThreads )
+			{
+				for( int maxLvl = 5; maxLvl <= 20; maxLvl += 5 )
+				{
+					for( int worklistSize = 24; worklistSize <= 2048; worklistSize *= 2 )
+					{
+						for( ulong memQuota = 1024ul * 1024ul * 1024ul; memQuota <= 1024ul * 1024ul * 1024ul * 7;
+							memQuota += 1024ul * 1024ul * 1024 )
+						{
+							param.push_back( TestParam( "../data/example/staypuff.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+							param.push_back( TestParam( "../../../src/data/real/tempietto_all.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+							param.push_back( TestParam( "../../../src/data/real/tempietto_sub_tot.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+						}
+					}
+				}
+			}
+			return param;
+		}
+		
 		INSTANTIATE_TEST_CASE_P( FastParallelOctreeStressTest, FastParallelOctreeStressTest,
-                        ::testing::Values(
-							TestParam( "../data/example/staypuff.ply", 20, 128, 1024ul * 1024ul * 10ul )//,
-// 							TestParam( "../data/example/staypuff.ply", 20, 512, 1024ul * 1024ul * 10ul ),
-// 							TestParam( "../../../src/data/real/tempietto_all.ply", 15, 256, 1024ul * 1024ul * 1024ul * 7ul ),
-// 							TestParam( "../../../src/data/real/tempietto_all.ply", 20, 256, 1024ul * 1024ul * 1024ul * 3ul ),
-// 							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 256, 1024ul * 1024ul * 1024ul * 5ul ),
-// 							TestParam( "../../../src/data/real/tempietto_sub_tot.ply", 20, 1024, 1024ul * 1024ul * 1024ul * 6ul )
-						) );
+                        ::testing::ValuesIn( createTestParams() ) );
 		
 		template< typename Node, typename Morton, typename OctreeDim, typename Sql >
 		void checkNodeGeneral( Node& node, const Morton& expectedMorton, const OctreeDim& dim, Sql& sql )
@@ -368,24 +397,26 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
+				ofstream m_log( "FastParallelOctreeStressTest.log", ios_base::app );
+				
 				TestParam param = GetParam();
-				cout << "Starting building octree." << endl;
-				auto start = Profiler::now();
+				m_log << "Starting building octree. Params:" << param << endl;
+				auto start = Profiler::now( m_log );
 				
 				Octree octree;
 				octree.buildFromFile( param.m_plyFilename, param.m_hierarchyLvl, param.m_workItemSize, param.m_memoryQuota );
 				
-				cout << "Time to build octree (ms): " << Profiler::elapsedTime( start ) << endl << endl;
+				m_log << "Time to build octree (ms): " << Profiler::elapsedTime( start, m_log ) << endl << endl;
 				
-				string dbFilename = param.m_plyFilename;
-				dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
-				dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
-				
-				cout << "Sanity check..." << endl << endl;
-				
-				Sql sql( dbFilename, false );
-				Morton rootCode; rootCode.build( 0x1 );
-				checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
+// 				string dbFilename = param.m_plyFilename;
+// 				dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
+// 				dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
+// 				
+// 				cout << "Sanity check..." << endl << endl;
+// 				
+// 				Sql sql( dbFilename, false );
+// 				Morton rootCode; rootCode.build( 0x1 );
+// 				checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );

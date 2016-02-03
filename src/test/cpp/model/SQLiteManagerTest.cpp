@@ -434,9 +434,10 @@ namespace model
 			
 			int nThreads = 8;
 			Array< Sql > connections( 8 );
-			for( int i = 0; i < nThreads; ++i )
+			connections[ 0 ].init( "test.db" );
+			for( int i = 1; i < nThreads; ++i )
 			{
-				connections[ i ].init( "test.db" );
+				connections[ i ].init( "test.db", false );
 			}
 			
 			int codeOffset = 10;
@@ -471,6 +472,50 @@ namespace model
 				Point expectedPoint( Vec3( code, code, code ), Vec3( code, code, code ) );
 				ASSERT_TRUE( expectedPoint.equal( *nodes[ i ].getContents()[ 0 ], 1.e-15 ) );
 			}
+		}
+		
+		TEST_F( SQLiteManagerTest, DISABLED_MultiThreadTransactionConflict )
+		{
+			using Node = O1OctreeNode< PointPtr >;
+			using NodeArray = Array< Node >;
+			using Morton = ShallowMortonCode;
+			using Sql = util::SQLiteManager< Point, Morton, Node >;
+			
+			
+			Sql connection0( "test.db" );
+			Sql connection1( "test.db", false );
+			
+			connection0.beginTransaction();
+			connection1.beginTransaction();
+			
+			PointPtr p0 = makeManaged< Point >( Vec3( 1, 1, 1 ), Vec3( 1, 1, 1 ) );
+			PointPtr p1 = makeManaged< Point >( Vec3( 2, 2, 2 ), Vec3( 2, 2, 2 ) );
+			Array< PointPtr > points0( 1 );
+			Array< PointPtr > points1( 1 );
+			points0[ 0 ] = p0;
+			points1[ 0 ] = p1;
+			Node node0( points0, true );
+			Node node1( points1, true );
+			Morton morton0; morton0.build( 1 );
+			Morton morton1; morton0.build( 2 );
+			
+			connection0.insertNode( morton0, node0 );
+			connection1.insertNode( morton1, node1 );
+			
+			connection0.endTransaction();
+			connection1.endTransaction();
+			
+			Morton a = Morton::getLvlFirst( 1 );
+			Morton b = Morton::getLvlLast( 2 );
+			
+			NodeArray nodes = connection0.getNodes( a, b );
+			
+			ASSERT_EQ( 2, nodes.size() );
+			
+			Point expectedP0( Vec3( 1, 1, 1 ), Vec3( 1, 1, 1 ) );
+			Point expectedP1( Vec3( 2, 2, 2 ), Vec3( 2, 2, 2 ) );
+			ASSERT_TRUE( expectedP0.equal( *nodes[ 0 ].getContents()[ 0 ], 1.e-15 ) );
+			ASSERT_TRUE( expectedP1.equal( *nodes[ 1 ].getContents()[ 0 ], 1.e-15 ) );
 		}
 	}
 }

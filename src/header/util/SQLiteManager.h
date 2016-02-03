@@ -269,8 +269,8 @@ namespace util
 		);
 		
 		checkReturnCode( sqlite3_extended_result_codes( m_db, 1 ), SQLITE_OK );
-// 		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
-// 		sqlite3_exec( m_db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL );
+		sqlite3_exec( m_db, "PRAGMA synchronous = OFF", NULL, NULL, NULL );
+		sqlite3_exec( m_db, "PRAGMA journal_mode = OFF", NULL, NULL, NULL );
 		sqlite3_busy_handler( m_db,
 			[]( void*, int )
 			{
@@ -378,16 +378,16 @@ namespace util
 		safeReset( m_nodeInsertion );
 		
 		// Debug
-		{
-			MortonCode expectedParent; expectedParent.build( 0x20b2bffb54faUL );
-			MortonCode expectedA = *expectedParent.getFirstChild();
-			MortonCode expectedB = *expectedParent.getLastChild();
-			
-			if( expectedA <= morton && morton <= expectedB )
-			{
-				cout << "Inserted: " << hex << morton.getPathToRoot( true ) << endl;
-			}
-		}
+// 		{
+// 			MortonCode expectedParent; expectedParent.build( 0x20b2bffb54faUL );
+// 			MortonCode expectedA = *expectedParent.getFirstChild();
+// 			MortonCode expectedB = *expectedParent.getLastChild();
+// 			
+// 			if( expectedA <= morton && morton <= expectedB )
+// 			{
+// 				cout << "Inserted: " << hex << morton.getPathToRoot( true ) << endl;
+// 			}
+// 		}
 		
 		delete[] serialization;
 	}

@@ -59,15 +59,16 @@ namespace model
 				cout << "Mem soft limit: " << m_memoryLimit << endl << endl;
 			}
 			
-			for( int i = 0; i < M_N_THREADS; ++i )
+			m_dbs[ 0 ].init( dbFilename );
+			for( int i = 1; i < M_N_THREADS; ++i )
 			{
-				m_dbs[ i ].init( dbFilename );
+				m_dbs[ i ].init( dbFilename, false );
 			}
 			
 			// Debug
-			{
-				m_log.open( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".log" ) );
-			}
+// 			{
+// 				m_log.open( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".log" ) );
+// 			}
 		}
 		
 		/** Creates the hierarchy.
@@ -392,7 +393,7 @@ namespace model
 		
 		// Debug
 		mutex m_logMutex;
-		ofstream m_log;
+// 		ofstream m_log;
 		//
 		
 		ulong m_memoryLimit;
@@ -483,7 +484,9 @@ namespace model
 		diskAccessThread.detach();
 		
 		// Debug
-		bool foundMarked = false;
+// 		bool foundMarked = false;
+// 		int itersAfterRelease = 0;
+// 		int maxItersAfterRelease = 10;
 		
 		// BEGIN MULTIPASS CONSTRUCTION LOOP.
 		while( !leafLvlLoaded || !checkAllWorkFinished() )
@@ -493,31 +496,18 @@ namespace model
 			int lvl = m_leafLvlDim.m_nodeLvl;
 			bool nextPassFlag = false; // Indicates that the current algorithm pass should end and a new one should be issued.
 			
-// 			if( isReleasing )
-// 			{
-// 				// Debug
+			if( isReleasing )
+			{
+				// Debug
 // 				{
 // 					lock_guard< mutex > lock( m_logMutex );
 // 					cout << "RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << endl << endl;
 // 				}
-// 				
-// 				for( int i = 0; i < M_N_THREADS; ++i )
-// 				{
-// 					m_dbs[ i ].endTransaction();
-// 				}
-// 				isReleasing = false;
-// 			}
-			
-			//Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "===== NEW ALGORITHM PASS =====" << endl;
-// 				for( int i = 0; i < m_lvlWorkLists.size(); ++i )
-// 				{
-// 					cout << "Lvl " << i << " size: " << m_lvlWorkLists[ i ].size() << endl;
-// 				}
-// 				cout << endl;
-// 			}
+				
+				isReleasing = false;
+				releaseFlag.notify_one();
+// 				itersAfterRelease = 0;
+			}
 			
 			// BEGIN HIERARCHY CONSTRUCTION LOOP.
 			while( lvl )
@@ -564,23 +554,11 @@ namespace model
 						increaseLvlFlag = true;
 					}
 					
-					// Debug
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						cout << "Dispatched threads: " << dispatchedThreads << endl << endl;
-// 					}
-					
 					IterArray iterInput( dispatchedThreads );
 					
 					for( int i = dispatchedThreads - 1; i > -1; --i )
 					{
 						iterInput[ i ] = popWork( lvl );
-						
-						// Debug
-// 						{
-// 							lock_guard< mutex > lock( m_logMutex );
-// 							cout << "Pop size: " << iterInput[ i ].size() << endl << endl;
-// 						}
 					}
 					
 					IterArray iterOutput( dispatchedThreads );
@@ -693,23 +671,23 @@ namespace model
 							m_dbs[ threadIdx ].endTransaction();
 							
 							// Debug 
-							{
-								Morton expectedMorton; expectedMorton.build( 0x20b2bffb54f9UL );
-								if( m_dbs[ threadIdx ].getNode( expectedMorton ).first == true )
-								{
-									if( foundMarked == false )
-									{
-										foundMarked = true;
-									}
-								}
-								else
-								{
-									if( foundMarked == true )
-									{
-										throw logic_error( "Node 0x20b2bffb54f9UL disappered from DB." );
-									}
-								}
-							}
+// 							{
+// 								Morton expectedMorton; expectedMorton.build( 0x20b2bffb54f9UL );
+// 								if( m_dbs[ threadIdx ].getNode( expectedMorton ).first == true )
+// 								{
+// 									if( foundMarked == false )
+// 									{
+// 										foundMarked = true;
+// 									}
+// 								}
+// 								else
+// 								{
+// 									if( foundMarked == true )
+// 									{
+// 										throw logic_error( "Node 0x20b2bffb54f9UL disappered from DB." );
+// 									}
+// 								}
+// 							}
 						}
 					}
 					// END PARALLEL WORKLIST PROCESSING.
@@ -790,7 +768,7 @@ namespace model
 							releaseFlag.notify_one();
 						}
 					}
-					else if( AllocStatistics::totalAllocated() > m_memoryLimit )
+					else if( AllocStatistics::totalAllocated() > m_memoryLimit /*&& itersAfterRelease > maxItersAfterRelease*/ )
 					{
 						// Check memory stress and release memory if necessary.
 						
@@ -841,6 +819,8 @@ namespace model
 				}
 			}
 			// END HIERARCHY CONSTRUCTION LOOP.
+			
+// 			++itersAfterRelease;
 		}
 		// END MULTIPASS CONSTRUCTION LOOP.
 		
@@ -879,16 +859,16 @@ namespace model
 			
 			Morton siblingMorton = dim.calcMorton( sibling );
 			// Debug
-			{
-				Morton expectedParent; expectedParent.build( 0x41657ff6a9fUL );
-				Morton expectedA = *expectedParent.getFirstChild();
-				Morton expectedB = *expectedParent.getLastChild();
-				
-				if( expectedA <= siblingMorton && siblingMorton <= expectedB )
-				{
-					cout << "2DB: " << hex << siblingMorton.getPathToRoot( true ) << endl;
-				}
-			}
+// 			{
+// 				Morton expectedParent; expectedParent.build( 0x41657ff6a9fUL );
+// 				Morton expectedA = *expectedParent.getFirstChild();
+// 				Morton expectedB = *expectedParent.getLastChild();
+// 				
+// 				if( expectedA <= siblingMorton && siblingMorton <= expectedB )
+// 				{
+// 					cout << "2DB: " << hex << siblingMorton.getPathToRoot( true ) << endl;
+// 				}
+// 			}
 			
 			// Persisting node
 			sql.insertNode( siblingMorton, sibling );
