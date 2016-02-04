@@ -39,12 +39,12 @@ namespace model
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
 		void buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread = 1024,
-							ulong memoryLimit = 1024 * 1024 * 8 );
+							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8 );
 		
 		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Also, the octree dimensions are expected
 		 * to be known. */
 		void buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread = 1024,
-								  ulong memoryLimit = 1024 * 1024 * 8 );
+								  ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8 );
 	
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
@@ -64,17 +64,15 @@ namespace model
 		
 		/** Root node of the hierarchy. */
 		Node* m_root;
-		
-		/** Number of threads used in octree construction and front tracking. The database thread is not part of the
-		 * group. */
-		static constexpr int M_N_THREADS = 8;
 	};
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit )
+	::buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit, int nThreads )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
+		
+		omp_set_num_threads( nThreads );
 		
 		PointSorter< Morton, Point > sorter( plyFilename, maxLvl );
 		
@@ -94,16 +92,18 @@ namespace model
 		sorter.sort( sortedFilename );
 		m_dim = sorter.comp();
 		
-		HierarchyCreator creator( sortedFilename, m_dim, loadPerThread, memoryLimit );
+		HierarchyCreator creator( sortedFilename, m_dim, loadPerThread, memoryLimit, nThreads );
 		m_root = creator.create();
 	}
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit )
+	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit, int nThreads )
 	{
+		omp_set_num_threads( nThreads );
+		
 		m_dim = dim;
-		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit );
+		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
 		m_root = creator.create();
 	}
 	

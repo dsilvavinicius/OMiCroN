@@ -333,6 +333,7 @@ namespace model
 					}
 				}
 			}
+			
 			return param;
 		}
 		
@@ -404,7 +405,8 @@ namespace model
 				auto start = Profiler::now( m_log );
 				
 				Octree octree;
-				octree.buildFromFile( param.m_plyFilename, param.m_hierarchyLvl, param.m_workItemSize, param.m_memoryQuota );
+				octree.buildFromFile( param.m_plyFilename, param.m_hierarchyLvl, param.m_workItemSize,
+									  param.m_memoryQuota, param.m_nThreads );
 				
 				m_log << "Time to build octree (ms): " << Profiler::elapsedTime( start, m_log ) << endl << endl;
 				
