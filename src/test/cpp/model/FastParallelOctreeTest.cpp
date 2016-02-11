@@ -387,6 +387,28 @@ namespace model
 			}
 		}
 		
+		TEST( FastParallelOctree, Creation_MultiThread_StayPuff_Sanity )
+		{
+			using Morton = MediumMortonCode;
+			using Octree = FastParallelOctree< Morton, Point >;
+			using OctreeDim = Octree::Dim;
+			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+			
+			Octree octree;
+			string filename = "../data/example/staypuff.ply";
+			octree.buildFromFile( filename, 20, 48, 1024, 8 );
+			
+			string dbFilename = filename;
+ 			dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
+ 			dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
+ 			
+ 			cout << "Sanity check..." << endl << dbFilename << endl << endl;
+ 				
+ 			Sql sql( dbFilename, false );
+ 			Morton rootCode; rootCode.build( 0x1 );
+ 			checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
+		}
+		
 		TEST_P( FastParallelOctreeStressTest, Stress )
 		{
 			using Morton = MediumMortonCode;

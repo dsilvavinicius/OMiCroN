@@ -438,53 +438,51 @@ namespace model
 				reader.read( Reader::SINGLE,
 					[ & ]( const Point& p )
 					{
-						bool isReleasingCpy;
-						{
-							lock_guard< mutex > lock( releaseMutex );
-							isReleasingCpy = isReleasing;
-						}
+						Morton code = leafLvlDimCpy.calcMorton( p );
+						Morton parent = *code.traverseUp();
 						
-						if( isReleasingCpy )
+						if( parent != currentParent )
 						{
-							isDiskThreadStopped = true;
-							
-							// Debug
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-// 								cout << "Disk thread stopped" << endl << endl;
-// 							}
-							
-							unique_lock< mutex > lock( releaseMutex );
-							releaseFlag.wait( lock, [ & ] { return !isReleasing; } );
-							
-							// Debug
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-// 								cout << "Disk thread resumed" << endl << endl;
-// 							}
-							
-							isDiskThreadStopped = false;
-						}
-						else 
-						{
-							Morton code = leafLvlDimCpy.calcMorton( p );
-							Morton parent = *code.traverseUp();
-							
-							if( parent != currentParent )
+							if( points.size() > 0 )
 							{
-								if( points.size() > 0 )
+								nodeList.push_back( Node( std::move( points ), true ) );
+								points = PointVector();
+								
+								if( nodeList.size() == m_expectedLoadPerThread )
 								{
-									nodeList.push_back( Node( std::move( points ), true ) );
-									points = PointVector();
+									pushWork( std::move( nodeList ) );
+									nodeList = NodeList();
 									
-									if( nodeList.size() == m_expectedLoadPerThread )
+									bool isReleasingCpy;
 									{
-										pushWork( std::move( nodeList ) );
-										nodeList = NodeList();
+										lock_guard< mutex > lock( releaseMutex );
+										isReleasingCpy = isReleasing;
+									}
+									
+									if( isReleasingCpy )
+									{
+										isDiskThreadStopped = true;
+							
+										// Debug
+			// 							{
+			// 								lock_guard< mutex > lock( m_logMutex );
+			// 								cout << "Disk thread stopped" << endl << endl;
+			// 							}
+										
+										unique_lock< mutex > lock( releaseMutex );
+										releaseFlag.wait( lock, [ & ] { return !isReleasing; } );
+										
+										// Debug
+			// 							{
+			// 								lock_guard< mutex > lock( m_logMutex );
+			// 								cout << "Disk thread resumed" << endl << endl;
+			// 							}
+										
+										isDiskThreadStopped = false;
 									}
 								}
-								currentParent = parent;
 							}
+							currentParent = parent;
 						}
 						
 						points.push_back( makeManaged< Point >( p ) );
