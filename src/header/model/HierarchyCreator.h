@@ -84,8 +84,10 @@ namespace model
 			lock_guard< mutex > lock( m_listMutex );
 			
 			// Debug
+// 			if( workItem.size() < m_expectedLoadPerThread )
 // 			{
-// 				cout << "Pushing work." << endl << endl;
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Pushing work: " << workItem.size() << endl << endl;
 // 			}
 			
 			m_lvlWorkLists[ m_leafLvlDim.m_nodeLvl ].push_back( std::move( workItem ) );
@@ -348,6 +350,51 @@ namespace model
 			return true;
 		}
 		
+		void turnReleaseOn( mutex& releaseMutex, bool& isReleasing )
+		{
+			
+			// Debug
+// 			{
+// 				cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
+// 						<< endl;
+// 			}
+			
+			{
+				lock_guard< mutex > lock( releaseMutex );
+				isReleasing = true;
+			}
+		}
+		
+		/** Sets all data to ensure that the algorithm's release is turned off. */
+		void turnReleaseOff( mutex& releaseMutex, bool& isReleasing, condition_variable& releaseFlag,
+							 mutex& diskThreadMutex, bool& isDiskThreadStopped )
+		{
+			// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "===== RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << "=====" << endl << endl;
+// 			}
+			//
+			
+			{
+				lock_guard< mutex > lock( releaseMutex );
+				isReleasing = false;
+			}
+			releaseFlag.notify_one();
+			
+			// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Disk thread resumed" << endl << endl;
+// 			}
+			//
+			
+			{
+				lock_guard< mutex > lock( diskThreadMutex );
+				isDiskThreadStopped = false;
+			}
+		}
+		
 		/** Releases and persists a given sibling group.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
 		 * @param threadIdx is the index of the executing thread.
@@ -423,6 +470,7 @@ namespace model
 		condition_variable releaseFlag;
 		
 		// SHARED. Indicates the disk thread is stopped.
+		mutex diskThreadMutex;
 		bool isDiskThreadStopped = false;
 		
 		// Thread that loads data from sorted file or database.
@@ -461,24 +509,19 @@ namespace model
 									
 									if( isReleasingCpy )
 									{
-										isDiskThreadStopped = true;
+										{
+											lock_guard< mutex > lock( diskThreadMutex );
+											isDiskThreadStopped = true;
+										}
 							
 										// Debug
-			// 							{
-			// 								lock_guard< mutex > lock( m_logMutex );
-			// 								cout << "Disk thread stopped" << endl << endl;
-			// 							}
+// 										{
+// 											lock_guard< mutex > lock( m_logMutex );
+// 											cout << "Disk thread stopped" << endl << endl;
+// 										}
 										
 										unique_lock< mutex > lock( releaseMutex );
 										releaseFlag.wait( lock, [ & ] { return !isReleasing; } );
-										
-										// Debug
-			// 							{
-			// 								lock_guard< mutex > lock( m_logMutex );
-			// 								cout << "Disk thread resumed" << endl << endl;
-			// 							}
-										
-										isDiskThreadStopped = false;
 									}
 								}
 							}
@@ -503,11 +546,6 @@ namespace model
 		);
 		diskAccessThread.detach();
 		
-		// Debug
-// 		bool foundMarked = false;
-// 		int itersAfterRelease = 0;
-// 		int maxItersAfterRelease = 10;
-		
 		// BEGIN MULTIPASS CONSTRUCTION LOOP.
 		while( !leafLvlLoaded || !checkAllWorkFinished() )
 		{
@@ -518,18 +556,7 @@ namespace model
 			
 			if( isReleasing )
 			{
-				// Debug
-// 				{
-// 					lock_guard< mutex > lock( m_logMutex );
-// 					cout << "===== RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << "=====" << endl << endl;
-// 				}
-				
-				{
-					lock_guard< mutex > lock( releaseMutex );
-					isReleasing = false;
-				}
-				releaseFlag.notify_one();
-// 				itersAfterRelease = 0;
+				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 			}
 			
 			// BEGIN HIERARCHY CONSTRUCTION LOOP.
@@ -566,15 +593,23 @@ namespace model
 					{
 						dispatchedThreads = m_nThreads;
 					}
-					else if( lvl != m_leafLvlDim.m_nodeLvl || isLastPass || isDiskThreadStopped )
-					{
-						dispatchedThreads = workListSize;
-						increaseLvlFlag = true;
-					}
 					else
 					{
-						dispatchedThreads = workListSize - 1;
-						increaseLvlFlag = true;
+						bool isDiskThreadStoppedCpy;
+						{
+							lock_guard< mutex > lock( diskThreadMutex );
+							isDiskThreadStoppedCpy = isDiskThreadStopped;
+						}
+						if( lvl != m_leafLvlDim.m_nodeLvl || isLastPass || isDiskThreadStoppedCpy )
+						{
+							dispatchedThreads = workListSize;
+							increaseLvlFlag = true;
+						}
+						else
+						{
+							dispatchedThreads = workListSize - 1;
+							increaseLvlFlag = true;
+						}
 					}
 					
 					// Debug
@@ -642,6 +677,12 @@ namespace model
 							
 							if( workListSize - dispatchedThreads == 0 && !isLastPass && threadIdx == 0 && isLastSiblingGroup )
 							{
+								// Debug
+// 								{
+// 									lock_guard< mutex > lock( m_logMutex );
+// 									cout << "Pushing sib group back." << endl << endl;
+// 								}
+								
 								// Send this last sibling group to the lvl WorkList again.
 								NodeList lastSiblingsList;
 								for( int j = 0; j < nSiblings; ++j )
@@ -783,42 +824,12 @@ namespace model
 					{
 						if( AllocStatistics::totalAllocated() < m_memoryLimit )
 						{
-							//Debug
-// 							{
-// 								cout << "===== RELEASE OFF: Mem " << AllocStatistics::totalAllocated() << " =====" << endl << endl;
-// 							}
-							
-// 							for( int i = 0; i < M_N_THREADS; ++i )
-// 							{
-// 								m_dbs[ i ].endTransaction();
-// 							}
-							
-							{
-								lock_guard< mutex > lock( releaseMutex );
-								isReleasing = false;
-							}
-							releaseFlag.notify_one();
+							turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 						}
 					}
-					else if( AllocStatistics::totalAllocated() > m_memoryLimit /*&& itersAfterRelease > maxItersAfterRelease*/ )
+					else if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
-						// Check memory stress and release memory if necessary.
-						
-						// Debug
-// 						{
-// 							cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
-// 								 << endl;
-// 						}
-						
-// 						for( int i = 0; i < M_N_THREADS; ++i )
-// 						{
-// 							m_dbs[ i ].beginTransaction();
-// 						}
-						
-						{
-							lock_guard< mutex > lock( releaseMutex );
-							isReleasing = true;
-						}
+						turnReleaseOn( releaseMutex, isReleasing );
 					}
 					// END NODE RELEASE MANAGEMENT.
 					
@@ -962,6 +973,21 @@ namespace model
 			for( int i = 0; i < children.size(); ++i )
 			{
 				children[ i ] = std::move( inChildren[ i ] );
+				
+				// Debug
+// 				if( i > 0 )
+// 				{
+// 					Morton prevMorton = m_octreeDim.calcMorton( children[ i - 1 ] );
+// 					Morton currentMorton = m_octreeDim.calcMorton( children[ i ] );
+// 					if( currentMorton <= prevMorton )
+// 					{
+// 						stringstream ss;
+// 						ss 	<< "Current: " << currentMorton.getPathToRoot( true ) << " <= "
+// 							<< prevMorton.getPathToRoot( true ) << endl;
+// 						throw logic_error( ss.str() );
+// 					}
+// 				}
+				//
 			}
 			
 			int nPoints = 0;
