@@ -689,8 +689,10 @@ namespace util
 		if( returnCode != expectedCode )
 		{
 			int errorCode = sqlite3_extended_errcode( m_db );
+			stringstream ss;
+			ss << "SQLite return code: " << errorCode << ". Msg: " << sqlite3_errstr( errorCode );
 			release();
-			throw runtime_error( sqlite3_errstr( errorCode ) );
+			throw runtime_error( ss.str() );
 		}
 	}
 	
@@ -714,10 +716,15 @@ namespace util
 		{
 			case SQLITE_ROW: return true;
 			case SQLITE_DONE: return false;
+			// SQLITE_BUSY means that a deadlock is detected. Try again.
+			case SQLITE_BUSY: return safeStep( statement );
 			default:
 			{
+				int errorCode = sqlite3_extended_errcode( m_db );
+				stringstream ss;
+				ss << "SQLite return code: " << errorCode << ". Msg: " << sqlite3_errstr( errorCode );
 				release();
-				throw runtime_error( sqlite3_errstr( returnCode ) );
+				throw runtime_error( ss.str() );
 			}
 		}
 	}

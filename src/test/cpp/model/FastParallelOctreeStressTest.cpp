@@ -33,9 +33,13 @@ namespace model
 			return out;
 		}
 		
-		vector< TestParam > createTestParams()
+		/** Creates the test parameters.
+		 * @param startFrom is the test index from which the tests will start. This parameter provides a way to resume
+		 * tests after a crash or something. */
+		vector< TestParam > createTestParams( int startFromIdx = 0 )
 		{
 			vector< TestParam > param;
+			int currentTestIdx = 0;
 			
 			for( int nThreads = 8; nThreads >= 1; --nThreads )
 			{
@@ -46,9 +50,18 @@ namespace model
 						for( ulong memQuota = 1024ul * 1024ul * 1024ul * 7ul; memQuota >= 1024ul * 1024ul * 1024ul * 2ul;
 							memQuota -= 1024ul * 1024ul * 1024ul * 2ul )
 						{
-							param.push_back( TestParam( "../data/example/staypuff.ply", nThreads, maxLvl, worklistSize, memQuota ) );
-							param.push_back( TestParam( "../../../src/data/real/tempietto_all.ply", nThreads, maxLvl, worklistSize, memQuota ) );
-							param.push_back( TestParam( "../../../src/data/real/tempietto_sub_tot.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+							if( currentTestIdx++ >= startFromIdx )
+							{
+								param.push_back( TestParam( "../data/example/staypuff.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+							}
+							if( currentTestIdx++ >= startFromIdx )
+							{
+								param.push_back( TestParam( "../../../src/data/real/tempietto_all.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+							}
+							if( currentTestIdx++ >= startFromIdx )
+							{
+								param.push_back( TestParam( "../../../src/data/real/tempietto_sub_tot.ply", nThreads, maxLvl, worklistSize, memQuota ) );
+							}
 						}
 					}
 				}
@@ -62,7 +75,7 @@ namespace model
 		{};
 		
 		INSTANTIATE_TEST_CASE_P( Stress, FastParallelOctreeStressTest,
-                        ::testing::ValuesIn( createTestParams() ) );
+                        ::testing::ValuesIn( createTestParams( 20 ) ) );
 		
 		TEST_P( FastParallelOctreeStressTest, Stress )
 		{
