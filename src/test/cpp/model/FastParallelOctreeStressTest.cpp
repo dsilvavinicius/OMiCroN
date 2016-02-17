@@ -47,7 +47,7 @@ namespace model
 				{
 					for( float worklistSize = 2048.f; worklistSize >= 24.f; worklistSize *= 0.5f )
 					{
-						for( ulong memQuota = 1024ul * 1024ul * 1024ul * 7ul; memQuota >= 1024ul * 1024ul * 1024ul * 2ul;
+						for( ulong memQuota = 1024ul * 1024ul * 1024ul * 5ul; memQuota >= 1024ul * 1024ul * 1024ul * 2ul;
 							memQuota -= 1024ul * 1024ul * 1024ul * 2ul )
 						{
 							if( currentTestIdx++ >= startFromIdx )
@@ -75,7 +75,7 @@ namespace model
 		{};
 		
 		INSTANTIATE_TEST_CASE_P( Stress, FastParallelOctreeStressTest,
-                        ::testing::ValuesIn( createTestParams( 20 ) ) );
+                        ::testing::ValuesIn( createTestParams( 32 ) ) );
 		
 		TEST_P( FastParallelOctreeStressTest, Stress )
 		{
