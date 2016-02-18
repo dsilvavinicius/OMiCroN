@@ -1,0 +1,23 @@
+#include <iostream>
+#include "FastParallelOctreeStressParam.h"
+
+FastParallelOctreeStressParam::FastParallelOctreeStressParam()
+{}
+
+FastParallelOctreeStressParam::FastParallelOctreeStressParam( const string& plyFilename, const int nThreads,
+															  const int hierarchyLvl, const int workItemSize,
+															  const ulong memoryQuota )
+: m_nThreads( nThreads ),
+m_plyFilename( plyFilename ),
+m_hierarchyLvl( hierarchyLvl ),
+m_workItemSize( workItemSize ),
+m_memoryQuota( memoryQuota )
+{};
+
+ostream& operator<<( ostream &out, const FastParallelOctreeStressParam &param )
+{
+	out << param.m_plyFilename << endl << "Threads: " << param.m_nThreads << endl << "Max lvl: "
+		<< param.m_hierarchyLvl << endl << "Workitem size:" << param.m_workItemSize << endl
+		<< "Mem quota (in bytes):" << param.m_memoryQuota << endl;
+	return out;
+}

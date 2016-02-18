@@ -22,6 +22,11 @@ namespace model
 		
 		FastParallelOctree()
 		: m_root( nullptr )
+		
+		#ifdef HIERARCHY_STATS
+			, m_processedNodes( 0 )
+		#endif
+		
 		{}
 		
 		~FastParallelOctree()
@@ -50,6 +55,10 @@ namespace model
 		const Dim& dim() const { return m_dim; }
 		
 		Node& root() { return *m_root; }
+		
+		#ifdef HIERARCHY_STATS
+			ulong m_processedNodes;
+		#endif
 		
 		template< typename M, typename Pt >
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, Pt >& octree );
@@ -94,6 +103,10 @@ namespace model
 		
 		HierarchyCreator creator( sortedFilename, m_dim, loadPerThread, memoryLimit, nThreads );
 		m_root = creator.create();
+		
+		#ifdef HIERARCHY_STATS
+			m_processedNodes = creator.m_processedNodes;
+		#endif
 	}
 	
 	template< typename Morton, typename Point >
@@ -105,6 +118,10 @@ namespace model
 		m_dim = dim;
 		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
 		m_root = creator.create();
+		
+		#ifdef HIERARCHY_STATS
+			m_processedNodes = creator.m_processedNodes;
+		#endif
 	}
 	
 	template< typename Morton, typename Point >

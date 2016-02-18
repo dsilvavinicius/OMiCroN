@@ -8,8 +8,14 @@ create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 #OpenMP thread number environment variable.
 set (ENV{OMP_NUM_THREADS} 8)
 
-include_directories( include/
-	${HEADER_DIR}/${MODEL_DIR}/ )
+find_package( Boost COMPONENTS program_options REQUIRED )
+
+include_directories(
+	${Boost_INCLUDE_DIR}
+	include/
+	${HEADER_DIR}/
+	${HEADER_DIR}/${MODEL_DIR}/
+)
 
 add_subdirectory (gtest/)
 
@@ -39,9 +45,10 @@ add_executable (Tests
 	
 	${HEADER_DIR}/${MODEL_DIR}/TextTestWidget.h		${CPP_DIR}/${MODEL_DIR}/TextTestWidget.cpp
 	${CPP_DIR}/${MODEL_DIR}/TextTest.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Text3DTestWidget.h		${CPP_DIR}/${MODEL_DIR}/Text3DTestWidget.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Text3DTestWidget.h	${CPP_DIR}/${MODEL_DIR}/Text3DTestWidget.cpp
 	${CPP_DIR}/${MODEL_DIR}/Text3DTest.cpp
-
+	${HEADER_DIR}/FastParallelOctreeStressParam.h	${CPP_DIR}/FastParallelOctreeStressParam.cpp
+	
 #	The tests below are not compatible with glew and Tucano, since are using new Qt only.
 
 #	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
@@ -57,7 +64,8 @@ target_include_directories (Tests PUBLIC gtest
 target_link_libraries (Tests Point_Based_Renderer_Lib
 	gtest
 	gtest_main
-	pthread)
+	pthread
+	${Boost_LIBRARIES})
 
 # .ply files copy target.
 add_custom_target( TestsCopy )
@@ -66,5 +74,8 @@ get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
 add_custom_command( TARGET TestsCopy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data
 	${Renderer_Dir}/test/data )
+add_custom_command( TARGET TestsCopy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/StressTest.bash
+	${Renderer_Dir}/test/StressTest.bash )
 	
 add_dependencies( Tests TestsCopy )

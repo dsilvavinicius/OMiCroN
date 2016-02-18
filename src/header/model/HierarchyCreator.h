@@ -9,6 +9,8 @@
 #include "OctreeDimensions.h"
 #include "SQLiteManager.h"
 
+//#define HIERARCHY_STATS
+
 using namespace util;
 
 namespace model
@@ -50,6 +52,11 @@ namespace model
 		m_expectedLoadPerThread( expectedLoadPerThread ),
 		m_dbs( nThreads ),
 		m_memoryLimit( memoryLimit )
+		
+		#ifdef HIERARCHY_STATS
+			, m_processedNodes( 0 )
+		#endif
+		
 		{
 			srand( 1 );
 			
@@ -77,6 +84,10 @@ namespace model
 		/** Creates the hierarchy.
 		 * @return hierarchy's root node. The pointer ownership is caller's. */
 		Node* create();
+		
+		#ifdef HIERARCHY_STATS
+			atomic_ulong m_processedNodes;
+		#endif
 		
 	private:
 		void pushWork( NodeList&& workItem )
@@ -693,6 +704,10 @@ namespace model
 							}
 							else
 							{
+								#ifdef HIERARCHY_STATS
+									m_processedNodes += nSiblings;
+								#endif
+								
 								if( isLastSiblingGroup )
 								{
 									isBoundarySiblingGroup = true;
