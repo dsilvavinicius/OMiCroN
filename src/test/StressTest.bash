@@ -1,6 +1,6 @@
 testExample()
 {
-	startFromIdx=0
+	startFromIdx=19
 	currentTestIdx=0
 	nThreads=8
 	while [[ $nThreads -ge 2 ]]; do
