@@ -1,6 +1,5 @@
 testExample()
 {
-	startFromIdx=19
 	currentTestIdx=0
 	nThreads=8
 	while [[ $nThreads -ge 2 ]]; do
@@ -10,7 +9,7 @@ testExample()
 			while [[ $worklistSize -ge 128 ]]; do
 				memQuota=7516192768
 				while [[ $memQuota -ge 2147483648 ]]; do
-					if [[ currentTestIdx -ge startFromIdx ]]
+					if [[ currentTestIdx -ge $2 ]]
 						then echo "Test " $currentTestIdx #" Params: file " $1 " threads " $nThreads " lvl " $maxLvl " workitem " $worklistSize " quota " $memQuota
 						./Tests "--gtest_filter=*FastParallelOctreeStressTest*" --octree_stress_filename $1 --octree_stress_threads $nThreads --octree_stress_lvl $maxLvl --octree_stress_workitem $worklistSize --octree_stress_quota $memQuota
 					fi
@@ -25,5 +24,5 @@ testExample()
 	done
 }
 
-testExample ../../../src/data/real/tempietto_sub_tot.ply
-testExample ../../../src/data/real/tempietto_all.ply
+testExample ../../../src/data/real/tempietto_sub_tot.ply 193
+testExample ../../../src/data/real/tempietto_all.ply 0
