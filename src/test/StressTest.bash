@@ -24,5 +24,5 @@ testExample()
 	done
 }
 
-testExample ../../../src/data/real/tempietto_sub_tot.ply 193
-testExample ../../../src/data/real/tempietto_all.ply 0
+#testExample ../../../src/data/real/tempietto_sub_tot.ply 193
+testExample ../../../src/data/real/tempietto_all.ply 75
