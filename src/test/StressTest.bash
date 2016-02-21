@@ -25,4 +25,4 @@ testExample()
 }
 
 #testExample ../../../src/data/real/tempietto_sub_tot.ply 193
-testExample ../../../src/data/real/tempietto_all.ply 75
+testExample ../../../src/data/real/tempietto_all.ply 181
