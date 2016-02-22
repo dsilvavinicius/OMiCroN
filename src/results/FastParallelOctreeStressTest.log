@@ -1,0 +1,6772 @@
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:4096
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 10:43:32 2016
+
+
+Finished at: Thu Feb 18 11:09:37 2016
+
+
+Time to build octree (ms): 1565146
+
+Processed nodes: 809096038
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 11:58:23 2016
+
+
+Finished at: Thu Feb 18 12:20:59 2016
+
+
+Time to build octree (ms): 1355839
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 12:21:06 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 12:35:14 2016
+
+
+Finished at: Thu Feb 18 12:59:07 2016
+
+
+Time to build octree (ms): 1433516
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 12:59:12 2016
+
+
+Finished at: Thu Feb 18 13:24:16 2016
+
+
+Time to build octree (ms): 1504583
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 13:24:20 2016
+
+
+Finished at: Thu Feb 18 13:44:52 2016
+
+
+Time to build octree (ms): 1232126
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 13:45:00 2016
+
+
+Finished at: Thu Feb 18 14:07:34 2016
+
+
+Time to build octree (ms): 1354493
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 14:07:40 2016
+
+
+Finished at: Thu Feb 18 14:29:19 2016
+
+
+Time to build octree (ms): 1298805
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 14:29:23 2016
+
+
+Finished at: Thu Feb 18 14:51:09 2016
+
+
+Time to build octree (ms): 1306344
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 14:51:18 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 14:53:45 2016
+
+
+Finished at: Thu Feb 18 15:19:38 2016
+
+
+Time to build octree (ms): 1553082
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 15:19:42 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 15:40:23 2016
+
+
+Finished at: Thu Feb 18 16:06:25 2016
+
+
+Time to build octree (ms): 1561869
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 16:06:32 2016
+
+
+Finished at: Thu Feb 18 16:34:10 2016
+
+
+Time to build octree (ms): 1657509
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 16:34:15 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 17:05:14 2016
+
+
+Finished at: Thu Feb 18 17:36:46 2016
+
+
+Time to build octree (ms): 1891626
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 17:36:53 2016
+
+
+Finished at: Thu Feb 18 18:08:56 2016
+
+
+Time to build octree (ms): 1922499
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 18:09:02 2016
+
+
+Finished at: Thu Feb 18 18:14:46 2016
+
+
+Time to build octree (ms): 343967
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 18:14:52 2016
+
+
+Finished at: Thu Feb 18 18:21:46 2016
+
+
+Time to build octree (ms): 413807
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 18:21:50 2016
+
+
+Finished at: Thu Feb 18 18:29:42 2016
+
+
+Time to build octree (ms): 472185
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 18:29:45 2016
+
+
+Finished at: Thu Feb 18 18:33:47 2016
+
+
+Time to build octree (ms): 241920
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 18:33:53 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 22:26:43 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 22:27:59 2016
+
+
+Finished at: Thu Feb 18 22:33:48 2016
+
+
+Time to build octree (ms): 348776
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 22:33:52 2016
+
+
+Finished at: Thu Feb 18 22:41:12 2016
+
+
+Time to build octree (ms): 440006
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 22:41:15 2016
+
+
+Finished at: Thu Feb 18 22:44:41 2016
+
+
+Time to build octree (ms): 206430
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 22:44:48 2016
+
+
+Finished at: Thu Feb 18 22:50:16 2016
+
+
+Time to build octree (ms): 327970
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 22:50:22 2016
+
+
+Finished at: Thu Feb 18 22:57:55 2016
+
+
+Time to build octree (ms): 452658
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 22:57:59 2016
+
+
+Finished at: Thu Feb 18 23:01:35 2016
+
+
+Time to build octree (ms): 215648
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 23:01:42 2016
+
+
+Finished at: Thu Feb 18 23:08:08 2016
+
+
+Time to build octree (ms): 385275
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 23:08:14 2016
+
+
+Finished at: Thu Feb 18 23:16:36 2016
+
+
+Time to build octree (ms): 502338
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 23:16:40 2016
+
+
+Finished at: Thu Feb 18 23:23:01 2016
+
+
+Time to build octree (ms): 380218
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 23:23:09 2016
+
+
+Finished at: Thu Feb 18 23:32:59 2016
+
+
+Time to build octree (ms): 590522
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 23:33:05 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 23:43:37 2016
+
+
+Finished at: Thu Feb 18 23:45:43 2016
+
+
+Time to build octree (ms): 126495
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 23:45:45 2016
+
+
+Finished at: Thu Feb 18 23:47:49 2016
+
+
+Time to build octree (ms): 123874
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 23:47:50 2016
+
+
+Finished at: Thu Feb 18 23:49:56 2016
+
+
+Time to build octree (ms): 125752
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 23:49:58 2016
+
+
+Finished at: Thu Feb 18 23:52:02 2016
+
+
+Time to build octree (ms): 124211
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 23:52:03 2016
+
+
+Finished at: Thu Feb 18 23:54:07 2016
+
+
+Time to build octree (ms): 123528
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Thu Feb 18 23:54:08 2016
+
+
+Finished at: Thu Feb 18 23:56:11 2016
+
+
+Time to build octree (ms): 123077
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Thu Feb 18 23:56:13 2016
+
+
+Finished at: Thu Feb 18 23:58:15 2016
+
+
+Time to build octree (ms): 122380
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Thu Feb 18 23:58:17 2016
+
+
+Finished at: Fri Feb 19 00:00:20 2016
+
+
+Time to build octree (ms): 123345
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:00:22 2016
+
+
+Finished at: Fri Feb 19 00:02:24 2016
+
+
+Time to build octree (ms): 122174
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:02:25 2016
+
+
+Finished at: Fri Feb 19 00:04:28 2016
+
+
+Time to build octree (ms): 122487
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:04:29 2016
+
+
+Finished at: Fri Feb 19 00:06:32 2016
+
+
+Time to build octree (ms): 122907
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:06:34 2016
+
+
+Finished at: Fri Feb 19 00:08:37 2016
+
+
+Time to build octree (ms): 122932
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:08:38 2016
+
+
+Finished at: Fri Feb 19 00:10:41 2016
+
+
+Time to build octree (ms): 122568
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:10:42 2016
+
+
+Finished at: Fri Feb 19 00:12:45 2016
+
+
+Time to build octree (ms): 123234
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:12:47 2016
+
+
+Finished at: Fri Feb 19 00:14:50 2016
+
+
+Time to build octree (ms): 123742
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:14:52 2016
+
+
+Finished at: Fri Feb 19 00:16:41 2016
+
+
+Time to build octree (ms): 109557
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:16:43 2016
+
+
+Finished at: Fri Feb 19 00:18:34 2016
+
+
+Time to build octree (ms): 110463
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:18:36 2016
+
+
+Finished at: Fri Feb 19 00:20:27 2016
+
+
+Time to build octree (ms): 111432
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:20:30 2016
+
+
+Finished at: Fri Feb 19 00:22:19 2016
+
+
+Time to build octree (ms): 109625
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:22:21 2016
+
+
+Finished at: Fri Feb 19 00:24:12 2016
+
+
+Time to build octree (ms): 110575
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:24:14 2016
+
+
+Finished at: Fri Feb 19 00:26:04 2016
+
+
+Time to build octree (ms): 109848
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:26:06 2016
+
+
+Finished at: Fri Feb 19 00:27:58 2016
+
+
+Time to build octree (ms): 111622
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:28:00 2016
+
+
+Finished at: Fri Feb 19 00:29:51 2016
+
+
+Time to build octree (ms): 110945
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:29:53 2016
+
+
+Finished at: Fri Feb 19 00:31:43 2016
+
+
+Time to build octree (ms): 110323
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:31:46 2016
+
+
+Finished at: Fri Feb 19 00:33:39 2016
+
+
+Time to build octree (ms): 112677
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:33:41 2016
+
+
+Finished at: Fri Feb 19 00:35:34 2016
+
+
+Time to build octree (ms): 113799
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:35:37 2016
+
+
+Finished at: Fri Feb 19 00:37:28 2016
+
+
+Time to build octree (ms): 111504
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:37:30 2016
+
+
+Finished at: Fri Feb 19 00:39:21 2016
+
+
+Time to build octree (ms): 111194
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 00:39:24 2016
+
+
+Finished at: Fri Feb 19 00:41:16 2016
+
+
+Time to build octree (ms): 112107
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 8
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 00:41:18 2016
+
+
+Finished at: Fri Feb 19 00:43:11 2016
+
+
+Time to build octree (ms): 112532
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 00:43:13 2016
+
+
+Finished at: Fri Feb 19 01:01:11 2016
+
+
+Time to build octree (ms): 1078645
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 01:01:18 2016
+
+
+Finished at: Fri Feb 19 01:20:42 2016
+
+
+Time to build octree (ms): 1163741
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 01:20:46 2016
+
+
+Finished at: Fri Feb 19 01:41:13 2016
+
+
+Time to build octree (ms): 1226601
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 01:41:16 2016
+
+
+Finished at: Fri Feb 19 01:57:49 2016
+
+
+Time to build octree (ms): 993026
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 01:57:56 2016
+
+
+Finished at: Fri Feb 19 02:16:47 2016
+
+
+Time to build octree (ms): 1131090
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 02:16:52 2016
+
+
+Finished at: Fri Feb 19 02:37:09 2016
+
+
+Time to build octree (ms): 1217598
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 02:37:13 2016
+
+
+Finished at: Fri Feb 19 02:51:43 2016
+
+
+Time to build octree (ms): 870046
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 02:51:51 2016
+
+
+Finished at: Fri Feb 19 03:11:21 2016
+
+
+Time to build octree (ms): 1170860
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 03:11:27 2016
+
+
+Finished at: Fri Feb 19 03:33:05 2016
+
+
+Time to build octree (ms): 1297670
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 03:33:08 2016
+
+
+Finished at: Fri Feb 19 03:52:51 2016
+
+
+Time to build octree (ms): 1182967
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 03:52:58 2016
+
+
+Finished at: Fri Feb 19 04:15:11 2016
+
+
+Time to build octree (ms): 1333434
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 04:15:17 2016
+
+
+Finished at: Fri Feb 19 04:39:00 2016
+
+
+Time to build octree (ms): 1422167
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 04:39:04 2016
+
+
+Finished at: Fri Feb 19 05:04:01 2016
+
+
+Time to build octree (ms): 1497144
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 05:04:11 2016
+
+
+Finished at: Fri Feb 19 05:29:09 2016
+
+
+Time to build octree (ms): 1498261
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 05:29:16 2016
+
+
+Finished at: Fri Feb 19 05:54:32 2016
+
+
+Time to build octree (ms): 1515881
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 05:54:37 2016
+
+
+Finished at: Fri Feb 19 06:00:32 2016
+
+
+Time to build octree (ms): 354458
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 06:00:37 2016
+
+
+Finished at: Fri Feb 19 06:06:48 2016
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 06:06:50 2016
+
+
+Finished at: Fri Feb 19 06:13:16 2016
+
+
+Time to build octree (ms): 386701
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 06:13:19 2016
+
+
+Finished at: Fri Feb 19 06:17:32 2016
+
+
+Time to build octree (ms): 252716
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 06:17:37 2016
+
+
+Finished at: Fri Feb 19 06:22:55 2016
+
+
+Time to build octree (ms): 317728
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 06:22:59 2016
+
+
+Finished at: Fri Feb 19 06:29:03 2016
+
+
+Time to build octree (ms): 364635
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 06:29:06 2016
+
+
+Finished at: Fri Feb 19 06:32:24 2016
+
+
+Time to build octree (ms): 197807
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 06:32:29 2016
+
+
+Finished at: Fri Feb 19 06:37:18 2016
+
+
+Time to build octree (ms): 288087
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 06:37:22 2016
+
+
+Finished at: Fri Feb 19 06:43:25 2016
+
+
+Time to build octree (ms): 363064
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 06:43:27 2016
+
+
+Finished at: Fri Feb 19 06:46:36 2016
+
+
+Time to build octree (ms): 188603
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 06:46:42 2016
+
+
+Finished at: Fri Feb 19 06:51:29 2016
+
+
+Time to build octree (ms): 287026
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 06:51:33 2016
+
+
+Finished at: Fri Feb 19 06:57:39 2016
+
+
+Time to build octree (ms): 365408
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 06:57:41 2016
+
+
+Finished at: Fri Feb 19 07:00:40 2016
+
+
+Time to build octree (ms): 178602
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:00:46 2016
+
+
+Finished at: Fri Feb 19 07:05:44 2016
+
+
+Time to build octree (ms): 297545
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:05:48 2016
+
+
+Finished at: Fri Feb 19 07:12:15 2016
+
+
+Time to build octree (ms): 387266
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:12:18 2016
+
+
+Finished at: Fri Feb 19 07:14:29 2016
+
+
+Time to build octree (ms): 131591
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:14:31 2016
+
+
+Finished at: Fri Feb 19 07:16:41 2016
+
+
+Time to build octree (ms): 130134
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:16:43 2016
+
+
+Finished at: Fri Feb 19 07:18:52 2016
+
+
+Time to build octree (ms): 129610
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:18:54 2016
+
+
+Finished at: Fri Feb 19 07:21:02 2016
+
+
+Time to build octree (ms): 128781
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:21:04 2016
+
+
+Finished at: Fri Feb 19 07:23:10 2016
+
+
+Time to build octree (ms): 125729
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:23:11 2016
+
+
+Finished at: Fri Feb 19 07:25:20 2016
+
+
+Time to build octree (ms): 128955
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:25:22 2016
+
+
+Finished at: Fri Feb 19 07:27:29 2016
+
+
+Time to build octree (ms): 127461
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:27:31 2016
+
+
+Finished at: Fri Feb 19 07:29:39 2016
+
+
+Time to build octree (ms): 127972
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:29:40 2016
+
+
+Finished at: Fri Feb 19 07:31:44 2016
+
+
+Time to build octree (ms): 124404
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:31:46 2016
+
+
+Finished at: Fri Feb 19 07:33:56 2016
+
+
+Time to build octree (ms): 130559
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:33:58 2016
+
+
+Finished at: Fri Feb 19 07:36:03 2016
+
+
+Time to build octree (ms): 125367
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:36:05 2016
+
+
+Finished at: Fri Feb 19 07:38:13 2016
+
+
+Time to build octree (ms): 127982
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:38:14 2016
+
+
+Finished at: Fri Feb 19 07:40:21 2016
+
+
+Time to build octree (ms): 126553
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:40:22 2016
+
+
+Finished at: Fri Feb 19 07:42:33 2016
+
+
+Time to build octree (ms): 130696
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:42:34 2016
+
+
+Finished at: Fri Feb 19 07:44:37 2016
+
+
+Time to build octree (ms): 122753
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:44:38 2016
+
+
+Finished at: Fri Feb 19 07:46:32 2016
+
+
+Time to build octree (ms): 113599
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:46:34 2016
+
+
+Finished at: Fri Feb 19 07:48:30 2016
+
+
+Time to build octree (ms): 116059
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:48:32 2016
+
+
+Finished at: Fri Feb 19 07:50:33 2016
+
+
+Time to build octree (ms): 120352
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:50:35 2016
+
+
+Finished at: Fri Feb 19 07:52:32 2016
+
+
+Time to build octree (ms): 117601
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:52:35 2016
+
+
+Finished at: Fri Feb 19 07:54:33 2016
+
+
+Time to build octree (ms): 118643
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 07:54:35 2016
+
+
+Finished at: Fri Feb 19 07:56:32 2016
+
+
+Time to build octree (ms): 116551
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 07:56:34 2016
+
+
+Finished at: Fri Feb 19 07:58:30 2016
+
+
+Time to build octree (ms): 116263
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 07:58:33 2016
+
+
+Finished at: Fri Feb 19 08:00:28 2016
+
+
+Time to build octree (ms): 115380
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 08:00:30 2016
+
+
+Finished at: Fri Feb 19 08:02:28 2016
+
+
+Time to build octree (ms): 117978
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 08:02:30 2016
+
+
+Finished at: Fri Feb 19 08:04:28 2016
+
+
+Time to build octree (ms): 117924
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 08:04:30 2016
+
+
+Finished at: Fri Feb 19 08:06:29 2016
+
+
+Time to build octree (ms): 118408
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 08:06:31 2016
+
+
+Finished at: Fri Feb 19 08:08:26 2016
+
+
+Time to build octree (ms): 115384
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 08:08:28 2016
+
+
+Finished at: Fri Feb 19 08:10:24 2016
+
+
+Time to build octree (ms): 115616
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 08:10:26 2016
+
+
+Finished at: Fri Feb 19 08:12:28 2016
+
+
+Time to build octree (ms): 122190
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 6
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 08:12:31 2016
+
+
+Finished at: Fri Feb 19 08:14:29 2016
+
+
+Time to build octree (ms): 118420
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 08:14:31 2016
+
+
+Finished at: Fri Feb 19 08:31:36 2016
+
+
+Time to build octree (ms): 1024228
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 08:31:42 2016
+
+
+Finished at: Fri Feb 19 08:49:41 2016
+
+
+Time to build octree (ms): 1079585
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 08:49:46 2016
+
+
+Finished at: Fri Feb 19 09:09:24 2016
+
+
+Time to build octree (ms): 1178022
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 09:09:27 2016
+
+
+Finished at: Fri Feb 19 09:24:22 2016
+
+
+Time to build octree (ms): 894640
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 09:24:28 2016
+
+
+Finished at: Fri Feb 19 09:41:38 2016
+
+
+Time to build octree (ms): 1030152
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 09:41:43 2016
+
+
+Finished at: Fri Feb 19 10:01:13 2016
+
+
+Time to build octree (ms): 1169687
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 10:01:17 2016
+
+
+Finished at: Fri Feb 19 10:17:29 2016
+
+
+Time to build octree (ms): 971517
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 10:17:36 2016
+
+
+Finished at: Fri Feb 19 10:35:36 2016
+
+
+Time to build octree (ms): 1079812
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 10:35:41 2016
+
+
+Finished at: Fri Feb 19 10:55:41 2016
+
+
+Time to build octree (ms): 1199458
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 10:55:45 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 11:02:51 2016
+
+
+Finished at: Fri Feb 19 11:22:48 2016
+
+
+Time to build octree (ms): 1196353
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 11:22:54 2016
+
+
+Finished at: Fri Feb 19 11:44:02 2016
+
+
+Time to build octree (ms): 1267680
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 11:44:07 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 11:48:33 2016
+
+
+Finished at: Fri Feb 19 12:10:54 2016
+
+
+Time to build octree (ms): 1340845
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 12:11:01 2016
+
+
+Finished at: Fri Feb 19 12:33:09 2016
+
+
+Time to build octree (ms): 1327734
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 12:33:12 2016
+
+
+Finished at: Fri Feb 19 12:39:12 2016
+
+
+Time to build octree (ms): 359907
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 12:39:18 2016
+
+
+Finished at: Fri Feb 19 12:45:33 2016
+
+
+Time to build octree (ms): 375083
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 12:45:37 2016
+
+
+Finished at: Fri Feb 19 12:51:42 2016
+
+
+Time to build octree (ms): 364730
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 12:51:44 2016
+
+
+Finished at: Fri Feb 19 12:55:59 2016
+
+
+Time to build octree (ms): 255079
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 12:56:05 2016
+
+
+Finished at: Fri Feb 19 13:01:28 2016
+
+
+Time to build octree (ms): 322999
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 13:01:32 2016
+
+
+Finished at: Fri Feb 19 13:07:12 2016
+
+
+Time to build octree (ms): 340101
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 13:07:15 2016
+
+
+Finished at: Fri Feb 19 13:10:21 2016
+
+
+Time to build octree (ms): 186261
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 13:10:27 2016
+
+
+Finished at: Fri Feb 19 13:14:55 2016
+
+
+Time to build octree (ms): 268140
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 13:14:59 2016
+
+
+Finished at: Fri Feb 19 13:20:49 2016
+
+
+Time to build octree (ms): 350010
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 13:20:52 2016
+
+
+Finished at: Fri Feb 19 13:24:04 2016
+
+
+Time to build octree (ms): 192073
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 13:24:10 2016
+
+
+Finished at: Fri Feb 19 13:28:28 2016
+
+
+Time to build octree (ms): 258496
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 13:28:34 2016
+
+
+Finished at: Fri Feb 19 13:33:53 2016
+
+
+Time to build octree (ms): 318521
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 13:33:55 2016
+
+
+Finished at: Fri Feb 19 13:37:07 2016
+
+
+Time to build octree (ms): 191986
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 13:37:14 2016
+
+
+Finished at: Fri Feb 19 13:42:00 2016
+
+
+Time to build octree (ms): 286442
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 13:42:04 2016
+
+
+Finished at: Fri Feb 19 13:47:51 2016
+
+
+Time to build octree (ms): 346159
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 13:47:53 2016
+
+
+Finished at: Fri Feb 19 13:49:53 2016
+
+
+Time to build octree (ms): 119550
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 13:49:54 2016
+
+
+Finished at: Fri Feb 19 13:52:14 2016
+
+
+Time to build octree (ms): 139356
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 13:52:15 2016
+
+
+Finished at: Fri Feb 19 13:54:35 2016
+
+
+Time to build octree (ms): 139507
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 13:54:36 2016
+
+
+Finished at: Fri Feb 19 13:56:37 2016
+
+
+Time to build octree (ms): 120532
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 13:56:38 2016
+
+
+Finished at: Fri Feb 19 13:58:41 2016
+
+
+Time to build octree (ms): 122873
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 13:58:43 2016
+
+
+Finished at: Fri Feb 19 14:01:10 2016
+
+
+Time to build octree (ms): 147147
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:01:11 2016
+
+
+Finished at: Fri Feb 19 14:03:13 2016
+
+
+Time to build octree (ms): 121898
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:03:15 2016
+
+
+Finished at: Fri Feb 19 14:05:37 2016
+
+
+Time to build octree (ms): 142239
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:05:38 2016
+
+
+Finished at: Fri Feb 19 14:07:45 2016
+
+
+Time to build octree (ms): 126121
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:07:46 2016
+
+
+Finished at: Fri Feb 19 14:10:06 2016
+
+
+Time to build octree (ms): 140180
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:10:08 2016
+
+
+Finished at: Fri Feb 19 14:12:07 2016
+
+
+Time to build octree (ms): 119188
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:12:08 2016
+
+
+Finished at: Fri Feb 19 14:14:13 2016
+
+
+Time to build octree (ms): 124885
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:14:15 2016
+
+
+Finished at: Fri Feb 19 14:16:33 2016
+
+
+Time to build octree (ms): 138105
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:16:34 2016
+
+
+Finished at: Fri Feb 19 14:18:57 2016
+
+
+Time to build octree (ms): 143183
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:18:59 2016
+
+
+Finished at: Fri Feb 19 14:21:04 2016
+
+
+Time to build octree (ms): 125185
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:21:05 2016
+
+
+Finished at: Fri Feb 19 14:23:17 2016
+
+
+Time to build octree (ms): 131965
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:23:19 2016
+
+
+Finished at: Fri Feb 19 14:25:35 2016
+
+
+Time to build octree (ms): 135740
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:25:37 2016
+
+
+Finished at: Fri Feb 19 14:27:35 2016
+
+
+Time to build octree (ms): 117283
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:27:37 2016
+
+
+Finished at: Fri Feb 19 14:29:53 2016
+
+
+Time to build octree (ms): 136021
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:29:55 2016
+
+
+Finished at: Fri Feb 19 14:32:10 2016
+
+
+Time to build octree (ms): 134710
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:32:12 2016
+
+
+Finished at: Fri Feb 19 14:34:10 2016
+
+
+Time to build octree (ms): 118264
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:34:12 2016
+
+
+Finished at: Fri Feb 19 14:36:09 2016
+
+
+Time to build octree (ms): 116676
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:36:11 2016
+
+
+Finished at: Fri Feb 19 14:38:09 2016
+
+
+Time to build octree (ms): 117796
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:38:11 2016
+
+
+Finished at: Fri Feb 19 14:40:27 2016
+
+
+Time to build octree (ms): 135528
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:40:29 2016
+
+
+Finished at: Fri Feb 19 14:42:44 2016
+
+
+Time to build octree (ms): 135077
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:42:46 2016
+
+
+Finished at: Fri Feb 19 14:45:01 2016
+
+
+Time to build octree (ms): 134662
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:45:03 2016
+
+
+Finished at: Fri Feb 19 14:47:01 2016
+
+
+Time to build octree (ms): 118593
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:47:04 2016
+
+
+Finished at: Fri Feb 19 14:48:59 2016
+
+
+Time to build octree (ms): 115349
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 14:49:01 2016
+
+
+Finished at: Fri Feb 19 14:51:16 2016
+
+
+Time to build octree (ms): 134285
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 4
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 14:51:18 2016
+
+
+Finished at: Fri Feb 19 14:53:34 2016
+
+
+Time to build octree (ms): 136099
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 14:53:36 2016
+
+
+Finished at: Fri Feb 19 15:10:21 2016
+
+
+Time to build octree (ms): 1004493
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 15:10:27 2016
+
+
+Finished at: Fri Feb 19 15:28:05 2016
+
+
+Time to build octree (ms): 1058046
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 15:28:09 2016
+
+
+Finished at: Fri Feb 19 15:47:06 2016
+
+
+Time to build octree (ms): 1137467
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 15:47:09 2016
+
+
+Finished at: Fri Feb 19 16:02:02 2016
+
+
+Time to build octree (ms): 892300
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 16:02:10 2016
+
+
+Finished at: Fri Feb 19 16:17:55 2016
+
+
+Time to build octree (ms): 945396
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 16:18:01 2016
+
+
+Finished at: Fri Feb 19 16:35:52 2016
+
+
+Time to build octree (ms): 1071342
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 16:35:55 2016
+
+
+Finished at: Fri Feb 19 16:52:21 2016
+
+
+Time to build octree (ms): 985928
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 16:52:28 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 16:58:16 2016
+
+
+Finished at: Fri Feb 19 17:16:02 2016
+
+
+Time to build octree (ms): 1065520
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 17:16:08 2016
+
+
+Finished at: Fri Feb 19 17:34:00 2016
+
+
+Time to build octree (ms): 1072479
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 17:34:04 2016
+
+
+Finished at: Fri Feb 19 17:52:39 2016
+
+
+Time to build octree (ms): 1115324
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 17:52:49 2016
+
+
+Finished at: Fri Feb 19 18:10:59 2016
+
+
+Time to build octree (ms): 1090281
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Fri Feb 19 18:11:06 2016
+
+
+Finished at: Fri Feb 19 18:29:39 2016
+
+
+Time to build octree (ms): 1113540
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Fri Feb 19 18:29:44 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 19:05:10 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Fri Feb 19 19:30:07 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 00:48:20 2016
+
+
+Finished at: Sat Feb 20 01:14:35 2016
+
+
+Time to build octree (ms): 1575765
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 01:14:43 2016
+
+
+Finished at: Sat Feb 20 01:37:07 2016
+
+
+Time to build octree (ms): 1343625
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 01:37:12 2016
+
+
+Finished at: Sat Feb 20 01:43:22 2016
+
+
+Time to build octree (ms): 370249
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 01:43:28 2016
+
+
+Finished at: Sat Feb 20 01:49:51 2016
+
+
+Time to build octree (ms): 382782
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 01:49:55 2016
+
+
+Finished at: Sat Feb 20 01:56:27 2016
+
+
+Time to build octree (ms): 392057
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 01:56:29 2016
+
+
+Finished at: Sat Feb 20 02:01:01 2016
+
+
+Time to build octree (ms): 271809
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 02:01:06 2016
+
+
+Finished at: Sat Feb 20 02:06:27 2016
+
+
+Time to build octree (ms): 320384
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 02:06:33 2016
+
+
+Finished at: Sat Feb 20 02:12:35 2016
+
+
+Time to build octree (ms): 361932
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 02:12:37 2016
+
+
+Finished at: Sat Feb 20 02:16:05 2016
+
+
+Time to build octree (ms): 207600
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 02:16:11 2016
+
+
+Finished at: Sat Feb 20 02:20:41 2016
+
+
+Time to build octree (ms): 270268
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 02:20:45 2016
+
+
+Finished at: Sat Feb 20 02:26:07 2016
+
+
+Time to build octree (ms): 322439
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 02:26:10 2016
+
+
+Finished at: Sat Feb 20 02:29:40 2016
+
+
+Time to build octree (ms): 210171
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 02:29:46 2016
+
+
+Finished at: Sat Feb 20 02:34:14 2016
+
+
+Time to build octree (ms): 268406
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 02:34:19 2016
+
+
+Finished at: Sat Feb 20 02:39:38 2016
+
+
+Time to build octree (ms): 319439
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 02:39:41 2016
+
+
+Finished at: Sat Feb 20 02:43:01 2016
+
+
+Time to build octree (ms): 200366
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 02:43:08 2016
+
+
+Finished at: Sat Feb 20 02:51:35 2016
+
+
+Time to build octree (ms): 507384
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 02:51:41 2016
+
+
+Finished at: Sat Feb 20 02:57:19 2016
+
+
+Time to build octree (ms): 337922
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 02:57:22 2016
+
+
+Finished at: Sat Feb 20 02:59:54 2016
+
+
+Time to build octree (ms): 151750
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 02:59:55 2016
+
+
+Finished at: Sat Feb 20 03:02:26 2016
+
+
+Time to build octree (ms): 150472
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:02:27 2016
+
+
+Finished at: Sat Feb 20 03:05:18 2016
+
+
+Time to build octree (ms): 170846
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:05:20 2016
+
+
+Finished at: Sat Feb 20 03:08:04 2016
+
+
+Time to build octree (ms): 164540
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:08:06 2016
+
+
+Finished at: Sat Feb 20 03:10:37 2016
+
+
+Time to build octree (ms): 151319
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:10:39 2016
+
+
+Finished at: Sat Feb 20 03:13:10 2016
+
+
+Time to build octree (ms): 151422
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:13:12 2016
+
+
+Finished at: Sat Feb 20 03:15:43 2016
+
+
+Time to build octree (ms): 151090
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:15:44 2016
+
+
+Finished at: Sat Feb 20 03:18:14 2016
+
+
+Time to build octree (ms): 149444
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:18:15 2016
+
+
+Finished at: Sat Feb 20 03:20:46 2016
+
+
+Time to build octree (ms): 150718
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:20:47 2016
+
+
+Finished at: Sat Feb 20 03:23:17 2016
+
+
+Time to build octree (ms): 149607
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:23:18 2016
+
+
+Finished at: Sat Feb 20 03:25:53 2016
+
+
+Time to build octree (ms): 154497
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:25:54 2016
+
+
+Finished at: Sat Feb 20 03:29:06 2016
+
+
+Time to build octree (ms): 191786
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:29:08 2016
+
+
+Finished at: Sat Feb 20 03:31:37 2016
+
+
+Time to build octree (ms): 149600
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:31:39 2016
+
+
+Finished at: Sat Feb 20 03:34:09 2016
+
+
+Time to build octree (ms): 150271
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:34:10 2016
+
+
+Finished at: Sat Feb 20 03:36:41 2016
+
+
+Time to build octree (ms): 150468
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:36:42 2016
+
+
+Finished at: Sat Feb 20 03:39:08 2016
+
+
+Time to build octree (ms): 146268
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:39:10 2016
+
+
+Finished at: Sat Feb 20 03:41:38 2016
+
+
+Time to build octree (ms): 147983
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:41:41 2016
+
+
+Finished at: Sat Feb 20 03:44:06 2016
+
+
+Time to build octree (ms): 145087
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:44:08 2016
+
+
+Finished at: Sat Feb 20 03:46:35 2016
+
+
+Time to build octree (ms): 147519
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:46:37 2016
+
+
+Finished at: Sat Feb 20 03:49:04 2016
+
+
+Time to build octree (ms): 146676
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:49:06 2016
+
+
+Finished at: Sat Feb 20 03:51:40 2016
+
+
+Time to build octree (ms): 153595
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:51:42 2016
+
+
+Finished at: Sat Feb 20 03:54:12 2016
+
+
+Time to build octree (ms): 149681
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 03:54:14 2016
+
+
+Finished at: Sat Feb 20 03:56:39 2016
+
+
+Time to build octree (ms): 145573
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 03:56:41 2016
+
+
+Finished at: Sat Feb 20 03:59:10 2016
+
+
+Time to build octree (ms): 148653
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 03:59:12 2016
+
+
+Finished at: Sat Feb 20 04:01:46 2016
+
+
+Time to build octree (ms): 154061
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 04:01:48 2016
+
+
+Finished at: Sat Feb 20 04:04:15 2016
+
+
+Time to build octree (ms): 146717
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 04:04:17 2016
+
+
+Finished at: Sat Feb 20 04:06:47 2016
+
+
+Time to build octree (ms): 149675
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 04:06:49 2016
+
+
+Finished at: Sat Feb 20 04:09:16 2016
+
+
+Time to build octree (ms): 147131
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 04:09:18 2016
+
+
+Finished at: Sat Feb 20 04:12:24 2016
+
+
+Time to build octree (ms): 186002
+
+Starting building octree. Params:../../../src/data/real/tempietto_sub_tot.ply
+Threads: 2
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 04:12:27 2016
+
+
+Finished at: Sat Feb 20 04:14:55 2016
+
+
+Time to build octree (ms): 147949
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 04:14:57 2016
+
+
+Finished at: Sat Feb 20 04:21:06 2016
+
+
+Time to build octree (ms): 369568
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 04:21:13 2016
+
+
+Finished at: Sat Feb 20 04:29:46 2016
+
+
+Time to build octree (ms): 513620
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 04:29:51 2016
+
+
+Finished at: Sat Feb 20 04:38:18 2016
+
+
+Time to build octree (ms): 507091
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 04:38:21 2016
+
+
+Finished at: Sat Feb 20 04:44:06 2016
+
+
+Time to build octree (ms): 345440
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 04:44:14 2016
+
+
+Finished at: Sat Feb 20 04:52:16 2016
+
+
+Time to build octree (ms): 482646
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 04:52:21 2016
+
+
+Finished at: Sat Feb 20 05:02:08 2016
+
+
+Time to build octree (ms): 586908
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 05:02:11 2016
+
+
+Finished at: Sat Feb 20 05:07:59 2016
+
+
+Time to build octree (ms): 347618
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 05:08:06 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 05:09:51 2016
+
+
+Finished at: Sat Feb 20 05:20:27 2016
+
+
+Time to build octree (ms): 636068
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 05:20:31 2016
+
+
+Finished at: Sat Feb 20 05:27:07 2016
+
+
+Time to build octree (ms): 395836
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 05:27:14 2016
+
+
+Finished at: Sat Feb 20 05:36:13 2016
+
+
+Time to build octree (ms): 538095
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 05:36:18 2016
+
+
+Finished at: Sat Feb 20 05:47:28 2016
+
+
+Time to build octree (ms): 669843
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 05:47:32 2016
+
+
+Finished at: Sat Feb 20 05:57:21 2016
+
+
+Time to build octree (ms): 588595
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 05:57:29 2016
+
+
+Finished at: Sat Feb 20 06:08:43 2016
+
+
+Time to build octree (ms): 673630
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 06:08:49 2016
+
+
+Finished at: Sat Feb 20 06:21:47 2016
+
+
+Time to build octree (ms): 777708
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 06:21:51 2016
+
+
+Finished at: Sat Feb 20 06:25:19 2016
+
+
+Time to build octree (ms): 207761
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 06:25:23 2016
+
+
+Finished at: Sat Feb 20 06:29:08 2016
+
+
+Time to build octree (ms): 224468
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 06:29:12 2016
+
+
+Finished at: Sat Feb 20 06:34:16 2016
+
+
+Time to build octree (ms): 304244
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 06:34:18 2016
+
+
+Finished at: Sat Feb 20 06:36:33 2016
+
+
+Time to build octree (ms): 134743
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 06:36:38 2016
+
+
+Finished at: Sat Feb 20 06:39:17 2016
+
+
+Time to build octree (ms): 158950
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 06:39:21 2016
+
+
+Finished at: Sat Feb 20 06:43:42 2016
+
+
+Time to build octree (ms): 261068
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 06:43:45 2016
+
+
+Finished at: Sat Feb 20 06:45:33 2016
+
+
+Time to build octree (ms): 107720
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 06:45:38 2016
+
+
+Finished at: Sat Feb 20 06:48:05 2016
+
+
+Time to build octree (ms): 146668
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 06:48:09 2016
+
+
+Finished at: Sat Feb 20 06:52:33 2016
+
+
+Time to build octree (ms): 263974
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 06:52:37 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 06:54:24 2016
+
+
+Finished at: Sat Feb 20 06:56:51 2016
+
+
+Time to build octree (ms): 146892
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 06:56:56 2016
+
+
+Finished at: Sat Feb 20 07:01:50 2016
+
+
+Time to build octree (ms): 294353
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:01:54 2016
+
+
+Finished at: Sat Feb 20 07:06:25 2016
+
+
+Time to build octree (ms): 270583
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:06:31 2016
+
+
+Finished at: Sat Feb 20 07:11:30 2016
+
+
+Time to build octree (ms): 299168
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:11:35 2016
+
+
+Finished at: Sat Feb 20 07:18:12 2016
+
+
+Time to build octree (ms): 396798
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:18:16 2016
+
+
+Finished at: Sat Feb 20 07:19:15 2016
+
+
+Time to build octree (ms): 59518
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:19:16 2016
+
+
+Finished at: Sat Feb 20 07:20:15 2016
+
+
+Time to build octree (ms): 58853
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:20:16 2016
+
+
+Finished at: Sat Feb 20 07:21:14 2016
+
+
+Time to build octree (ms): 58732
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:21:15 2016
+
+
+Finished at: Sat Feb 20 07:22:13 2016
+
+
+Time to build octree (ms): 58143
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:22:14 2016
+
+
+Finished at: Sat Feb 20 07:23:13 2016
+
+
+Time to build octree (ms): 58360
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:23:13 2016
+
+
+Finished at: Sat Feb 20 07:24:12 2016
+
+
+Time to build octree (ms): 58400
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:24:12 2016
+
+
+Finished at: Sat Feb 20 07:25:12 2016
+
+
+Time to build octree (ms): 59130
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:25:12 2016
+
+
+Finished at: Sat Feb 20 07:26:11 2016
+
+
+Time to build octree (ms): 58629
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:26:12 2016
+
+
+Finished at: Sat Feb 20 07:27:10 2016
+
+
+Time to build octree (ms): 58271
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:27:11 2016
+
+
+Finished at: Sat Feb 20 07:28:09 2016
+
+
+Time to build octree (ms): 58510
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:28:10 2016
+
+
+Finished at: Sat Feb 20 07:29:08 2016
+
+
+Time to build octree (ms): 58453
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:29:09 2016
+
+
+Finished at: Sat Feb 20 07:30:09 2016
+
+
+Time to build octree (ms): 59342
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:30:09 2016
+
+
+Finished at: Sat Feb 20 07:31:09 2016
+
+
+Time to build octree (ms): 59316
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:31:09 2016
+
+
+Finished at: Sat Feb 20 07:32:08 2016
+
+
+Time to build octree (ms): 58479
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:32:08 2016
+
+
+Finished at: Sat Feb 20 07:33:07 2016
+
+
+Time to build octree (ms): 58503
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:33:08 2016
+
+
+Finished at: Sat Feb 20 07:33:59 2016
+
+
+Time to build octree (ms): 51378
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:34:00 2016
+
+
+Finished at: Sat Feb 20 07:34:52 2016
+
+
+Time to build octree (ms): 52403
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:34:53 2016
+
+
+Finished at: Sat Feb 20 07:35:45 2016
+
+
+Time to build octree (ms): 51589
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:35:46 2016
+
+
+Finished at: Sat Feb 20 07:36:38 2016
+
+
+Time to build octree (ms): 52040
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:36:39 2016
+
+
+Finished at: Sat Feb 20 07:37:30 2016
+
+
+Time to build octree (ms): 51296
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:37:31 2016
+
+
+Finished at: Sat Feb 20 07:38:23 2016
+
+
+Time to build octree (ms): 51574
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:38:24 2016
+
+
+Finished at: Sat Feb 20 07:39:15 2016
+
+
+Time to build octree (ms): 51252
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:39:16 2016
+
+
+Finished at: Sat Feb 20 07:40:07 2016
+
+
+Time to build octree (ms): 51550
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:40:08 2016
+
+
+Finished at: Sat Feb 20 07:41:00 2016
+
+
+Time to build octree (ms): 51405
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:41:01 2016
+
+
+Finished at: Sat Feb 20 07:41:53 2016
+
+
+Time to build octree (ms): 52634
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:41:54 2016
+
+
+Finished at: Sat Feb 20 07:42:46 2016
+
+
+Time to build octree (ms): 51214
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:42:47 2016
+
+
+Finished at: Sat Feb 20 07:43:38 2016
+
+
+Time to build octree (ms): 51549
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:43:39 2016
+
+
+Finished at: Sat Feb 20 07:44:32 2016
+
+
+Time to build octree (ms): 53210
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:44:33 2016
+
+
+Finished at: Sat Feb 20 07:45:26 2016
+
+
+Time to build octree (ms): 53105
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 8
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:45:28 2016
+
+
+Finished at: Sat Feb 20 07:46:21 2016
+
+
+Time to build octree (ms): 53033
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 07:46:22 2016
+
+
+Finished at: Sat Feb 20 07:52:11 2016
+
+
+Time to build octree (ms): 349615
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 07:52:17 2016
+
+
+Finished at: Sat Feb 20 07:59:34 2016
+
+
+Time to build octree (ms): 437223
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 07:59:38 2016
+
+
+Finished at: Sat Feb 20 08:08:12 2016
+
+
+Time to build octree (ms): 513629
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 08:08:14 2016
+
+
+Finished at: Sat Feb 20 08:13:47 2016
+
+
+Time to build octree (ms): 333193
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 08:13:52 2016
+
+
+Finished at: Sat Feb 20 08:20:01 2016
+
+
+Time to build octree (ms): 369072
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 08:20:05 2016
+
+
+Finished at: Sat Feb 20 08:28:02 2016
+
+
+Time to build octree (ms): 476591
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 08:28:05 2016
+
+
+Finished at: Sat Feb 20 08:32:33 2016
+
+
+Time to build octree (ms): 268094
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 08:32:40 2016
+
+
+Finished at: Sat Feb 20 08:41:55 2016
+
+
+Time to build octree (ms): 554562
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 08:41:57 2016
+
+
+Finished at: Sat Feb 20 08:50:20 2016
+
+
+Time to build octree (ms): 503064
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 08:50:23 2016
+
+
+Finished at: Sat Feb 20 08:55:31 2016
+
+
+Time to build octree (ms): 307735
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 08:55:39 2016
+
+
+Finished at: Sat Feb 20 09:03:02 2016
+
+
+Time to build octree (ms): 443636
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 09:03:08 2016
+
+
+Finished at: Sat Feb 20 09:12:33 2016
+
+
+Time to build octree (ms): 565360
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 09:12:35 2016
+
+
+Finished at: Sat Feb 20 09:19:37 2016
+
+
+Time to build octree (ms): 421386
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 09:19:45 2016
+
+
+Finished at: Sat Feb 20 09:28:33 2016
+
+
+Time to build octree (ms): 527624
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 09:28:39 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 09:31:20 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 09:42:36 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 09:44:12 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 19:35:10 2016
+
+
+Finished at: Sat Feb 20 19:38:52 2016
+
+
+Time to build octree (ms): 221959
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 19:38:56 2016
+
+
+Finished at: Sat Feb 20 19:42:42 2016
+
+
+Time to build octree (ms): 226254
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 19:42:46 2016
+
+
+Finished at: Sat Feb 20 19:47:02 2016
+
+
+Time to build octree (ms): 256088
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 19:47:04 2016
+
+
+Finished at: Sat Feb 20 19:49:26 2016
+
+
+Time to build octree (ms): 141284
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 19:49:30 2016
+
+
+Finished at: Sat Feb 20 19:51:58 2016
+
+
+Time to build octree (ms): 147569
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 19:52:01 2016
+
+
+Finished at: Sat Feb 20 19:55:46 2016
+
+
+Time to build octree (ms): 224986
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 19:55:49 2016
+
+
+Finished at: Sat Feb 20 19:57:29 2016
+
+
+Time to build octree (ms): 100175
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 19:57:33 2016
+
+
+Finished at: Sat Feb 20 19:59:34 2016
+
+
+Time to build octree (ms): 120498
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 19:59:38 2016
+
+
+Finished at: Sat Feb 20 20:03:09 2016
+
+
+Time to build octree (ms): 210953
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:03:11 2016
+
+
+Finished at: Sat Feb 20 20:04:35 2016
+
+
+Time to build octree (ms): 83831
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:04:40 2016
+
+
+Finished at: Sat Feb 20 20:06:33 2016
+
+
+Time to build octree (ms): 113481
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:06:38 2016
+
+
+Finished at: Sat Feb 20 20:10:26 2016
+
+
+Time to build octree (ms): 228134
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:10:28 2016
+
+
+Finished at: Sat Feb 20 20:11:52 2016
+
+
+Time to build octree (ms): 84054
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:11:58 2016
+
+
+Finished at: Sat Feb 20 20:13:55 2016
+
+
+Time to build octree (ms): 117258
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:13:59 2016
+
+
+Finished at: Sat Feb 20 20:18:03 2016
+
+
+Time to build octree (ms): 243496
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:18:06 2016
+
+
+Finished at: Sat Feb 20 20:19:07 2016
+
+
+Time to build octree (ms): 61690
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:19:08 2016
+
+
+Finished at: Sat Feb 20 20:20:09 2016
+
+
+Time to build octree (ms): 60715
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:20:10 2016
+
+
+Finished at: Sat Feb 20 20:21:12 2016
+
+
+Time to build octree (ms): 62096
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:21:12 2016
+
+
+Finished at: Sat Feb 20 20:22:14 2016
+
+
+Time to build octree (ms): 62041
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:22:15 2016
+
+
+Finished at: Sat Feb 20 20:23:17 2016
+
+
+Time to build octree (ms): 62259
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:23:18 2016
+
+
+Finished at: Sat Feb 20 20:24:20 2016
+
+
+Time to build octree (ms): 61835
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:24:21 2016
+
+
+Finished at: Sat Feb 20 20:25:18 2016
+
+
+Time to build octree (ms): 57391
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:25:19 2016
+
+
+Finished at: Sat Feb 20 20:26:21 2016
+
+
+Time to build octree (ms): 61974
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:26:22 2016
+
+
+Finished at: Sat Feb 20 20:27:24 2016
+
+
+Time to build octree (ms): 62292
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:27:25 2016
+
+
+Finished at: Sat Feb 20 20:28:25 2016
+
+
+Time to build octree (ms): 60331
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:28:26 2016
+
+
+Finished at: Sat Feb 20 20:29:26 2016
+
+
+Time to build octree (ms): 60401
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:29:27 2016
+
+
+Finished at: Sat Feb 20 20:30:29 2016
+
+
+Time to build octree (ms): 61875
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:30:30 2016
+
+
+Finished at: Sat Feb 20 20:31:27 2016
+
+
+Time to build octree (ms): 57210
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:31:27 2016
+
+
+Finished at: Sat Feb 20 20:32:30 2016
+
+
+Time to build octree (ms): 62094
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:32:30 2016
+
+
+Finished at: Sat Feb 20 20:33:34 2016
+
+
+Time to build octree (ms): 63752
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:33:35 2016
+
+
+Finished at: Sat Feb 20 20:34:28 2016
+
+
+Time to build octree (ms): 53625
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:34:29 2016
+
+
+Finished at: Sat Feb 20 20:35:23 2016
+
+
+Time to build octree (ms): 54047
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:35:24 2016
+
+
+Finished at: Sat Feb 20 20:36:18 2016
+
+
+Time to build octree (ms): 53742
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:36:19 2016
+
+
+Finished at: Sat Feb 20 20:37:13 2016
+
+
+Time to build octree (ms): 54381
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:37:14 2016
+
+
+Finished at: Sat Feb 20 20:38:08 2016
+
+
+Time to build octree (ms): 53692
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:38:09 2016
+
+
+Finished at: Sat Feb 20 20:39:04 2016
+
+
+Time to build octree (ms): 54948
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:39:05 2016
+
+
+Finished at: Sat Feb 20 20:39:58 2016
+
+
+Time to build octree (ms): 53062
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:39:59 2016
+
+
+Finished at: Sat Feb 20 20:40:52 2016
+
+
+Time to build octree (ms): 53402
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:40:53 2016
+
+
+Finished at: Sat Feb 20 20:41:47 2016
+
+
+Time to build octree (ms): 54364
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:41:48 2016
+
+
+Finished at: Sat Feb 20 20:42:42 2016
+
+
+Time to build octree (ms): 53998
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:42:43 2016
+
+
+Finished at: Sat Feb 20 20:43:38 2016
+
+
+Time to build octree (ms): 54182
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:43:38 2016
+
+
+Finished at: Sat Feb 20 20:44:33 2016
+
+
+Time to build octree (ms): 54049
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:44:33 2016
+
+
+Finished at: Sat Feb 20 20:45:29 2016
+
+
+Time to build octree (ms): 55159
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:45:30 2016
+
+
+Finished at: Sat Feb 20 20:46:25 2016
+
+
+Time to build octree (ms): 55723
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:46:26 2016
+
+
+Finished at: Sat Feb 20 20:47:21 2016
+
+
+Time to build octree (ms): 55107
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 20:47:22 2016
+
+
+Finished at: Sat Feb 20 20:52:59 2016
+
+
+Time to build octree (ms): 336295
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 20:53:05 2016
+
+
+Finished at: Sat Feb 20 20:59:44 2016
+
+
+Time to build octree (ms): 399149
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 20:59:48 2016
+
+
+Finished at: Sat Feb 20 21:07:51 2016
+
+
+Time to build octree (ms): 483370
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 21:07:54 2016
+
+
+Finished at: Sat Feb 20 21:12:16 2016
+
+
+Time to build octree (ms): 262258
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 21:12:23 2016
+
+
+Finished at: Sat Feb 20 21:18:56 2016
+
+
+Time to build octree (ms): 393424
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 21:19:00 2016
+
+
+Finished at: Sat Feb 20 21:25:51 2016
+
+
+Time to build octree (ms): 411114
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 21:25:54 2016
+
+
+Finished at: Sat Feb 20 21:30:32 2016
+
+
+Time to build octree (ms): 277696
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 21:30:39 2016
+
+
+Finished at: Sat Feb 20 21:37:07 2016
+
+
+Time to build octree (ms): 388430
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 21:37:13 2016
+
+
+Finished at: Sat Feb 20 21:44:56 2016
+
+
+Time to build octree (ms): 463052
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 21:44:59 2016
+
+
+Finished at: Sat Feb 20 21:50:11 2016
+
+
+Time to build octree (ms): 312432
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 21:50:20 2016
+
+
+Finished at: Sat Feb 20 21:57:12 2016
+
+
+Time to build octree (ms): 411977
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 21:57:17 2016
+
+
+Finished at: Sat Feb 20 22:05:40 2016
+
+
+Time to build octree (ms): 502096
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 22:05:42 2016
+
+
+Finished at: Sat Feb 20 22:14:55 2016
+
+
+Time to build octree (ms): 552374
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 22:15:03 2016
+
+
+Finished at: Sat Feb 20 22:24:01 2016
+
+
+Time to build octree (ms): 537732
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 22:24:07 2016
+
+
+Finished at: Sat Feb 20 22:33:38 2016
+
+
+Time to build octree (ms): 571625
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 22:33:42 2016
+
+
+Finished at: Sat Feb 20 22:37:15 2016
+
+
+Time to build octree (ms): 213108
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 22:37:20 2016
+
+
+Finished at: Sat Feb 20 22:41:02 2016
+
+
+Time to build octree (ms): 222472
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 22:41:06 2016
+
+
+Finished at: Sat Feb 20 22:45:37 2016
+
+
+Time to build octree (ms): 270952
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 22:45:39 2016
+
+
+Finished at: Sat Feb 20 22:47:52 2016
+
+
+Time to build octree (ms): 132939
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 22:47:56 2016
+
+
+Finished at: Sat Feb 20 22:50:32 2016
+
+
+Time to build octree (ms): 155597
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 22:50:36 2016
+
+
+Finished at: Sat Feb 20 22:54:07 2016
+
+
+Time to build octree (ms): 210815
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 22:54:09 2016
+
+
+Finished at: Sat Feb 20 22:55:54 2016
+
+
+Time to build octree (ms): 104606
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 22:55:58 2016
+
+
+Finished at: Sat Feb 20 22:57:57 2016
+
+
+Time to build octree (ms): 119244
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 22:58:02 2016
+
+
+Finished at: Sat Feb 20 23:01:03 2016
+
+
+Time to build octree (ms): 181425
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:01:06 2016
+
+
+Finished at: Sat Feb 20 23:02:39 2016
+
+
+Time to build octree (ms): 93292
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:02:44 2016
+
+
+Finished at: Sat Feb 20 23:04:30 2016
+
+
+Time to build octree (ms): 105863
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:04:34 2016
+
+
+Finished at: Sat Feb 20 23:07:59 2016
+
+
+Time to build octree (ms): 204823
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:08:02 2016
+
+
+Finished at: Sat Feb 20 23:09:35 2016
+
+
+Time to build octree (ms): 92969
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:09:40 2016
+
+
+Finished at: Sat Feb 20 23:11:34 2016
+
+
+Time to build octree (ms): 113670
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:11:38 2016
+
+
+Finished at: Sat Feb 20 23:15:14 2016
+
+
+Time to build octree (ms): 215980
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:15:17 2016
+
+
+Finished at: Sat Feb 20 23:16:13 2016
+
+
+Time to build octree (ms): 56274
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:16:14 2016
+
+
+Finished at: Sat Feb 20 23:17:25 2016
+
+
+Time to build octree (ms): 71141
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:17:26 2016
+
+
+Finished at: Sat Feb 20 23:18:32 2016
+
+
+Time to build octree (ms): 65575
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:18:32 2016
+
+
+Finished at: Sat Feb 20 23:19:36 2016
+
+
+Time to build octree (ms): 63632
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:19:37 2016
+
+
+Finished at: Sat Feb 20 23:20:44 2016
+
+
+Time to build octree (ms): 67564
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:20:45 2016
+
+
+Finished at: Sat Feb 20 23:21:53 2016
+
+
+Time to build octree (ms): 67615
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:21:54 2016
+
+
+Finished at: Sat Feb 20 23:22:56 2016
+
+
+Time to build octree (ms): 62472
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:22:57 2016
+
+
+Finished at: Sat Feb 20 23:23:54 2016
+
+
+Time to build octree (ms): 57444
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:23:55 2016
+
+
+Finished at: Sat Feb 20 23:25:02 2016
+
+
+Time to build octree (ms): 66644
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:25:02 2016
+
+
+Finished at: Sat Feb 20 23:26:03 2016
+
+
+Time to build octree (ms): 61073
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:26:04 2016
+
+
+Finished at: Sat Feb 20 23:27:12 2016
+
+
+Time to build octree (ms): 67855
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:27:13 2016
+
+
+Finished at: Sat Feb 20 23:28:15 2016
+
+
+Time to build octree (ms): 62017
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:28:16 2016
+
+
+Finished at: Sat Feb 20 23:29:22 2016
+
+
+Time to build octree (ms): 66891
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:29:23 2016
+
+
+Finished at: Sat Feb 20 23:30:30 2016
+
+
+Time to build octree (ms): 67065
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:30:31 2016
+
+
+Finished at: Sat Feb 20 23:31:35 2016
+
+
+Time to build octree (ms): 64331
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:31:36 2016
+
+
+Finished at: Sat Feb 20 23:32:37 2016
+
+
+Time to build octree (ms): 61213
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:32:38 2016
+
+
+Finished at: Sat Feb 20 23:33:32 2016
+
+
+Time to build octree (ms): 53416
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:33:33 2016
+
+
+Finished at: Sat Feb 20 23:34:33 2016
+
+
+Time to build octree (ms): 60561
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:34:34 2016
+
+
+Finished at: Sat Feb 20 23:35:34 2016
+
+
+Time to build octree (ms): 60366
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:35:35 2016
+
+
+Finished at: Sat Feb 20 23:36:31 2016
+
+
+Time to build octree (ms): 55943
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:36:32 2016
+
+
+Finished at: Sat Feb 20 23:37:25 2016
+
+
+Time to build octree (ms): 53057
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:37:26 2016
+
+
+Finished at: Sat Feb 20 23:38:27 2016
+
+
+Time to build octree (ms): 60740
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:38:28 2016
+
+
+Finished at: Sat Feb 20 23:39:29 2016
+
+
+Time to build octree (ms): 61139
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:39:30 2016
+
+
+Finished at: Sat Feb 20 23:40:32 2016
+
+
+Time to build octree (ms): 61341
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:40:33 2016
+
+
+Finished at: Sat Feb 20 23:41:33 2016
+
+
+Time to build octree (ms): 60851
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:41:34 2016
+
+
+Finished at: Sat Feb 20 23:42:28 2016
+
+
+Time to build octree (ms): 53740
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:42:29 2016
+
+
+Finished at: Sat Feb 20 23:43:23 2016
+
+
+Time to build octree (ms): 53647
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:43:24 2016
+
+
+Finished at: Sat Feb 20 23:44:25 2016
+
+
+Time to build octree (ms): 61509
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:44:26 2016
+
+
+Finished at: Sat Feb 20 23:45:28 2016
+
+
+Time to build octree (ms): 62036
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 4
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sat Feb 20 23:45:29 2016
+
+
+Finished at: Sat Feb 20 23:46:31 2016
+
+
+Time to build octree (ms): 61632
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sat Feb 20 23:46:32 2016
+
+
+Finished at: Sat Feb 20 23:52:03 2016
+
+
+Time to build octree (ms): 331242
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sat Feb 20 23:52:09 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 6
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 00:46:16 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 00:47:08 2016
+
+
+Finished at: Sun Feb 21 00:54:16 2016
+
+
+Time to build octree (ms): 428175
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 00:54:20 2016
+
+
+Finished at: Sun Feb 21 01:02:28 2016
+
+
+Time to build octree (ms): 487721
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 01:02:30 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 01:05:31 2016
+
+
+Finished at: Sun Feb 21 01:11:31 2016
+
+
+Time to build octree (ms): 360257
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 01:11:36 2016
+
+
+Finished at: Sun Feb 21 01:20:46 2016
+
+
+Time to build octree (ms): 549948
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 01:20:46 2016
+
+
+Finished at: Sun Feb 21 01:25:38 2016
+
+
+Time to build octree (ms): 291852
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 01:25:45 2016
+
+
+Finished at: Sun Feb 21 01:32:19 2016
+
+
+Time to build octree (ms): 394008
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 01:32:24 2016
+
+
+Finished at: Sun Feb 21 01:39:48 2016
+
+
+Time to build octree (ms): 443534
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 01:39:51 2016
+
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 01:42:46 2016
+
+
+Finished at: Sun Feb 21 01:49:58 2016
+
+
+Time to build octree (ms): 432293
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 01:50:04 2016
+
+
+Finished at: Sun Feb 21 01:58:20 2016
+
+
+Time to build octree (ms): 496054
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 01:58:24 2016
+
+
+Finished at: Sun Feb 21 02:13:57 2016
+
+
+Time to build octree (ms): 933104
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 02:14:04 2016
+
+
+Finished at: Sun Feb 21 02:26:13 2016
+
+
+Time to build octree (ms): 728967
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 20
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 02:26:19 2016
+
+
+Finished at: Sun Feb 21 02:36:47 2016
+
+
+Time to build octree (ms): 628176
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 02:36:52 2016
+
+
+Finished at: Sun Feb 21 02:40:30 2016
+
+
+Time to build octree (ms): 218653
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 02:40:34 2016
+
+
+Finished at: Sun Feb 21 02:44:20 2016
+
+
+Time to build octree (ms): 225811
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 02:44:24 2016
+
+
+Finished at: Sun Feb 21 02:48:58 2016
+
+
+Time to build octree (ms): 273739
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 02:49:00 2016
+
+
+Finished at: Sun Feb 21 02:51:26 2016
+
+
+Time to build octree (ms): 145116
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 02:51:30 2016
+
+
+Finished at: Sun Feb 21 02:54:09 2016
+
+
+Time to build octree (ms): 159155
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 02:54:13 2016
+
+
+Finished at: Sun Feb 21 02:58:00 2016
+
+
+Time to build octree (ms): 227398
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 02:58:03 2016
+
+
+Finished at: Sun Feb 21 02:59:49 2016
+
+
+Time to build octree (ms): 105975
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 02:59:53 2016
+
+
+Finished at: Sun Feb 21 03:01:53 2016
+
+
+Time to build octree (ms): 119715
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:01:57 2016
+
+
+Finished at: Sun Feb 21 03:05:00 2016
+
+
+Time to build octree (ms): 182412
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:05:02 2016
+
+
+Finished at: Sun Feb 21 03:07:03 2016
+
+
+Time to build octree (ms): 121427
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:07:09 2016
+
+
+Finished at: Sun Feb 21 03:09:09 2016
+
+
+Time to build octree (ms): 119859
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:09:13 2016
+
+
+Finished at: Sun Feb 21 03:12:39 2016
+
+
+Time to build octree (ms): 206183
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:12:42 2016
+
+
+Finished at: Sun Feb 21 03:15:44 2016
+
+
+Time to build octree (ms): 182204
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:15:50 2016
+
+
+Finished at: Sun Feb 21 03:18:58 2016
+
+
+Time to build octree (ms): 187979
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 15
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:19:03 2016
+
+
+Finished at: Sun Feb 21 03:23:58 2016
+
+
+Time to build octree (ms): 294384
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:24:01 2016
+
+
+Finished at: Sun Feb 21 03:25:19 2016
+
+
+Time to build octree (ms): 77435
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:25:20 2016
+
+
+Finished at: Sun Feb 21 03:26:37 2016
+
+
+Time to build octree (ms): 77064
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:26:37 2016
+
+
+Finished at: Sun Feb 21 03:27:48 2016
+
+
+Time to build octree (ms): 70716
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:27:49 2016
+
+
+Finished at: Sun Feb 21 03:28:59 2016
+
+
+Time to build octree (ms): 69789
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:29:00 2016
+
+
+Finished at: Sun Feb 21 03:30:10 2016
+
+
+Time to build octree (ms): 70475
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:30:11 2016
+
+
+Finished at: Sun Feb 21 03:31:21 2016
+
+
+Time to build octree (ms): 70198
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:31:22 2016
+
+
+Finished at: Sun Feb 21 03:32:32 2016
+
+
+Time to build octree (ms): 70250
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:32:33 2016
+
+
+Finished at: Sun Feb 21 03:33:43 2016
+
+
+Time to build octree (ms): 69740
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:33:43 2016
+
+
+Finished at: Sun Feb 21 03:34:54 2016
+
+
+Time to build octree (ms): 70392
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:34:55 2016
+
+
+Finished at: Sun Feb 21 03:36:04 2016
+
+
+Time to build octree (ms): 69662
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:36:05 2016
+
+
+Finished at: Sun Feb 21 03:37:34 2016
+
+
+Time to build octree (ms): 88708
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:37:34 2016
+
+
+Finished at: Sun Feb 21 03:38:45 2016
+
+
+Time to build octree (ms): 70399
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:38:46 2016
+
+
+Finished at: Sun Feb 21 03:39:55 2016
+
+
+Time to build octree (ms): 69341
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:39:56 2016
+
+
+Finished at: Sun Feb 21 03:41:06 2016
+
+
+Time to build octree (ms): 70358
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 10
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:41:07 2016
+
+
+Finished at: Sun Feb 21 03:42:17 2016
+
+
+Time to build octree (ms): 69861
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:42:17 2016
+
+
+Finished at: Sun Feb 21 03:43:24 2016
+
+
+Time to build octree (ms): 67140
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:43:25 2016
+
+
+Finished at: Sun Feb 21 03:44:32 2016
+
+
+Time to build octree (ms): 66500
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:2048
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:44:33 2016
+
+
+Finished at: Sun Feb 21 03:45:40 2016
+
+
+Time to build octree (ms): 67104
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:45:41 2016
+
+
+Finished at: Sun Feb 21 03:46:48 2016
+
+
+Time to build octree (ms): 67256
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:46:49 2016
+
+
+Finished at: Sun Feb 21 03:47:56 2016
+
+
+Time to build octree (ms): 66540
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:1024
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:47:57 2016
+
+
+Finished at: Sun Feb 21 03:49:04 2016
+
+
+Time to build octree (ms): 67529
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:49:05 2016
+
+
+Finished at: Sun Feb 21 03:50:13 2016
+
+
+Time to build octree (ms): 67828
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:50:14 2016
+
+
+Finished at: Sun Feb 21 03:51:21 2016
+
+
+Time to build octree (ms): 67285
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:512
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:51:22 2016
+
+
+Finished at: Sun Feb 21 03:52:29 2016
+
+
+Time to build octree (ms): 66998
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:52:30 2016
+
+
+Finished at: Sun Feb 21 03:53:38 2016
+
+
+Time to build octree (ms): 67322
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:53:39 2016
+
+
+Finished at: Sun Feb 21 03:55:02 2016
+
+
+Time to build octree (ms): 83750
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:256
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:55:03 2016
+
+
+Finished at: Sun Feb 21 03:56:10 2016
+
+
+Time to build octree (ms): 66796
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):7516192768
+
+Started at: Sun Feb 21 03:56:11 2016
+
+
+Finished at: Sun Feb 21 03:57:18 2016
+
+
+Time to build octree (ms): 67140
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):5368709120
+
+Started at: Sun Feb 21 03:57:19 2016
+
+
+Finished at: Sun Feb 21 03:58:27 2016
+
+
+Time to build octree (ms): 67461
+
+Starting building octree. Params:../../../src/data/real/tempietto_all.ply
+Threads: 2
+Max lvl: 5
+Workitem size:128
+Mem quota (in bytes):3221225472
+
+Started at: Sun Feb 21 03:58:28 2016
+
+
+Finished at: Sun Feb 21 03:59:51 2016
+
+
+Time to build octree (ms): 83611
+
