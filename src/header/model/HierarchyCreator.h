@@ -214,6 +214,8 @@ namespace model
 			}
 		}
 		
+		// TODO: This method is wrong. The duplicate removal should also choose again the node points, since the children
+		// changed
 		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim )
