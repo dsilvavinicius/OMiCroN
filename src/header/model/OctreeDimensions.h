@@ -57,7 +57,7 @@ namespace model
 		pair< Vec3, Vec3 > getBoundaries( const M& code ) const
 		{
 			uint level = code->getLevel();
-			auto nodeCoordsVec = code->decode(level);
+			auto nodeCoordsVec = code->decode( level );
 			Vec3 nodeCoords( nodeCoordsVec[ 0 ], nodeCoordsVec[ 1 ], nodeCoordsVec[ 2 ] );
 			Float nodeSizeFactor = Float( 1 ) / Float( 1 << level );
 			Vec3 levelNodeSize = m_size * nodeSizeFactor;
@@ -76,6 +76,13 @@ namespace model
 			pair< Vec3, Vec3 > box( minBoxVert, maxBoxVert );
 			
 			return box;
+		}
+		
+		/** Returns the boundaries of the node. */
+		template< typename Node >
+		pair< Vec3, Vec3 > getBoundaries( const Node& node )
+		{
+			return getBoundaries( calcMorton( node ) );
 		}
 		
 		bool operator()( const P& p0, const P& p1 ) const

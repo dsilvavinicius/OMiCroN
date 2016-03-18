@@ -1,13 +1,14 @@
 #ifndef O1OCTREE
 #define O1OCTREE
 
+#include <forward_list>
 #include "PointSorter.h"
 #include "O1OctreeNode.h"
 #include "HierarchyCreator.h"
 
 namespace model
 {
-	/** Out-of-core fast parallel octree. */
+	/** Out-of-core fast parallel octree. Provides visualization while constructing the hierarchy bottom-up. */
 	template< typename MortonCode, typename P >
 	class FastParallelOctree
 	{

@@ -2,7 +2,7 @@
 #define COMPACTION_FRONT_OCTREE_H
 
 #include "FrontOctree.h"
-#include "Front.h"
+//#include "Front.h"
 #include "CompactionRenderingState.h"
 
 namespace model

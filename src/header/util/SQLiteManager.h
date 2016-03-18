@@ -51,11 +51,11 @@ namespace util
 		SQLiteManager();
 		
 		/** Ctor.
-		 * @param dropTables is true if the tables are dropped before creation, thus erasing all contents. */
+		 * @param deleteDbFileFlag is true if the database file is deleted before creation. */
 		SQLiteManager( const string& dbFileName, const bool deleteDbFileFlag = true );
 		
 		/** Init the connection.
-		* @param dropTables is true if the tables are dropped before creation, thus erasing all contents. */
+		 * @param deleteDbFileFlag is true if the database file is deleted before creation. */
 		void init( const string& dbFileName, const bool deleteDbFileFlag = true );
 		
 		~SQLiteManager();

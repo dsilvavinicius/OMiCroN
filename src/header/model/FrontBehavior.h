@@ -3,7 +3,7 @@
 
 //#include "CompactionRenderingState.h"
 #include "RenderingState.h"
-#include "Front.h"
+//#include "Front.h"
 #include "OctreeMapTypes.h"
 #include "MemoryUtils.h"
 
