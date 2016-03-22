@@ -5,6 +5,7 @@
 #include "PointSorter.h"
 #include "O1OctreeNode.h"
 #include "HierarchyCreator.h"
+#include "Front.h"
 
 namespace model
 {
@@ -20,23 +21,13 @@ namespace model
 		using Node = typename HierarchyCreator::Node;
 		using NodeArray = typename HierarchyCreator::NodeArray;
 		using Dim = typename HierarchyCreator::OctreeDim;
+		using Renderer = RenderingState;
 		
-		FastParallelOctree()
-		: m_root( nullptr )
+		FastParallelOctree();
 		
-		#ifdef HIERARCHY_STATS
-			, m_processedNodes( 0 )
-		#endif
+		~FastParallelOctree();
 		
-		{}
-		
-		~FastParallelOctree()
-		{
-			if( m_root )
-			{
-				delete m_root;
-			}
-		}
+		void release();
 		
 		/**
 		 * Builds from a .ply file, generates a sorted file in the process which can be used with buildFromSortedFile()
@@ -58,16 +49,20 @@ namespace model
 		Node& root() { return *m_root; }
 		
 		#ifdef HIERARCHY_STATS
-			ulong m_processedNodes;
+			atomic_ulong m_processedNodes;
 		#endif
 		
 		template< typename M, typename Pt >
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, Pt >& octree );
 		
 	private:
-		void setupNodeRendering( Node node, RenderingState& renderingState );
-		
 		string toString( const Node& node, const Dim& nodeLvlDim ) const;
+		
+		/** Octree front used for rendering. */
+		Front* m_front;
+		
+		/** Octree construction thread. */
+		thread m_octreeThread;
 		
 		/** Dimensional info of this octree. */
 		Dim m_dim;
@@ -75,6 +70,41 @@ namespace model
 		/** Root node of the hierarchy. */
 		Node* m_root;
 	};
+	
+	template< typename Morton, typename Point >
+	FastParallelOctree< Morton, Point >::FastParallelOctree()
+	: m_root( nullptr ),
+	m_front( nullptr )
+	
+	#ifdef HIERARCHY_STATS
+		, m_processedNodes( 0 )
+	#endif
+	
+	{}
+	
+	template< typename Morton, typename Point >
+	FastParallelOctree< Morton, Point >::~FastParallelOctree()
+	{
+		release();
+	}
+	
+	template< typename Morton, typename Point >
+	void FastParallelOctree< Morton, Point >::release()
+	{
+		// ######### CONTINUE HERE. Code a way to notify the HierarchyCreator that is should halt. #####################
+		
+		if( m_root )
+		{
+			delete m_root;
+			m_root = nullptr;
+		}
+		
+		if( m_front )
+		{
+			delete m_front;
+			m_front = nullptr;
+		}
+	}
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
@@ -100,14 +130,8 @@ namespace model
 		cout << sortedFilename << endl << endl;
 		
 		sorter.sort( sortedFilename );
-		m_dim = sorter.comp();
 		
-		HierarchyCreator creator( sortedFilename, m_dim, loadPerThread, memoryLimit, nThreads );
-		m_root = creator.create();
-		
-		#ifdef HIERARCHY_STATS
-			m_processedNodes = creator.m_processedNodes;
-		#endif
+		buildFromSortedFile( sortedFilename, sorter.comp(), loadPerThread, memoryLimit, nThreads );
 	}
 	
 	template< typename Morton, typename Point >
@@ -117,12 +141,27 @@ namespace model
 		omp_set_num_threads( nThreads );
 		
 		m_dim = dim;
-		HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
-		m_root = creator.create();
 		
-		#ifdef HIERARCHY_STATS
-			m_processedNodes = creator.m_processedNodes;
-		#endif
+		release();
+		m_front = new Front( plyFilename, m_dim );
+		
+		m_octreeThread = thread(
+			[ & ]
+			{
+				HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
+				m_root = creator.create();
+				
+				#ifdef HIERARCHY_STATS
+					m_processedNodes = creator.m_processedNodes;
+				#endif
+			}
+		);
+	}
+	
+	template< typename Morton, typename Point >
+	FrontOctreeStats FastParallelOctree< Morton, Point >::trackFront( Renderer& renderer, const Float& projThresh )
+	{
+		return m_front->trackFront( renderer, projThresh );
 	}
 	
 	template< typename Morton, typename Point >
@@ -149,9 +188,17 @@ namespace model
 	template< typename M, typename P >
 	ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree )
 	{
-		using Dim = typename FastParallelOctree< M, P >::Dim;
- 		out << octree.toString( *octree.m_root, Dim( octree.dim(), 0 ) );
-		return out;
+		typename FastParallelOctree< M, P >::Node* root;
+		{
+			lock_guard< mutex > lock( mutex() );
+			root = octree.m_root;
+		}
+		if( root )
+		{
+			using Dim = typename FastParallelOctree< M, P >::Dim;
+			out << octree.toString( *root, Dim( octree.dim(), 0 ) );
+			return out;
+		}
 	}
 }
 
