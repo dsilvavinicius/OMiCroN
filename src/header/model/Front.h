@@ -24,8 +24,6 @@ namespace model
 		using OctreeDim = OctreeDimensions< Morton, Point >;
 		using Sql = SQLiteManager< Point, Morton, Node >;
 		using Renderer = RenderingState;
-		using FrontList = forward_list< FrontNode, ManagedAllocator< FrontNode > >;
-		using FrontListIter = typename FrontList::iterator;
 		
 		/** The node type that is used in front. */
 		typedef struct FrontNode
@@ -38,6 +36,9 @@ namespace model
 			Node& m_octreeNode;
 			unsigned char m_lvl;
 		} FrontNode;
+		
+		using FrontList = forward_list< FrontNode, ManagedAllocator< FrontNode > >;
+		using FrontListIter = typename FrontList::iterator;
 		
 		/** Ctor.
 		 * @param sortedPlyFilename is the path to a .ply file with points sorted in morton code order.
@@ -64,18 +65,19 @@ namespace model
 		/** Tracks the front based on the projection threshold.
 		 * @param renderer is the responsible of rendering the points of the tracked front.
 		 * @param projThresh is the projection threashold */
-		FrontOctreeStats trackFront( RenderingState& renderer, const Float projThresh );
+		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
-		void trackNode( FrontListIter iter, Renderer& renderer, const Float& projThresh );
+		void trackNode( FrontListIter& frontIt, FrontListIter& frontEnd, Renderer& renderer, const Float projThresh );
 		
-		bool checkPrune( const Morton& parentMorton, const OctreeDim& parentLvlDim, Renderer& renderer,
-						 const Float& projThresh ) const;
+		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
+						 FrontListIter& frontIt, FrontListIter& frontEnd, Renderer& renderer, const Float projThresh )
+		const;
 		
-		void prune( FrontListIter iter, const OctreeDim& nodeLvlDim, const Node& parentNode, Renderer& renderer );
+		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, const Node* parentNode, Renderer& renderer );
 		
-		bool checkBranch( const OctreeDim& nodeLvlDim, const Morton& morton, Renderer& renderer, const Float projThresh,
-						  bool& out_isCullable ) const;
+		bool checkBranch( const OctreeDim& nodeLvlDim, const Node& node, const Morton& morton, Renderer& renderer,
+						  const Float projThresh, bool& out_isCullable ) const;
 		
 		void branch( FrontListIter& iter, const Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
 		
@@ -151,7 +153,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
+	inline FrontOctreeStats Front< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		m_processedNodes = 0ul;
 		auto start = Profiler::now();
@@ -179,7 +181,7 @@ namespace model
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
-		start = Profiler.now();
+		start = Profiler::now();
 		
 		unsigned int numRenderedPoints = renderer.render();
 		
@@ -190,7 +192,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::trackNode( FrontListIter& frontIt, FrontListIter& frontEnd, Renderer& renderer,
-												   const Float& projThresh )
+												   const Float projThresh )
 	{
 		FrontNode& frontNode = *next( frontIt );
 		Node& node = frontNode.m_octreeNode;
@@ -230,7 +232,7 @@ namespace model
 	template< typename Morton, typename Point >
 	inline bool Front< Morton, Point >::checkPrune( const Morton& parentMorton, const Node* parentNode,
 													const OctreeDim& parentLvlDim, FrontListIter& frontIt,
-												 FrontListIter& frontEnd, Renderer& renderer, const Float& projThresh )
+												 FrontListIter& frontEnd, Renderer& renderer, const Float projThresh )
 	const
 	{
 		pair< Vec3, Vec3 > parentBox = parentLvlDim.getBoundaries( parentMorton );

@@ -21,28 +21,27 @@ namespace model
 		using Node = typename HierarchyCreator::Node;
 		using NodeArray = typename HierarchyCreator::NodeArray;
 		using Dim = typename HierarchyCreator::OctreeDim;
+		using Front = model::Front< MortonCode, Point >;
 		using Renderer = RenderingState;
 		
-		FastParallelOctree();
-		
-		~FastParallelOctree();
-		
-		void release();
-		
 		/**
-		 * Builds from a .ply file, generates a sorted file in the process which can be used with buildFromSortedFile()
-		 * later on to skip sorting, increasing creation performance.
+		 * Ctor. Creates the octree from a .ply file, generating a sorted file in the process which can be used with
+		 * the other constructor in order to increase creation performance.
 		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Lesser values incur in
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
-		void buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread = 1024,
-							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8 );
+		FastParallelOctree( const string& plyFilename, const int& maxLvl, ulong loadPerThread = 1024,
+							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
 		
-		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Also, the octree dimensions are expected
-		 * to be known. */
-		void buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread = 1024,
-								  ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8 );
-	
+		/** Ctor. Creates the octree from a sorted .ply file. */
+		FastParallelOctree( const string& plyFilename, const Dim& dim, ulong loadPerThread = 1024,
+							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
+		
+		~FastParallelOctree();
+		
+		/** Tracks the rendering front of the octree. */
+		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
+		
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
 		
@@ -56,10 +55,18 @@ namespace model
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, Pt >& octree );
 		
 	private:
+		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Also, the octree dimensions are expected
+		 * to be known. */
+		void buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit,
+								  int nThreads, bool async );
+		
 		string toString( const Node& node, const Dim& nodeLvlDim ) const;
 		
 		/** Octree front used for rendering. */
 		Front* m_front;
+		
+		/** Manages the octree creation. */
+		HierarchyCreator* m_hierarchyCreator;
 		
 		/** Octree construction thread. */
 		thread m_octreeThread;
@@ -72,43 +79,9 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	FastParallelOctree< Morton, Point >::FastParallelOctree()
-	: m_root( nullptr ),
-	m_front( nullptr )
-	
-	#ifdef HIERARCHY_STATS
-		, m_processedNodes( 0 )
-	#endif
-	
-	{}
-	
-	template< typename Morton, typename Point >
-	FastParallelOctree< Morton, Point >::~FastParallelOctree()
-	{
-		release();
-	}
-	
-	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >::release()
-	{
-		// ######### CONTINUE HERE. Code a way to notify the HierarchyCreator that is should halt. #####################
-		
-		if( m_root )
-		{
-			delete m_root;
-			m_root = nullptr;
-		}
-		
-		if( m_front )
-		{
-			delete m_front;
-			m_front = nullptr;
-		}
-	}
-	
-	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >
-	::buildFromFile( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit, int nThreads )
+	FastParallelOctree< Morton, Point >
+	::FastParallelOctree( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit,
+						  int nThreads, bool async )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
@@ -131,35 +104,74 @@ namespace model
 		
 		sorter.sort( sortedFilename );
 		
-		buildFromSortedFile( sortedFilename, sorter.comp(), loadPerThread, memoryLimit, nThreads );
+		buildFromSortedFile( sortedFilename, sorter.comp(), loadPerThread, memoryLimit, nThreads, async );
+	}
+	
+	template< typename Morton, typename Point >
+	FastParallelOctree< Morton, Point >
+	::FastParallelOctree( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit, int nThreads,
+						  bool async )
+	{
+		buildFromSortedFile( plyFilename, dim, loadPerThread, memoryLimit, nThreads, async );
+	}
+	
+	template< typename Morton, typename Point >
+	FastParallelOctree< Morton, Point >::~FastParallelOctree()
+	{
+		// ######### CONTINUE HERE. Code a way to notify the HierarchyCreator that is should halt. #####################
+		
+		if( m_hierarchyCreator )
+		{
+			delete m_hierarchyCreator;
+			m_hierarchyCreator = nullptr;
+		}
+		
+		if( m_root )
+		{
+			delete m_root;
+			m_root = nullptr;
+		}
+		
+		if( m_front )
+		{
+			delete m_front;
+			m_front = nullptr;
+		}
 	}
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit, int nThreads )
+	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit,
+						   int nThreads, bool async )
 	{
+		#ifdef HIERARCHY_STATS
+			m_processedNodes = 0;
+		#endif
+		
 		omp_set_num_threads( nThreads );
 		
 		m_dim = dim;
 		
-		release();
 		m_front = new Front( plyFilename, m_dim );
 		
-		m_octreeThread = thread(
-			[ & ]
-			{
-				HierarchyCreator creator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
-				m_root = creator.create();
-				
-				#ifdef HIERARCHY_STATS
-					m_processedNodes = creator.m_processedNodes;
-				#endif
-			}
-		);
+		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
+		
+		if( async )
+		{
+			m_root = m_hierarchyCreator->createAsync().get();
+		}
+		else
+		{
+			m_root = m_hierarchyCreator->create();
+		}
+		
+		#ifdef HIERARCHY_STATS
+			m_processedNodes = m_hierarchyCreator->m_processedNodes;
+		#endif
 	}
 	
 	template< typename Morton, typename Point >
-	FrontOctreeStats FastParallelOctree< Morton, Point >::trackFront( Renderer& renderer, const Float& projThresh )
+	FrontOctreeStats FastParallelOctree< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		return m_front->trackFront( renderer, projThresh );
 	}

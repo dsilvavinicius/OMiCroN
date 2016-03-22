@@ -132,15 +132,14 @@ namespace model
 			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 1 ], 5, {} );
 		}
 		
-		TEST( FastParallelOctree, Creation_MonoThread_Shallow_Point )
+		TEST( FastParallelOctreeTest, Creation_MonoThread_Shallow_Point )
 		{
 			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10 );
+				Octree octree( "data/simple_point_octree.ply", 10 );
 				cout << octree << endl;
 				
 				OctreeTestWrapper< Octree > wrapper( octree );
@@ -151,15 +150,14 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MonoThread_Shallow_Extended )
+		TEST( FastParallelOctreeTest, Creation_MonoThread_Shallow_Extended )
 		{
 			using Octree = FastParallelOctree< ShallowMortonCode, ExtendedPoint >;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree;
-				octree.buildFromFile( "data/extended_point_octree.ply", 10 );
+				Octree octree( "data/extended_point_octree.ply", 10 );
 				cout << octree << endl;
 				
 				OctreeTestWrapper< Octree > wrapper( octree );
@@ -170,14 +168,13 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MonoThread_Medium_Point )
+		TEST( FastParallelOctreeTest, Creation_MonoThread_Medium_Point )
 		{
 			using Octree = FastParallelOctree< MediumMortonCode, Point >;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			{
-				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 21 );
+				Octree octree( "data/simple_point_octree.ply", 21 );
 				cout << octree << endl;
 				
 				OctreeTestWrapper< Octree > wrapper( octree );
@@ -186,15 +183,14 @@ namespace model
 			}
 		}
 		
-		TEST( FastParallelOctree, Creation_MonoThread_Medium_Extended )
+		TEST( FastParallelOctreeTest, Creation_MonoThread_Medium_Extended )
 		{
 			using Octree = FastParallelOctree< MediumMortonCode, ExtendedPoint >;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree;
-				octree.buildFromFile( "data/extended_point_octree.ply", 21 );
+				Octree octree( "data/extended_point_octree.ply", 21 );
 				cout << octree << endl;
 				
 				OctreeTestWrapper< Octree > wrapper( octree );
@@ -205,15 +201,14 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MultiThread_Shallow_Point )
+		TEST( FastParallelOctreeTest, Creation_MultiThread_Shallow_Point )
 		{
 			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 2 );
+				Octree octree( "data/simple_point_octree.ply", 10, 2 );
 				cout << octree << endl;
 				OctreeTestWrapper< Octree > wrapper( octree );
 				
@@ -223,7 +218,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MultiThread_SmallerWorklist_Release )
+		TEST( FastParallelOctreeTest, Creation_MultiThread_SmallerWorklist_Release )
 		{
 			using Morton = ShallowMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
@@ -233,8 +228,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 3, 5000 );
+				Octree octree( "data/simple_point_octree.ply", 10, 3, 5000 );
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
@@ -252,7 +246,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 		
-		TEST( FastParallelOctree, Creation_MultiThread_BiggerWorklist_Release )
+		TEST( FastParallelOctreeTest, Creation_MultiThread_BiggerWorklist_Release )
 		{
 			using Morton = ShallowMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
@@ -262,8 +256,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree;
-				octree.buildFromFile( "data/simple_point_octree.ply", 10, 6, 5000 );
+				Octree octree( "data/simple_point_octree.ply", 10, 6, 5000 );
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
@@ -328,16 +321,15 @@ namespace model
 			}
 		}
 		
-		TEST( FastParallelOctree, DISABLED_Creation_MultiThread_TempiettoAll_Sanity )
+		TEST( FastParallelOctreeTest, DISABLED_Creation_MultiThread_TempiettoAll_Sanity )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
 			using OctreeDim = Octree::Dim;
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			
-			Octree octree;
 			string filename = "../../../src/data/real/tempietto_all.ply";
-			octree.buildFromFile( filename, 20, 48, 1024, 8 );
+			Octree octree( filename, 20, 48, 1024, 8 );
 			
 			string dbFilename = filename;
  			dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );

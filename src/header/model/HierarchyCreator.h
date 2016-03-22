@@ -4,6 +4,7 @@
 #include <mutex>
 #include <fstream>
 #include <condition_variable>
+#include <future>
 #include "ManagedAllocator.h"
 #include "O1OctreeNode.h"
 #include "OctreeDimensions.h"
@@ -44,42 +45,12 @@ namespace model
 		 * hierarchy creation loop iterations.
 		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
 		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
-						  const ulong memoryLimit, int nThreads = 8 )
-		: m_plyFilename( sortedPlyFilename ), 
-		m_lvlWorkLists( dim.m_nodeLvl + 1 ),
-		m_leafLvlDim( dim ),
-		m_nThreads( nThreads ),
-		m_expectedLoadPerThread( expectedLoadPerThread ),
-		m_dbs( nThreads ),
-		m_memoryLimit( memoryLimit )
+						  const ulong memoryLimit, int nThreads = 8 );
 		
-		#ifdef HIERARCHY_STATS
-			, m_processedNodes( 0 )
-		#endif
-		
-		{
-			srand( 1 );
-			
-			string dbFilename = m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" );
-			
-			// Debug
-			{
-				cout << "Mem soft limit: " << m_memoryLimit << endl << endl;
-			}
-			
-			m_dbs[ 0 ].init( dbFilename );
-			for( int i = 1; i < m_nThreads; ++i )
-			{
-				m_dbs[ i ].init( dbFilename, false );
-			}
-			
-			omp_set_num_threads( m_nThreads );
-			
-			// Debug
-// 			{
-// 				m_log.open( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".log" ) );
-// 			}
-		}
+		/** Creates the hierarchy asychronously.
+		 * @return a future that will contain the hierarchy's root node when done. The node pointer ownership is caller's.
+		 */
+		future< Node* > createAsync();
 		
 		/** Creates the hierarchy.
 		 * @return hierarchy's root node. The pointer ownership is caller's. */
@@ -90,246 +61,27 @@ namespace model
 		#endif
 		
 	private:
-		void pushWork( NodeList&& workItem )
-		{
-			lock_guard< mutex > lock( m_listMutex );
-			
-			// Debug
-// 			if( workItem.size() < m_expectedLoadPerThread )
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Pushing work: " << workItem.size() << endl << endl;
-// 			}
-			
-			m_lvlWorkLists[ m_leafLvlDim.m_nodeLvl ].push_back( std::move( workItem ) );
-		}
+		void pushWork( NodeList&& workItem );
 		
-		NodeList popWork( const int lvl )
-		{
-			if( lvl == m_leafLvlDim.m_nodeLvl )
-			{
-				lock_guard< mutex > lock( m_listMutex );
-				NodeList nodeList = std::move( m_lvlWorkLists[ lvl ].front() );
-				m_lvlWorkLists[ lvl ].pop_front();
-				return nodeList;
-			}
-			else
-			{
-				NodeList nodeList = std::move( m_lvlWorkLists[ lvl ].front() );
-				m_lvlWorkLists[ lvl ].pop_front();
-				return nodeList;
-			}
-		}
+		NodeList popWork( const int lvl );
 		
-		size_t updatedWorkListSize( int lvl )
-		{
-			if( lvl == m_leafLvlDim.m_nodeLvl )
-			{
-				// This lock is need so m_workList.size() access is not optimized, returning outdated results.
-				lock_guard< mutex > lock( m_listMutex );
-				return m_lvlWorkLists[ lvl ].size();
-			}
-			else
-			{
-				return m_lvlWorkLists[ lvl ].size();
-			}
-		}
+		size_t updatedWorkListSize( int lvl );
 		
 		/** Sets the parent pointer for all children of a given node. */
-		void setParent( Node& node ) const
-		{
-
-			// Debug
-// 			{
-// 				Morton morton; morton.build( 0x8 );
-// 				if( m_octreeDim.calcMorton( node ) == morton )
-// 				{
-// 					cout << "Setting children parents of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
-// 				}
-// 			}
-			
-			NodeArray& children = node.child();
-			for( int i = 0; i < children.size(); ++i )
-			{
-				// Debug
-// 				{
-// 					Morton morton; morton.build( 0x8 );
-// 					if( m_octreeDim.calcMorton( node ) == morton )
-// 					{
-// 						OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-// 						cout << "Setting parent of " << childDim.calcMorton( children[ i ] ).getPathToRoot( true )
-// 							<< ": " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
-// 							<< "addr: " << &node << endl << endl;
-// 					}
-// 				}
-				
-				children[ i ].setParent( &node );
-			}
-		}
+		void setParent( Node& node ) const;
 		
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
-		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const
-		{
-			if( !list.empty() )
-			{
-				Node& firstNode = list.front();
-				NodeArray& firstNodeChild = firstNode.child();
-				
-				// Debug
-// 				{
-// 					cout << "Checking for collapse list with size " << list.size() << ":" << endl;
-// 					cout << nextLvlDim.calcMorton( firstNode ).getPathToRoot( true ) << endl;
-// 				}
-				
-				if( firstNodeChild.size() == 1 && firstNodeChild[ 0 ].isLeaf() )
-				{
-					// Debug
-// 					{
-// 						cout << "Collapsing." << endl << endl;
-// 					}
-					//
-					
-					firstNode.turnLeaf();
-				}
-				
-				Node& lastNode = list.back();
-				NodeArray& lastNodeChild = lastNode.child();
-				
-				// Debug
-// 				{
-// 					cout << "Checking for collapse: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true ) << endl;
-// 				}
-				
-				if( lastNodeChild.size() == 1 && lastNodeChild[ 0 ].isLeaf() )
-				{
-					// Debug
-// 					{
-// 						cout << "Turning into leaf: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true )
-// 								<< endl;
-// 					}
-					//
-					
-					lastNode.turnLeaf();
-				}
-			}
-		}
+		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const;
 		
-		// TODO: This method is wrong. The duplicate removal should also choose again the node points, since the children
-		// changed
 		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim )
-		const
-		{
-			if( !previousProcessed.empty() && !nextProcessed.empty() )
-			{
-				Node& prevLastNode = previousProcessed.back();
-				Node& nextFirstNode = nextProcessed.front();
-				
-				if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
-				{
-					// Nodes from same sibling groups were in different threads
-					// TODO: the merge operation needs to select again the points in nextFirstNode.
-					
-					// Debug
-	// 				{
-	// 					cout << "Duplicate found: " << nextLvlDim.calcMorton( prevLastNode ).getPathToRoot( true ) << endl << endl;
-	// 				}
-					
-					NodeArray& prevLastNodeChild = prevLastNode.child();
-					NodeArray& nextFirstNodeChild = nextFirstNode.child();
-					
-					NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
-					
-					for( int i = 0; i < prevLastNodeChild.size(); ++i )
-					{
-						mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
-						// Parent pointer needs to be fixed.
-						setParent( mergedChild[ i ] );
-					}
-					for( int i = 0; i < nextFirstNodeChild.size(); ++i )
-					{
-						int idx = prevLastNodeChild.size() + i;
-						mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
-						// Parent pointer needs to be fixed.
-						setParent( mergedChild[ idx ] );
-					}
-					
-					nextFirstNode.setChildren( std::move( mergedChild ) );
-					
-					// Debug
-	// 				{
-	// 					cout << "Merged child: " << endl;
-	// 					NodeArray& newChild = nextFirstNode.child();
-	// 					for( int i = 0; i < newChild.size(); ++i )
-	// 					{
-	// 						cout << m_octreeDim.calcMorton( newChild[ i ] ).getPathToRoot( true );
-	// 					}
-	// 					cout << endl;
-	// 				}
-					
-					previousProcessed.pop_back();
-				}
-				
-				collapseBoundaries( previousProcessed, nextLvlDim );
-				
-				// If needed, collapse the first node of nextProcessed
-				NodeArray& nextFirstNodeChild = nextFirstNode.child();
-				if( nextFirstNodeChild.size() == 1 && nextFirstNodeChild[ 0 ].isLeaf() )
-				{
-					nextFirstNode.turnLeaf();
-				}
-			}
-		}
+		const;
 		
 		/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
 		 * the next level WorkList otherwise. Repetitions are checked while linking lists, since it can occur when the
 		 * lists have nodes from the same sibling group. */
-		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim )
-		{
-			// Debug
-// 			{
-// 				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim )
-// 					 << endl << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					 << "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim )
-// 					 << "nextLvlWorkList end" << endl << endl;
-// 			}
-			
-			removeBoundaryDuplicate( previousProcessed, nextProcessed, nextLvlDim );
-		
-			if( previousProcessed.size() < m_expectedLoadPerThread )
-			{
-				// Debug
-// 				{
-// 					cout << "Moving prev to next" << endl << endl;
-// 				}
-				
-				nextProcessed.splice( nextProcessed.begin(), previousProcessed );
-			}
-			else
-			{
-				// Debug
-// 				{
-// 					cout << "Pushing next to global worklist." << endl << endl;
-// 				}
-				
-				WorkList& workList = m_lvlWorkLists[ nextLvlDim.m_nodeLvl ];
-				
-				if( !workList.empty() )
-				{
-					removeBoundaryDuplicate( workList.back(), previousProcessed, nextLvlDim );
-				}
-				
-				workList.push_back( std::move( previousProcessed ) );
-			}
-			
-			// Debug
-// 			{
-// 				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
-// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					<< "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
-// 			}
-		}
+		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim );
 		
 		/** Creates a node from its solo child node. */
 		Node createNodeFromSingleChild( Node&& child, bool isLeaf ) const;
@@ -338,75 +90,13 @@ namespace model
 		Node createInnerNode( NodeArray&& inChildren, uint nChildren ) const;
 		
 		/** Checks if all work is finished in all lvls. */
-		bool checkAllWorkFinished()
-		{
-			lock_guard< mutex > lock( m_listMutex );
-			
-			for( int i = 1; i < m_lvlWorkLists.size(); ++i )
-			{
-				if( !m_lvlWorkLists[ i ].empty() )
-				{
-					// Debug
-// 					{
-// 						cout << "Works remaining" << endl << endl;
-// 					}
-					
-					return false;
-				}
-			}
-			
-			// Debug
-// 			{
-// 				cout << "All work finished" << endl << endl;
-// 			}
-			
-			return true;
-		}
+		bool checkAllWorkFinished();
 		
-		void turnReleaseOn( mutex& releaseMutex, bool& isReleasing )
-		{
-			
-			// Debug
-// 			{
-// 				cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
-// 						<< endl;
-// 			}
-			
-			{
-				lock_guard< mutex > lock( releaseMutex );
-				isReleasing = true;
-			}
-		}
+		void turnReleaseOn( mutex& releaseMutex, bool& isReleasing );
 		
 		/** Sets all data to ensure that the algorithm's release is turned off. */
 		void turnReleaseOff( mutex& releaseMutex, bool& isReleasing, condition_variable& releaseFlag,
-							 mutex& diskThreadMutex, bool& isDiskThreadStopped )
-		{
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "===== RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << "=====" << endl << endl;
-// 			}
-			//
-			
-			{
-				lock_guard< mutex > lock( releaseMutex );
-				isReleasing = false;
-			}
-			releaseFlag.notify_one();
-			
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Disk thread resumed" << endl << endl;
-// 			}
-			//
-			
-			{
-				lock_guard< mutex > lock( diskThreadMutex );
-				isDiskThreadStopped = false;
-			}
-		}
+							 mutex& diskThreadMutex, bool& isDiskThreadStopped );
 		
 		/** Releases and persists a given sibling group.
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
@@ -414,29 +104,9 @@ namespace model
 		 * @param dim is the dimensions of the octree for the sibling lvl. */
 		void releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim );
 		
-		string nodeListToString( const NodeList& list, const OctreeDim& lvlDim )
-		{
-			stringstream ss;
-			ss << "list size: " << list.size() <<endl;
-			for( const Node& node : list )
-			{
-				ss << lvlDim.calcMorton( node ).getPathToRoot( true );
-			}
-			
-			return ss.str();
-		}
+		string nodeListToString( const NodeList& list, const OctreeDim& lvlDim );
 		
-		string workListToString( const WorkList& list, const OctreeDim& lvlDim )
-		{
-			stringstream ss;
-			
-			for( const NodeList& nodeList : list )
-			{
-				ss << nodeListToString( nodeList, lvlDim ) << endl;
-			}
-			
-			return ss.str();
-		}
+		string workListToString( const WorkList& list, const OctreeDim& lvlDim );
 		
 		/** Thread[ i ] uses database connection m_dbs[ i ]. */
 		Array< Sql > m_dbs;
@@ -465,6 +135,53 @@ namespace model
 		
 		int m_nThreads;
 	};
+	
+	template< typename Morton, typename Point >
+	HierarchyCreator< Morton, Point >
+	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
+						const ulong memoryLimit, int nThreads )
+	: m_plyFilename( sortedPlyFilename ), 
+	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
+	m_leafLvlDim( dim ),
+	m_nThreads( nThreads ),
+	m_expectedLoadPerThread( expectedLoadPerThread ),
+	m_dbs( nThreads ),
+	m_memoryLimit( memoryLimit )
+	
+	#ifdef HIERARCHY_STATS
+		, m_processedNodes( 0 )
+	#endif
+	
+	{
+		srand( 1 );
+		
+		string dbFilename = m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" );
+		
+		// Debug
+		{
+			cout << "Mem soft limit: " << m_memoryLimit << endl << endl;
+		}
+		
+		m_dbs[ 0 ].init( dbFilename );
+		for( int i = 1; i < m_nThreads; ++i )
+		{
+			m_dbs[ i ].init( dbFilename, false );
+		}
+		
+		omp_set_num_threads( m_nThreads );
+		
+		// Debug
+// 			{
+// 				m_log.open( m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".log" ) );
+// 			}
+	}
+	
+	template< typename Morton, typename Point >
+	future< typename HierarchyCreator< Morton, Point >::Node* > HierarchyCreator< Morton, Point >::createAsync()
+	{
+		packaged_task< Node*() > task( [ & ]{ return create(); } );
+		return task.get_future();
+	}
 	
 	template< typename Morton, typename Point >
 	typename HierarchyCreator< Morton, Point >::Node* HierarchyCreator< Morton, Point >::create()
@@ -900,6 +617,330 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >::pushWork( NodeList&& workItem )
+	{
+		lock_guard< mutex > lock( m_listMutex );
+		
+		// Debug
+// 			if( workItem.size() < m_expectedLoadPerThread )
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Pushing work: " << workItem.size() << endl << endl;
+// 			}
+		
+		m_lvlWorkLists[ m_leafLvlDim.m_nodeLvl ].push_back( std::move( workItem ) );
+	}
+	
+	template< typename Morton, typename Point >
+	inline typename HierarchyCreator< Morton, Point >::NodeList HierarchyCreator< Morton, Point >
+	::popWork( const int lvl )
+	{
+		if( lvl == m_leafLvlDim.m_nodeLvl )
+		{
+			lock_guard< mutex > lock( m_listMutex );
+			NodeList nodeList = std::move( m_lvlWorkLists[ lvl ].front() );
+			m_lvlWorkLists[ lvl ].pop_front();
+			return nodeList;
+		}
+		else
+		{
+			NodeList nodeList = std::move( m_lvlWorkLists[ lvl ].front() );
+			m_lvlWorkLists[ lvl ].pop_front();
+			return nodeList;
+		}
+	}
+	
+	template< typename Morton, typename Point >
+	inline size_t HierarchyCreator< Morton, Point >::updatedWorkListSize( int lvl )
+	{
+		if( lvl == m_leafLvlDim.m_nodeLvl )
+		{
+			// This lock is need so m_workList.size() access is not optimized, returning outdated results.
+			lock_guard< mutex > lock( m_listMutex );
+			return m_lvlWorkLists[ lvl ].size();
+		}
+		else
+		{
+			return m_lvlWorkLists[ lvl ].size();
+		}
+	}
+		
+	/** Sets the parent pointer for all children of a given node. */
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >::setParent( Node& node ) const
+	{
+
+		// Debug
+// 			{
+// 				Morton morton; morton.build( 0x8 );
+// 				if( m_octreeDim.calcMorton( node ) == morton )
+// 				{
+// 					cout << "Setting children parents of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+// 				}
+// 			}
+		
+		NodeArray& children = node.child();
+		for( int i = 0; i < children.size(); ++i )
+		{
+			// Debug
+// 				{
+// 					Morton morton; morton.build( 0x8 );
+// 					if( m_octreeDim.calcMorton( node ) == morton )
+// 					{
+// 						OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+// 						cout << "Setting parent of " << childDim.calcMorton( children[ i ] ).getPathToRoot( true )
+// 							<< ": " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
+// 							<< "addr: " << &node << endl << endl;
+// 					}
+// 				}
+			
+			children[ i ].setParent( &node );
+		}
+	}
+		
+	/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >::collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim )
+	const
+	{
+		if( !list.empty() )
+		{
+			Node& firstNode = list.front();
+			NodeArray& firstNodeChild = firstNode.child();
+			
+			// Debug
+// 				{
+// 					cout << "Checking for collapse list with size " << list.size() << ":" << endl;
+// 					cout << nextLvlDim.calcMorton( firstNode ).getPathToRoot( true ) << endl;
+// 				}
+			
+			if( firstNodeChild.size() == 1 && firstNodeChild[ 0 ].isLeaf() )
+			{
+				// Debug
+// 					{
+// 						cout << "Collapsing." << endl << endl;
+// 					}
+				//
+				
+				firstNode.turnLeaf();
+			}
+			
+			Node& lastNode = list.back();
+			NodeArray& lastNodeChild = lastNode.child();
+			
+			// Debug
+// 				{
+// 					cout << "Checking for collapse: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true ) << endl;
+// 				}
+			
+			if( lastNodeChild.size() == 1 && lastNodeChild[ 0 ].isLeaf() )
+			{
+				// Debug
+// 					{
+// 						cout << "Turning into leaf: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true )
+// 								<< endl;
+// 					}
+				//
+				
+				lastNode.turnLeaf();
+			}
+		}
+	}
+		
+	// TODO: This method is wrong. The duplicate removal should also choose again the node points, since the children
+	// changed
+	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
+		* Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >
+	::removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim ) const
+	{
+		if( !previousProcessed.empty() && !nextProcessed.empty() )
+		{
+			Node& prevLastNode = previousProcessed.back();
+			Node& nextFirstNode = nextProcessed.front();
+			
+			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
+			{
+				// Nodes from same sibling groups were in different threads
+				// TODO: the merge operation needs to select again the points in nextFirstNode.
+				
+				// Debug
+// 				{
+// 					cout << "Duplicate found: " << nextLvlDim.calcMorton( prevLastNode ).getPathToRoot( true ) << endl << endl;
+// 				}
+				
+				NodeArray& prevLastNodeChild = prevLastNode.child();
+				NodeArray& nextFirstNodeChild = nextFirstNode.child();
+				
+				NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
+				
+				for( int i = 0; i < prevLastNodeChild.size(); ++i )
+				{
+					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
+					// Parent pointer needs to be fixed.
+					setParent( mergedChild[ i ] );
+				}
+				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
+				{
+					int idx = prevLastNodeChild.size() + i;
+					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
+					// Parent pointer needs to be fixed.
+					setParent( mergedChild[ idx ] );
+				}
+				
+				nextFirstNode.setChildren( std::move( mergedChild ) );
+				
+				// Debug
+// 				{
+// 					cout << "Merged child: " << endl;
+// 					NodeArray& newChild = nextFirstNode.child();
+// 					for( int i = 0; i < newChild.size(); ++i )
+// 					{
+// 						cout << m_octreeDim.calcMorton( newChild[ i ] ).getPathToRoot( true );
+// 					}
+// 					cout << endl;
+// 				}
+				
+				previousProcessed.pop_back();
+			}
+			
+			collapseBoundaries( previousProcessed, nextLvlDim );
+			
+			// If needed, collapse the first node of nextProcessed
+			NodeArray& nextFirstNodeChild = nextFirstNode.child();
+			if( nextFirstNodeChild.size() == 1 && nextFirstNodeChild[ 0 ].isLeaf() )
+			{
+				nextFirstNode.turnLeaf();
+			}
+		}
+	}
+		
+	/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
+		* the next level WorkList otherwise. Repetitions are checked while linking lists, since it can occur when the
+		* lists have nodes from the same sibling group. */
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >
+	::mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim )
+	{
+		// Debug
+// 			{
+// 				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim )
+// 					 << endl << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 					 << "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim )
+// 					 << "nextLvlWorkList end" << endl << endl;
+// 			}
+		
+		removeBoundaryDuplicate( previousProcessed, nextProcessed, nextLvlDim );
+	
+		if( previousProcessed.size() < m_expectedLoadPerThread )
+		{
+			// Debug
+// 				{
+// 					cout << "Moving prev to next" << endl << endl;
+// 				}
+			
+			nextProcessed.splice( nextProcessed.begin(), previousProcessed );
+		}
+		else
+		{
+			// Debug
+// 				{
+// 					cout << "Pushing next to global worklist." << endl << endl;
+// 				}
+			
+			WorkList& workList = m_lvlWorkLists[ nextLvlDim.m_nodeLvl ];
+			
+			if( !workList.empty() )
+			{
+				removeBoundaryDuplicate( workList.back(), previousProcessed, nextLvlDim );
+			}
+			
+			workList.push_back( std::move( previousProcessed ) );
+		}
+		
+		// Debug
+// 			{
+// 				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
+// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 					<< "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
+// 			}
+	}
+	
+	template< typename Morton, typename Point >
+	inline bool HierarchyCreator< Morton, Point >::checkAllWorkFinished()
+	{
+		lock_guard< mutex > lock( m_listMutex );
+		
+		for( int i = 1; i < m_lvlWorkLists.size(); ++i )
+		{
+			if( !m_lvlWorkLists[ i ].empty() )
+			{
+				// Debug
+// 					{
+// 						cout << "Works remaining" << endl << endl;
+// 					}
+				
+				return false;
+			}
+		}
+		
+		// Debug
+// 			{
+// 				cout << "All work finished" << endl << endl;
+// 			}
+		
+		return true;
+	}
+	
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >::turnReleaseOn( mutex& releaseMutex, bool& isReleasing )
+	{
+		
+		// Debug
+// 			{
+// 				cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
+// 						<< endl;
+// 			}
+		
+		{
+			lock_guard< mutex > lock( releaseMutex );
+			isReleasing = true;
+		}
+	}
+		
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >
+	::turnReleaseOff( mutex& releaseMutex, bool& isReleasing, condition_variable& releaseFlag, mutex& diskThreadMutex,
+						bool& isDiskThreadStopped )
+	{
+		// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "===== RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << "=====" << endl << endl;
+// 			}
+		//
+		
+		{
+			lock_guard< mutex > lock( releaseMutex );
+			isReleasing = false;
+		}
+		releaseFlag.notify_one();
+		
+		// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Disk thread resumed" << endl << endl;
+// 			}
+		//
+		
+		{
+			lock_guard< mutex > lock( diskThreadMutex );
+			isDiskThreadStopped = false;
+		}
+	}
+	
+	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
 	::releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim )
 	{
@@ -1054,6 +1095,32 @@ namespace model
 			
 			return node;
 		}
+	}
+	
+	template< typename Morton, typename Point >
+	inline string HierarchyCreator< Morton, Point >::nodeListToString( const NodeList& list, const OctreeDim& lvlDim )
+	{
+		stringstream ss;
+		ss << "list size: " << list.size() <<endl;
+		for( const Node& node : list )
+		{
+			ss << lvlDim.calcMorton( node ).getPathToRoot( true );
+		}
+		
+		return ss.str();
+	}
+	
+	template< typename Morton, typename Point >
+	inline string HierarchyCreator< Morton, Point >::workListToString( const WorkList& list, const OctreeDim& lvlDim )
+	{
+		stringstream ss;
+		
+		for( const NodeList& nodeList : list )
+		{
+			ss << nodeListToString( nodeList, lvlDim ) << endl;
+		}
+		
+		return ss.str();
 	}
 }
 
