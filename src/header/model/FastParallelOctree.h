@@ -156,10 +156,10 @@ namespace model
 		
 		m_dim = dim;
 		
-		// This is buggy!
-		//m_front = new Front( plyFilename, m_dim );
+		// THE NEXT LINE IS BUGGY!
+		m_front = new Front( plyFilename, m_dim, nThreads );
 		
-		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
+		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, *m_front, loadPerThread, memoryLimit, nThreads );
 		
 		if( async )
 		{
@@ -167,7 +167,7 @@ namespace model
 		}
 		else
 		{
-			m_root = m_hierarchyCreator->create();
+			//m_root = m_hierarchyCreator->create();
 		}
 		
 		#ifdef HIERARCHY_STATS

@@ -1,7 +1,8 @@
 #ifndef FRONT_H
 #define FRONT_H
 
-#include <forward_list>
+#include <list>
+#include "SQLiteManager.h"
 #include "O1OctreeNode.h"
 #include "OctreeDimensions.h"
 #include "OctreeStats.h"
@@ -13,7 +14,9 @@ using namespace util;
 
 namespace model
 {
-	/** Current visualization front of the hierarchy. */
+	// TODO: Probably would be better using list instead of forward_list because of the O(1) splice.
+	/** Visualization front of the hierarchy. The front leaf nodes are assumed to be inserted by threads different of the
+	 * visualization threads. */
 	template< typename Morton, typename Point >
 	class Front
 	{
@@ -33,21 +36,25 @@ namespace model
 			m_lvl( lvl )
 			{}
 			
-			Node& m_octreeNode;
+			const Node& m_octreeNode;
 			unsigned char m_lvl;
 		} FrontNode;
 		
-		using FrontList = forward_list< FrontNode, ManagedAllocator< FrontNode > >;
+		using FrontList = list< FrontNode, ManagedAllocator< FrontNode > >;
 		using FrontListIter = typename FrontList::iterator;
+		using InsertionVector = vector< FrontList, ManagedAllocator< FrontList > >;
 		
 		/** Ctor.
 		 * @param sortedPlyFilename is the path to a .ply file with points sorted in morton code order.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
-		Front( const string& sortedPlyFilename, const OctreeDim& leafLvlDim );
+		Front( const string& sortedPlyFilename, const OctreeDim& leafLvlDim, const int nThreads );
 		
 		/** Synchronized. Inserts a leaf sibling group into front so it can be tracked later on.
 		 * @param leafSiblings is the sibling group array */
-		void insertIntoFront( NodeArray& leafSiblings );
+		void insertIntoFront( Node& node, unsigned char level, int threadIdx );
+		
+		/** Notifies that all threads have finished an insertion iteration. */
+		void notifyInsertionEnd();
 		
 		/** Indicates that node release is needed. The front tracking will release nodes until a call to turnReleaseOff()
 		 * occurs. */
@@ -91,11 +98,15 @@ namespace model
 		/** Front internal representation. */
 		FrontList m_front;
 		
-		/** Internal front insertion iterator. */
-		FrontListIter m_insertionIt;
-		
-		/** Mutex to synchronize insertions into front from other threads. */
+		/** Mutex to synchronize insertions into front with the rendering procedure. */
 		mutex m_frontMtx;
+		
+		/** FrontLists that need to be inserted into front. */
+		InsertionVector m_insertionLists;
+		
+		/** Insertions done in the current insertion iteration. m_currentIterInsertions[ i ] have the insertions for
+		 * thread i. This list is spliced to m_insertionLists after notifyInsertionEnd() is called. */
+		InsertionVector m_currentIterInsertions;
 		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
@@ -111,11 +122,10 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	inline Front< Morton, Point >::Front( const string& sortedPlyFilename, const OctreeDim& leafLvlDim )
+	inline Front< Morton, Point >::Front( const string& sortedPlyFilename, const OctreeDim& leafLvlDim, const int nThreads )
 	: m_sql( sortedPlyFilename ),
 	m_leafLvlDim( leafLvlDim ),
-	m_front(),
-	m_insertionIt( m_front.before_begin() ),
+	m_currentIterInsertions( nThreads ),
 	m_processedNodes( 0ul ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
@@ -140,15 +150,20 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	void Front< Morton, Point >::insertIntoFront( NodeArray& leafSiblings )
+	inline void Front< Morton, Point >::insertIntoFront( Node& node, unsigned char level, int threadIdx )
 	{
-		for( int i = 0; i < leafSiblings.size(); ++i )
+		FrontList& list = m_currentIterInsertions[ threadIdx ];
+		list.push_back( FrontNode( node, level ) );
+	}
+	
+	template< typename Morton, typename Point >
+	inline void Front< Morton, Point >::notifyInsertionEnd()
+	{
+		lock_guard< mutex > lock( m_frontMtx);
+		
+		for( FrontList list : m_insertionLists )
 		{
-			FrontNode frontNode( leafSiblings[ i ], m_leafLvlDim.m_nodeLvl );
-			{
-				lock_guard< mutex > lock( m_frontMtx );
-				m_insertionIt = m_front.insert_after( m_insertionIt, frontNode );
-			}
+			m_front.splice( m_front.end(), list );
 		}
 	}
 	
@@ -169,7 +184,7 @@ namespace model
 			frontEnd = m_front.end();
 		}
 		
-		for( FrontListIter frontIt = m_front.before_begin(); next( frontIt ) != frontEnd;/* */)
+		for( FrontListIter frontIt = m_front.begin(); frontIt != frontEnd;/* */)
 		{
 			trackNode( frontIt, frontEnd, renderer, projThresh );
 		}
@@ -194,7 +209,7 @@ namespace model
 	inline void Front< Morton, Point >::trackNode( FrontListIter& frontIt, FrontListIter& frontEnd, Renderer& renderer,
 												   const Float projThresh )
 	{
-		FrontNode& frontNode = *next( frontIt );
+		FrontNode& frontNode = *frontIt;
 		Node& node = frontNode.m_octreeNode;
 		OctreeDim nodeLvlDim( m_leafLvlDim, frontNode.m_lvl );
 		Morton morton = nodeLvlDim.calcMorton( node );
@@ -255,7 +270,7 @@ namespace model
 			if( !m_leafLvlLoadedFlag )
 			{
 				// The last sibling group cannot be prunned until all leaf level nodes are loaded.
-				FrontListIter siblingIter = next( frontIt );
+				FrontListIter siblingIter = frontIt;
 				while( siblingIter != frontEnd && siblingIter++.parent() == parentNode )
 				{}
 				
@@ -277,10 +292,10 @@ namespace model
 			releaseSiblings( parentNode->child(), nodeLvlDim );
 		}
 		
-		while( next( frontIt )->m_octreeNode.parent() == parentNode )
+		while( frontIt->m_octreeNode.parent() == parentNode )
 		{
 			++m_processedNodes;
-			m_front.erase_after( frontIt );
+			frontIt = m_front.erase( frontIt );
 		}
 		
 		FrontNode frontNode( *parentNode, nodeLvlDim.m_nodelLvl + 1 );
@@ -312,7 +327,7 @@ namespace model
 	{
 		//cout << "=== Branching begins ===" << endl << endl;
 		++m_processedNodes;
-		m_front.erase_after( frontIt );
+		frontIt = m_front.erase( frontIt );
 		
 		OctreeDim childLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl + 1 );
 		NodeArray& children = node.child();
@@ -331,7 +346,7 @@ namespace model
 			}
 			else
 			{
-				frontIt = m_front->insert_after( frontIt, frontNode );
+				m_front->insert( frontIt, frontNode );
 			}
 		}
 		
@@ -342,7 +357,7 @@ namespace model
 	inline void Front< Morton, Point >::setupNodeRendering( FrontListIter& frontIt, const FrontNode& frontNode,
 															Renderer& renderer )
 	{
-		frontIt = m_front.insert_after( frontIt, frontNode );
+		m_front.insert( frontIt, frontNode );
 		//cout << "Into front: " << code->getPathToRoot( true ) << endl;
 		renderer.handleNodeRendering( frontNode.m_octreeNode.getContents() );
 	}

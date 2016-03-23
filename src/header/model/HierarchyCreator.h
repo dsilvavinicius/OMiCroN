@@ -8,6 +8,7 @@
 #include "ManagedAllocator.h"
 #include "O1OctreeNode.h"
 #include "OctreeDimensions.h"
+#include "Front.h"
 #include "SQLiteManager.h"
 
 //#define HIERARCHY_STATS
@@ -28,8 +29,9 @@ namespace model
 		using NodeArray = Array< Node >;
 		
 		using OctreeDim = OctreeDimensions< Morton, Point >;
+		using Front = model::Front< Morton, Point >;
 		using Reader = PlyPointReader< Point >;
-		using Sql = SQLiteManager< Point, Morton, Node >;
+		//using Sql = SQLiteManager< Point, Morton, Node >;
 		
 		/** List of nodes that can be processed parallel by one thread. */
 		using NodeList = list< Node, ManagedAllocator< Node > >;
@@ -44,23 +46,23 @@ namespace model
 		 * @param expectedLoadPerThread is the size of the NodeList that will be passed to each thread in the
 		 * hierarchy creation loop iterations.
 		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
-		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
-						  const ulong memoryLimit, int nThreads = 8 );
+		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, Front& front,
+						  ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
 		
 		/** Creates the hierarchy asychronously.
 		 * @return a future that will contain the hierarchy's root node when done. The node pointer ownership is caller's.
 		 */
 		future< Node* > createAsync();
 		
-		/** Creates the hierarchy.
-		 * @return hierarchy's root node. The pointer ownership is caller's. */
-		Node* create();
-		
 		#ifdef HIERARCHY_STATS
 			atomic_ulong m_processedNodes;
 		#endif
 		
 	private:
+		/** Creates the hierarchy.
+		 * @return hierarchy's root node. The pointer ownership is caller's. */
+		Node* create();
+		
 		void pushWork( NodeList&& workItem );
 		
 		NodeList popWork( const int lvl );
@@ -68,7 +70,7 @@ namespace model
 		size_t updatedWorkListSize( int lvl );
 		
 		/** Sets the parent pointer for all children of a given node. */
-		void setParent( Node& node ) const;
+		void setParent( Node& node, const char childLvl, const int threadIdx ) const;
 		
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const;
@@ -84,10 +86,10 @@ namespace model
 		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim );
 		
 		/** Creates a node from its solo child node. */
-		Node createNodeFromSingleChild( Node&& child, bool isLeaf ) const;
+		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const char childLvl, const int threadIdx ) const;
 		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
-		Node createInnerNode( NodeArray&& inChildren, uint nChildren ) const;
+		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const char childLvl, const int threadIdx ) const;
 		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
@@ -102,14 +104,14 @@ namespace model
 		 * @param siblings is the sibling group to be released and persisted if it is the case.
 		 * @param threadIdx is the index of the executing thread.
 		 * @param dim is the dimensions of the octree for the sibling lvl. */
-		void releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim );
+		//void releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim );
 		
 		string nodeListToString( const NodeList& list, const OctreeDim& lvlDim );
 		
 		string workListToString( const WorkList& list, const OctreeDim& lvlDim );
 		
 		/** Thread[ i ] uses database connection m_dbs[ i ]. */
-		Array< Sql > m_dbs;
+		//Array< Sql > m_dbs;
 		
 		/** Worklists for every level in the hierarchy. m_lvlWorkLists[ i ] corresponds to lvl i. */
 		Array< WorkList > m_lvlWorkLists;
@@ -133,20 +135,23 @@ namespace model
 		
 		ulong m_expectedLoadPerThread;
 		
+		Front& m_front;
+		
 		int m_nThreads;
 	};
 	
 	template< typename Morton, typename Point >
 	HierarchyCreator< Morton, Point >
-	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, ulong expectedLoadPerThread,
+	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, Front& front, ulong expectedLoadPerThread,
 						const ulong memoryLimit, int nThreads )
 	: m_plyFilename( sortedPlyFilename ), 
 	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
 	m_leafLvlDim( dim ),
 	m_nThreads( nThreads ),
 	m_expectedLoadPerThread( expectedLoadPerThread ),
-	m_dbs( nThreads ),
-	m_memoryLimit( memoryLimit )
+	//m_dbs( nThreads ),
+	m_memoryLimit( memoryLimit ),
+	m_front( front )
 	
 	#ifdef HIERARCHY_STATS
 		, m_processedNodes( 0 )
@@ -155,18 +160,18 @@ namespace model
 	{
 		srand( 1 );
 		
-		string dbFilename = m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" );
-		
-		// Debug
-		{
-			cout << "Mem soft limit: " << m_memoryLimit << endl << endl;
-		}
-		
-		m_dbs[ 0 ].init( dbFilename );
-		for( int i = 1; i < m_nThreads; ++i )
-		{
-			m_dbs[ i ].init( dbFilename, false );
-		}
+// 		string dbFilename = m_plyFilename.substr( 0, m_plyFilename.find_last_of( "." ) ).append( ".db" );
+// 		
+// 		// Debug
+// 		{
+// 			cout << "Mem soft limit: " << m_memoryLimit << endl << endl;
+// 		}
+// 		
+// 		m_dbs[ 0 ].init( dbFilename );
+// 		for( int i = 1; i < m_nThreads; ++i )
+// 		{
+// 			m_dbs[ i ].init( dbFilename, false );
+// 		}
 		
 		omp_set_num_threads( m_nThreads );
 		
@@ -366,10 +371,10 @@ namespace model
 						NodeList& output = iterOutput[ threadIdx ];
 						bool isBoundarySiblingGroup = true;
 						
-						if( isReleasing )
-						{
-							m_dbs[ threadIdx ].beginTransaction();
-						}
+// 						if( isReleasing )
+// 						{
+// 							m_dbs[ threadIdx ].beginTransaction();
+// 						}
 						
 						while( !input.empty() )
 						{
@@ -440,7 +445,8 @@ namespace model
 // 										cout << "T " << omp_get_thread_num() << " collapse." << endl << endl;
 // 									}
 									
-									output.push_back( createNodeFromSingleChild( std::move( siblings[ 0 ] ), true ) );
+									output.push_back( createNodeFromSingleChild( std::move( siblings[ 0 ] ), true,
+																				 m_octreeDim.m_nodeLvl, threadIdx ) );
 								}
 								else
 								{
@@ -451,18 +457,19 @@ namespace model
 // 									}
 									
 									// LOD
-									Node inner = createInnerNode( std::move( siblings ), nSiblings );
+									Node inner = createInnerNode( std::move( siblings ), nSiblings, m_octreeDim.m_nodeLvl,
+																  threadIdx );
 									
-									if( isReleasing && !isBoundarySiblingGroup )
-									{
-										// Debug
-// 										{
-// 											lock_guard< mutex > lock( m_logMutex );
-// 											cout << "T " << omp_get_thread_num() << " release." << endl << endl;
-// 										}
-										
-										releaseSiblings( inner.child(), threadIdx, m_octreeDim );
-									}
+// 									if( isReleasing && !isBoundarySiblingGroup )
+// 									{
+// 										// Debug
+// // 										{
+// // 											lock_guard< mutex > lock( m_logMutex );
+// // 											cout << "T " << omp_get_thread_num() << " release." << endl << endl;
+// // 										}
+// 										
+// 										releaseSiblings( inner.child(), threadIdx, m_octreeDim );
+// 									}
 									
 									output.push_back( std::move( inner ) );
 									isBoundarySiblingGroup = false;
@@ -470,29 +477,29 @@ namespace model
 							}
 						}
 						
-						if( isReleasing )
-						{
-							m_dbs[ threadIdx ].endTransaction();
-							
-							// Debug 
-// 							{
-// 								Morton expectedMorton; expectedMorton.build( 0x20b2bffb54f9UL );
-// 								if( m_dbs[ threadIdx ].getNode( expectedMorton ).first == true )
-// 								{
-// 									if( foundMarked == false )
-// 									{
-// 										foundMarked = true;
-// 									}
-// 								}
-// 								else
-// 								{
-// 									if( foundMarked == true )
-// 									{
-// 										throw logic_error( "Node 0x20b2bffb54f9UL disappered from DB." );
-// 									}
-// 								}
-// 							}
-						}
+// 						if( isReleasing )
+// 						{
+// 							m_dbs[ threadIdx ].endTransaction();
+// 							
+// 							// Debug 
+// // 							{
+// // 								Morton expectedMorton; expectedMorton.build( 0x20b2bffb54f9UL );
+// // 								if( m_dbs[ threadIdx ].getNode( expectedMorton ).first == true )
+// // 								{
+// // 									if( foundMarked == false )
+// // 									{
+// // 										foundMarked = true;
+// // 									}
+// // 								}
+// // 								else
+// // 								{
+// // 									if( foundMarked == true )
+// // 									{
+// // 										throw logic_error( "Node 0x20b2bffb54f9UL disappered from DB." );
+// // 									}
+// // 								}
+// // 							}
+// 						}
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					
@@ -667,7 +674,7 @@ namespace model
 		
 	/** Sets the parent pointer for all children of a given node. */
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::setParent( Node& node ) const
+	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const char childLvl, const int threadIdx ) const
 	{
 
 		// Debug
@@ -694,7 +701,13 @@ namespace model
 // 					}
 // 				}
 			
-			children[ i ].setParent( &node );
+			Node& child = children[ i ];
+			child.setParent( &node );
+			
+			if( child.isLeaf() )
+			{
+				m_front.insertIntoFront( child, childLvl, threadIdx );
+			}
 		}
 	}
 		
@@ -748,7 +761,7 @@ namespace model
 	}
 		
 	// TODO: This method is wrong. The duplicate removal should also choose again the node points, since the children
-	// changed
+	// changed.
 	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		* Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 	template< typename Morton, typename Point >
@@ -779,14 +792,14 @@ namespace model
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					// Parent pointer needs to be fixed.
-					setParent( mergedChild[ i ] );
+					setParent( mergedChild[ i ], nextLvlDim.m_nodeLvl + 2, 0 );
 				}
 				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
 				{
 					int idx = prevLastNodeChild.size() + i;
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					// Parent pointer needs to be fixed.
-					setParent( mergedChild[ idx ] );
+					setParent( mergedChild[ idx ], nextLvlDim.m_nodeLvl + 2, 0 );
 				}
 				
 				nextFirstNode.setChildren( std::move( mergedChild ) );
@@ -940,50 +953,50 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >
-	::releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim )
-	{
-		Sql& sql = m_dbs[ threadIdx ];
-
-		// Debug
+// 	template< typename Morton, typename Point >
+// 	inline void HierarchyCreator< Morton, Point >
+// 	::releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim )
+// 	{
+// 		Sql& sql = m_dbs[ threadIdx ];
+// 
+// 		// Debug
+// // 		{
+// // 			lock_guard< mutex > lock( m_logMutex );
+// // 			cout << "Thread " << threadIdx << ": rel sib size " << siblings.size() << endl << endl;
+// // 		}
+// 		
+// 		for( int i = 0; i < siblings.size(); ++i )
 // 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			cout << "Thread " << threadIdx << ": rel sib size " << siblings.size() << endl << endl;
-// 		}
-		
-		for( int i = 0; i < siblings.size(); ++i )
-		{
-			Node& sibling = siblings[ i ];
-			NodeArray& children = sibling.child();
-			if( !children.empty() )
-			{
-				releaseSiblings( children, threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
-			}
-			
-			Morton siblingMorton = dim.calcMorton( sibling );
-			// Debug
+// 			Node& sibling = siblings[ i ];
+// 			NodeArray& children = sibling.child();
+// 			if( !children.empty() )
 // 			{
-// 				Morton expectedParent; expectedParent.build( 0x41657ff6a9fUL );
-// 				Morton expectedA = *expectedParent.getFirstChild();
-// 				Morton expectedB = *expectedParent.getLastChild();
-// 				
-// 				if( expectedA <= siblingMorton && siblingMorton <= expectedB )
-// 				{
-// 					cout << "2DB: " << hex << siblingMorton.getPathToRoot( true ) << endl;
-// 				}
+// 				releaseSiblings( children, threadIdx, OctreeDim( dim, dim.m_nodeLvl + 1 ) );
 // 			}
-			
-			// Persisting node
-			sql.insertNode( siblingMorton, sibling );
-		}
-		
-		siblings.clear();
-	}
+// 			
+// 			Morton siblingMorton = dim.calcMorton( sibling );
+// 			// Debug
+// // 			{
+// // 				Morton expectedParent; expectedParent.build( 0x41657ff6a9fUL );
+// // 				Morton expectedA = *expectedParent.getFirstChild();
+// // 				Morton expectedB = *expectedParent.getLastChild();
+// // 				
+// // 				if( expectedA <= siblingMorton && siblingMorton <= expectedB )
+// // 				{
+// // 					cout << "2DB: " << hex << siblingMorton.getPathToRoot( true ) << endl;
+// // 				}
+// // 			}
+// 			
+// 			// Persisting node
+// 			sql.insertNode( siblingMorton, sibling );
+// 		}
+// 		
+// 		siblings.clear();
+// 	}
 	
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createNodeFromSingleChild( Node&& child, bool isLeaf ) const
+	::createNodeFromSingleChild( Node&& child, bool isLeaf, const char childLvl, const int threadIdx ) const
 	{
 		const Array< PointPtr >& childPoints = child.getContents();
 		
@@ -1006,7 +1019,7 @@ namespace model
 			Node& finalChild = node.child()[ 0 ];
 			if( !finalChild.isLeaf() )
 			{
-				setParent( finalChild );
+				setParent( finalChild, childLvl + 1, threadIdx );
 			}
 		}
 		
@@ -1015,14 +1028,14 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createInnerNode( NodeArray&& inChildren, uint nChildren ) const
+	::createInnerNode( NodeArray&& inChildren, uint nChildren, const char childLvl, const int threadIdx ) const
 	{
 		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
 		using MapEntry = typename Map::value_type;
 		
 		if( nChildren == 1 )
 		{
-			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false );
+			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, childLvl, threadIdx );
 		}
 		else
 		{
@@ -1060,7 +1073,7 @@ namespace model
 				// Set parental relationship of children.
 				if( !child.isLeaf() )
 				{
-					setParent( child );
+					setParent( child, childLvl + 1, threadIdx );
 				}
 			}
 			
