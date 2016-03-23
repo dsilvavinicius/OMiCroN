@@ -82,6 +82,9 @@ namespace model
 	FastParallelOctree< Morton, Point >
 	::FastParallelOctree( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit,
 						  int nThreads, bool async )
+	: m_hierarchyCreator( nullptr ),
+	m_front( nullptr ),
+	m_root( nullptr )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
@@ -100,8 +103,6 @@ namespace model
 			sortedFilename.insert( 0, "sorted_" );
 		}
 		
-		cout << sortedFilename << endl << endl;
-		
 		sorter.sort( sortedFilename );
 		
 		buildFromSortedFile( sortedFilename, sorter.comp(), loadPerThread, memoryLimit, nThreads, async );
@@ -111,6 +112,9 @@ namespace model
 	FastParallelOctree< Morton, Point >
 	::FastParallelOctree( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit, int nThreads,
 						  bool async )
+	: m_hierarchyCreator( nullptr ),
+	m_front( nullptr ),
+	m_root( nullptr )
 	{
 		buildFromSortedFile( plyFilename, dim, loadPerThread, memoryLimit, nThreads, async );
 	}
@@ -152,7 +156,8 @@ namespace model
 		
 		m_dim = dim;
 		
-		m_front = new Front( plyFilename, m_dim );
+		// This is buggy!
+		//m_front = new Front( plyFilename, m_dim );
 		
 		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, loadPerThread, memoryLimit, nThreads );
 		

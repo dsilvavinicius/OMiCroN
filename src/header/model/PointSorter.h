@@ -43,6 +43,8 @@ namespace model
 	template< typename M, typename P >
 	PointSorter< M, P >::PointSorter( const string& input, uint leafLvl )
 	{
+		cout << "Setup sorting of " << input << endl << endl;
+		
 		m_reader = new Reader( input );
 		m_nPoints = m_reader->getNumPoints();
 		m_points = ( P* ) malloc( sizeof( P ) * m_nPoints );
@@ -52,19 +54,13 @@ namespace model
 		Vec3 origin = Vec3( posInf, posInf, posInf );
 		Vec3 maxCoords( negInf, negInf, negInf );
 		
-		cout << "Reading points." << endl << endl;
+		cout << "Reading " << m_nPoints << " points." << endl << endl;
 		auto start = Profiler::now();
 		
 		long i = 0;
 		m_reader->read( Reader::SINGLE,
 			[ & ]( const P& p )
 			{
-				// Debug
-				if( i >= m_nPoints )
-				{
-					cout << "i = " << i << " nPoints = " << m_nPoints << endl << endl;
-				}
-				
 				m_points[ i++ ] = p;
 				Vec3 pos = p.getPos();
 				for( int i = 0; i < 3; ++i )
@@ -91,14 +87,14 @@ namespace model
 	template< typename M, typename P >
 	void PointSorter< M, P >::sort( const string& outFilename )
 	{
-		cout << "In-memory sort. " << endl << endl;
+		cout << "Start sorting to " << outFilename << endl << endl;
 		auto start = Profiler::now();
 		
 		std::sort( m_points, m_points + m_nPoints, m_comp );
 		
 		cout << "Sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
-		cout << "Writing. " << endl << endl;
+		cout << "Start writing. " << endl << endl;
 		
 		start = Profiler::now();
 		// Write output file

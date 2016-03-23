@@ -75,6 +75,8 @@ namespace util
 	PlyPointReader< Point >::PlyPointReader( const string& fileName )
 	: m_filename( fileName )
 	{
+		cout << "Setup read of " << m_filename << endl << endl;
+		
 		openPly();
 		readHeader();
 		
