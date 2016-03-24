@@ -57,6 +57,9 @@ namespace model
 		pair< Vec3, Vec3 > getMortonBoundaries( const M& code ) const
 		{
 			uint level = code.getLevel();
+			
+			assert( level == m_nodeLvl && "Morton code level should be equal than OctreeDimension's." );
+			
 			auto nodeCoordsVec = code.decode( level );
 			Vec3 nodeCoords( nodeCoordsVec[ 0 ], nodeCoordsVec[ 1 ], nodeCoordsVec[ 2 ] );
 			Float nodeSizeFactor = Float( 1 ) / Float( 1 << level );
