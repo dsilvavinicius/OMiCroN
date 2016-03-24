@@ -42,6 +42,9 @@ namespace model
 		/** Tracks the rendering front of the octree. */
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
+		/** Returns only after async hierarchy creation has finished. */
+		void waitAsyncCreation();
+		
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
 		
@@ -67,6 +70,9 @@ namespace model
 		
 		/** Manages the octree creation. */
 		HierarchyCreator* m_hierarchyCreator;
+		
+		/** Future with the async creation result */
+		future< Node* > m_creationFuture;
 		
 		/** Octree construction thread. */
 		thread m_octreeThread;
@@ -122,10 +128,10 @@ namespace model
 	template< typename Morton, typename Point >
 	FastParallelOctree< Morton, Point >::~FastParallelOctree()
 	{
-		// ######### CONTINUE HERE. Code a way to notify the HierarchyCreator that is should halt. #####################
-		
 		if( m_hierarchyCreator )
 		{
+			waitAsyncCreation();
+			
 			delete m_hierarchyCreator;
 			m_hierarchyCreator = nullptr;
 		}
@@ -161,24 +167,28 @@ namespace model
 		
 		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, *m_front, loadPerThread, memoryLimit, nThreads );
 		
-		if( async )
-		{
-			m_root = m_hierarchyCreator->createAsync().get();
-		}
-		else
-		{
-			//m_root = m_hierarchyCreator->create();
-		}
-		
-		#ifdef HIERARCHY_STATS
-			m_processedNodes = m_hierarchyCreator->m_processedNodes;
-		#endif
+		m_creationFuture = m_hierarchyCreator->createAsync();
 	}
 	
 	template< typename Morton, typename Point >
 	FrontOctreeStats FastParallelOctree< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		return m_front->trackFront( renderer, projThresh );
+	}
+	
+	template< typename Morton, typename Point >
+	void FastParallelOctree< Morton, Point >::waitAsyncCreation()
+	{
+		cout << "Waiting for async octree creation finish. It can take several minutes or hours depending on model size..."
+				 << endl << endl;
+		
+		m_root = m_creationFuture.get();
+		
+		cout << "Hierarchy creation finished." << endl << endl;
+		
+		#ifdef HIERARCHY_STATS
+			m_processedNodes = m_hierarchyCreator.m_processedNodes;
+		#endif
 	}
 	
 	template< typename Morton, typename Point >
