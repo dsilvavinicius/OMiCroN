@@ -14,6 +14,9 @@ namespace model
 	class Array
 	{
 	public:
+		using iterator = T*;
+		using const_iterator = const T*;
+		
 		/** Ctor to construct an empty non-usable array. */
 		Array()
 		: Array( 0 )
@@ -188,6 +191,11 @@ namespace model
 		T* data() { return m_array; }
 		
 		const T* data() const { return m_array; }
+		
+		iterator begin() noexcept { return m_array; }
+		iterator end() noexcept { return m_array + m_size; }
+		const_iterator begin() const noexcept { return m_array; }
+		const_iterator end() const noexcept { return m_array + m_size; }
 		
 		template< typename Type, typename Alloc >
 		friend ostream& operator<<( ostream& out, const Array< Type, Alloc >& array );

@@ -22,16 +22,16 @@ namespace model
 				ofstream m_log( "FastParallelOctreeStressTest.log", ios_base::app );
 				
 				FastParallelOctreeStressParam param = g_fastParallelStressParam;
-				m_log << "Starting building octree. Params:" << param << endl;
-				auto start = Profiler::now( m_log );
+				m_log << "Params: " << param << endl;
+				auto start = Profiler::now( "Octree construction", m_log );
 				
 				Octree octree( param.m_plyFilename, param.m_hierarchyLvl, param.m_workItemSize,
 							   param.m_memoryQuota, param.m_nThreads );
 				
-				m_log << "Time to build octree (ms): " << Profiler::elapsedTime( start, m_log ) << endl << endl;
+				Profiler::elapsedTime( start, "Octree construction", m_log );
 				
 				#ifdef HIERARCHY_STATS
-					m_log << "Processed nodes: " <<octree.m_processedNodes << endl << endl;
+					m_log << "Processed nodes: " << octree.m_processedNodes << endl << endl;
 				#endif
 			}
 			

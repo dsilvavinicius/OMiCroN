@@ -271,6 +271,7 @@ namespace model
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
+				m_front.notifyLeafLvlLoaded();
 				
 				// Debug
 				{
@@ -502,6 +503,8 @@ namespace model
 // 						}
 					}
 					// END PARALLEL WORKLIST PROCESSING.
+					
+					m_front.notifyInsertionEnd();
 					
 					// BEGIN LOAD BALANCE.
 					// Debug
@@ -920,6 +923,8 @@ namespace model
 			lock_guard< mutex > lock( releaseMutex );
 			isReleasing = true;
 		}
+		
+		m_front.turnReleaseOn();
 	}
 		
 	template< typename Morton, typename Point >
@@ -939,6 +944,8 @@ namespace model
 			isReleasing = false;
 		}
 		releaseFlag.notify_one();
+		
+		m_front.turnReleaseOff();
 		
 		// Debug
 // 			{

@@ -52,6 +52,11 @@ namespace model
 				PointArray array;
 				ASSERT_EQ( 0, array.size() );
 				
+				for( PointPtr& point : array )
+				{
+					ADD_FAILURE();
+				}
+				
 				int arraySize = 10;
 				array = PointArray( arraySize );
 				
@@ -64,6 +69,20 @@ namespace model
 				{
 					Point expected = createPoint< Point >( i );
 					ASSERT_TRUE( expected.equal( *array[ i ], 1.e-15 ) );
+				}
+				
+				int i = 0;
+				for( PointPtr& point : array )
+				{
+					Point expected = createPoint< Point >( i++ );
+					ASSERT_TRUE( expected.equal( *point, 1.e-15 ) );
+				}
+				
+				i = 0;
+				for( const PointPtr& point : array )
+				{
+					Point expected = createPoint< Point >( i++ );
+					ASSERT_TRUE( expected.equal( *point, 1.e-15 ) );
 				}
 				
 				size_t expectedSerialSize = sizeof( uint ) + array.size() * sizeof( Point );

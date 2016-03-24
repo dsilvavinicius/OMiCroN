@@ -31,12 +31,12 @@ namespace model
 		/** The node type that is used in front. */
 		typedef struct FrontNode
 		{
-			FrontNode( const Node& node, unsigned char lvl )
+			FrontNode( Node& node, unsigned char lvl )
 			: m_octreeNode( node ),
 			m_lvl( lvl )
 			{}
 			
-			const Node& m_octreeNode;
+			Node& m_octreeNode;
 			unsigned char m_lvl;
 		} FrontNode;
 		
@@ -66,9 +66,6 @@ namespace model
 		/** Notifies that all leaf level nodes are already loaded. */
 		void notifyLeafLvlLoaded();
 		
-		/** Persists and release nodes in order to ease memory pressure. */
-		void releaseSiblings( NodeArray& siblings, const OctreeDim& dim );
-		
 		/** Tracks the front based on the projection threshold.
 		 * @param renderer is the responsible of rendering the points of the tracked front.
 		 * @param projThresh is the projection threashold */
@@ -81,12 +78,15 @@ namespace model
 						 FrontListIter& frontIt, FrontListIter& frontEnd, Renderer& renderer, const Float projThresh )
 		const;
 		
-		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, const Node* parentNode, Renderer& renderer );
+		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, Renderer& renderer );
 		
 		bool checkBranch( const OctreeDim& nodeLvlDim, const Node& node, const Morton& morton, Renderer& renderer,
 						  const Float projThresh, bool& out_isCullable ) const;
 		
-		void branch( FrontListIter& iter, const Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
+		void branch( FrontListIter& iter, Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
+		
+		/** Persists and release nodes in order to ease memory pressure. */
+		void releaseSiblings( NodeArray& siblings, const OctreeDim& dim );
 		
 		void setupNodeRendering( FrontListIter& iter, const FrontNode& frontNode, Renderer& renderer );
 		
@@ -217,7 +217,7 @@ namespace model
 		
 		if( parentNode != nullptr )
 		{
-			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_lvl - 1 );
+			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 		
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, frontEnd, renderer, projThresh ) )
@@ -250,7 +250,7 @@ namespace model
 												 FrontListIter& frontEnd, Renderer& renderer, const Float projThresh )
 	const
 	{
-		pair< Vec3, Vec3 > parentBox = parentLvlDim.getBoundaries( parentMorton );
+		pair< Vec3, Vec3 > parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
 		bool pruneFlag = false;
 		if( renderer.isCullable( parentBox ) )
@@ -271,7 +271,7 @@ namespace model
 			{
 				// The last sibling group cannot be prunned until all leaf level nodes are loaded.
 				FrontListIter siblingIter = frontIt;
-				while( siblingIter != frontEnd && siblingIter++.parent() == parentNode )
+				while( siblingIter != frontEnd && siblingIter++->m_octreeNode.parent() == parentNode )
 				{}
 				
 				pruneFlag = siblingIter != frontEnd;
@@ -282,7 +282,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, const Node* parentNode,
+	inline void Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode,
 											   Renderer& renderer )
 	{
 		//cout << "=== Prunning begins ===" << endl << endl;
@@ -298,7 +298,7 @@ namespace model
 			frontIt = m_front.erase( frontIt );
 		}
 		
-		FrontNode frontNode( *parentNode, nodeLvlDim.m_nodelLvl + 1 );
+		FrontNode frontNode( *parentNode, nodeLvlDim.m_nodeLvl + 1 );
 		setupNodeRendering( frontIt, frontNode, renderer );
 		
 		//cout << "=== Prunning ends ===" << endl << endl;
@@ -309,10 +309,10 @@ namespace model
 													 Renderer& renderer, const Float projThresh, bool& out_isCullable )
 	const
 	{
-		pair< Vec3, Vec3 > box = nodeLvlDim.getBoundaries( morton );
+		pair< Vec3, Vec3 > box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
 		
-		if( node.isInner() && !node.child().empty() )
+		if( !node.isLeaf() && !node.child().empty() )
 		{
 			return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
 		}
@@ -322,7 +322,7 @@ namespace model
 	
 	// TODO: Verify if there is need for release in branch too.
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::branch( FrontListIter& frontIt, const Node& node, const OctreeDim& nodeLvlDim,
+	inline void Front< Morton, Point >::branch( FrontListIter& frontIt, Node& node, const OctreeDim& nodeLvlDim,
 												Renderer& renderer )
 	{
 		//cout << "=== Branching begins ===" << endl << endl;
@@ -335,7 +335,7 @@ namespace model
 		for( int i = 0; i < children.size(); ++i )
 		{
 			Node& child = children[ i ];
-			pair< Vec3, Vec3 > box = childLvlDim.getBoundaries( child );
+			pair< Vec3, Vec3 > box = childLvlDim.getNodeBoundaries( child );
 			FrontNode frontNode( child, childLvlDim.m_nodeLvl );
 			
 			if( !renderer.isCullable( box ) )
@@ -346,7 +346,7 @@ namespace model
 			}
 			else
 			{
-				m_front->insert( frontIt, frontNode );
+				m_front.insert( frontIt, frontNode );
 			}
 		}
 		

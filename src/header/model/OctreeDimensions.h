@@ -50,14 +50,14 @@ namespace model
 		template< typename Node >
 		M calcMorton( const Node& node ) const
 		{
-			return calcMorton( *node.getContents()[ 0 ] );
+			return calcMorton( *( node.getContents()[ 0 ] ) );
 		}
 		
 		/** Returns the boundaries of the node identified by the given MortonCode */
-		pair< Vec3, Vec3 > getBoundaries( const M& code ) const
+		pair< Vec3, Vec3 > getMortonBoundaries( const M& code ) const
 		{
-			uint level = code->getLevel();
-			auto nodeCoordsVec = code->decode( level );
+			uint level = code.getLevel();
+			auto nodeCoordsVec = code.decode( level );
 			Vec3 nodeCoords( nodeCoordsVec[ 0 ], nodeCoordsVec[ 1 ], nodeCoordsVec[ 2 ] );
 			Float nodeSizeFactor = Float( 1 ) / Float( 1 << level );
 			Vec3 levelNodeSize = m_size * nodeSizeFactor;
@@ -80,9 +80,9 @@ namespace model
 		
 		/** Returns the boundaries of the node. */
 		template< typename Node >
-		pair< Vec3, Vec3 > getBoundaries( const Node& node )
+		pair< Vec3, Vec3 > getNodeBoundaries( const Node& node )
 		{
-			return getBoundaries( calcMorton( node ) );
+			return getMortonBoundaries( calcMorton( node ) );
 		}
 		
 		bool operator()( const P& p0, const P& p1 ) const
@@ -93,7 +93,7 @@ namespace model
 		friend ostream& operator<<( ostream& out, const OctreeDimensions& dim )
 		{
 			out << "origin: " << dim.m_origin << endl
-				<< "octree size:" << dim.m_size << endl
+				<< "octree size: " << dim.m_size << endl
 				<< "node lvl size:" << dim.m_nodeSize << endl
 				<< "node lvl:" << dim.m_nodeLvl << endl;
 			return out;

@@ -4,13 +4,11 @@
 #include <QDebug>
 #include <QTimer>
 
-// TODO: Replace clock_t timings by C++'s high resolution clock. The logic is in util::Profiler.
 PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtFreecameraWidget( parent ),
 m_projThresh( 0.001f ),
 m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
-m_endOfFrameTime( clock() ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
 m_octree( nullptr ),
@@ -29,7 +27,7 @@ PointRendererWidget::~PointRendererWidget()
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
 	// Init MemoryManager allowing 9GB of data.
-	DefaultManager< MortonCode, Point, OctreeNode >::initInstance( 1024ul * 1024ul * 1024ul * 9 );
+// 	DefaultManager< MortonCode, Point, OctreeNode >::initInstance( 1024ul * 1024ul * 1024ul * 9 );
 	
 	//Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
 	//	1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,
@@ -73,9 +71,9 @@ void PointRendererWidget::resizeGL( int width, int height )
 }
 
 
-void PointRendererWidget::adaptProjThresh( float desiredRenderTime )
+void PointRendererWidget::adaptProjThresh()
 {
-	float renderTimeDiff = m_renderTime - desiredRenderTime;
+	float renderTimeDiff = m_renderTime - m_desiredRenderTime;
 	if( abs( renderTimeDiff ) > m_renderingTimeTolerance )
 	{
 		m_projThresh += renderTimeDiff * 1.0e-6f;
@@ -88,35 +86,33 @@ void PointRendererWidget::paintGL (void)
 {
 	//cout << "=== Painting starts ===" << endl << endl;
 	
-	clock_t startOfFrameTime = clock();
-	clock_t totalTiming = startOfFrameTime;
+	auto frameStart = Profiler::now();
 	makeCurrent();
 
-	adaptProjThresh( m_desiredRenderTime );
+	adaptProjThresh();
 	
 	m_renderer->setupRendering();
 	
 	// Render the scene.
-	clock_t timing = clock();
+	auto frontTrackingStart = Profiler::now();
+	
 	//OctreeStats stats = m_octree->traverse( *m_renderer, m_projThresh );
 	FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
-	timing = clock() - timing;
 	
-	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+	int frontTrackingTime = Profiler::elapsedTime( frontTrackingStart );
 
 	m_renderer->afterRendering();
 	
-	totalTiming = clock() - totalTiming;
+	m_renderTime = Profiler::elapsedTime( frameStart );
 	
 	// Render debug data.
 	stringstream debugSS;
-	debugSS << "Total loop time: " << float( totalTiming ) / CLOCKS_PER_SEC * 1000 << endl << endl
-			<< "Render time (traversal + rendering): " << m_renderTime << " ms" << endl << endl
-			<< "Time between frames: " << float( startOfFrameTime - m_endOfFrameTime ) / CLOCKS_PER_SEC * 1000 <<
-			"ms" << endl
+	debugSS << "Total frame time: " << m_renderTime << " ms" << endl << endl
+			<< "Render time (traversal + rendering): " << frontTrackingTime << " ms" << endl << endl
+			<< "Time between frames: " << Profiler::elapsedTime( m_endOfFrameTime, frameStart ) << "ms" << endl
 			<< stats
-			<< "Desired render time: " << m_desiredRenderTime << "ms" << endl << endl
-			<< "Rendering time tolerance: " << m_renderingTimeTolerance << "ms" << endl << endl
+			<< "Desired render time: " << m_desiredRenderTime << " ms" << endl << endl
+			<< "Rendering time tolerance: " << m_renderingTimeTolerance << " ms" << endl << endl
 			<< "Projection threshold: " << m_projThresh << endl << endl;
 			
 	//cout << debugSS.str() << endl << endl;
@@ -132,7 +128,7 @@ void PointRendererWidget::paintGL (void)
 		camera->renderAtCorner();
 	}
 	
-	m_endOfFrameTime = clock();
+	m_endOfFrameTime = Profiler::now();
 	
 	if( m_drawAuxViewports )
 	{
@@ -199,7 +195,7 @@ void PointRendererWidget::toggleWriteFrames()
 
 void PointRendererWidget::toggleEffect( int id )
 {
-	m_renderer->selectEffect( ( RenderingState::Effect ) id );
+	m_renderer->selectEffect( ( Renderer::Effect ) id );
 	updateGL();
 }
 
@@ -235,7 +231,7 @@ void PointRendererWidget::toggleDrawAuxViewports( void )
 
 void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 {
-	m_octree->toggleDebug( value );
+// 	m_octree->toggleDebug( value );
 	updateGL();
 }
 
@@ -261,8 +257,9 @@ void PointRendererWidget::openMesh( const string& filename )
 	int nameEnding = filename.find_last_of( "." );
 	string dbFilename = filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
-	m_octree = new Octree( 1, 10, dbFilename );
-	m_octree->buildFromFile( filename, PointReader::SINGLE );
+// 	m_octree = new Octree( 1, 10, dbFilename );
+// 	m_octree->buildFromFile( filename, PointReader::SINGLE );
+	m_octree = new Octree( filename, 20, 1024, 1024ul * 1024ul * 1024ul * 7ul, 4, true );
 	
 	cout << "Octree built." << endl;
 	
@@ -274,14 +271,15 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new RenderingState( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, "shaders/tucano/" );
+	m_renderer = new Renderer( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, "shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;
 	
-	clock_t timing = clock();
-	m_octree->trackFront( *m_renderer, m_projThresh );
-	timing = clock() - timing;
-	m_renderTime = float( timing ) / CLOCKS_PER_SEC * 1000;
+	auto frontTrackingStart = Profiler::now();
 	
+	m_octree->trackFront( *m_renderer, m_projThresh );
 	updateGL();
+	
+	m_endOfFrameTime = Profiler::now();
+	m_renderTime = Profiler::elapsedTime( frontTrackingStart, m_endOfFrameTime );
 }

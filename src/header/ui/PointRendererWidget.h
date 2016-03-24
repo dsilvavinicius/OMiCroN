@@ -7,9 +7,10 @@
 #include <utils/qtfreecamerawidget.hpp>
 #include <point_model.hpp>
 #include "TucanoRenderingState.h"
+#include "FastParallelOctree.h"
 //#include "FrontOctree.h"
 //#include "ParallelOctree.h"
-#include "OutOfCoreDebugOctree.h"
+// #include "OutOfCoreDebugOctree.h"
 #include <QApplication>
 
 using namespace std;
@@ -23,17 +24,18 @@ class PointRendererWidget
 	using MortonCode = MediumMortonCode;
 	
 	using Point = model::Point;
-	using PointPtr = shared_ptr< Point >;
-	using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-	using PointReader = util::PlyPointReader< Point >;
+// 	using PointPtr = shared_ptr< Point >;
+// 	using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
+// 	using PointReader = util::PlyPointReader< Point >;
 	
-	using OctreeNode = model::OctreeNode< PointVector >;
-	using Hierarchy = OctreeMap< MortonCode, OctreeNode >;
+// 	using OctreeNode = model::OctreeNode< PointVector >;
+// 	using Hierarchy = OctreeMap< MortonCode, OctreeNode >;
+// 	
+// 	using OctreeParams = model::OctreeParams< MortonCode, Point, OctreeNode, Hierarchy >;
+// 	using Octree = model::DefaultOutOfCoreDebugOctree< OctreeParams >;
 	
-	using OctreeParams = model::OctreeParams< MortonCode, Point, OctreeNode, Hierarchy >;
-	using Octree = model::DefaultOutOfCoreDebugOctree< OctreeParams >;
-	
-	using RenderingState = model::TucanoRenderingState;
+	using Octree = FastParallelOctree< MortonCode, Point >;
+	using Renderer = model::TucanoRenderingState;
 	
 public:
 	explicit PointRendererWidget( QWidget *parent );
@@ -101,8 +103,8 @@ private:
 		TOP
 	};
 	
-	/** Adaps the projection threshold given a desired render time for a frame. */
-	void adaptProjThresh( float desiredRenderTime );
+	/** Adaps the projection threshold based on m_desiredRenderTime. */
+	void adaptProjThresh();
 
 	/** Render auxiliary viewports for debugging purposes. */
 	void renderAuxViewport( const Viewport& viewport );
@@ -114,7 +116,7 @@ private:
 	bool m_drawAuxViewports;
 	
 	PointModel mesh;
-	RenderingState* m_renderer;
+	Renderer* m_renderer;
 	Octree* m_octree;
 	
 	QTimer *m_timer;
@@ -132,7 +134,7 @@ private:
 	float m_renderingTimeTolerance;
 	
 	/** Time when a frame is finished. Used to measure performance only. In ms. */
-	clock_t m_endOfFrameTime;
+	chrono::system_clock::time_point m_endOfFrameTime;
 };
 
 #endif // PointRendererWidget
