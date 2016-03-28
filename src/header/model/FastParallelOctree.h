@@ -9,7 +9,7 @@
 
 namespace model
 {
-	/** Out-of-core fast parallel octree. Provides visualization while constructing the hierarchy bottom-up. */
+	/** Out-of-core fast parallel octree. Provides visualization while async constructing the hierarchy bottom-up. */
 	template< typename MortonCode, typename P >
 	class FastParallelOctree
 	{
@@ -42,8 +42,11 @@ namespace model
 		/** Tracks the rendering front of the octree. */
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
+		/** Checks if the async creation is finished. */
+		bool isCreationFinished();
+		
 		/** Returns only after async hierarchy creation has finished. */
-		void waitAsyncCreation();
+		void waitCreation();
 		
 		/** Gets dimensional info of this octree. */
 		const Dim& dim() const { return m_dim; }
@@ -130,7 +133,7 @@ namespace model
 	{
 		if( m_hierarchyCreator )
 		{
-			waitAsyncCreation();
+			waitCreation();
 			
 			delete m_hierarchyCreator;
 			m_hierarchyCreator = nullptr;
@@ -177,7 +180,21 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >::waitAsyncCreation()
+	bool FastParallelOctree< Morton, Point >::isCreationFinished()
+	{
+		if( m_creationFuture.wait_for( chrono::seconds( 0 ) ) == future_status::ready )
+		{
+			waitCreation();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	
+	template< typename Morton, typename Point >
+	void FastParallelOctree< Morton, Point >::waitCreation()
 	{
 		cout << "Waiting for async octree creation finish. It can take several minutes or hours depending on model size..."
 				 << endl << endl;

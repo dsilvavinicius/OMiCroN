@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <MockRenderer.h>
 #include "FastParallelOctree.h"
 
 namespace model
@@ -132,6 +133,28 @@ namespace model
 			wrapper.checkChild( octree.root().child()[ 1 ].child()[ 0 ].child()[ 0 ].child()[ 0 ].child()[ 1 ], 5, {} );
 		}
 		
+		template< typename Octree >
+		void waitAsynCreation( Octree& octree )
+		{
+			MockRenderer renderer;
+			while( !octree.isCreationFinished() )
+			{
+				octree.trackFront( renderer, 0.f );
+			}
+		}
+		
+		/** Check expectations of octree for the in-core tests. */
+		template< typename Octree >
+		void testInCore( Octree& octree )
+		{
+			waitAsynCreation( octree );
+			cout << octree << endl;
+			
+			OctreeTestWrapper< Octree > wrapper( octree );
+			
+			checkHierarchy( wrapper );
+		}
+		
 		TEST( FastParallelOctreeTest, Creation_MonoThread_Shallow_Point )
 		{
 			using Octree = FastParallelOctree< ShallowMortonCode, Point >;
@@ -140,11 +163,7 @@ namespace model
 			
 			{
 				Octree octree( "data/simple_point_octree.ply", 10 );
-				cout << octree << endl;
-				
-				OctreeTestWrapper< Octree > wrapper( octree );
-				
-				checkHierarchy( wrapper );
+				testInCore( octree );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -158,11 +177,7 @@ namespace model
 			
 			{
 				Octree octree( "data/extended_point_octree.ply", 10 );
-				cout << octree << endl;
-				
-				OctreeTestWrapper< Octree > wrapper( octree );
-				
-				checkHierarchy( wrapper );
+				testInCore( octree );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -175,11 +190,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			{
 				Octree octree( "data/simple_point_octree.ply", 21 );
-				cout << octree << endl;
-				
-				OctreeTestWrapper< Octree > wrapper( octree );
-				
-				checkHierarchy( wrapper );
+				testInCore( octree );
 			}
 		}
 		
@@ -191,11 +202,7 @@ namespace model
 			
 			{
 				Octree octree( "data/extended_point_octree.ply", 21 );
-				cout << octree << endl;
-				
-				OctreeTestWrapper< Octree > wrapper( octree );
-				
-				checkHierarchy( wrapper );
+				testInCore( octree );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -209,10 +216,7 @@ namespace model
 			
 			{
 				Octree octree( "data/simple_point_octree.ply", 10, 2 );
-				cout << octree << endl;
-				OctreeTestWrapper< Octree > wrapper( octree );
-				
-				checkHierarchy( wrapper );
+				testInCore( octree );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -229,6 +233,8 @@ namespace model
 			
 			{
 				Octree octree( "data/simple_point_octree.ply", 10, 3, 5000 );
+				waitAsynCreation( octree );
+				
 				cout << octree << endl;
 				
 				// Nodes released are just in the database
@@ -257,6 +263,8 @@ namespace model
 			
 			{
 				Octree octree( "data/simple_point_octree.ply", 10, 6, 5000 );
+				waitAsynCreation( octree );
+				
 				cout << octree << endl;
 				
 				// Nodes released are just in the database

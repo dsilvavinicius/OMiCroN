@@ -22,6 +22,8 @@ namespace model
 	public:
 		RenderingState();
 		
+		virtual ~RenderingState(){};
+		
 		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
 		 * Default implementation does nothing. */
 		virtual void setupRendering(){};
@@ -43,12 +45,12 @@ namespace model
 		 * rendered. False otherwise (indicating that the traversal should proceed deeper in the hierarchy). */
 		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const = 0;
 		
-		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const PointPtr& point );
-		
 		/** Indicates that the passed string should be rendered at the position also passed as parameter. Useful for
 		 * debugging and labelling. */
 		virtual void renderText( const Vec3& pos, const string& str ) = 0;
+		
+		/** Indicates that the node contents passed should be rendered. */
+		virtual void handleNodeRendering( const PointPtr& point );
 		
 		/** Indicates that the node contents passed should be rendered. */
 		virtual void handleNodeRendering( const PointVector& points );
