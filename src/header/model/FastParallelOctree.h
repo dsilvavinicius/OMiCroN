@@ -131,25 +131,16 @@ namespace model
 	template< typename Morton, typename Point >
 	FastParallelOctree< Morton, Point >::~FastParallelOctree()
 	{
-		if( m_hierarchyCreator )
-		{
-			waitCreation();
+		waitCreation();
 			
-			delete m_hierarchyCreator;
-			m_hierarchyCreator = nullptr;
-		}
+		delete m_hierarchyCreator;
+		m_hierarchyCreator = nullptr;
 		
-		if( m_root )
-		{
-			delete m_root;
-			m_root = nullptr;
-		}
+		delete m_root;
+		m_root = nullptr;
 		
-		if( m_front )
-		{
-			delete m_front;
-			m_front = nullptr;
-		}
+		delete m_front;
+		m_front = nullptr;
 	}
 	
 	template< typename Morton, typename Point >
@@ -165,8 +156,8 @@ namespace model
 		
 		m_dim = dim;
 		
-		// THE NEXT LINE IS BUGGY!
-		m_front = new Front( plyFilename, m_dim, nThreads );
+		string dbFilename = plyFilename.substr( 0, plyFilename.find_last_of( "." ) ).append( ".db" );
+		m_front = new Front( dbFilename, m_dim, nThreads );
 		
 		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, *m_front, loadPerThread, memoryLimit, nThreads );
 		
@@ -196,16 +187,19 @@ namespace model
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >::waitCreation()
 	{
-		cout << "Waiting for async octree creation finish. It can take several minutes or hours depending on model size..."
-				 << endl << endl;
-		
-		m_root = m_creationFuture.get();
-		
-		cout << "Hierarchy creation finished." << endl << endl;
-		
-		#ifdef HIERARCHY_STATS
-			m_processedNodes = m_hierarchyCreator.m_processedNodes;
-		#endif
+		if( m_creationFuture.valid() )
+		{
+			cout << "Waiting for async octree creation finish. It can take several minutes or hours depending on model size..."
+						<< endl << endl;
+			
+			m_root = m_creationFuture.get();
+			
+			cout << "Hierarchy creation finished." << endl << endl;
+			
+			#ifdef HIERARCHY_STATS
+				m_processedNodes = m_hierarchyCreator.m_processedNodes;
+			#endif
+		}
 	}
 	
 	template< typename Morton, typename Point >

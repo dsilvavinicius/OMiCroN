@@ -185,7 +185,11 @@ namespace model
 	future< typename HierarchyCreator< Morton, Point >::Node* > HierarchyCreator< Morton, Point >::createAsync()
 	{
 		packaged_task< Node*() > task( [ & ]{ return create(); } );
-		return task.get_future();
+		auto future = task.get_future();
+		thread t( std::move( task ) );
+		t.detach();
+		
+		return future;
 	}
 	
 	template< typename Morton, typename Point >
@@ -914,10 +918,10 @@ namespace model
 	{
 		
 		// Debug
-// 			{
-// 				cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
-// 						<< endl;
-// 			}
+// 		{
+// 			cout << "===== RELEASE ON: Mem " << AllocStatistics::totalAllocated() << " =====" << endl
+// 					<< endl;
+// 		}
 		
 		{
 			lock_guard< mutex > lock( releaseMutex );
@@ -933,11 +937,10 @@ namespace model
 						bool& isDiskThreadStopped )
 	{
 		// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "===== RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << "=====" << endl << endl;
-// 			}
-		//
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "===== RELEASE OFF. MEMORY: " << AllocStatistics::totalAllocated() << "=====" << endl << endl;
+// 		}
 		
 		{
 			lock_guard< mutex > lock( releaseMutex );

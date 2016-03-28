@@ -232,7 +232,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/simple_point_octree.ply", 10, 3, 5000 );
+				Octree octree( "data/simple_point_octree.ply", 10, 3, 1000 );
 				waitAsynCreation( octree );
 				
 				cout << octree << endl;
@@ -262,7 +262,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/simple_point_octree.ply", 10, 6, 5000 );
+				Octree octree( "data/simple_point_octree.ply", 10, 6, 1000 );
 				waitAsynCreation( octree );
 				
 				cout << octree << endl;

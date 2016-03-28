@@ -45,9 +45,9 @@ namespace model
 		using InsertionVector = vector< FrontList, ManagedAllocator< FrontList > >;
 		
 		/** Ctor.
-		 * @param sortedPlyFilename is the path to a .ply file with points sorted in morton code order.
+		 * @param dbFilename is the path to a database file which will be used to store nodes in an out-of-core approach.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
-		Front( const string& sortedPlyFilename, const OctreeDim& leafLvlDim, const int nThreads );
+		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads );
 		
 		/** Synchronized. Inserts a leaf sibling group into front so it can be tracked later on.
 		 * @param leafSiblings is the sibling group array */
@@ -102,10 +102,10 @@ namespace model
 		mutex m_frontMtx;
 		
 		/** FrontLists that need to be inserted into front. */
-		InsertionVector m_insertionLists;
+		//InsertionVector m_insertionLists;
 		
 		/** Insertions done in the current insertion iteration. m_currentIterInsertions[ i ] have the insertions for
-		 * thread i. This list is spliced to m_insertionLists after notifyInsertionEnd() is called. */
+		 * thread i. This list is spliced into m_front after notifyInsertionEnd() is called. */
 		InsertionVector m_currentIterInsertions;
 		
 		/** Dimensions of the octree nodes at deepest level. */
@@ -122,8 +122,8 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	inline Front< Morton, Point >::Front( const string& sortedPlyFilename, const OctreeDim& leafLvlDim, const int nThreads )
-	: m_sql( sortedPlyFilename ),
+	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads )
+	: m_sql( dbFilename ),
 	m_leafLvlDim( leafLvlDim ),
 	m_currentIterInsertions( nThreads ),
 	m_processedNodes( 0ul ),
@@ -134,12 +134,22 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::turnReleaseOn()
 	{
+		// Debug
+		{
+			cout << "Front release on" << endl << endl;
+		}
+		
 		m_releaseFlag = true;
 	}
 	
 	template< typename Morton, typename Point >
 	void Front< Morton, Point >::turnReleaseOff()
 	{
+		// Debug
+		{
+			cout << "Front release off" << endl << endl;
+		}
+		
 		m_releaseFlag = false;
 	}
 	
@@ -152,6 +162,12 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::insertIntoFront( Node& node, unsigned char level, int threadIdx )
 	{
+		// Debug
+// 		{
+// 			cout << "Front insertion: " << OctreeDim( m_leafLvlDim, level ).calcMorton( node ).getPathToRoot( true )
+// 				 << endl << endl;
+// 		}
+		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, level ) );
 	}
@@ -159,9 +175,13 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::notifyInsertionEnd()
 	{
-		lock_guard< mutex > lock( m_frontMtx);
+		{
+			cout << "Notify insertion end: " << endl << endl;
+		}
 		
-		for( FrontList list : m_insertionLists )
+		lock_guard< mutex > lock( m_frontMtx );
+		
+		for( FrontList list : m_currentIterInsertions )
 		{
 			m_front.splice( m_front.end(), list );
 		}
@@ -182,6 +202,11 @@ namespace model
 		{
 			lock_guard< mutex > lock( m_frontMtx );
 			frontEnd = m_front.end();
+			
+			// Debug
+			{
+				cout << "Tracking front. Size: " << m_front.size() << endl << endl;
+			}
 		}
 		
 		for( FrontListIter frontIt = m_front.begin(); frontIt != frontEnd;/* */)
@@ -214,6 +239,11 @@ namespace model
 		OctreeDim nodeLvlDim( m_leafLvlDim, frontNode.m_lvl );
 		Morton morton = nodeLvlDim.calcMorton( node );
 		Node* parentNode = node.parent();
+		
+		// Debug
+		{
+			cout << "Tracking: " << morton.getPathToRoot( true ) << endl << endl;
+		}
 		
 		if( parentNode != nullptr )
 		{
