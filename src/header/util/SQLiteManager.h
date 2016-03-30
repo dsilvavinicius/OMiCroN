@@ -30,6 +30,8 @@ namespace util
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		
+		using Node = OctreeNode;
+		
 		using OctreeNodePtr = shared_ptr< OctreeNode >;
 		using NodePtrVector = vector< OctreeNodePtr, ManagedAllocator< OctreeNodePtr > >;
 		using NodeVector = vector< OctreeNode, ManagedAllocator< OctreeNode > >;

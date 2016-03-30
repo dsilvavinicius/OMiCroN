@@ -246,7 +246,7 @@ namespace model
 				NodeArray nodes = sql.getNodes( a, b );
 				sql.endTransaction();
 				
-				ASSERT_EQ( 6, nodes.size() );
+				ASSERT_EQ( 4, nodes.size() );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -276,7 +276,7 @@ namespace model
 				NodeArray nodes = sql.getNodes( a, b );
 				sql.endTransaction();
 				
-				ASSERT_EQ( 8, nodes.size() );
+				ASSERT_EQ( 4, nodes.size() );
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
