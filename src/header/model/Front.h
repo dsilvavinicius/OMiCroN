@@ -72,14 +72,15 @@ namespace model
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
-		void trackNode( FrontListIter& frontIt, FrontListIter& beforeFrontEnd, Node*& lastParent, Renderer& renderer,
+		bool trackNode( FrontListIter& frontIt, FrontListIter& beforeFrontEnd, Node*& lastParent, Renderer& renderer,
 						const Float projThresh );
 		
 		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
 						 FrontListIter& frontIt, FrontListIter& beforeFrontEnd, Renderer& renderer,
 				   const Float projThresh ) const;
 		
-		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, Renderer& renderer );
+		bool prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, FrontListIter& beforeFrontEnd,
+					Renderer& renderer );
 		
 		bool checkBranch( const OctreeDim& nodeLvlDim, const Node& node, const Morton& morton, Renderer& renderer,
 						  const Float projThresh, bool& out_isCullable ) const;
@@ -120,6 +121,9 @@ namespace model
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
+		
+		// Debug
+		mutex m_logMutex;
 	};
 	
 	template< typename Morton, typename Point >
@@ -137,6 +141,7 @@ namespace model
 	{
 		// Debug
 		{
+			lock_guard< mutex > lock( m_logMutex );
 			cout << "Front release on" << endl << endl;
 		}
 		
@@ -148,6 +153,7 @@ namespace model
 	{
 		// Debug
 		{
+			lock_guard< mutex > lock( m_logMutex );
 			cout << "Front release off" << endl << endl;
 		}
 		
@@ -164,10 +170,11 @@ namespace model
 	inline void Front< Morton, Point >::insertIntoFront( Node& node, unsigned char level, int threadIdx )
 	{
 		// Debug
-// 		{
-// 			cout << "Front insertion: " << OctreeDim( m_leafLvlDim, level ).calcMorton( node ).getPathToRoot( true )
-// 				 << endl << endl;
-// 		}
+		{
+			lock_guard< mutex > lock( m_logMutex );
+			cout << "Front insertion: " << OctreeDim( m_leafLvlDim, level ).calcMorton( node ).getPathToRoot( true )
+				 << endl << endl;
+		}
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, level ) );
@@ -176,16 +183,22 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::notifyInsertionEnd()
 	{
-		{
-			cout << "Notify insertion end: " << endl << endl;
-		}
-		
 		lock_guard< mutex > lock( m_frontMtx );
 		
-		for( FrontList list : m_currentIterInsertions )
+		for( FrontList& list : m_currentIterInsertions )
 		{
 			m_front.splice( m_front.end(), list );
 		}
+		
+		// Debug
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Notify insertion end. Fron after insertion:" << endl << endl;
+// 			for( FrontNode& node : m_front )
+// 			{
+// 				cout << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).getPathToRoot( true ) << endl;
+// 			}
+// 		}
 	}
 	
 	template< typename Morton, typename Point >
@@ -197,7 +210,7 @@ namespace model
 		bool isFrontEmpty = false;
 		// The stop condition is the node before the front end instead of the front end itself. It's because the front
 		// end can be changed in parallel by the hierarchy creation thread if nodes are inserted into front. Specifically,
-		// the last node cannot be nor prunned since its sibling group can be incomplete nor branched because list
+		// the last node cannot be prunned, since its sibling group can be incomplete, nor branched, because list
 		// insertion requires an iterator to a position after the insertion point.
 		FrontListIter beforeFrontEnd; 
 		{
@@ -208,15 +221,24 @@ namespace model
 			{
 				beforeFrontEnd = prev( m_front.end() );
 			}
-			
-			// Debug
-			{
-				cout << "Tracking front. Size: " << m_front.size() << endl << endl;
-			}
 		}
 		
 		if( !isFrontEmpty )
 		{
+			// Debug
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				OctreeDim dim( m_leafLvlDim, beforeFrontEnd->m_lvl );
+				
+				cout << "Tracking front. Size: " << m_front.size() << endl << "Before end it:"
+					 << dim.calcMorton( beforeFrontEnd->m_octreeNode ).getPathToRoot( true ) << endl;
+					 
+				for( FrontNode& node : m_front )
+				{
+					cout << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).getPathToRoot( true ) << endl;
+				}
+			}
+			
 			if( m_releaseFlag )
 			{
 				m_sql.beginTransaction();
@@ -224,9 +246,10 @@ namespace model
 			
 			FrontListIter frontIt = m_front.begin();
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			while( frontIt != beforeFrontEnd )
+			bool reachedEnd = false;
+			while( !reachedEnd )
 			{
-				trackNode( frontIt, beforeFrontEnd, lastParent, renderer, projThresh );
+				reachedEnd = trackNode( frontIt, beforeFrontEnd, lastParent, renderer, projThresh );
 			}
 			
 			// The last node is always rendered if not culled, since nor prunning nor branching can be applied on it.
@@ -240,6 +263,12 @@ namespace model
 			if( m_releaseFlag )
 			{
 				m_sql.endTransaction();
+			}
+			
+			// Debug
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "Tracking front end." << endl << endl;
 			}
 		}
 		
@@ -255,7 +284,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::trackNode( FrontListIter& frontIt, FrontListIter& beforeFrontEnd,
+	inline bool Front< Morton, Point >::trackNode( FrontListIter& frontIt, FrontListIter& beforeFrontEnd,
 												   Node*& lastParent, Renderer& renderer, const Float projThresh )
 	{
 		FrontNode& frontNode = *frontIt;
@@ -266,6 +295,7 @@ namespace model
 		
 		// Debug
 		{
+			lock_guard< mutex > lock( m_logMutex );
 			cout << "Tracking: " << morton.getPathToRoot( true ) << endl << endl;
 		}
 		
@@ -278,8 +308,13 @@ namespace model
 		
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, beforeFrontEnd, renderer, projThresh ) )
 			{
-				prune( frontIt, nodeLvlDim, parentNode, renderer );
-				return;
+				// Debug
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					cout << "Prunning: " << morton.getPathToRoot( true ) << endl << endl;
+				}
+				
+				return prune( frontIt, nodeLvlDim, parentNode, beforeFrontEnd, renderer );
 			}
 		}
 		
@@ -288,16 +323,29 @@ namespace model
 		//cout << "Tracking: " << code->getPathToRoot( true ) << endl;
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
-			//cout << "Branching" << endl << endl;
+			// Debug
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "Branching: " << morton.getPathToRoot( true ) << endl << endl;
+			}
+			
 			branch( frontIt, node, nodeLvlDim, renderer );
-			return;
+			return false;
 		}
 		
 		if( !isCullable )
 		{
+			// Debug
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				cout << "Staying: " << morton.getPathToRoot( true ) << endl << endl;
+			}
+			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
 		}
+		
+		return false;
 	}
 	
 	template< typename Morton, typename Point >
@@ -325,7 +373,6 @@ namespace model
 		{
 			if( !m_leafLvlLoadedFlag )
 			{
-				// The last sibling group cannot be prunned until all leaf level nodes are loaded.
 				FrontListIter siblingIter = frontIt;
 				while( siblingIter != beforeFrontEnd && siblingIter++->m_octreeNode.parent() == parentNode )
 				{}
@@ -341,8 +388,8 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode,
-											   Renderer& renderer )
+	inline bool Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode,
+											   FrontListIter& beforeFrontEnd, Renderer& renderer )
 	{
 		//cout << "=== Prunning begins ===" << endl << endl;
 		
@@ -351,14 +398,23 @@ namespace model
 			releaseSiblings( parentNode->child(), nodeLvlDim );
 		}
 		
+		bool reachedEnd = false;
+		
 		while( frontIt->m_octreeNode.parent() == parentNode )
 		{
+			if( frontIt == beforeFrontEnd )
+			{
+				reachedEnd = true;
+			}
+			
 			++m_processedNodes;
 			frontIt = m_front.erase( frontIt );
 		}
 		
-		FrontNode frontNode( *parentNode, nodeLvlDim.m_nodeLvl + 1 );
+		FrontNode frontNode( *parentNode, nodeLvlDim.m_nodeLvl - 1 );
 		setupNodeRendering( frontIt, frontNode, renderer );
+		
+		return reachedEnd;
 		
 		//cout << "=== Prunning ends ===" << endl << endl;
 	}
