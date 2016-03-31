@@ -61,7 +61,7 @@ namespace model
 		vector<T> decode() const;
 		
 		/** Computes the level of this code. */
-		unsigned int getLevel() const;
+		uint getLevel() const;
 		
 		T getBits() const;
 		
@@ -190,22 +190,6 @@ namespace model
 	{
 		unsigned int level = getLevel();
 		return decode(level);
-	}
-	
-	template <typename T>
-	inline unsigned int MortonCode<T>::getLevel() const
-	{
-		// Finds the MortonCode level.
-		unsigned int numBits = sizeof(T) * 8;
-		T bits = m_bits;
-		unsigned int level = 0;
-		for (level = numBits / 3; level > 0; --level)
-		{
-			unsigned int shift = level * 3;
-			if ((bits & ((T)1 << shift)) != 0) { break; }
-		}
-		
-		return level;
 	}
 	
 	template <typename T>
@@ -404,24 +388,6 @@ namespace model
 		return x;
 	}
 	
-	template <>
-	inline unsigned int MortonCode< unsigned int >::compact3(unsigned int x) const
-	{
-		x &= 0x09249249;
-		x = (x ^ (x >>  2)) & 0x030c30c3;
-		x = (x ^ (x >>  4)) & 0x0300f00f;
-		x = (x ^ (x >>  8)) & 0xff0000ff;
-		x = (x ^ (x >> 16)) & 0x000003ff;
-		
-		return x;
-	}
-	
-	template<>
-	inline uint MortonCode< uint >::maxLvl()
-	{
-		return 10;
-	}
-	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:
 	 * http://stackoverflow.com/a/18528775/1042102 */
 	template <>
@@ -433,6 +399,18 @@ namespace model
 		x = (x | x << 8UL) & 0x100f00f00f00f00fUL;
 		x = (x | x << 4UL) & 0x10c30c30c30c30c3UL;
 		x = (x | x << 2UL) & 0x1249249249249249UL;
+		
+		return x;
+	}
+	
+	template <>
+	inline unsigned int MortonCode< unsigned int >::compact3(unsigned int x) const
+	{
+		x &= 0x09249249;
+		x = (x ^ (x >>  2)) & 0x030c30c3;
+		x = (x ^ (x >>  4)) & 0x0300f00f;
+		x = (x ^ (x >>  8)) & 0xff0000ff;
+		x = (x ^ (x >> 16)) & 0x000003ff;
 		
 		return x;
 	}
@@ -451,9 +429,27 @@ namespace model
 	}
 	
 	template<>
+	inline uint MortonCode< uint >::maxLvl()
+	{
+		return 10;
+	}
+	
+	template<>
 	inline uint MortonCode< ulong >::maxLvl()
 	{
 		return 21;
+	}
+	
+	template<>
+	inline uint MortonCode< uint >::getLevel() const
+	{
+		return ( 31u - __builtin_clz( m_bits ) ) / 3u;
+	}
+	
+	template<>
+	inline uint MortonCode< ulong >::getLevel() const
+	{
+		return ( 63ul - __builtin_clz( m_bits ) ) / 3ul;
 	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:

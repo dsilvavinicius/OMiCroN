@@ -76,7 +76,7 @@ namespace model
 			using Octree = typename OctreeTestWrapper::Octree;
 			
 			// Expected hierarchy. 0x1 is the root node. A node with an arrow that points to nothing means that
-			// it is a sibling of the node at the same position at the line immediately above.
+			// it is a sibling of the node at the same position at the text line immediately above.
 			//
 			// 0xa6c0 -> 0x14d8 -> 0x29b -> 0x53 -> 0xa -> 0x1
 			// 0xa6c3 -> 

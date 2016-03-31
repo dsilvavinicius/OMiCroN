@@ -31,13 +31,13 @@ namespace model
 		/** The node type that is used in front. */
 		typedef struct FrontNode
 		{
-			FrontNode( Node& node, unsigned char lvl )
+			FrontNode( Node& node, const Morton& morton )
 			: m_octreeNode( node ),
-			m_lvl( lvl )
+			m_morton( morton )
 			{}
 			
 			Node& m_octreeNode;
-			unsigned char m_lvl;
+			Morton m_morton;
 		} FrontNode;
 		
 		using FrontList = list< FrontNode, ManagedAllocator< FrontNode > >;
@@ -49,11 +49,19 @@ namespace model
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
 		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads );
 		
-		/** Synchronized. Inserts a leaf sibling group into front so it can be tracked later on.
-		 * @param leafSiblings is the sibling group array */
-		void insertIntoFront( Node& node, unsigned char level, int threadIdx );
+		/** Synchronized. Inserts a leaf node into front so it can be tracked later on. If a placeholder in a deeper level
+		 * for this node is already inserted, it is replaced by the new node.
+		 * @param node is a reference to the node to be inserted.
+		 * @param morton is node's morton code id.
+		 * @param threadIdx is the hierarchy creation thread index of the caller thread. */
+		void insertIntoFront( Node& node, const Morton& morton, int threadIdx );
 		
-		/** Notifies that all threads have finished an insertion iteration. */
+		/** Synchronized. Inserts a placeholder for a node that will be defined later in the shallower levels. This node
+		 * will be replaced on front tracking if a substitute is already defined.
+		 * @param morton is the placeholder node id. */
+		void insertPlaceholder( const Morton& morton, int threadIdx );
+		
+		/** Synchronized. Notifies that all threads have finished an insertion iteration. */
 		void notifyInsertionEnd();
 		
 		/** Indicates that node release is needed. The front tracking will release nodes until a call to turnReleaseOff()
@@ -72,15 +80,12 @@ namespace model
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
-		bool trackNode( FrontListIter& frontIt, FrontListIter& beforeFrontEnd, Node*& lastParent, Renderer& renderer,
-						const Float projThresh );
+		void trackNode( FrontListIter& frontIt, Node*& lastParent, Renderer& renderer, const Float projThresh );
 		
 		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
-						 FrontListIter& frontIt, FrontListIter& beforeFrontEnd, Renderer& renderer,
-				   const Float projThresh ) const;
+						 FrontListIter& frontIt, Renderer& renderer, const Float projThresh ) const;
 		
-		bool prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, FrontListIter& beforeFrontEnd,
-					Renderer& renderer );
+		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, Renderer& renderer );
 		
 		bool checkBranch( const OctreeDim& nodeLvlDim, const Node& node, const Morton& morton, Renderer& renderer,
 						  const Float projThresh, bool& out_isCullable ) const;
@@ -100,15 +105,23 @@ namespace model
 		/** Front internal representation. */
 		FrontList m_front;
 		
+		/** Node used as a placeholder in the front. It is used whenever it is known that a node should occupy a given
+		 * position, but the node itself is not defined yet because the hierarchy creation algorithm have not reached
+		 * the needed level. */
+		Node m_placeholder;
+		
 		/** Mutex to synchronize insertions into front with the rendering procedure. */
 		mutex m_frontMtx;
 		
 		/** FrontLists that need to be inserted into front. */
 		//InsertionVector m_insertionLists;
 		
-		/** Insertions done in the current insertion iteration. m_currentIterInsertions[ i ] have the insertions for
-		 * thread i. This list is spliced into m_front after notifyInsertionEnd() is called. */
+		/** Nodes pending insertion in the current insertion iteration. m_currentIterInsertions[ t ] have the insertions
+		 * for thread t. This list is spliced into m_perLvlInsertions after notifyInsertionEnd() is called. */
 		InsertionVector m_currentIterInsertions;
+		
+		/** All nodes pendeing insertion in earlier iterations, with m_perLvlInsertions[ l ] having the nodes for level l. */
+		InsertionVector m_perLvlInsertions;
 		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
@@ -131,6 +144,7 @@ namespace model
 	: m_sql( dbFilename ),
 	m_leafLvlDim( leafLvlDim ),
 	m_currentIterInsertions( nThreads ),
+	m_perLvlInsertions( m_leafLvlDim.m_nodeLvl + 1 ),
 	m_processedNodes( 0ul ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
@@ -167,7 +181,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::insertIntoFront( Node& node, unsigned char level, int threadIdx )
+	inline void Front< Morton, Point >::insertIntoFront( Node& node, const Morton& morton, int threadIdx )
 	{
 		// Debug
 // 		{
@@ -177,28 +191,49 @@ namespace model
 // 		}
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		list.push_back( FrontNode( node, level ) );
+		list.push_back( FrontNode( node, morton ) );
+	}
+	
+	template< typename Morton, typename Point >
+	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
+	{
+		// Debug
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Front insertion: " << OctreeDim( m_leafLvlDim, level ).calcMorton( node ).getPathToRoot( true )
+// 				 << endl << endl;
+// 		}
+		
+		FrontList& list = m_currentIterInsertions[ threadIdx ];
+		list.push_back( FrontNode( m_placeholder, morton ) );
 	}
 	
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::notifyInsertionEnd()
 	{
-		lock_guard< mutex > lock( m_frontMtx );
-		
-		for( FrontList& list : m_currentIterInsertions )
+		if( !m_currentIterInsertions.empty() )
 		{
-			m_front.splice( m_front.end(), list );
-		}
+			lock_guard< mutex > lock( m_frontMtx );
+			int lvl = m_currentIterInsertions[ 0 ].front().m_morton.getLevel();
 		
-		// Debug
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			cout << "Notify insertion end. Fron after insertion:" << endl << endl;
-// 			for( FrontNode& node : m_front )
+			for( FrontList& list : m_currentIterInsertions )
+			{
+				m_perLvlInsertions[ lvl ].splice( m_front.end(), list );
+			}
+			
+			// Debug
 // 			{
-// 				cout << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).getPathToRoot( true ) << endl;
+// 				if( !m_front.empty() )
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					cout << "Notify insertion end. Fron after insertion:" << endl << endl;
+// 					for( FrontNode& node : m_front )
+// 					{
+// 						cout << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).getPathToRoot( true ) << endl;
+// 					}
+// 				}
 // 			}
-// 		}
+		}
 	}
 	
 	template< typename Morton, typename Point >
@@ -207,69 +242,30 @@ namespace model
 		m_processedNodes = 0ul;
 		auto start = Profiler::now();
 		
-		bool isFrontEmpty = false;
-		// The stop condition is the node before the front end instead of the front end itself. It's because the front
-		// end can be changed in parallel by the hierarchy creation thread if nodes are inserted into front. Specifically,
-		// the last node cannot be prunned, since its sibling group can be incomplete, nor branched, because list
-		// insertion requires an iterator to a position after the insertion point.
-		FrontListIter beforeFrontEnd; 
+		// Insert all leaf level pending nodes and placeholders.
+		m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
+		
+		// Debug
 		{
-			lock_guard< mutex > lock( m_frontMtx );
-			isFrontEmpty = m_front.empty();
+			lock_guard< mutex > lock( m_logMutex );
 			
-			if( !isFrontEmpty )
-			{
-				beforeFrontEnd = prev( m_front.end() );
-			}
+			cout << "Tracking front. Size: " << m_front.size() << endl << endl;
 		}
 		
-		if( !isFrontEmpty )
+		if( m_releaseFlag )
 		{
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				OctreeDim dim( m_leafLvlDim, beforeFrontEnd->m_lvl );
-// 				
-// 				cout << "Tracking front. Size: " << m_front.size() << endl << "Before end it:"
-// 					 << dim.calcMorton( beforeFrontEnd->m_octreeNode ).getPathToRoot( true ) << endl;
-// 					 
-// 				for( FrontNode& node : m_front )
-// 				{
-// 					cout << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).getPathToRoot( true ) << endl;
-// 				}
-// 			}
-			
-			if( m_releaseFlag )
-			{
-				m_sql.beginTransaction();
-			}
-			
-			FrontListIter frontIt = m_front.begin();
-			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			bool reachedEnd = false;
-			while( !reachedEnd )
-			{
-				reachedEnd = trackNode( frontIt, beforeFrontEnd, lastParent, renderer, projThresh );
-			}
-			
-			// The last node is always rendered if not culled, since nor prunning nor branching can be applied on it.
-			OctreeDim lastNodeDim( m_leafLvlDim, frontIt->m_lvl );
-			pair< Vec3, Vec3 > lastNodeBox = lastNodeDim.getNodeBoundaries( frontIt->m_octreeNode );
-			if( !renderer.isCullable( lastNodeBox ) )
-			{
-				renderer.handleNodeRendering( frontIt->m_octreeNode.getContents() );
-			}
-			
-			if( m_releaseFlag )
-			{
-				m_sql.endTransaction();
-			}
-			
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Tracking front end." << endl << endl;
-// 			}
+			m_sql.beginTransaction();
+		}
+		
+		Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
+		for( FrontListIter frontIt = m_front.begin(); frontIt != m_front.end(); /**/ )
+		{
+			trackNode( frontIt, lastParent, renderer, projThresh );
+		}
+		
+		if( m_releaseFlag )
+		{
+			m_sql.endTransaction();
 		}
 		
 		int traversalTime = Profiler::elapsedTime( start );
@@ -284,13 +280,24 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >::trackNode( FrontListIter& frontIt, FrontListIter& beforeFrontEnd,
-												   Node*& lastParent, Renderer& renderer, const Float projThresh )
+	inline void Front< Morton, Point >::trackNode( FrontListIter& frontIt, Node*& lastParent, Renderer& renderer,
+												   const Float projThresh )
 	{
 		FrontNode& frontNode = *frontIt;
 		Node& node = frontNode.m_octreeNode;
-		OctreeDim nodeLvlDim( m_leafLvlDim, frontNode.m_lvl );
-		Morton morton = nodeLvlDim.calcMorton( node );
+		Morton& morton = frontNode.m_morton;
+		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
+		
+		// ==== CONTINUE HERE ==== Need to find an O(1) solution to substitute placeholders.
+// 		if( node == m_placeholder )
+// 		{
+// 			// Verify if a substitute for this placeholder is defined in the level above.
+// 			FrontNode& nextLvlNode = m_perLvlInsertions[ nodeLvlDim.m_nodeLvl ].front();
+// 			
+// 			Morton parentMorton = .;
+// 			if(  )
+// 		}
+		
 		Node* parentNode = node.parent();
 		
 		// Debug
@@ -306,7 +313,7 @@ namespace model
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 		
-			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, beforeFrontEnd, renderer, projThresh ) )
+			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, renderer, projThresh ) )
 			{
 				// Debug
 // 				{
@@ -314,7 +321,7 @@ namespace model
 // 					cout << "Prunning: " << morton.getPathToRoot( true ) << endl << endl;
 // 				}
 				
-				return prune( frontIt, nodeLvlDim, parentNode, beforeFrontEnd, renderer );
+				prune( frontIt, nodeLvlDim, parentNode, renderer );
 			}
 		}
 		
@@ -330,7 +337,6 @@ namespace model
 // 			}
 			
 			branch( frontIt, node, nodeLvlDim, renderer );
-			return false;
 		}
 		
 		if( !isCullable )
@@ -344,15 +350,12 @@ namespace model
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
 		}
-		
-		return false;
 	}
 	
 	template< typename Morton, typename Point >
 	inline bool Front< Morton, Point >::checkPrune( const Morton& parentMorton, const Node* parentNode,
 													const OctreeDim& parentLvlDim, FrontListIter& frontIt,
-												 FrontListIter& beforeFrontEnd, Renderer& renderer,
-												 const Float projThresh ) const
+												 Renderer& renderer, const Float projThresh ) const
 	{
 		pair< Vec3, Vec3 > parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
@@ -373,11 +376,12 @@ namespace model
 		{
 			if( !m_leafLvlLoadedFlag )
 			{
+				// The last sibling group cannot be prunned because it can be incomplete yet.
 				FrontListIter siblingIter = frontIt;
-				while( siblingIter != beforeFrontEnd && siblingIter++->m_octreeNode.parent() == parentNode )
+				while( siblingIter != m_front.end() && siblingIter++->m_octreeNode.parent() == parentNode )
 				{}
 				
-				if( siblingIter == beforeFrontEnd && siblingIter->m_octreeNode.parent() == parentNode )
+				if( siblingIter == m_front.end() )
 				{
 					pruneFlag = false;
 				}
@@ -388,33 +392,25 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode,
-											   FrontListIter& beforeFrontEnd, Renderer& renderer )
+	inline void Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode,
+											   Renderer& renderer )
 	{
 		//cout << "=== Prunning begins ===" << endl << endl;
+		Morton parentMorton = *frontIt->m_morton.traverseUp();
 		
 		if( m_releaseFlag )
 		{
 			releaseSiblings( parentNode->child(), nodeLvlDim );
 		}
 		
-		bool reachedEnd = false;
-		
 		while( frontIt->m_octreeNode.parent() == parentNode )
 		{
-			if( frontIt == beforeFrontEnd )
-			{
-				reachedEnd = true;
-			}
-			
 			++m_processedNodes;
 			frontIt = m_front.erase( frontIt );
 		}
 		
-		FrontNode frontNode( *parentNode, nodeLvlDim.m_nodeLvl - 1 );
+		FrontNode frontNode( *parentNode, parentMorton );
 		setupNodeRendering( frontIt, frontNode, renderer );
-		
-		return reachedEnd;
 		
 		//cout << "=== Prunning ends ===" << endl << endl;
 	}
@@ -451,7 +447,7 @@ namespace model
 		{
 			Node& child = children[ i ];
 			pair< Vec3, Vec3 > box = childLvlDim.getNodeBoundaries( child );
-			FrontNode frontNode( child, childLvlDim.m_nodeLvl );
+			FrontNode frontNode( child, childLvlDim.calcMorton( child ) );
 			
 			if( !renderer.isCullable( box ) )
 			{

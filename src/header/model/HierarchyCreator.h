@@ -70,7 +70,7 @@ namespace model
 		size_t updatedWorkListSize( int lvl );
 		
 		/** Sets the parent pointer for all children of a given node. */
-		void setParent( Node& node, const char childLvl, const int threadIdx ) const;
+		void setParent( Node& node, const int threadIdx ) const;
 		
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const;
@@ -86,10 +86,10 @@ namespace model
 		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim );
 		
 		/** Creates a node from its solo child node. */
-		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const char childLvl, const int threadIdx ) const;
+		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx ) const;
 		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
-		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const char childLvl, const int threadIdx ) const;
+		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx ) const;
 		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
@@ -451,7 +451,7 @@ namespace model
 // 									}
 									
 									output.push_back( createNodeFromSingleChild( std::move( siblings[ 0 ] ), true,
-																				 m_octreeDim.m_nodeLvl, threadIdx ) );
+																				 threadIdx ) );
 								}
 								else
 								{
@@ -462,8 +462,7 @@ namespace model
 // 									}
 									
 									// LOD
-									Node inner = createInnerNode( std::move( siblings ), nSiblings, m_octreeDim.m_nodeLvl,
-																  threadIdx );
+									Node inner = createInnerNode( std::move( siblings ), nSiblings, threadIdx );
 									
 // 									if( isReleasing && !isBoundarySiblingGroup )
 // 									{
@@ -681,7 +680,7 @@ namespace model
 		
 	/** Sets the parent pointer for all children of a given node. */
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const char childLvl, const int threadIdx ) const
+	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx ) const
 	{
 
 		// Debug
@@ -693,6 +692,7 @@ namespace model
 // 				}
 // 			}
 		
+		OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 		NodeArray& children = node.child();
 		for( int i = 0; i < children.size(); ++i )
 		{
@@ -713,7 +713,7 @@ namespace model
 			
 			if( child.isLeaf() )
 			{
-				m_front.insertIntoFront( child, childLvl, threadIdx );
+				m_front.insertIntoFront( child, childDim.calcMorton( child ), threadIdx );
 			}
 		}
 	}
@@ -799,14 +799,14 @@ namespace model
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					// Parent pointer needs to be fixed.
-					setParent( mergedChild[ i ], nextLvlDim.m_nodeLvl + 2, 0 );
+					setParent( mergedChild[ i ], 0 );
 				}
 				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
 				{
 					int idx = prevLastNodeChild.size() + i;
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					// Parent pointer needs to be fixed.
-					setParent( mergedChild[ idx ], nextLvlDim.m_nodeLvl + 2, 0 );
+					setParent( mergedChild[ idx ], 0 );
 				}
 				
 				nextFirstNode.setChildren( std::move( mergedChild ) );
@@ -1006,8 +1006,15 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createNodeFromSingleChild( Node&& child, bool isLeaf, const char childLvl, const int threadIdx ) const
+	::createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx ) const
 	{
+		// Setup a placeholder in front if the node is in the leaf level.
+		Morton childMorton = m_octreeDim.calcMorton( child );
+		if( childMorton.getLevel() == m_leafLvlDim.m_nodeLvl )
+		{
+			m_front.insertPlaceholder( childMorton, threadIdx );
+		}
+		
 		const Array< PointPtr >& childPoints = child.getContents();
 		
 		int numSamplePoints = std::max( 1., childPoints.size() * 0.125 );
@@ -1029,31 +1036,40 @@ namespace model
 			Node& finalChild = node.child()[ 0 ];
 			if( !finalChild.isLeaf() )
 			{
-				setParent( finalChild, childLvl + 1, threadIdx );
+				setParent( finalChild, threadIdx );
 			}
 		}
 		
 		return node;
 	}
 	
+	// TODO: Probably there is no need for the first for loop...
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createInnerNode( NodeArray&& inChildren, uint nChildren, const char childLvl, const int threadIdx ) const
+	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx ) const
 	{
 		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
 		using MapEntry = typename Map::value_type;
 		
 		if( nChildren == 1 )
 		{
-			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, childLvl, threadIdx );
+			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, threadIdx );
 		}
 		else
 		{
 			NodeArray children( nChildren );
 			
+			// Verify if placeholders are necessary.
+			bool frontPlaceholdersOn = ( m_octreeDim.calcMorton( children[ 0 ] ).getLevel() == m_leafLvlDim.m_nodeLvl );
+			
 			for( int i = 0; i < children.size(); ++i )
 			{
 				children[ i ] = std::move( inChildren[ i ] );
+				
+				if( frontPlaceholdersOn )
+				{
+					m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
+				}
 				
 				// Debug
 // 				if( i > 0 )
@@ -1083,7 +1099,7 @@ namespace model
 				// Set parental relationship of children.
 				if( !child.isLeaf() )
 				{
-					setParent( child, childLvl + 1, threadIdx );
+					setParent( child, threadIdx );
 				}
 			}
 			
