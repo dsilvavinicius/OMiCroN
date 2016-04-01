@@ -80,8 +80,11 @@ namespace model
 		 * @returns a pair with first element being a and second element being b. */
 		pair< MortonCodePtr< T >, MortonCodePtr< T > > getChildInterval() const;
 		
-		/** Check if this MortonCode is child the code passed as parameter. */
+		/** Checks if this MortonCode is child the code passed as parameter. */
 		bool isChildOf( const MortonCode& code ) const;
+		
+		/** Checks if this MortonCode is descendent of code. */
+		bool isDescendantOf( const MortonCode& code ) const;
 		
 		/** Gets the morton code that precede this one. */
 		MortonCodePtr< T > getPrevious() const;
@@ -258,6 +261,14 @@ namespace model
 	inline bool MortonCode< T >::isChildOf( const MortonCode& code ) const
 	{
 		return code.getBits() == ( m_bits >> 3 );
+	}
+	
+	template <typename T>
+	inline bool MortonCode< T >::isDescendantOf( const MortonCode& code ) const
+	{
+		uint ancestorLvl = code.getLevel();
+		uint lvlDiff = getLevel() - ancestorLvl;
+		return code.getBits() == ( m_bits >> 3 * lvlDiff );
 	}
 	
 	template <typename T>

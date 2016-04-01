@@ -36,6 +36,17 @@ namespace model
 			m_morton( morton )
 			{}
 			
+			FrontNode( const FrontNode& other )
+			: m_octreeNode( other.m_octreeNode ),
+			m_morton( other.m_morton )
+			{}
+			
+			FrontNode& operator=( const FrontNode& other )
+			{
+				m_octreeNode = other.m_octreeNode;
+				m_morton = other.m_morton;
+			}
+			
 			Node& m_octreeNode;
 			Morton m_morton;
 		} FrontNode;
@@ -80,7 +91,8 @@ namespace model
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
-		void trackNode( FrontListIter& frontIt, Node*& lastParent, Renderer& renderer, const Float projThresh );
+		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
+						const Float projThresh );
 		
 		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
 						 FrontListIter& frontIt, Renderer& renderer, const Float projThresh ) const;
@@ -110,8 +122,8 @@ namespace model
 		 * the needed level. */
 		Node m_placeholder;
 		
-		/** Mutex to synchronize insertions into front with the rendering procedure. */
-		mutex m_frontMtx;
+		/** Mutex to synchronize m_perLvlInsertions operations. */
+		vector< mutex > m_perLvlMtx;
 		
 		/** FrontLists that need to be inserted into front. */
 		//InsertionVector m_insertionLists;
@@ -120,7 +132,7 @@ namespace model
 		 * for thread t. This list is spliced into m_perLvlInsertions after notifyInsertionEnd() is called. */
 		InsertionVector m_currentIterInsertions;
 		
-		/** All nodes pendeing insertion in earlier iterations, with m_perLvlInsertions[ l ] having the nodes for level l. */
+		/** All pending insertion nodes. m_perLvlInsertions[ l ] have the nodes for level l. */
 		InsertionVector m_perLvlInsertions;
 		
 		/** Dimensions of the octree nodes at deepest level. */
@@ -145,6 +157,7 @@ namespace model
 	m_leafLvlDim( leafLvlDim ),
 	m_currentIterInsertions( nThreads ),
 	m_perLvlInsertions( m_leafLvlDim.m_nodeLvl + 1 ),
+	m_perLvlMtx( m_leafLvlDim.m_nodeLvl + 1 ),
 	m_processedNodes( 0ul ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
@@ -213,8 +226,8 @@ namespace model
 	{
 		if( !m_currentIterInsertions.empty() )
 		{
-			lock_guard< mutex > lock( m_frontMtx );
 			int lvl = m_currentIterInsertions[ 0 ].front().m_morton.getLevel();
+			lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 		
 			for( FrontList& list : m_currentIterInsertions )
 			{
@@ -242,14 +255,30 @@ namespace model
 		m_processedNodes = 0ul;
 		auto start = Profiler::now();
 		
-		// Insert all leaf level pending nodes and placeholders.
-		m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
-		
 		// Debug
 		{
 			lock_guard< mutex > lock( m_logMutex );
 			
 			cout << "Tracking front. Size: " << m_front.size() << endl << endl;
+		}
+		
+		{
+			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
+			// Insert all leaf level pending nodes and placeholders.
+			m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
+		}
+		
+		// The level from which the placeholders will be substituted in the one with max size.
+		size_t maxSize = 0;
+		int substitutionLvl = 0;
+		for( int i = 1; i < m_perLvlInsertions.size(); ++i )
+		{
+			lock_guard< mutex > lock( m_perLvlMtx[ i ] );
+			size_t currentMax = std::max( maxSize, m_perLvlInsertions.size() );
+			if( maxSize == currentMax )
+			{
+				substitutionLvl = i;
+			}
 		}
 		
 		if( m_releaseFlag )
@@ -260,7 +289,7 @@ namespace model
 		Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 		for( FrontListIter frontIt = m_front.begin(); frontIt != m_front.end(); /**/ )
 		{
-			trackNode( frontIt, lastParent, renderer, projThresh );
+			trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
 		}
 		
 		if( m_releaseFlag )
@@ -280,23 +309,31 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::trackNode( FrontListIter& frontIt, Node*& lastParent, Renderer& renderer,
-												   const Float projThresh )
+	inline void Front< Morton, Point >::trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl,
+												   Renderer& renderer, const Float projThresh )
 	{
 		FrontNode& frontNode = *frontIt;
 		Node& node = frontNode.m_octreeNode;
 		Morton& morton = frontNode.m_morton;
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
 		
-		// ==== CONTINUE HERE ==== Need to find an O(1) solution to substitute placeholders.
-// 		if( node == m_placeholder )
-// 		{
-// 			// Verify if a substitute for this placeholder is defined in the level above.
-// 			FrontNode& nextLvlNode = m_perLvlInsertions[ nodeLvlDim.m_nodeLvl ].front();
-// 			
-// 			Morton parentMorton = .;
-// 			if(  )
-// 		}
+		if( &node == &m_placeholder && substitutionLvl != 0 )
+		{
+			lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
+			FrontList& substitutionLvlList = m_perLvlInsertions[ substitutionLvl ];
+			FrontNode& substituteCandidate = substitutionLvlList.front();
+			
+			if( morton.isDescendantOf( substituteCandidate.m_morton ) )
+			{
+				*frontIt = substituteCandidate;
+				substitutionLvlList.erase( substitutionLvlList.begin() );
+			}
+			else 
+			{
+				frontIt++;
+				return;
+			}
+		}
 		
 		Node* parentNode = node.parent();
 		
