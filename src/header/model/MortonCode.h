@@ -268,7 +268,8 @@ namespace model
 	{
 		uint ancestorLvl = code.getLevel();
 		uint lvlDiff = getLevel() - ancestorLvl;
-		return code.getBits() == ( m_bits >> 3 * lvlDiff );
+		
+		return code.getBits() == ( m_bits >> ( 3 * lvlDiff ) );
 	}
 	
 	template <typename T>
@@ -460,7 +461,7 @@ namespace model
 	template<>
 	inline uint MortonCode< ulong >::getLevel() const
 	{
-		return ( 63ul - __builtin_clz( m_bits ) ) / 3ul;
+		return ( 63u - __builtin_clzl( m_bits ) ) / 3u;
 	}
 	
 	/** "Spreads" coordinate bits to build Morton code. Applied bit-wise operations are explained here:

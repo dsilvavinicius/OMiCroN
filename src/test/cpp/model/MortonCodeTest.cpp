@@ -71,6 +71,20 @@ namespace model
 			//			 "shifted > bits && ""MortonCode traversal overflow.""" );
 		}
 		
+		TEST_F( MortonCodeTest, getLevel )
+		{
+			ShallowMortonCode morton;
+			morton.build( 1u << 3 );
+			ASSERT_EQ( 1u, morton.getLevel() );
+			
+			morton.build( 1u << 30 );
+			ASSERT_EQ( 10u, morton.getLevel() );
+			
+			MediumMortonCode mediumMorton;
+			mediumMorton.build( 1ul << 60ul );
+			ASSERT_EQ( 20u, mediumMorton.getLevel() );
+		}
+		
 		TEST_F( MortonCodeTest, TraversalMedium )
 		{
 			MPV_DefaultManager::initInstance( 1000000 );
@@ -185,6 +199,52 @@ namespace model
 			code1.build( 0x3 );
 			
 			ASSERT_FALSE( code0.isChildOf( code1 ) );
+		}
+		
+		TEST_F( MortonCodeTest, isDescendantShallow )
+		{
+			ShallowMortonCode code0;
+			code0.build( 0xF );
+			
+			ShallowMortonCode code1;
+			code1.build( 0xFFF7 );
+			
+			ASSERT_TRUE( code1.isDescendantOf( code0 ) );
+			
+			code1.build( 0x8FF0 );
+			
+			ASSERT_FALSE( code1.isDescendantOf( code0 ) );
+			
+			code1.build( 0x1 );
+			
+			ASSERT_FALSE( code1.isDescendantOf( code0 ) );
+			
+			code1.build( 0xCF19ABC );
+			
+			ASSERT_FALSE( code1.isDescendantOf( code0 ) );
+		}
+		
+		TEST_F( MortonCodeTest, isDescendantMedium )
+		{
+			MediumMortonCode code0;
+			code0.build( 0xFFFFFFFFFFFFFul );
+			
+			MediumMortonCode code1;
+			code1.build( 0xFFFFFFFFFFFFFE01ul );
+			
+			ASSERT_TRUE( code1.isDescendantOf( code0 ) );
+			
+			code1.build( 0xFFFFFFFFFFFFEE01ul );
+			
+			ASSERT_FALSE( code1.isDescendantOf( code0 ) );
+			
+			code1.build( 0xF012578ul );
+			
+			ASSERT_FALSE( code1.isDescendantOf( code0 ) );
+			
+			code1.build( 0xF012578FFFFFFFFFul );
+			
+			ASSERT_FALSE( code1.isDescendantOf( code0 ) );
 		}
 		
 		TEST_F( MortonCodeTest, getFirstChild )
