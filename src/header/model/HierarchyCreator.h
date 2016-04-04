@@ -1060,7 +1060,7 @@ namespace model
 			NodeArray children( nChildren );
 			
 			// Verify if placeholders are necessary.
-			bool frontPlaceholdersOn = ( m_octreeDim.calcMorton( children[ 0 ] ).getLevel() == m_leafLvlDim.m_nodeLvl );
+			bool frontPlaceholdersOn = ( m_octreeDim.calcMorton( inChildren[ 0 ] ).getLevel() == m_leafLvlDim.m_nodeLvl );
 			
 			for( int i = 0; i < children.size(); ++i )
 			{
