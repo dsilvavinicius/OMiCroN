@@ -246,7 +246,7 @@ namespace model
 				NodeArray nodes = sql.getNodes( a, b );
 				sql.endTransaction();
 				
-				ASSERT_EQ( 4, nodes.size() );
+				cout << "Database size: " << nodes.size() << endl << endl;
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -276,7 +276,7 @@ namespace model
 				NodeArray nodes = sql.getNodes( a, b );
 				sql.endTransaction();
 				
-				ASSERT_EQ( 4, nodes.size() );
+				cout << "Database size: " << nodes.size() << endl << endl;
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
@@ -338,6 +338,7 @@ namespace model
 			
 			string filename = "../../../src/data/real/tempietto_all.ply";
 			Octree octree( filename, 20, 48, 1024, 8 );
+			waitAsynCreation( octree );
 			
 			string dbFilename = filename;
  			dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );

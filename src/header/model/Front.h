@@ -200,10 +200,10 @@ namespace model
 	inline void Front< Morton, Point >::insertIntoFront( Node& node, const Morton& morton, int threadIdx )
 	{
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "Front node insertion: " << morton.getPathToRoot( true ) << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Front node insertion: " << morton.getPathToRoot( true ) << endl;
+// 		}
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, morton ) );
@@ -213,10 +213,10 @@ namespace model
 	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
 	{
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "Front placeholder insertion: " << morton.getPathToRoot( true ) << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Front placeholder insertion: " << morton.getPathToRoot( true ) << endl;
+// 		}
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( m_placeholder, morton ) );
@@ -251,10 +251,10 @@ namespace model
 			}
 			
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Notifying insertion end in lvl " << lvl << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Notifying insertion end in lvl " << lvl << endl << endl;
+// 			}
 		}
 	}
 	
@@ -269,11 +269,11 @@ namespace model
 			// Insert all leaf level pending nodes and placeholders.
 			
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "==== TRACKING FRONT ====" << endl << "Leaf lvl insertions: "
-					 << m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ].size() << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "==== TRACKING FRONT ====" << endl << "Leaf lvl insertions: "
+// 					 << m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ].size() << endl << endl;
+// 			}
 			
 			m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
 		}
@@ -297,10 +297,10 @@ namespace model
 			}
 			
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Substitution lvl: " << substitutionLvl << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Substitution lvl: " << substitutionLvl << endl << endl;
+// 			}
 			
 			if( m_releaseFlag )
 			{
@@ -320,10 +320,10 @@ namespace model
 		}
 		
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "==== TRACKING FRONT END ====" << endl << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "==== TRACKING FRONT END ====" << endl << endl;
+// 		}
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
@@ -345,10 +345,10 @@ namespace model
 		Morton& morton = frontNode.m_morton;
 		
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "Tracking: " << morton.getPathToRoot( true ) << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Tracking: " << morton.getPathToRoot( true ) << endl;
+// 		}
 		
 		if( &node == &m_placeholder )
 		{
@@ -372,10 +372,10 @@ namespace model
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, renderer, projThresh ) )
 			{
 				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "Prunning: " << morton.getPathToRoot( true ) << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					cout << "Prunning: " << morton.getPathToRoot( true ) << endl << endl;
+// 				}
 				
 				prune( frontIt, nodeLvlDim, parentNode, renderer );
 				return;
@@ -388,10 +388,10 @@ namespace model
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Branching: " << morton.getPathToRoot( true ) << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Branching: " << morton.getPathToRoot( true ) << endl << endl;
+// 			}
 			
 			branch( frontIt, node, nodeLvlDim, renderer );
 			return;
@@ -400,10 +400,10 @@ namespace model
 		if( !isCullable )
 		{
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Staying: " << morton.getPathToRoot( true ) << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Staying: " << morton.getPathToRoot( true ) << endl << endl;
+// 			}
 			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
@@ -422,18 +422,18 @@ namespace model
 			FrontNode& substituteCandidate = substitutionLvlList.front();
 			
 			// Debug
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				cout << "Substitute candidate: " << substituteCandidate.m_morton.getPathToRoot( true ) << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Substitute candidate: " << substituteCandidate.m_morton.getPathToRoot( true ) << endl;
+// 			}
 			
 			if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
 			{
 				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "Substitution sucessful" << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					cout << "Substitution sucessful" << endl << endl;
+// 				}
 				
 				node = substituteCandidate;
 				substitutionLvlList.erase( substitutionLvlList.begin() );
@@ -523,10 +523,10 @@ namespace model
 	const
 	{
 		// Debug
-		{
-			cout << "Morton: " <<  morton.getPathToRoot( true ) << "ParentLvlDim: " << nodeLvlDim
-				 << endl;
-		}
+// 		{
+// 			cout << "Morton: " <<  morton.getPathToRoot( true ) << "ParentLvlDim: " << nodeLvlDim
+// 				 << endl;
+// 		}
 		
 		pair< Vec3, Vec3 > box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
@@ -592,6 +592,12 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::releaseSiblings( NodeArray& siblings, const OctreeDim& dim )
 	{
+		// Debug
+		{
+			lock_guard< mutex > lock( m_logMutex );
+			cout << "Releasing" << endl << endl;
+		}
+		
 		for( int i = 0; i < siblings.size(); ++i )
 		{
 			Node& sibling = siblings[ i ];
