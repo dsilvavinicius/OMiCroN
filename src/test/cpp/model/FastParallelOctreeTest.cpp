@@ -337,7 +337,7 @@ namespace model
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			
 			string filename = "../../../src/data/real/tempietto_all.ply";
-			Octree octree( filename, 20, 48, 1024, 8 );
+			Octree octree( filename, 20, 48, 600ul * 1024ul * 1024ul, 4 );
 			waitAsynCreation( octree );
 			
 			string dbFilename = filename;

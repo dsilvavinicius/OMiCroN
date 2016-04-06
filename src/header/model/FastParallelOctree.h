@@ -157,7 +157,7 @@ namespace model
 		m_dim = dim;
 		
 		string dbFilename = plyFilename.substr( 0, plyFilename.find_last_of( "." ) ).append( ".db" );
-		m_front = new Front( dbFilename, m_dim, nThreads );
+		m_front = new Front( dbFilename, m_dim, nThreads, memoryLimit );
 		
 		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, *m_front, loadPerThread, memoryLimit, nThreads );
 		

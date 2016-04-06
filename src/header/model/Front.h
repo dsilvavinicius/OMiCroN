@@ -58,7 +58,7 @@ namespace model
 		/** Ctor.
 		 * @param dbFilename is the path to a database file which will be used to store nodes in an out-of-core approach.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
-		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads );
+		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads, const ulong memoryLimit );
 		
 		/** Synchronized. Inserts a leaf node into front so it can be tracked later on. If a placeholder in a deeper level
 		 * for this node is already inserted, it is replaced by the new node.
@@ -77,10 +77,13 @@ namespace model
 		
 		/** Indicates that node release is needed. The front tracking will release nodes until a call to turnReleaseOff()
 		 * occurs. */
-		void turnReleaseOn();
+// 		void turnReleaseOn();
 		
 		/** Indicates that node release is not needed anymore. The front tracking will stop the node release. */
-		void turnReleaseOff();
+		//void turnReleaseOff();
+		
+		/** Returns true if the front can release more nodes, false otherwise. */
+		bool canRelease();
 		
 		/** Notifies that all leaf level nodes are already loaded. */
 		void notifyLeafLvlLoaded();
@@ -98,7 +101,7 @@ namespace model
 		bool substitutePlaceholder( FrontNode& node, uint substitutionLvl );
 		
 		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
-						 FrontListIter& frontIt, Renderer& renderer, const Float projThresh ) const;
+						 FrontListIter& frontIt, int substituionLvl, Renderer& renderer, const Float projThresh );
 		
 		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, Renderer& renderer );
 		
@@ -141,11 +144,17 @@ namespace model
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
 		
+		/** Memory usage limit. Used to turn on/off node release. */
+		ulong m_memoryLimit;
+		
 		/** Number of nodes processed in a frame. */
 		ulong m_processedNodes;
 		
-		/** true if release is on, false otherwise. */
-		atomic_bool m_releaseFlag;
+		/** Number of persisted nodes in the last front tracking operation. */
+		ulong m_persisted;
+		
+		/** true if the front has nodes to release yet, false otherwise. */
+		atomic_bool m_canRelease;
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
@@ -155,45 +164,53 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads )
+	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads,
+										  const ulong memoryLimit )
 	: m_sql( dbFilename ),
 	m_leafLvlDim( leafLvlDim ),
+	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_processedNodes( 0ul ),
-	m_releaseFlag( false ),
+	m_canRelease( true ),
 	m_leafLvlLoadedFlag( false )
 	{}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::turnReleaseOn()
-	{
-		// Debug
+// 	template< typename Morton, typename Point >
+// 	inline void Front< Morton, Point >::turnReleaseOn()
+// 	{
+// 		Debug
 // 		{
 // 			lock_guard< mutex > lock( m_logMutex );
 // 			cout << "Front release on" << endl << endl;
 // 		}
-		
-		m_releaseFlag = true;
-	}
+// 		
+// 		m_releaseFlag = true;
+// 	}
 	
-	template< typename Morton, typename Point >
-	void Front< Morton, Point >::turnReleaseOff()
-	{
-		// Debug
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			cout << "Front release off" << endl << endl;
-// 		}
-		
-		m_releaseFlag = false;
-	}
+// 	template< typename Morton, typename Point >
+// 	void Front< Morton, Point >::turnReleaseOff()
+// 	{
+// 		// Debug
+// // 		{
+// // 			lock_guard< mutex > lock( m_logMutex );
+// // 			cout << "Front release off" << endl << endl;
+// // 		}
+// 		
+// 		m_releaseFlag = false;
+// 	}
 	
 	template< typename Morton, typename Point >
 	void Front< Morton, Point >::notifyLeafLvlLoaded()
 	{
 		m_leafLvlLoadedFlag = true;
+	}
+	
+	template< typename Morton, typename Point >
+	inline bool Front< Morton, Point >::canRelease()
+	{
+		return m_canRelease;
 	}
 	
 	template< typename Morton, typename Point >
@@ -231,6 +248,12 @@ namespace model
 			{
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
+				// Debug
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					cout << "Notifying insertion end in lvl " << lvl << endl << endl;
+				}
+				
 				for( FrontList& list : m_currentIterInsertions )
 				{
 					m_perLvlInsertions[ lvl ].splice( m_perLvlInsertions[ lvl ].end(), list );
@@ -249,12 +272,6 @@ namespace model
 	// 				}
 	// 			}
 			}
-			
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Notifying insertion end in lvl " << lvl << endl << endl;
-// 			}
 		}
 	}
 	
@@ -262,19 +279,21 @@ namespace model
 	inline FrontOctreeStats Front< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		m_processedNodes = 0ul;
+		
+		// Debug
+		if( m_persisted )
+		{
+			lock_guard< mutex > lock( m_logMutex );
+			cout << "==== TRACKING FRONT ====" << endl << endl;
+		}
+		
+		m_persisted = 0ul;
+		
 		auto start = Profiler::now();
 		
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			// Insert all leaf level pending nodes and placeholders.
-			
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "==== TRACKING FRONT ====" << endl << "Leaf lvl insertions: "
-// 					 << m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ].size() << endl << endl;
-// 			}
-			
 			m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
 		}
 		
@@ -303,7 +322,7 @@ namespace model
 // 			}
 			
 			bool transactionOpened = false;
-			if( m_releaseFlag )
+			if( AllocStatistics::totalAllocated() > m_memoryLimit )
 			{
 				transactionOpened = true;
 				m_sql.beginTransaction();
@@ -321,11 +340,14 @@ namespace model
 			}
 		}
 		
+		m_canRelease = ( m_persisted > 0 );
+		
 		// Debug
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			cout << "==== TRACKING FRONT END ====" << endl << endl;
-// 		}
+		if( m_canRelease )
+		{
+			lock_guard< mutex > lock( m_logMutex );
+			cout << "TRACKING FRONT END. Persisted: " << m_persisted << endl << endl;
+		}
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
@@ -356,6 +378,12 @@ namespace model
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
+				// Debug
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					cout << "Placeholder: " << morton.getPathToRoot( true ) << endl << endl;
+// 				}
+				
 				frontIt++;
 				return;
 			}
@@ -371,12 +399,12 @@ namespace model
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 		
-			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, renderer, projThresh ) )
+			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer, projThresh ) )
 			{
 				// Debug
 // 				{
 // 					lock_guard< mutex > lock( m_logMutex );
-// 					cout << "Prunning: " << morton.getPathToRoot( true ) << endl << endl;
+// 					cout << "Prunning: " << morton.getPathToRoot( true ) << endl;
 // 				}
 				
 				prune( frontIt, nodeLvlDim, parentNode, renderer );
@@ -392,7 +420,7 @@ namespace model
 			// Debug
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Branching: " << morton.getPathToRoot( true ) << endl << endl;
+// 				cout << "Branching: " << morton.getPathToRoot( true ) << endl;
 // 			}
 			
 			branch( frontIt, node, nodeLvlDim, renderer );
@@ -404,7 +432,7 @@ namespace model
 			// Debug
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Staying: " << morton.getPathToRoot( true ) << endl << endl;
+// 				cout << "Staying: " << morton.getPathToRoot( true ) << endl;
 // 			}
 			
 			// No prunning or branching done. Just send the current front node for rendering.
@@ -453,7 +481,7 @@ namespace model
 	template< typename Morton, typename Point >
 	inline bool Front< Morton, Point >::checkPrune( const Morton& parentMorton, const Node* parentNode,
 													const OctreeDim& parentLvlDim, FrontListIter& frontIt,
-												 Renderer& renderer, const Float projThresh ) const
+												 int substitutionLvl, Renderer& renderer, const Float projThresh )
 	{
 		// Debug
 // 		{
@@ -482,10 +510,19 @@ namespace model
 			{
 				// The last sibling group cannot be prunned because it can be incomplete yet.
 				FrontListIter siblingIter = frontIt;
-				while( siblingIter != m_front.end() && siblingIter++->m_octreeNode.parent() == parentNode )
-				{}
+				while( siblingIter != m_front.end() )
+				{
+					if( &siblingIter->m_octreeNode == &m_placeholder )
+					{
+						substitutePlaceholder( *siblingIter, substitutionLvl );
+					}
+					if( siblingIter++->m_octreeNode.parent() != parentNode )
+					{
+						break;
+					}
+				}
 				
-				if( siblingIter == m_front.end() || &siblingIter->m_octreeNode == &m_placeholder )
+				if( siblingIter == m_front.end() )
 				{
 					pruneFlag = false;
 				}
@@ -502,7 +539,12 @@ namespace model
 		//cout << "=== Prunning begins ===" << endl << endl;
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
 		
-		if( m_releaseFlag )
+		// Debug
+// 		{
+// 			cout << "Tot alloc: " << AllocStatistics::totalAllocated() << ". Limit: " << m_memoryLimit << endl << endl;
+// 		}
+		
+		if( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
 			releaseSiblings( parentNode->child(), nodeLvlDim );
 		}
@@ -594,12 +636,6 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::releaseSiblings( NodeArray& siblings, const OctreeDim& dim )
 	{
-		// Debug
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			cout << "Releasing" << endl << endl;
-// 		}
-		
 		for( int i = 0; i < siblings.size(); ++i )
 		{
 			Node& sibling = siblings[ i ];
@@ -612,20 +648,18 @@ namespace model
 			Morton siblingMorton = dim.calcMorton( sibling );
 			// Debug
 // 			{
-// 				Morton expectedParent; expectedParent.build( 0x41657ff6a9fUL );
-// 				Morton expectedA = *expectedParent.getFirstChild();
-// 				Morton expectedB = *expectedParent.getLastChild();
-// 				
-// 				if( expectedA <= siblingMorton && siblingMorton <= expectedB )
-// 				{
-// 					cout << "2DB: " << hex << siblingMorton.getPathToRoot( true ) << endl;
-// 				}
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
 // 			}
 			
 			// Persisting node
 			m_sql.insertNode( siblingMorton, sibling );
 		}
 		
+		// Debug
+		{
+			m_persisted += siblings.size();
+		}
 		siblings.clear();
 	}
 }

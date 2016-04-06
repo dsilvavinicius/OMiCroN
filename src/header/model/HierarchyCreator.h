@@ -294,8 +294,14 @@ namespace model
 			int lvl = m_leafLvlDim.m_nodeLvl;
 			bool nextPassFlag = false; // Indicates that the current algorithm pass should end and a new one should be issued.
 			
-			if( isReleasing )
+			if( isReleasing && !m_front.canRelease() )
 			{
+				// Debug
+				{
+					lock_guard< mutex > lock( mutex );
+					cout << "Turning release off. Front cannot release anymore." << endl << endl;
+				}
+				
 				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 			}
 			
@@ -305,8 +311,7 @@ namespace model
 				// Debug
 // 				{
 // 					lock_guard< mutex > lock( m_logMutex );
-// 					cout << "======== Starting lvl " << lvl << ". Mem: " << AllocStatistics::totalAllocated()
-// 						 << " ========" << endl << endl;
+// 					cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
 // 				}
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
@@ -928,7 +933,7 @@ namespace model
 			isReleasing = true;
 		}
 		
-		m_front.turnReleaseOn();
+		//m_front.turnReleaseOn();
 	}
 		
 	template< typename Morton, typename Point >
@@ -948,7 +953,7 @@ namespace model
 		}
 		releaseFlag.notify_one();
 		
-		m_front.turnReleaseOff();
+		//m_front.turnReleaseOff();
 		
 		// Debug
 // 			{
