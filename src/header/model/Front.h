@@ -170,10 +170,10 @@ namespace model
 	inline void Front< Morton, Point >::turnReleaseOn()
 	{
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "Front release on" << endl << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Front release on" << endl << endl;
+// 		}
 		
 		m_releaseFlag = true;
 	}
@@ -182,10 +182,10 @@ namespace model
 	void Front< Morton, Point >::turnReleaseOff()
 	{
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "Front release off" << endl << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Front release off" << endl << endl;
+// 		}
 		
 		m_releaseFlag = false;
 	}
@@ -302,8 +302,10 @@ namespace model
 // 				cout << "Substitution lvl: " << substitutionLvl << endl << endl;
 // 			}
 			
+			bool transactionOpened = false;
 			if( m_releaseFlag )
 			{
+				transactionOpened = true;
 				m_sql.beginTransaction();
 			}
 			
@@ -313,7 +315,7 @@ namespace model
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
 			}
 			
-			if( m_releaseFlag )
+			if( transactionOpened )
 			{
 				m_sql.endTransaction();
 			}
@@ -593,10 +595,10 @@ namespace model
 	inline void Front< Morton, Point >::releaseSiblings( NodeArray& siblings, const OctreeDim& dim )
 	{
 		// Debug
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "Releasing" << endl << endl;
-		}
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Releasing" << endl << endl;
+// 		}
 		
 		for( int i = 0; i < siblings.size(); ++i )
 		{
