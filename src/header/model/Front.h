@@ -222,6 +222,8 @@ namespace model
 // 			cout << "Front node insertion: " << morton.getPathToRoot( true ) << endl;
 // 		}
 		
+		assert( morton.getBits() != 1 && "Inserting the root node into front." );
+		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, morton ) );
 	}
@@ -234,6 +236,8 @@ namespace model
 // 			lock_guard< mutex > lock( m_logMutex );
 // 			cout << "Front placeholder insertion: " << morton.getPathToRoot( true ) << endl;
 // 		}
+		
+		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deeper level." );
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( m_placeholder, morton ) );
@@ -249,10 +253,10 @@ namespace model
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
 				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "Notifying insertion end in lvl " << lvl << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					cout << "Notifying insertion end in lvl " << lvl << endl << endl;
+// 				}
 				
 				for( FrontList& list : m_currentIterInsertions )
 				{
@@ -281,11 +285,11 @@ namespace model
 		m_processedNodes = 0ul;
 		
 		// Debug
-		if( m_persisted )
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "==== TRACKING FRONT ====" << endl << endl;
-		}
+// 		if( m_persisted )
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "==== TRACKING FRONT ====" << endl << endl;
+// 		}
 		
 		m_persisted = 0ul;
 		
@@ -316,9 +320,10 @@ namespace model
 			}
 			
 			// Debug
+// 			if( m_canRelease )
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
-// 				cout << "Substitution lvl: " << substitutionLvl << endl << endl;
+// 				cout << "Before transaction begin." << endl << endl;
 // 			}
 			
 			bool transactionOpened = false;
@@ -328,11 +333,25 @@ namespace model
 				m_sql.beginTransaction();
 			}
 			
+			// Debug
+// 			if( m_canRelease )
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Before front tracking loop." << endl << endl;
+// 			}
+			
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 			for( FrontListIter frontIt = m_front.begin(); frontIt != m_front.end(); /**/ )
 			{
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
 			}
+			
+			// Debug
+// 			if( m_canRelease )
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				cout << "Before transaction end." << endl << endl;
+// 			}
 			
 			if( transactionOpened )
 			{
@@ -340,14 +359,21 @@ namespace model
 			}
 		}
 		
+		// Debug
+// 		if( m_canRelease && m_persisted == 0 )
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "Front cannot release anymore." << endl << endl;
+// 		}
+		
 		m_canRelease = ( m_persisted > 0 );
 		
 		// Debug
-		if( m_canRelease )
-		{
-			lock_guard< mutex > lock( m_logMutex );
-			cout << "TRACKING FRONT END. Persisted: " << m_persisted << endl << endl;
-		}
+// 		if( m_canRelease )
+// 		{
+// 			lock_guard< mutex > lock( m_logMutex );
+// 			cout << "TRACKING FRONT END, can release. Persisted: " << m_persisted << endl << endl;
+// 		}
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
@@ -365,8 +391,6 @@ namespace model
 												   Renderer& renderer, const Float projThresh )
 	{
 		FrontNode& frontNode = *frontIt;
-		Node& node = frontNode.m_octreeNode;
-		Morton& morton = frontNode.m_morton;
 		
 		// Debug
 // 		{
@@ -374,21 +398,24 @@ namespace model
 // 			cout << "Tracking: " << morton.getPathToRoot( true ) << endl;
 // 		}
 		
-		if( &node == &m_placeholder )
+		if( &frontNode.m_octreeNode == &m_placeholder )
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
 				// Debug
-// 				{
-// 					lock_guard< mutex > lock( m_logMutex );
-// 					cout << "Placeholder: " << morton.getPathToRoot( true ) << endl << endl;
-// 				}
+// 				if( m_canRelease )
+//  				{
+//  					lock_guard< mutex > lock( m_logMutex );
+//  					cout << "Placeholder: " << morton.getPathToRoot( true ) << endl << endl;
+//  				}
 				
 				frontIt++;
 				return;
 			}
 		}
 		
+		Node& node = frontNode.m_octreeNode;
+		Morton& morton = frontNode.m_morton;
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
 		Node* parentNode = node.parent();
 		
@@ -402,6 +429,7 @@ namespace model
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer, projThresh ) )
 			{
 				// Debug
+// 				if( m_canRelease )
 // 				{
 // 					lock_guard< mutex > lock( m_logMutex );
 // 					cout << "Prunning: " << morton.getPathToRoot( true ) << endl;
@@ -414,10 +442,10 @@ namespace model
 		
 		bool isCullable = false;
 		
-		//cout << "Tracking: " << code->getPathToRoot( true ) << endl;
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
 			// Debug
+// 			if( m_canRelease )
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
 // 				cout << "Branching: " << morton.getPathToRoot( true ) << endl;
@@ -430,6 +458,7 @@ namespace model
 		if( !isCullable )
 		{
 			// Debug
+// 			if( m_canRelease )
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
 // 				cout << "Staying: " << morton.getPathToRoot( true ) << endl;
@@ -437,7 +466,11 @@ namespace model
 			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
+			return;
 		}
+		
+		lastParent = parentNode;
+		frontIt++;
 	}
 	
 	template< typename Morton, typename Point >
@@ -555,6 +588,19 @@ namespace model
 			frontIt = m_front.erase( frontIt );
 		}
 		
+		// Debug
+		{
+			auto parentMortonCalc = OctreeDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 ).calcMorton( *parentNode );
+			if( parentMortonCalc != parentMorton )
+			{
+				cout << "parent morton calc: " << parentMortonCalc.getPathToRoot( true ) << "parentMorton: "
+					 << parentMorton.getPathToRoot( true ) << endl;
+					
+				assert( false && "Inconsistency in parent morton code." );
+			}
+			assert( parentMorton.getBits() != 1 && "Inserting root node into front (prune)." );
+		}
+		
 		FrontNode frontNode( *parentNode, parentMorton );
 		setupNodeRendering( frontIt, frontNode, renderer );
 		
@@ -600,6 +646,8 @@ namespace model
 			Node& child = children[ i ];
 			pair< Vec3, Vec3 > box = childLvlDim.getNodeBoundaries( child );
 			FrontNode frontNode( child, childLvlDim.calcMorton( child ) );
+			
+			assert( frontNode.m_morton.getBits() != 1 && "Inserting root node into front (branch)." );
 			
 			if( !renderer.isCullable( box ) )
 			{

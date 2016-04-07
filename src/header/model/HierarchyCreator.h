@@ -297,10 +297,10 @@ namespace model
 			if( isReleasing && !m_front.canRelease() )
 			{
 				// Debug
-				{
-					lock_guard< mutex > lock( mutex );
-					cout << "Turning release off. Front cannot release anymore." << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( mutex );
+// 					cout << "Turning release off. Front cannot release anymore." << endl << endl;
+// 				}
 				
 				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 			}
