@@ -512,7 +512,7 @@ namespace model
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					
-					m_front.notifyInsertionEnd();
+					m_front.notifyInsertionEnd( dispatchedThreads );
 					
 					// BEGIN LOAD BALANCE.
 					// Debug
