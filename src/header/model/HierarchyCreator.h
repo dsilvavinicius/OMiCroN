@@ -70,7 +70,7 @@ namespace model
 		size_t updatedWorkListSize( int lvl );
 		
 		/** Sets the parent pointer for all children of a given node. */
-		void setParent( Node& node, const int threadIdx ) const;
+		void setParent( Node& node, const int threadIdx, /* Debug */ uint callType ) const;
 		
 		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const;
@@ -685,7 +685,7 @@ namespace model
 		
 	/** Sets the parent pointer for all children of a given node. */
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx ) const
+	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx, /* Debug */ uint callType ) const
 	{
 
 		// Debug
@@ -718,7 +718,7 @@ namespace model
 			
 			if( child.isLeaf() )
 			{
-				m_front.insertIntoFront( child, childDim.calcMorton( child ), threadIdx );
+				m_front.insertIntoFront( child, childDim.calcMorton( child ), threadIdx, callType );
 			}
 		}
 	}
@@ -804,14 +804,14 @@ namespace model
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					// Parent pointer needs to be fixed.
-					setParent( mergedChild[ i ], 0 );
+					setParent( mergedChild[ i ], 0, 2 );
 				}
 				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
 				{
 					int idx = prevLastNodeChild.size() + i;
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					// Parent pointer needs to be fixed.
-					setParent( mergedChild[ idx ], 0 );
+					setParent( mergedChild[ idx ], 0, 2 );
 				}
 				
 				nextFirstNode.setChildren( std::move( mergedChild ) );
@@ -1041,7 +1041,7 @@ namespace model
 			Node& finalChild = node.child()[ 0 ];
 			if( !finalChild.isLeaf() )
 			{
-				setParent( finalChild, threadIdx );
+				setParent( finalChild, threadIdx, 0 );
 			}
 		}
 		
@@ -1104,7 +1104,7 @@ namespace model
 				// Set parental relationship of children.
 				if( !child.isLeaf() )
 				{
-					setParent( child, threadIdx );
+					setParent( child, threadIdx, 1 );
 				}
 			}
 			
