@@ -66,7 +66,7 @@ namespace model
 		 * @param node is a reference to the node to be inserted.
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread. */
-		void insertIntoFront( Node& node, const Morton& morton, int threadIdx, /* Debug */ uint callType );
+		void insertIntoFront( Node& node, const Morton& morton, int threadIdx );
 		
 		/** Synchronized. Inserts a placeholder for a node that will be defined later in the shallower levels. This node
 		 * will be replaced on front tracking if a substitute is already defined.
@@ -89,6 +89,12 @@ namespace model
 		
 		/** Notifies that all leaf level nodes are already loaded. */
 		void notifyLeafLvlLoaded();
+		
+// 		/*/** Acquires a lock for operations that should have mutual exclusion with prunning. */
+// 		void lockPrunning();
+// 		
+// 		/** Releases a lock for operations that should have mutual exclusion with prunning. */
+// 		void unlockPrunning();*/
 		
 		/** Tracks the front based on the projection threshold.
 		 * @param renderer is the responsible of rendering the points of the tracked front.
@@ -126,13 +132,13 @@ namespace model
 			OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
 			
 			stringstream ss;
-			ss << "Asserting: " << morton.getPathToRoot( true ) << "Addr: " << &node << endl << endl;
+			ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
 			
-			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << ss.str();
-				m_log.flush();
-			}
+// 			{
+// 				lock_guard< recursive_mutex > lock( m_logMutex );
+// 				m_log << ss.str();
+// 				m_log.flush();
+// 			}
 			
 			if( &node == &m_placeholder )
 			{
@@ -163,7 +169,7 @@ namespace model
 				Morton calcMorton = nodeDim.calcMorton( node );
 				if( calcMorton != morton )
 				{
-					ss << "Morton inconsistency. Calc: " << calcMorton.getPathToRoot( true ) << endl;
+					ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
 					{
 						lock_guard< recursive_mutex > lock( m_logMutex );
 						m_log << ss.str();
@@ -192,8 +198,8 @@ namespace model
 					Morton calcParentMorton = parentDim.calcMorton( *parentNode );
 					if( parentMorton != calcParentMorton )
 					{
-						ss << "traversal parent: " << parentMorton.getPathToRoot( true ) << "Calc parent: "
-						<< calcParentMorton.getPathToRoot( true ) << endl;
+						ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
+						<< calcParentMorton.toString() << endl;
 						{
 							lock_guard< recursive_mutex > lock( m_logMutex );
 							m_log << ss.str();
@@ -216,8 +222,12 @@ namespace model
 		 * the needed level. */
 		Node m_placeholder;
 		
-		/** Mutex to synchronize m_perLvlInsertions operations. */
+		/** Mutexes to synchronize m_perLvlInsertions operations. */
 		vector< mutex > m_perLvlMtx;
+		
+		/** Mutex to sincronize prunning operations with other ones that should have mutual exclusion with
+		 * it. */
+// 		mutex m_prunningMtx;
 		
 		/** FrontLists that need to be inserted into front. */
 		//InsertionVector m_insertionLists;
@@ -306,17 +316,16 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::insertIntoFront( Node& node, const Morton& morton, int threadIdx, /* Debug */ uint callType )
+	inline void Front< Morton, Point >::insertIntoFront( Node& node, const Morton& morton, int threadIdx )
 	{
 		// Debug
 		assertNode( node, morton );
 		
 		// Debug
-		{
-			lock_guard< recursive_mutex > lock( m_logMutex );
-			m_log << "Front insertion: " << morton.getPathToRoot( true ) << "Addr: " << &node << endl
-				  << "Case: " << callType << endl;
-		}
+// 		{
+// 			lock_guard< recursive_mutex > lock( m_logMutex );
+// 			m_log << "Front insertion: " << morton.toString() << " Addr: " << &node << endl << endl;
+// 		}
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, morton ) );
@@ -327,12 +336,8 @@ namespace model
 	{
 		// Debug
 // 		{
-// 			Morton tracked; tracked.build( 0x8339eedUL );
-// 			if( morton.isDescendantOf( tracked ) )
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "Front placeholder insertion t[ " << threadIdx <<  " ]: " << morton.getPathToRoot( true ) << endl;
-// 			}
+// 			lock_guard< recursive_mutex > lock( m_logMutex );
+// 			m_log << "Front placeholder insertion: " << morton.toString() << endl;
 // 		}
 		
 		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
@@ -378,13 +383,25 @@ namespace model
 	// 					m_log << "Notify insertion end. Fron after insertion:" << endl << endl;
 	// 					for( FrontNode& node : m_front )
 	// 					{
-	// 						m_log << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).getPathToRoot( true ) << endl;
+	// 						m_log << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).toString() << endl;
 	// 					}
 	// 				}
 	// 			}
 			}
 		}
 	}
+	
+// 	template< typename Morton, typename Point >
+// 	inline void Front< Morton, Point >::lockPrunning()
+// 	{
+// 		m_prunningMtx.lock();
+// 	}
+// 	
+// 	template< typename Morton, typename Point >
+// 	inline void Front< Morton, Point >::unlockPrunning()
+// 	{
+// 		m_prunningMtx.unlock();
+// 	}
 	
 	template< typename Morton, typename Point >
 	inline FrontOctreeStats Front< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
@@ -444,8 +461,8 @@ namespace model
 			{
 				// Debug
 				{
-					lock_guard< recursive_mutex > lock( m_logMutex );
-					m_log << "=== Node tracking begin ===" << endl << endl;
+// 					lock_guard< recursive_mutex > lock( m_logMutex );
+// 					m_log << "=== Node tracking begin ===" << endl << endl;
 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 				}
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
@@ -497,20 +514,20 @@ namespace model
 		FrontNode& frontNode = *frontIt;
 		
 		// Debug
-		{
-			lock_guard< recursive_mutex > lock( m_logMutex );
-			m_log << "Tracking: " << frontIt->m_morton.getPathToRoot( true ) << endl;
-		}
+// 		{
+// 			lock_guard< recursive_mutex > lock( m_logMutex );
+// 			m_log << "Tracking: " << frontIt->m_morton.toString() << endl;
+// 		}
 		
 		if( frontNode.m_octreeNode == &m_placeholder )
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
 				// Debug
-				{
-					lock_guard< recursive_mutex > lock( m_logMutex );
-					m_log << "Skipping placeholder : " << frontNode.m_morton.getPathToRoot( true ) << endl;
-				}
+// 				{
+// 					lock_guard< recursive_mutex > lock( m_logMutex );
+// 					m_log << "Skipping placeholder : " << frontNode.m_morton.toString() << endl << endl;
+// 				}
 				
 				frontIt++;
 				return;
@@ -520,7 +537,11 @@ namespace model
 		Node& node = *frontNode.m_octreeNode;
 		Morton& morton = frontNode.m_morton;
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
+		
+		
+// 		m_prunningMtx.lock();
 		Node* parentNode = node.parent();
+// 		m_prunningMtx.unlock();
 		
 		// If parentNode == lastParent, prunning was not sucessful for a sibling of the current node, so the prunning
 		// check can be skipped.
@@ -539,11 +560,18 @@ namespace model
 				// Debug
 				{
 					lock_guard< recursive_mutex > lock( m_logMutex );
-					m_log << "Prunning: " << morton.getPathToRoot( true ) << endl;
+					m_log << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
+						  << endl << endl;
 				}
 				
 				prune( frontIt, nodeLvlDim, parentNode, renderer );
 				lastParent = parentNode;
+				
+				// Debug
+				{
+					auto tempIt = prev( frontIt );
+					assertNode( *tempIt->m_octreeNode, tempIt->m_morton );
+				}
 				return;
 			}
 			lastParent = parentNode;
@@ -554,10 +582,10 @@ namespace model
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
 			// Debug
-			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "Branching: " << morton.getPathToRoot( true ) << endl;
-			}
+// 			{
+// 				lock_guard< recursive_mutex > lock( m_logMutex );
+// 				m_log << "Branching: " << morton.toString() << endl << endl;
+// 			}
 			
 			branch( frontIt, node, nodeLvlDim, renderer );
 			return;
@@ -566,10 +594,10 @@ namespace model
 		if( !isCullable )
 		{
 			// Debug
-			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "Staying: " << morton.getPathToRoot( true ) << endl;
-			}
+// 			{
+// 				lock_guard< recursive_mutex > lock( m_logMutex );
+// 				m_log << "Staying: " << morton.toString() << endl << endl;
+// 			}
 			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
@@ -577,10 +605,10 @@ namespace model
 		}
 		
 		// Debug
-		{
-			lock_guard< recursive_mutex > lock( m_logMutex );
-			m_log << "Skiping: " << morton.getPathToRoot( true ) << endl;
-		}
+// 		{
+// 			lock_guard< recursive_mutex > lock( m_logMutex );
+// 			m_log << "Skiping: " << morton.toString() << endl << endl;
+// 		}
 		
 		frontIt++;
 	}
@@ -599,7 +627,7 @@ namespace model
 			// Debug
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "Substitute candidate: " << substituteCandidate.m_morton.getPathToRoot( true ) << endl;
+// 				m_log << "Substitute candidate: " << substituteCandidate.m_morton.toString() << endl;
 // 			}
 			
 			if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
@@ -609,9 +637,9 @@ namespace model
 // 					Morton tracked; tracked.build( 0x8339eedUL );
 // 					if( tracked == substituteCandidate.m_morton )
 // 					{
-						lock_guard< recursive_mutex > lock( m_logMutex );
-						m_log << "Substituting: " << node.m_morton.getPathToRoot( true ) << "by "
-							<< substituteCandidate.m_morton.getPathToRoot( true ) << endl;
+// 						lock_guard< recursive_mutex > lock( m_logMutex );
+// 						m_log << "Substituting: " << node.m_morton.toString() << "by "
+// 							<< substituteCandidate.m_morton.toString() << endl << endl;
 						assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
 // 					}
 				}
@@ -648,7 +676,7 @@ namespace model
 	{
 		// Debug
 // 		{
-// 			m_log << "Parent Morton: " <<  parentMorton.getPathToRoot( true ) << "ParentLvlDim: " << parentLvlDim
+// 			m_log << "Parent Morton: " <<  parentMorton.toString() << "ParentLvlDim: " << parentLvlDim
 // 				 << endl;
 // 		}
 		
@@ -675,7 +703,7 @@ namespace model
 				// Debug
 // 				{
 // 					lock_guard< recursive_mutex > lock( m_logMutex );
-// 					m_log << "Checking substitution: " << siblingIter->m_morton.getPathToRoot( true ) << endl;
+// 					m_log << "Checking substitution: " << siblingIter->m_morton.toString() << endl;
 // 				}
 				
 				if( siblingIter->m_octreeNode == &m_placeholder )
@@ -728,7 +756,7 @@ namespace model
 			// Debug
 // 			{
 // 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
+// 				m_log << "Releasing " << frontIt->m_morton.toString() << endl;
 // 			}
 			
 			frontIt = m_front.erase( frontIt );
@@ -753,7 +781,7 @@ namespace model
 	{
 		// Debug
 // 		{
-// 			m_log << "Morton: " <<  morton.getPathToRoot( true ) << "ParentLvlDim: " << nodeLvlDim
+// 			m_log << "Morton: " <<  morton.toString() << "ParentLvlDim: " << nodeLvlDim
 // 				 << endl;
 // 		}
 		
@@ -808,7 +836,7 @@ namespace model
 															Renderer& renderer )
 	{
 		m_front.insert( frontIt, frontNode );
-		//m_log << "Into front: " << code->getPathToRoot( true ) << endl;
+		//m_log << "Into front: " << code->toString() << endl;
 		renderer.handleNodeRendering( frontNode.m_octreeNode->getContents() );
 	}
 	
@@ -836,7 +864,7 @@ namespace model
 			// Debug
 // 			{
 // 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
+// 				m_log << "2DB: " << siblingMorton.toString() << endl;
 // 			}
 			
 			// Persisting node
