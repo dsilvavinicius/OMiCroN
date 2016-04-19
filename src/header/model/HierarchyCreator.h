@@ -72,8 +72,11 @@ namespace model
 		/** Sets the parent pointer for all children of a given node. */
 		void setParent( Node& node, const int threadIdx ) /*const*/;
 		
-		/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
-		void collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim ) const;
+		/** Collapses (turn into leaf) a node if it has only one child. */
+		void collapse( Node& node ) const;
+		
+		/** If needed, collapses (turn into leaf) the boundary nodes of a worklist. */
+		void collapseBoundaries( NodeList& list ) const;
 		
 		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
@@ -86,10 +89,12 @@ namespace model
 		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim );
 		
 		/** Creates a node from its solo child node. */
-		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx ) /*const*/;
+		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx,
+										const bool setParentFlag ) /*const*/;
 		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
-		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx ) /*const*/;
+		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx,
+							  const bool setParentFlag ) /*const*/;
 		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
@@ -455,8 +460,10 @@ namespace model
 // 										cout << "T " << omp_get_thread_num() << " collapse." << endl << endl;
 // 									}
 									
-									output.push_back( createNodeFromSingleChild( std::move( siblings[ 0 ] ), true,
-																				 threadIdx ) );
+									output.push_back(
+										createNodeFromSingleChild( std::move( siblings[ 0 ] ), true,
+																   threadIdx, !isBoundarySiblingGroup )
+									);
 								}
 								else
 								{
@@ -467,7 +474,8 @@ namespace model
 // 									}
 									
 									// LOD
-									Node inner = createInnerNode( std::move( siblings ), nSiblings, threadIdx );
+									Node inner = createInnerNode( std::move( siblings ), nSiblings,
+																  threadIdx, !isBoundarySiblingGroup );
 									
 // 									if( isReleasing && !isBoundarySiblingGroup )
 // 									{
@@ -528,20 +536,40 @@ namespace model
 					
 					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
 					
-					if( !nextLvlWorkList.empty() && !iterOutput.empty() && !iterOutput[ dispatchedThreads - 1 ].empty() )
+					if( !iterOutput.empty() && !iterOutput[ dispatchedThreads - 1 ].empty() )
 					{
-						NodeList nextLvlBack = std::move( nextLvlWorkList.back() );
-						nextLvlWorkList.pop_back();
-						
-						// Debug
-// 						{
-// 							lock_guard< mutex > lock( m_logMutex );
-// 							cout << "Merging nextLvl back and output " << dispatchedThreads - 1 << endl
-// 								 << "Next lvl back size: " << nextLvlBack.size() << "output size: "
-// 								 << iterOutput[ dispatchedThreads - 1 ].size() << endl << endl;
-// 						}
-						
-						mergeOrPushWork( nextLvlBack, iterOutput[ dispatchedThreads - 1 ], nextLvlDim );
+						if( !nextLvlWorkList.empty() )
+						{
+							NodeList nextLvlBack = std::move( nextLvlWorkList.back() );
+							nextLvlWorkList.pop_back();
+							
+							// Debug
+	// 						{
+	// 							lock_guard< mutex > lock( m_logMutex );
+	// 							cout << "Merging nextLvl back and output " << dispatchedThreads - 1 << endl
+	// 								 << "Next lvl back size: " << nextLvlBack.size() << "output size: "
+	// 								 << iterOutput[ dispatchedThreads - 1 ].size() << endl << endl;
+	// 						}
+							
+							mergeOrPushWork( nextLvlBack, iterOutput[ dispatchedThreads - 1 ], nextLvlDim );
+						}
+						else if( iterOutput[ dispatchedThreads - 1 ].size() > 1 )
+						{
+							// Setup the parent for the first node in thread[ dispatchedThreads - 1 ] output. This is
+							// necessary because it won't be merged with a previous workList.
+							Node& firstNode = iterOutput[ dispatchedThreads - 1 ].front();							
+							for( Node& child : firstNode.child() )
+							{
+								// Debug
+								{
+									lock_guard< mutex > lock( m_logMutex );
+									cout << "Case -1 addr:" << &child << " code: "
+										<< m_octreeDim.calcMorton( child ).toString() << endl << endl;
+								}
+								
+								setParent( child, 0 );
+							}
+						}
 					}
 					
 					for( int i = dispatchedThreads - 1; i > 0; --i )
@@ -569,6 +597,8 @@ namespace model
 						}
 						nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
 					}
+					
+					m_front.notifyInsertionEnd( 1 );
 					// END LOAD BALANCE.
 					
 					// BEGIN NODE RELEASE MANAGEMENT.
@@ -608,8 +638,23 @@ namespace model
 				{
 					if( isLastPass )
 					{
-						// The last NodeList is not collapsed yet.
-						collapseBoundaries( m_lvlWorkLists[ lvl - 1 ].back(), nextLvlDim );
+						// The last NodeList is not collapsed and the parent of its children is not set yet.
+						NodeList& lastList = m_lvlWorkLists[ lvl - 1 ].back();
+						collapseBoundaries( lastList );
+						
+						for( Node& child : lastList.back().child() )
+						{
+							// Debug
+							{
+								lock_guard< mutex > lock( m_logMutex );
+								cout << "Case -2 addr: " << &child << " code: "
+									 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+							}
+							
+							setParent( child, 0 );
+						}
+						
+						m_front.notifyInsertionEnd( 1 );
 					}
 					
 					--lvl;
@@ -734,60 +779,46 @@ namespace model
 			}
 		}
 	}
-		
-	/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
+	
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::collapseBoundaries( NodeList& list, const OctreeDim& nextLvlDim )
-	const
+	inline void HierarchyCreator< Morton, Point >::collapse( Node& node ) const
 	{
-		if( !list.empty() )
-		{
-			Node& firstNode = list.front();
-			NodeArray& firstNodeChild = firstNode.child();
-			
-			// Debug
+		NodeArray& children = node.child();
+		
+		// Debug
 // 				{
 // 					cout << "Checking for collapse list with size " << list.size() << ":" << endl;
 // 					cout << nextLvlDim.calcMorton( firstNode ).getPathToRoot( true ) << endl;
 // 				}
-			
-			if( firstNodeChild.size() == 1 && firstNodeChild[ 0 ].isLeaf() )
-			{
-				// Debug
+		
+		if( children.size() == 1 && children[ 0 ].isLeaf() )
+		{
+			// Debug
 // 					{
 // 						cout << "Collapsing." << endl << endl;
 // 					}
-				//
-				
-				firstNode.turnLeaf();
-			}
+			//
 			
-			Node& lastNode = list.back();
-			NodeArray& lastNodeChild = lastNode.child();
-			
-			// Debug
-// 				{
-// 					cout << "Checking for collapse: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true ) << endl;
-// 				}
-			
-			if( lastNodeChild.size() == 1 && lastNodeChild[ 0 ].isLeaf() )
-			{
-				// Debug
-// 					{
-// 						cout << "Turning into leaf: " << nextLvlDim.calcMorton( lastNode ).getPathToRoot( true )
-// 								<< endl;
-// 					}
-				//
-				
-				lastNode.turnLeaf();
-			}
+			node.turnLeaf();
+		}
+	}
+	
+	/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
+	template< typename Morton, typename Point >
+	inline void HierarchyCreator< Morton, Point >::collapseBoundaries( NodeList& list )
+	const
+	{
+		if( !list.empty() )
+		{
+			collapse( list.front() );
+			collapse( list.back() );
 		}
 	}
 		
 	// TODO: This method is wrong. The duplicate removal should also choose again the node points, since the children
 	// changed.
 	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
-		* Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
+	 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
 	::removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim ) /*const*/
@@ -796,6 +827,8 @@ namespace model
 		{
 			Node& prevLastNode = previousProcessed.back();
 			Node& nextFirstNode = nextProcessed.front();
+			NodeArray& prevLastNodeChild = prevLastNode.child();
+			NodeArray& nextFirstNodeChild = nextFirstNode.child();
 			
 			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
 			{
@@ -807,20 +840,16 @@ namespace model
 // 					cout << "Duplicate found: " << nextLvlDim.calcMorton( prevLastNode ).getPathToRoot( true ) << endl << endl;
 // 				}
 				
-				NodeArray& prevLastNodeChild = prevLastNode.child();
-				NodeArray& nextFirstNodeChild = nextFirstNode.child();
-				
 				NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
 				
 				for( int i = 0; i < prevLastNodeChild.size(); ++i )
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
-					// Parent pointer needs to be fixed.
 					
 					// Debug
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case 0 addr: " << &mergedChild[ i ] << " code: "
+						cout << "Case 0 (1) addr: " << &mergedChild[ i ] << " code: "
 							 << m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl << endl;
 					}
 					
@@ -830,12 +859,11 @@ namespace model
 				{
 					int idx = prevLastNodeChild.size() + i;
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
-					// Parent pointer needs to be fixed.
 					
 					// Debug
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case 0 addr: " << &mergedChild[ idx ] << " code: "
+						cout << "Case 0 (2) addr: " << &mergedChild[ idx ] << " code: "
 							 << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl << endl;
 					}
 					
@@ -857,12 +885,38 @@ namespace model
 				
 				previousProcessed.pop_back();
 			}
+			else
+			{
+				// Setup parents for boundary nodes children.
+				for( Node& child : prevLastNodeChild )
+				{
+					// Debug
+					{
+						lock_guard< mutex > lock( m_logMutex );
+						cout << "Case -3 (1) addr: " << &child << " code: "
+							 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+					}
+					
+					setParent( child, 0 );
+				}
+				for( Node& child : nextFirstNodeChild )
+				{
+					// Debug
+					{
+						lock_guard< mutex > lock( m_logMutex );
+						cout << "Case -3 (2) addr: " << &child << " code: "
+							 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+					}
+					
+					setParent( child, 0 );
+				}
+			}
 			
-			collapseBoundaries( previousProcessed, nextLvlDim );
+			collapseBoundaries( previousProcessed );
 			
 			// If needed, collapse the first node of nextProcessed
-			NodeArray& nextFirstNodeChild = nextFirstNode.child();
-			if( nextFirstNodeChild.size() == 1 && nextFirstNodeChild[ 0 ].isLeaf() )
+			NodeArray& newNextFirstNodeChild = nextFirstNode.child();
+			if( newNextFirstNodeChild.size() == 1 && newNextFirstNodeChild[ 0 ].isLeaf() )
 			{
 				nextFirstNode.turnLeaf();
 			}
@@ -1039,7 +1093,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx ) /*const*/
+	::createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
 		// Setup a placeholder in front if the node is in the leaf level.
 		Morton childMorton = m_octreeDim.calcMorton( child );
@@ -1067,7 +1121,7 @@ namespace model
 			node.setChildren( std::move( children ) );
 			
 			Node& finalChild = node.child()[ 0 ];
-			if( !finalChild.isLeaf() )
+			if( setParentFlag && !finalChild.isLeaf() )
 			{
 				// Debug
 				{
@@ -1086,14 +1140,14 @@ namespace model
 	// TODO: Probably there is no need for the first for loop...
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
-	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx ) /*const*/
+	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
 		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
 		using MapEntry = typename Map::value_type;
 		
 		if( nChildren == 1 )
 		{
-			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, threadIdx );
+			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, threadIdx, setParentFlag );
 		}
 		else
 		{
@@ -1137,7 +1191,7 @@ namespace model
 				nPoints += child.getContents().size();
 				
 				// Set parental relationship of children.
-				if( !child.isLeaf() )
+				if( setParentFlag && !child.isLeaf() )
 				{
 					// Debug
 					{

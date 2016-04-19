@@ -329,7 +329,7 @@ namespace model
 			}
 		}
 		
-		TEST( FastParallelOctreeTest, Creation_MultiThread_TempiettoAll_Sanity )
+		TEST( FastParallelOctreeTest, Creation_MultiThread_StayPuff_Sanity )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
