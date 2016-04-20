@@ -2,6 +2,10 @@
 #define O1_OCTREE_NODE_H
 
 #include <memory>
+// Debug
+#include <fstream>
+#include <execinfo.h>
+//
 #include "Array.h"
 
 using namespace std;
@@ -52,6 +56,29 @@ namespace model
 		m_isLeaf( other.m_isLeaf )
 		{}
 		
+		~O1OctreeNode()
+		{
+			// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				
+// 				void* buffer[ 10 ];
+// 				int entries = backtrace( buffer, 10 );
+// 				char** strings = backtrace_symbols( buffer, entries );
+// 				
+// 				m_log << "dest: " << this << endl;
+// 				for( int i = 0; i < entries; ++i )
+// 				{
+// 					 m_log << strings[ i ] << endl;
+// 				}
+// 				m_log << endl;
+// 				
+// 				free( strings );
+// 			}
+			
+			m_parent = nullptr;
+		}
+		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
 		 * resources. */
 		O1OctreeNode& operator=( const O1OctreeNode& other )
@@ -70,11 +97,47 @@ namespace model
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf )
 		{
+			// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				
+// 				void* buffer[ 10 ];
+// 				int entries = backtrace( buffer, 10 );
+// 				char** strings = backtrace_symbols( buffer, entries );
+// 				
+// 				m_log << "mov: " << &other << endl;
+// 				for( int i = 0; i < entries; ++i )
+// 				{
+// 					 m_log << strings[ i ] << endl;
+// 				}
+// 				m_log << endl;
+// 				
+// 				free( strings );
+// 			}
+			
 			other.m_parent = nullptr;
 		}
 		
 		O1OctreeNode& operator=( O1OctreeNode&& other )
 		{
+			// Debug
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				
+// 				void* buffer[ 10 ];
+// 				int entries = backtrace( buffer, 10 );
+// 				char** strings = backtrace_symbols( buffer, entries );
+// 				
+// 				m_log << "mov: " << &other << endl;
+// 				for( int i = 0; i < entries; ++i )
+// 				{
+// 					 m_log << strings[ i ] << endl;
+// 				}
+// 				m_log << endl;
+// 				
+// 				free( strings );
+// 			}
+			
 			m_contents = std::move( other.m_contents );
 			m_children = std::move( other.m_children );
 			m_parent = other.m_parent;
@@ -148,9 +211,20 @@ namespace model
 		// children can be released from octree cache.
 		NodeArray m_children;
 		
+		// Debug
+		static ofstream m_log;
+		static mutex m_logMutex;
+		//
+		
 		// CACHE INVARIANT. Indicates if the node is leaf.
-		bool m_isLeaf; 
+		bool m_isLeaf;
 	};
+	
+	template< typename Contents, typename ContentsAlloc >
+	ofstream O1OctreeNode< Contents, ContentsAlloc >::m_log( "O1Octree.log" );
+	
+	template< typename Contents, typename ContentsAlloc >
+	mutex O1OctreeNode< Contents, ContentsAlloc >::m_logMutex;
 	
 	template< typename Contents, typename ContentsAlloc >
 	inline void* O1OctreeNode< Contents, ContentsAlloc >::operator new( size_t size )

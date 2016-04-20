@@ -9,6 +9,8 @@
 #include "RenderingState.h"
 #include "Profiler.h"
 
+#define DEBUG
+
 using namespace std;
 using namespace util;
 
@@ -125,67 +127,51 @@ namespace model
 		
 		void setupNodeRenderingNoFront( FrontListIter& iter, const Node& node, Renderer& renderer ) const;
 		
-		// Debug
-		void assertNode( const Node& node, const Morton& morton )
-		{
-			uint nodeLvl = morton.getLevel();
-			OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
-			
-			stringstream ss;
-			ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
-			
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << ss.str();
-// 				m_log.flush();
-// 			}
-			
-			if( &node == &m_placeholder )
+		#ifdef DEBUG
+			void assertNode( const Node& node, const Morton& morton )
 			{
-				uint level = morton.getLevel();
-				if( level != m_leafLvlDim.m_nodeLvl )
-				{
-					ss << "Placeholder is not from leaf level." << endl << endl;
-					{
-						lock_guard< recursive_mutex > lock( m_logMutex );
-						m_log << ss.str();
-						m_log.flush();
-					}
-					assert( false );
-				}
-			}
-			else
-			{
-				if( node.getContents().empty() )
-				{
-					ss << "Empty node" << endl << endl;
-					{
-						lock_guard< recursive_mutex > lock( m_logMutex );
-						m_log << ss.str();
-						m_log.flush();
-					}
-					assert( false );
-				}
-				Morton calcMorton = nodeDim.calcMorton( node );
-				if( calcMorton != morton )
-				{
-					ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
-					{
-						lock_guard< recursive_mutex > lock( m_logMutex );
-						m_log << ss.str();
-						m_log.flush();
-					}
-					assert( false );
-				}
+				uint nodeLvl = morton.getLevel();
+				OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
 				
-				OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
-				Node* parentNode = node.parent();
+				stringstream ss;
+				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
 				
-				if( parentNode != nullptr )
+	// 			{
+	// 				lock_guard< recursive_mutex > lock( m_logMutex );
+	// 				m_log << ss.str();
+	// 				m_log.flush();
+	// 			}
+				
+				if( &node == &m_placeholder )
 				{
-					if( parentNode->getContents().empty() )
+					uint level = morton.getLevel();
+					if( level != m_leafLvlDim.m_nodeLvl )
 					{
-						ss << "Empty parent" << endl << endl;
+						ss << "Placeholder is not from leaf level." << endl << endl;
+						{
+							lock_guard< recursive_mutex > lock( m_logMutex );
+							m_log << ss.str();
+							m_log.flush();
+						}
+						assert( false );
+					}
+				}
+				else
+				{
+					if( node.getContents().empty() )
+					{
+						ss << "Empty node" << endl << endl;
+						{
+							lock_guard< recursive_mutex > lock( m_logMutex );
+							m_log << ss.str();
+							m_log.flush();
+						}
+						assert( false );
+					}
+					Morton calcMorton = nodeDim.calcMorton( node );
+					if( calcMorton != morton )
+					{
+						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
 						{
 							lock_guard< recursive_mutex > lock( m_logMutex );
 							m_log << ss.str();
@@ -194,22 +180,39 @@ namespace model
 						assert( false );
 					}
 					
-					Morton parentMorton = *morton.traverseUp();
-					Morton calcParentMorton = parentDim.calcMorton( *parentNode );
-					if( parentMorton != calcParentMorton )
+					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
+					Node* parentNode = node.parent();
+					
+					if( parentNode != nullptr )
 					{
-						ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
-						<< calcParentMorton.toString() << endl;
+						if( parentNode->getContents().empty() )
 						{
-							lock_guard< recursive_mutex > lock( m_logMutex );
-							m_log << ss.str();
-							m_log.flush();
+							ss << "Empty parent" << endl << endl;
+							{
+								lock_guard< recursive_mutex > lock( m_logMutex );
+								m_log << ss.str();
+								m_log.flush();
+							}
+							assert( false );
 						}
-						assert( false );
+						
+						Morton parentMorton = *morton.traverseUp();
+						Morton calcParentMorton = parentDim.calcMorton( *parentNode );
+						if( parentMorton != calcParentMorton )
+						{
+							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
+							<< calcParentMorton.toString() << endl;
+							{
+								lock_guard< recursive_mutex > lock( m_logMutex );
+								m_log << ss.str();
+								m_log.flush();
+							}
+							assert( false );
+						}
 					}
 				}
 			}
-		}
+		#endif
 		
 		/** Database connection used to persist nodes. */
 		Sql m_sql;
@@ -257,11 +260,10 @@ namespace model
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
 		
-		// Debug
-		recursive_mutex m_logMutex;
-		
-		// Debug
-		ofstream m_log;
+		#ifdef DEBUG
+			recursive_mutex m_logMutex;
+			ofstream m_log;
+		#endif
 	};
 	
 	template< typename Morton, typename Point >
@@ -275,8 +277,10 @@ namespace model
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_processedNodes( 0ul ),
 	m_canRelease( true ),
-	m_leafLvlLoadedFlag( false ),
-	m_log( "log.txt" )
+	m_leafLvlLoadedFlag( false )
+	#ifdef DEBUG
+		,m_log( "log.txt" )
+	#endif
 	{}
 	
 // 	template< typename Morton, typename Point >
@@ -318,8 +322,11 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::insertIntoFront( Node& node, const Morton& morton, int threadIdx )
 	{
-		// Debug
-		assertNode( node, morton );
+		#ifdef DEBUG
+		{
+			assertNode( node, morton );
+		}
+		#endif
 		
 		// Debug
 // 		{
@@ -459,12 +466,13 @@ namespace model
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 			for( FrontListIter frontIt = m_front.begin(); frontIt != m_front.end(); /**/ )
 			{
-				// Debug
+				#ifdef DEBUG
 				{
 // 					lock_guard< recursive_mutex > lock( m_logMutex );
 // 					m_log << "=== Node tracking begin ===" << endl << endl;
 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 				}
+				#endif
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
 			}
 			
@@ -550,28 +558,32 @@ namespace model
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 			
-			// Debug
+			#ifdef DEBUG
 			{
 				assertNode( node, morton );
 			}
+			#endif
 			
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer, projThresh ) )
 			{
-				// Debug
+				#ifdef DEBUG
 				{
 					lock_guard< recursive_mutex > lock( m_logMutex );
 					m_log << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
 						  << endl << endl;
 				}
+				#endif
 				
 				prune( frontIt, nodeLvlDim, parentNode, renderer );
 				lastParent = parentNode;
 				
-				// Debug
+				#ifdef DEBUG
 				{
 					auto tempIt = prev( frontIt );
 					assertNode( *tempIt->m_octreeNode, tempIt->m_morton );
 				}
+				#endif
+				
 				return;
 			}
 			lastParent = parentNode;
@@ -632,7 +644,7 @@ namespace model
 			
 			if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
 			{
-				// Debug
+				#ifdef DEBUG
 				{
 // 					Morton tracked; tracked.build( 0x8339eedUL );
 // 					if( tracked == substituteCandidate.m_morton )
@@ -643,20 +655,23 @@ namespace model
 						assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
 // 					}
 				}
+				#endif
 				
 				node = substituteCandidate;
 				
-				// Debug
+				#ifdef DEBUG
 				{
 					assertNode( *node.m_octreeNode, node.m_morton );
 				}
+				#endif
 				
 				substitutionLvlList.erase( substitutionLvlList.begin() );
 				
-				// Debug
+				#ifdef DEBUG
 				{
 					assertNode( *node.m_octreeNode, node.m_morton );
 				}
+				#endif
 				
 				return true;
 			}
@@ -739,35 +754,57 @@ namespace model
 // 			m_log << "Tot alloc: " << AllocStatistics::totalAllocated() << ". Limit: " << m_memoryLimit << endl << endl;
 // 		}
 		
-		// Debug
-		{
+		#ifdef DEBUG
+			int toRelease = parentNode->child().size();
+			ulong processedBefore = m_processedNodes;
+			bool released = false;
+			
 			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
-		}
-		
-		if( AllocStatistics::totalAllocated() > m_memoryLimit )
-		{
-			releaseSiblings( parentNode->child(), nodeLvlDim );
-		}
+		#endif
 		
 		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
 		{
 			++m_processedNodes;
 			
-			// Debug
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "Releasing " << frontIt->m_morton.toString() << endl;
-// 			}
+			#ifdef DEBUG
+			{
+				lock_guard< recursive_mutex > lock( m_logMutex );
+				m_log << "Releasing " << frontIt->m_morton.toString() << endl;
+			}
+			#endif
 			
 			frontIt = m_front.erase( frontIt );
 		}
 		
+		if( AllocStatistics::totalAllocated() > m_memoryLimit )
+		{
+			#ifdef DEBUG
+				released = true;
+			#endif
+			
+			releaseSiblings( parentNode->child(), nodeLvlDim );
+		}
+		
+		#ifdef DEBUG
+		{
+			if( released && toRelease != m_processedNodes - processedBefore )
+			{
+				lock_guard< recursive_mutex > lock( m_logMutex );
+				m_log << "Expected parent: " << parentNode << " found: " << frontIt->m_octreeNode->parent() << endl
+					  << endl;
+				
+				assert( false && "All persisted nodes should also be released." );
+			}
+		}
+		#endif
+		
 		FrontNode frontNode( *parentNode, parentMorton );
 		
-		// Debug
+		#ifdef DEBUG
 		{
 			assertNode( *frontNode.m_octreeNode, frontNode.m_morton );
 		}
+		#endif
 		
 		setupNodeRendering( frontIt, frontNode, renderer );
 		
@@ -861,22 +898,24 @@ namespace model
 			}
 			
 			Morton siblingMorton = dim.calcMorton( sibling );
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "2DB: " << siblingMorton.toString() << endl;
-// 			}
+			
+			#ifdef DEBUG
+			{
+				lock_guard< recursive_mutex > lock( m_logMutex );
+				m_log << "2DB: " << siblingMorton.toString() << endl;
+			}
+			#endif
 			
 			// Persisting node
 			m_sql.insertNode( siblingMorton, sibling );
 		}
 		
-		// Debug
-		{
-			m_persisted += siblings.size();
-		}
+		m_persisted += siblings.size();
+		
 		siblings.clear();
 	}
 }
+
+#undef DEBUG
 
 #endif
