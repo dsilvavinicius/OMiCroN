@@ -521,12 +521,6 @@ namespace model
 	{
 		FrontNode& frontNode = *frontIt;
 		
-		// Debug
-// 		{
-// 			lock_guard< recursive_mutex > lock( m_logMutex );
-// 			m_log << "Tracking: " << frontIt->m_morton.toString() << endl;
-// 		}
-		
 		if( frontNode.m_octreeNode == &m_placeholder )
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
@@ -550,6 +544,12 @@ namespace model
 // 		m_prunningMtx.lock();
 		Node* parentNode = node.parent();
 // 		m_prunningMtx.unlock();
+		
+		// Debug
+		{
+			lock_guard< recursive_mutex > lock( m_logMutex );
+			m_log << "Tracking: " << morton.toString() << endl;
+		}
 		
 		// If parentNode == lastParent, prunning was not sucessful for a sibling of the current node, so the prunning
 		// check can be skipped.
@@ -712,6 +712,7 @@ namespace model
 		
 		if( pruneFlag )
 		{
+			int nSiblings = 0;
 			FrontListIter siblingIter = frontIt;
 			while( siblingIter != m_front.end() )
 			{
@@ -729,11 +730,12 @@ namespace model
 				{
 					break;
 				}
+				++nSiblings;
 			}
 			
 			// The last sibling group cannot be prunned when the leaf level is not loaded yet. It can be incomplete yet
-			// at that time.
-			if( !m_leafLvlLoadedFlag && siblingIter == m_front.end() )
+			// at that time. Also, all the sibling nodes should be in front before prunning.
+			if( ( !m_leafLvlLoadedFlag && siblingIter == m_front.end() ) || nSiblings != parentNode->child().size() )
 			{
 				pruneFlag = false;
 			}
@@ -769,7 +771,7 @@ namespace model
 			#ifdef DEBUG
 			{
 				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "Releasing " << frontIt->m_morton.toString() << endl;
+				m_log << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
 			}
 			#endif
 			
@@ -790,8 +792,8 @@ namespace model
 			if( released && toRelease != m_processedNodes - processedBefore )
 			{
 				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "Expected parent: " << parentNode << " found: " << frontIt->m_octreeNode->parent() << endl
-					  << endl;
+				m_log << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: " << parentNode
+					  << " found: " << m_front.front().m_octreeNode->parent() << endl << endl;
 				
 				assert( false && "All persisted nodes should also be released." );
 			}
@@ -902,7 +904,7 @@ namespace model
 			#ifdef DEBUG
 			{
 				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "2DB: " << siblingMorton.toString() << endl;
+				m_log << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
 			}
 			#endif
 			
