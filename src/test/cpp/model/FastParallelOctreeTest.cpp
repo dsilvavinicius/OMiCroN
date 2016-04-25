@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <MockRenderer.h>
 #include "FastParallelOctree.h"
+#include "FastParallelOctreeTestParam.h"
 
 namespace model
 {
@@ -329,18 +330,18 @@ namespace model
 			}
 		}
 		
-		TEST( FastParallelOctreeTest, Creation_MultiThread_StayPuff_Sanity )
+		void testSanity( const FastParallelOctreeTestParam& params )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton, Point >;
 			using OctreeDim = Octree::Dim;
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			
-			string filename = "../../../src/data/example/staypuff.ply";
-			Octree octree( filename, 20, 1024, 10ul * 1024ul * 1024ul, 4 );
+			Octree octree( params.m_plyFilename, params.m_hierarchyLvl, params.m_workItemSize, params.m_memoryQuota,
+						   params.m_nThreads );
 			waitAsynCreation( octree );
 			
-			string dbFilename = filename;
+			string dbFilename = params.m_plyFilename;
  			dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
  			dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
  			
@@ -349,6 +350,37 @@ namespace model
  			Sql sql( dbFilename, false );
  			Morton rootCode; rootCode.build( 0x1 );
  			checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
+		}
+		
+		TEST( FastParallelOctreeTest, Creation_StayPuff_Sanity )
+		{
+			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			testSanity( params );
+		}
+		
+		TEST( FastParallelOctreeTest, Creation_Prova5M_Sanity )
+		{
+			FastParallelOctreeTestParam params( "../../../src/data/real/prova5M.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			testSanity( params );
+		}
+		
+		TEST( FastParallelOctreeTest, Creation_Prova10M_Sanity )
+		{
+			FastParallelOctreeTestParam params( "../../../src/data/real/prova10M.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			testSanity( params );
+		}
+		
+		TEST( FastParallelOctreeTest, Creation_TempiettoAll_Sanity )
+		{
+			FastParallelOctreeTestParam params( "../../../src/data/real/tempietto_all.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			testSanity( params );
+		}
+		
+		TEST( FastParallelOctreeTest, Creation_TempiettoSub_Sanity )
+		{
+			FastParallelOctreeTestParam params( "../../../src/data/real/tempietto_sub_tot.ply", 4, 20,
+												1024, 10ul * 1024ul * 1024ul );
+			testSanity( params );
 		}
 	}
 }

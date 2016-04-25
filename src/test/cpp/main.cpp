@@ -3,12 +3,12 @@
 #include <QDir>
 #include <string>
 #include <boost/program_options.hpp>
-#include "FastParallelOctreeStressParam.h"
+#include "FastParallelOctreeTestParam.h"
 
 using namespace std;
 namespace po = boost::program_options;
 
-FastParallelOctreeStressParam g_fastParallelStressParam;
+FastParallelOctreeTestParam g_fastParallelStressParam;
 
 int main(int argc, char** argv)
 {
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
 
 	if( vm.count( "octree_stress_filename" ) )
 	{
-		cout << "FastParallelOctreeStress params identified." << endl << endl;
+		cout << "FastParallelOctreeTest params identified." << endl << endl;
 		
 		string plyFilename = vm[ "octree_stress_filename" ].as< string >();
 		int threads = vm[ "octree_stress_threads" ].as< int >();
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 		int workitem = vm[ "octree_stress_workitem" ].as< int >();
 		ulong quota = vm[ "octree_stress_quota" ].as< ulong >();
 		
-		g_fastParallelStressParam = FastParallelOctreeStressParam( plyFilename, threads, lvl, workitem, quota );
+		g_fastParallelStressParam = FastParallelOctreeTestParam( plyFilename, threads, lvl, workitem, quota );
 	}
 	
 	return RUN_ALL_TESTS();

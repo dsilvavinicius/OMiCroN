@@ -47,7 +47,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/TextTest.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Text3DTestWidget.h	${CPP_DIR}/${MODEL_DIR}/Text3DTestWidget.cpp
 	${CPP_DIR}/${MODEL_DIR}/Text3DTest.cpp
-	${HEADER_DIR}/FastParallelOctreeStressParam.h	${CPP_DIR}/FastParallelOctreeStressParam.cpp
+	${HEADER_DIR}/FastParallelOctreeTestParam.h	${CPP_DIR}/FastParallelOctreeTestParam.cpp
 	
 #	The tests below are not compatible with glew and Tucano, since are using new Qt only.
 

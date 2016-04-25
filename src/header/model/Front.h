@@ -279,7 +279,7 @@ namespace model
 	m_canRelease( true ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
-		,m_log( "log.txt" )
+		,m_log( "Front.txt" )
 	#endif
 	{}
 	
@@ -545,11 +545,12 @@ namespace model
 		Node* parentNode = node.parent();
 // 		m_prunningMtx.unlock();
 		
-		// Debug
-		{
-			lock_guard< recursive_mutex > lock( m_logMutex );
-			m_log << "Tracking: " << morton.toString() << endl;
-		}
+		#ifdef DEBUG
+// 		{
+// 			lock_guard< recursive_mutex > lock( m_logMutex );
+// 			m_log << "Tracking: " << morton.toString() << endl;
+// 		}
+		#endif
 		
 		// If parentNode == lastParent, prunning was not sucessful for a sibling of the current node, so the prunning
 		// check can be skipped.
@@ -567,11 +568,11 @@ namespace model
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer, projThresh ) )
 			{
 				#ifdef DEBUG
-				{
-					lock_guard< recursive_mutex > lock( m_logMutex );
-					m_log << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
-						  << endl << endl;
-				}
+// 				{
+// 					lock_guard< recursive_mutex > lock( m_logMutex );
+// 					m_log << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
+// 						  << endl << endl;
+// 				}
 				#endif
 				
 				prune( frontIt, nodeLvlDim, parentNode, renderer );
@@ -769,10 +770,10 @@ namespace model
 			++m_processedNodes;
 			
 			#ifdef DEBUG
-			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
-			}
+// 			{
+// 				lock_guard< recursive_mutex > lock( m_logMutex );
+// 				m_log << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
+// 			}
 			#endif
 			
 			frontIt = m_front.erase( frontIt );
@@ -902,10 +903,10 @@ namespace model
 			Morton siblingMorton = dim.calcMorton( sibling );
 			
 			#ifdef DEBUG
-			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
-			}
+// 			{
+// 				lock_guard< recursive_mutex > lock( m_logMutex );
+// 				m_log << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
+// 			}
 			#endif
 			
 			// Persisting node

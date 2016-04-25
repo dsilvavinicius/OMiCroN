@@ -12,6 +12,7 @@
 #include "SQLiteManager.h"
 
 //#define HIERARCHY_STATS
+//#define DEBUG
 
 using namespace util;
 
@@ -131,10 +132,10 @@ namespace model
 		
 		mutex m_listMutex;
 		
-		// Debug
-		mutex m_logMutex;
-// 		ofstream m_log;
-		//
+		#ifdef DEBUG
+			mutex m_logMutex;
+ 			ofstream m_log;
+		#endif
 		
 		ulong m_memoryLimit;
 		
@@ -161,7 +162,9 @@ namespace model
 	#ifdef HIERARCHY_STATS
 		, m_processedNodes( 0 )
 	#endif
-	
+	#ifdef DEBUG
+		, m_log( "HierarchyCreation.log" )
+	#endif
 	{
 		srand( 1 );
 		
@@ -200,10 +203,7 @@ namespace model
 	template< typename Morton, typename Point >
 	typename HierarchyCreator< Morton, Point >::Node* HierarchyCreator< Morton, Point >::create()
 	{
-		// Debug
-		{
-			cout << "MEMORY BEFORE CREATING: " << AllocStatistics::totalAllocated() << endl << endl;
-		}
+		cout << "MEMORY BEFORE CREATING: " << AllocStatistics::totalAllocated() << endl << endl;
 		
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
 		bool leafLvlLoaded = false;
@@ -282,11 +282,7 @@ namespace model
 				leafLvlLoaded = true;
 				m_front.notifyLeafLvlLoaded();
 				
-				// Debug
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					cout << "===== Leaf lvl loaded =====" << endl << endl;
-				}
+				cout << "===== Leaf lvl loaded =====" << endl << endl;
 			}
 		);
 		diskAccessThread.detach();
@@ -560,12 +556,13 @@ namespace model
 							Node& firstNode = iterOutput[ dispatchedThreads - 1 ].front();							
 							for( Node& child : firstNode.child() )
 							{
-								// Debug
+								#ifdef DEBUG
 								{
 									lock_guard< mutex > lock( m_logMutex );
-									cout << "Case -1 addr:" << &child << " code: "
-										<< m_octreeDim.calcMorton( child ).toString() << endl << endl;
+									m_log << "Case -1 addr:" << &child << " code: "
+										  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
 								}
+								#endif
 								
 								setParent( child, 0 );
 							}
@@ -644,12 +641,13 @@ namespace model
 						
 						for( Node& child : lastList.back().child() )
 						{
-							// Debug
+							#ifdef DEBUG
 							{
 								lock_guard< mutex > lock( m_logMutex );
-								cout << "Case -2 addr: " << &child << " code: "
-									 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+								m_log << "Case -2 addr: " << &child << " code: "
+									  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
 							}
+							#endif
 							
 							setParent( child, 0 );
 						}
@@ -766,12 +764,13 @@ namespace model
 			child.setParent( &node );
 // 			m_front.unlockPrunning();
 			
-			// Debug
+			#ifdef DEBUG
 			{
 				lock_guard< mutex > lock( m_logMutex );
-				cout << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-					 << m_octreeDim.calcMorton( node ).toString() << endl << endl;
+				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
+					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
 			}
+			#endif
 			
 			if( child.isLeaf() )
 			{
@@ -846,12 +845,13 @@ namespace model
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					
-					// Debug
+					#ifdef DEBUG
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case 0 (1) addr: " << &mergedChild[ i ] << " code: "
-							 << m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl << endl;
+						m_log << "Case 0 (1) addr: " << &mergedChild[ i ] << " code: "
+							  << m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl << endl;
 					}
+					#endif
 					
 					setParent( mergedChild[ i ], 0 );
 				}
@@ -860,12 +860,13 @@ namespace model
 					int idx = prevLastNodeChild.size() + i;
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					
-					// Debug
+					#ifdef DEBUG
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case 0 (2) addr: " << &mergedChild[ idx ] << " code: "
-							 << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl << endl;
+						m_log << "Case 0 (2) addr: " << &mergedChild[ idx ] << " code: "
+							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl << endl;
 					}
+					#endif
 					
 					setParent( mergedChild[ idx ], 0 );
 				}
@@ -890,23 +891,25 @@ namespace model
 				// Setup parents for boundary nodes children.
 				for( Node& child : prevLastNodeChild )
 				{
-					// Debug
+					#ifdef DEBUG
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case -3 (1) addr: " << &child << " code: "
-							 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+						m_log << "Case -3 (1) addr: " << &child << " code: "
+							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
 					}
+					#endif
 					
 					setParent( child, 0 );
 				}
 				for( Node& child : nextFirstNodeChild )
 				{
-					// Debug
+					#ifdef DEBUG
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case -3 (2) addr: " << &child << " code: "
-							 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+						m_log << "Case -3 (2) addr: " << &child << " code: "
+							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
 					}
+					#endif
 					
 					setParent( child, 0 );
 				}
@@ -1123,12 +1126,13 @@ namespace model
 			Node& finalChild = node.child()[ 0 ];
 			if( setParentFlag && !finalChild.isLeaf() )
 			{
-				// Debug
+				#ifdef DEBUG
 				{
 					lock_guard< mutex > lock( m_logMutex );
-					cout << "Case 1. addr: " << &finalChild << " code: "
-						 << m_octreeDim.calcMorton( finalChild ).toString() << endl << endl;
+					m_log << "Case 1. addr: " << &finalChild << " code: "
+						  << m_octreeDim.calcMorton( finalChild ).toString() << endl << endl;
 				}
+				#endif
 				
 				setParent( finalChild, threadIdx );
 			}
@@ -1193,12 +1197,13 @@ namespace model
 				// Set parental relationship of children.
 				if( setParentFlag && !child.isLeaf() )
 				{
-					// Debug
+					#ifdef DEBUG
 					{
 						lock_guard< mutex > lock( m_logMutex );
-						cout << "Case 2 addr: " << &child << " code: "
-							 << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+						m_log << "Case 2 addr: " << &child << " code: "
+							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
 					}
+					#endif
 					
 					setParent( child, threadIdx );
 				}
@@ -1263,5 +1268,7 @@ namespace model
 		return ss.str();
 	}
 }
+
+#undef DEBUG
 
 #endif

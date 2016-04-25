@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include "FastParallelOctree.h"
-#include "FastParallelOctreeStressParam.h"
+#include "FastParallelOctreeTestParam.h"
 
-extern "C" FastParallelOctreeStressParam g_fastParallelStressParam;
+extern "C" FastParallelOctreeTestParam g_fastParallelStressParam;
 
 namespace model
 {
@@ -21,7 +21,7 @@ namespace model
 			{
 				ofstream m_log( "FastParallelOctreeStressTest.log", ios_base::app );
 				
-				FastParallelOctreeStressParam param = g_fastParallelStressParam;
+				FastParallelOctreeTestParam param = g_fastParallelStressParam;
 				m_log << "Params: " << param << endl;
 				auto start = Profiler::now( "Octree construction", m_log );
 				
