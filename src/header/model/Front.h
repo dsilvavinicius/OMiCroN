@@ -79,29 +79,23 @@ namespace model
 		 * @param dispatchedThreads is the number of dispatched thread in the creation iteration. */
 		void notifyInsertionEnd( uint dispatchedThreads );
 		
-		/** Indicates that node release is needed. The front tracking will release nodes until a call to turnReleaseOff()
-		 * occurs. */
-// 		void turnReleaseOn();
-		
-		/** Indicates that node release is not needed anymore. The front tracking will stop the node release. */
-		//void turnReleaseOff();
-		
-		/** Returns true if the front can release more nodes, false otherwise. */
-		bool canRelease();
+		/** Checks if the front is in release mode. */
+		bool isReleasing();
 		
 		/** Notifies that all leaf level nodes are already loaded. */
 		void notifyLeafLvlLoaded();
-		
-// 		/*/** Acquires a lock for operations that should have mutual exclusion with prunning. */
-// 		void lockPrunning();
-// 		
-// 		/** Releases a lock for operations that should have mutual exclusion with prunning. */
-// 		void unlockPrunning();*/
 		
 		/** Tracks the front based on the projection threshold.
 		 * @param renderer is the responsible of rendering the points of the tracked front.
 		 * @param projThresh is the projection threashold */
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
+		
+		#ifdef DEBUG
+			long reportPlaceholders()
+			{
+				return m_nPlaceholders;
+			}
+		#endif
 		
 	private:
 		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
@@ -128,6 +122,19 @@ namespace model
 		void setupNodeRenderingNoFront( FrontListIter& iter, const Node& node, Renderer& renderer ) const;
 		
 		#ifdef DEBUG
+			void logAndFail( const string& msg )
+			{
+				logDebugMsg( msg );
+				m_log.flush();
+				assert( false );
+			}
+		
+			void logDebugMsg( const string& msg )
+			{
+				lock_guard< recursive_mutex > lock( m_logMutex );
+				m_log << msg;
+			}
+		
 			void assertNode( const Node& node, const Morton& morton )
 			{
 				uint nodeLvl = morton.getLevel();
@@ -136,24 +143,13 @@ namespace model
 				stringstream ss;
 				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
 				
-	// 			{
-	// 				lock_guard< recursive_mutex > lock( m_logMutex );
-	// 				m_log << ss.str();
-	// 				m_log.flush();
-	// 			}
-				
 				if( &node == &m_placeholder )
 				{
 					uint level = morton.getLevel();
 					if( level != m_leafLvlDim.m_nodeLvl )
 					{
 						ss << "Placeholder is not from leaf level." << endl << endl;
-						{
-							lock_guard< recursive_mutex > lock( m_logMutex );
-							m_log << ss.str();
-							m_log.flush();
-						}
-						assert( false );
+						logAndFail( ss.str() );
 					}
 				}
 				else
@@ -161,23 +157,13 @@ namespace model
 					if( node.getContents().empty() )
 					{
 						ss << "Empty node" << endl << endl;
-						{
-							lock_guard< recursive_mutex > lock( m_logMutex );
-							m_log << ss.str();
-							m_log.flush();
-						}
-						assert( false );
+						logAndFail( ss.str() );
 					}
 					Morton calcMorton = nodeDim.calcMorton( node );
 					if( calcMorton != morton )
 					{
 						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
-						{
-							lock_guard< recursive_mutex > lock( m_logMutex );
-							m_log << ss.str();
-							m_log.flush();
-						}
-						assert( false );
+						logAndFail( ss.str() );
 					}
 					
 					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
@@ -188,12 +174,7 @@ namespace model
 						if( parentNode->getContents().empty() )
 						{
 							ss << "Empty parent" << endl << endl;
-							{
-								lock_guard< recursive_mutex > lock( m_logMutex );
-								m_log << ss.str();
-								m_log.flush();
-							}
-							assert( false );
+							logAndFail( ss.str() );
 						}
 						
 						Morton parentMorton = *morton.traverseUp();
@@ -202,12 +183,7 @@ namespace model
 						{
 							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
 							<< calcParentMorton.toString() << endl;
-							{
-								lock_guard< recursive_mutex > lock( m_logMutex );
-								m_log << ss.str();
-								m_log.flush();
-							}
-							assert( false );
+							logAndFail( ss.str() );
 						}
 					}
 				}
@@ -255,7 +231,7 @@ namespace model
 		ulong m_persisted;
 		
 		/** true if the front has nodes to release yet, false otherwise. */
-		atomic_bool m_canRelease;
+		atomic_bool m_releaseFlag;
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
@@ -263,6 +239,7 @@ namespace model
 		#ifdef DEBUG
 			recursive_mutex m_logMutex;
 			ofstream m_log;
+			atomic_long m_nPlaceholders;
 		#endif
 	};
 	
@@ -276,10 +253,11 @@ namespace model
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_processedNodes( 0ul ),
-	m_canRelease( true ),
+	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
-		,m_log( "Front.txt" )
+		,m_log( "Front.txt" ),
+		m_nPlaceholders( 0ul )
 	#endif
 	{}
 	
@@ -314,9 +292,9 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >::canRelease()
+	inline bool Front< Morton, Point >::isReleasing()
 	{
-		return m_canRelease;
+		return m_releaseFlag;
 	}
 	
 	template< typename Morton, typename Point >
@@ -341,12 +319,6 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
 	{
-		// Debug
-// 		{
-// 			lock_guard< recursive_mutex > lock( m_logMutex );
-// 			m_log << "Front placeholder insertion: " << morton.toString() << endl;
-// 		}
-		
 		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
@@ -429,6 +401,11 @@ namespace model
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			// Insert all leaf level pending nodes and placeholders.
+			
+			#ifdef DEBUG
+				m_nPlaceholders += m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ].size();
+			#endif
+			
 			m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
 		}
 		
@@ -450,11 +427,17 @@ namespace model
 				}
 			}
 			
-			bool transactionOpened = false;
-			if( AllocStatistics::totalAllocated() > m_memoryLimit )
+			bool transactionNeeded = AllocStatistics::totalAllocated() > m_memoryLimit;
+			m_releaseFlag = transactionNeeded;
+			
+			if( transactionNeeded )
 			{
-				transactionOpened = true;
 				m_sql.beginTransaction();
+				
+				#ifdef DEBUG
+// 					stringstream ss; ss << "Front size: " << m_front.size() << endl << endl;
+// 					logDebugMsg( ss.str() );
+				#endif
 			}
 			
 			// Debug
@@ -468,41 +451,33 @@ namespace model
 			{
 				#ifdef DEBUG
 				{
-// 					lock_guard< recursive_mutex > lock( m_logMutex );
-// 					m_log << "=== Node tracking begin ===" << endl << endl;
 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 				}
 				#endif
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
 			}
 			
-			// Debug
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "===== Front tracking ends =====." << endl << endl;
-// 			}
-			
-			if( transactionOpened )
+			if( transactionNeeded )
 			{
 				m_sql.endTransaction();
 			}
 		}
 		
-		// Debug
-// 		if( m_canRelease && m_persisted == 0 )
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			m_log << "Front cannot release anymore." << endl << endl;
-// 		}
+		#ifdef DEBUG
+			stringstream ss; ss << "Front size: " << m_front.size() << " Placeholders: " << m_nPlaceholders
+								<< " Persisted: " << m_persisted << endl << endl;
+			logDebugMsg( ss.str() );
+		#endif
 		
-		m_canRelease = ( m_persisted > 0 );
-		
-		// Debug
-// 		if( m_canRelease )
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			m_log << "TRACKING FRONT END, can release. Persisted: " << m_persisted << endl << endl;
-// 		}
+		if( m_releaseFlag && m_persisted == 0 )
+		{
+			#ifdef DEBUG
+				ss << "No more nodes can be persisted." << endl << endl;
+				logDebugMsg( ss.str() );
+			#endif
+			
+			m_releaseFlag = false;
+		}
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
@@ -525,12 +500,6 @@ namespace model
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
-				// Debug
-// 				{
-// 					lock_guard< recursive_mutex > lock( m_logMutex );
-// 					m_log << "Skipping placeholder : " << frontNode.m_morton.toString() << endl << endl;
-// 				}
-				
 				frontIt++;
 				return;
 			}
@@ -547,8 +516,8 @@ namespace model
 		
 		#ifdef DEBUG
 // 		{
-// 			lock_guard< recursive_mutex > lock( m_logMutex );
-// 			m_log << "Tracking: " << morton.toString() << endl;
+// 			stringstream ss; ss << "Tracking: " << morton.toString() << endl << endl;
+// 			logDebugMsg( ss.str() );
 // 		}
 		#endif
 		
@@ -569,9 +538,9 @@ namespace model
 			{
 				#ifdef DEBUG
 // 				{
-// 					lock_guard< recursive_mutex > lock( m_logMutex );
-// 					m_log << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
-// 						  << endl << endl;
+// 					stringstream ss; ss << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
+// 										<< endl << endl;
+// 					logDebugMsg( ss.str() );
 // 				}
 				#endif
 				
@@ -594,34 +563,16 @@ namespace model
 		
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
-			// Debug
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "Branching: " << morton.toString() << endl << endl;
-// 			}
-			
 			branch( frontIt, node, nodeLvlDim, renderer );
 			return;
 		}
 		
 		if( !isCullable )
 		{
-			// Debug
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "Staying: " << morton.toString() << endl << endl;
-// 			}
-			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
 			return;
 		}
-		
-		// Debug
-// 		{
-// 			lock_guard< recursive_mutex > lock( m_logMutex );
-// 			m_log << "Skiping: " << morton.toString() << endl << endl;
-// 		}
 		
 		frontIt++;
 	}
@@ -637,24 +588,12 @@ namespace model
 			FrontList& substitutionLvlList = m_perLvlInsertions[ substitutionLvl ];
 			FrontNode& substituteCandidate = substitutionLvlList.front();
 			
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "Substitute candidate: " << substituteCandidate.m_morton.toString() << endl;
-// 			}
-			
 			if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
 			{
 				#ifdef DEBUG
 				{
-// 					Morton tracked; tracked.build( 0x8339eedUL );
-// 					if( tracked == substituteCandidate.m_morton )
-// 					{
-// 						lock_guard< recursive_mutex > lock( m_logMutex );
-// 						m_log << "Substituting: " << node.m_morton.toString() << "by "
-// 							<< substituteCandidate.m_morton.toString() << endl << endl;
-						assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
-// 					}
+					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
+					--m_nPlaceholders;
 				}
 				#endif
 				
@@ -690,12 +629,6 @@ namespace model
 													const OctreeDim& parentLvlDim, FrontListIter& frontIt,
 												 int substitutionLvl, Renderer& renderer, const Float projThresh )
 	{
-		// Debug
-// 		{
-// 			m_log << "Parent Morton: " <<  parentMorton.toString() << "ParentLvlDim: " << parentLvlDim
-// 				 << endl;
-// 		}
-		
 		pair< Vec3, Vec3 > parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
 		bool pruneFlag = false;
@@ -717,12 +650,6 @@ namespace model
 			FrontListIter siblingIter = frontIt;
 			while( siblingIter != m_front.end() )
 			{
-				// Debug
-// 				{
-// 					lock_guard< recursive_mutex > lock( m_logMutex );
-// 					m_log << "Checking substitution: " << siblingIter->m_morton.toString() << endl;
-// 				}
-				
 				if( siblingIter->m_octreeNode == &m_placeholder )
 				{
 					substitutePlaceholder( *siblingIter, substitutionLvl );
@@ -749,13 +676,7 @@ namespace model
 	inline void Front< Morton, Point >::prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode,
 											   Renderer& renderer )
 	{
-		//m_log << "=== Prunning begins ===" << endl << endl;
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
-		
-		// Debug
-// 		{
-// 			m_log << "Tot alloc: " << AllocStatistics::totalAllocated() << ". Limit: " << m_memoryLimit << endl << endl;
-// 		}
 		
 		#ifdef DEBUG
 			int toRelease = parentNode->child().size();
@@ -763,6 +684,9 @@ namespace model
 			bool released = false;
 			
 			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
+			
+			stringstream ss; ss << "Prunning group of " << frontIt->m_morton.toString() << endl << endl;
+			logDebugMsg( ss.str() );
 		#endif
 		
 		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
@@ -771,31 +695,42 @@ namespace model
 			
 			#ifdef DEBUG
 // 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
+// 				stringstream ss; ss << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
+// 				logDebugMsg( ss.str() );
 // 			}
 			#endif
 			
 			frontIt = m_front.erase( frontIt );
 		}
 		
-		if( AllocStatistics::totalAllocated() > m_memoryLimit )
+		if( m_releaseFlag )
 		{
 			#ifdef DEBUG
-				released = true;
+				stringstream ss; ss << "Should release" << endl << endl;
+				logDebugMsg( ss.str() );
 			#endif
 			
-			releaseSiblings( parentNode->child(), nodeLvlDim );
+			if( AllocStatistics::totalAllocated() > m_memoryLimit )
+			{
+				#ifdef DEBUG
+					released = true;
+				#endif
+				
+				releaseSiblings( parentNode->child(), nodeLvlDim );
+			}
+			else
+			{
+				m_releaseFlag = false;
+			}
 		}
 		
 		#ifdef DEBUG
 		{
 			if( released && toRelease != m_processedNodes - processedBefore )
 			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: " << parentNode
-					  << " found: " << m_front.front().m_octreeNode->parent() << endl << endl;
-				
+				stringstream ss; ss << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: "
+									<< parentNode << " found: " << m_front.front().m_octreeNode->parent() << endl << endl;
+				logAndFail( ss.str() );
 				assert( false && "All persisted nodes should also be released." );
 			}
 		}
@@ -810,8 +745,6 @@ namespace model
 		#endif
 		
 		setupNodeRendering( frontIt, frontNode, renderer );
-		
-		//m_log << "=== Prunning ends ===" << endl << endl;
 	}
 	
 	template< typename Morton, typename Point >
@@ -819,12 +752,6 @@ namespace model
 													 Renderer& renderer, const Float projThresh, bool& out_isCullable )
 	const
 	{
-		// Debug
-// 		{
-// 			m_log << "Morton: " <<  morton.toString() << "ParentLvlDim: " << nodeLvlDim
-// 				 << endl;
-// 		}
-		
 		pair< Vec3, Vec3 > box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
 		
@@ -841,7 +768,6 @@ namespace model
 	inline void Front< Morton, Point >::branch( FrontListIter& frontIt, Node& node, const OctreeDim& nodeLvlDim,
 												Renderer& renderer )
 	{
-		//m_log << "=== Branching begins ===" << endl << endl;
 		++m_processedNodes;
 		frontIt = m_front.erase( frontIt );
 		
@@ -858,8 +784,6 @@ namespace model
 			
 			if( !renderer.isCullable( box ) )
 			{
-				//m_log << "Point set to render: " << hex << child->getBits() << dec << endl;
-				
 				setupNodeRendering( frontIt, frontNode, renderer );
 			}
 			else
@@ -867,8 +791,6 @@ namespace model
 				m_front.insert( frontIt, frontNode );
 			}
 		}
-		
-		//m_log << "=== Branching ends ===" << endl << endl;
 	}
 	
 	template< typename Morton, typename Point >
@@ -876,7 +798,6 @@ namespace model
 															Renderer& renderer )
 	{
 		m_front.insert( frontIt, frontNode );
-		//m_log << "Into front: " << code->toString() << endl;
 		renderer.handleNodeRendering( frontNode.m_octreeNode->getContents() );
 	}
 	
@@ -903,10 +824,8 @@ namespace model
 			Morton siblingMorton = dim.calcMorton( sibling );
 			
 			#ifdef DEBUG
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
-// 			}
+				stringstream ss; ss << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
+				logDebugMsg( ss.str() );
 			#endif
 			
 			// Persisting node

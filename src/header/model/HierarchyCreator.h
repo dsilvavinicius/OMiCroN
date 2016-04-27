@@ -295,13 +295,14 @@ namespace model
 			int lvl = m_leafLvlDim.m_nodeLvl;
 			bool nextPassFlag = false; // Indicates that the current algorithm pass should end and a new one should be issued.
 			
-			if( isReleasing && !m_front.canRelease() )
+			if( isReleasing && !m_front.isReleasing() )
 			{
-				// Debug
-// 				{
-// 					lock_guard< mutex > lock( mutex );
-// 					cout << "Turning release off. Front cannot release anymore." << endl << endl;
-// 				}
+				#ifdef DEBUG
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					m_log << "Turning release off. Front cannot release anymore." << endl << endl;
+				}
+				#endif
 				
 				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 			}
@@ -557,11 +558,11 @@ namespace model
 							for( Node& child : firstNode.child() )
 							{
 								#ifdef DEBUG
-								{
-									lock_guard< mutex > lock( m_logMutex );
-									m_log << "Case -1 addr:" << &child << " code: "
-										  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-								}
+// 								{
+// 									lock_guard< mutex > lock( m_logMutex );
+// 									m_log << "Case -1 addr:" << &child << " code: "
+// 										  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+// 								}
 								#endif
 								
 								setParent( child, 0 );
@@ -603,11 +604,25 @@ namespace model
 					{
 						if( AllocStatistics::totalAllocated() < m_memoryLimit )
 						{
+							#ifdef DEBUG
+							{
+								lock_guard< mutex > lock( m_logMutex );
+								m_log << "Turning release off. Mem quota respected." << endl << endl;
+							}
+							#endif
+							
 							turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 						}
 					}
 					else if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
+						#ifdef DEBUG
+						{
+							lock_guard< mutex > lock( m_logMutex );
+							m_log << "Turning release on." << endl << endl;
+						}
+						#endif
+						
 						turnReleaseOn( releaseMutex, isReleasing );
 					}
 					// END NODE RELEASE MANAGEMENT.
@@ -642,11 +657,11 @@ namespace model
 						for( Node& child : lastList.back().child() )
 						{
 							#ifdef DEBUG
-							{
-								lock_guard< mutex > lock( m_logMutex );
-								m_log << "Case -2 addr: " << &child << " code: "
-									  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-							}
+// 							{
+// 								lock_guard< mutex > lock( m_logMutex );
+// 								m_log << "Case -2 addr: " << &child << " code: "
+// 									  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+// 							}
 							#endif
 							
 							setParent( child, 0 );
@@ -765,11 +780,11 @@ namespace model
 // 			m_front.unlockPrunning();
 			
 			#ifdef DEBUG
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
+// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
+// 			}
 			#endif
 			
 			if( child.isLeaf() )
@@ -846,11 +861,11 @@ namespace model
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Case 0 (1) addr: " << &mergedChild[ i ] << " code: "
-							  << m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "Case 0 (1) addr: " << &mergedChild[ i ] << " code: "
+// 							  << m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl << endl;
+// 					}
 					#endif
 					
 					setParent( mergedChild[ i ], 0 );
@@ -861,11 +876,11 @@ namespace model
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Case 0 (2) addr: " << &mergedChild[ idx ] << " code: "
-							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "Case 0 (2) addr: " << &mergedChild[ idx ] << " code: "
+// 							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl << endl;
+// 					}
 					#endif
 					
 					setParent( mergedChild[ idx ], 0 );
@@ -892,11 +907,11 @@ namespace model
 				for( Node& child : prevLastNodeChild )
 				{
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Case -3 (1) addr: " << &child << " code: "
-							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "Case -3 (1) addr: " << &child << " code: "
+// 							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+// 					}
 					#endif
 					
 					setParent( child, 0 );
@@ -904,11 +919,11 @@ namespace model
 				for( Node& child : nextFirstNodeChild )
 				{
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Case -3 (2) addr: " << &child << " code: "
-							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "Case -3 (2) addr: " << &child << " code: "
+// 							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+// 					}
 					#endif
 					
 					setParent( child, 0 );
@@ -1017,8 +1032,6 @@ namespace model
 			lock_guard< mutex > lock( releaseMutex );
 			isReleasing = true;
 		}
-		
-		//m_front.turnReleaseOn();
 	}
 		
 	template< typename Morton, typename Point >
@@ -1127,11 +1140,11 @@ namespace model
 			if( setParentFlag && !finalChild.isLeaf() )
 			{
 				#ifdef DEBUG
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					m_log << "Case 1. addr: " << &finalChild << " code: "
-						  << m_octreeDim.calcMorton( finalChild ).toString() << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					m_log << "Case 1. addr: " << &finalChild << " code: "
+// 						  << m_octreeDim.calcMorton( finalChild ).toString() << endl << endl;
+// 				}
 				#endif
 				
 				setParent( finalChild, threadIdx );
@@ -1198,11 +1211,11 @@ namespace model
 				if( setParentFlag && !child.isLeaf() )
 				{
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Case 2 addr: " << &child << " code: "
-							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "Case 2 addr: " << &child << " code: "
+// 							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+// 					}
 					#endif
 					
 					setParent( child, threadIdx );
