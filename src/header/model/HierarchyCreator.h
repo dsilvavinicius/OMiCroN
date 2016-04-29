@@ -71,7 +71,7 @@ namespace model
 		size_t updatedWorkListSize( int lvl );
 		
 		/** Sets the parent pointer for all children of a given node. */
-		void setParent( Node& node, const int threadIdx ) /*const*/;
+		void setParent( Node& node, const int threadIdx, bool infrontEnd = true ) /*const*/;
 		
 		/** Collapses (turn into leaf) a node if it has only one child. */
 		void collapse( Node& node ) const;
@@ -517,6 +517,11 @@ namespace model
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					
+					// Debug
+					{
+						cout << "Insertion end after parallel." << endl << endl;
+					}
+					
 					m_front.notifyInsertionEnd( dispatchedThreads );
 					
 					// BEGIN LOAD BALANCE.
@@ -596,6 +601,11 @@ namespace model
 						nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
 					}
 					
+					// Debug
+					{
+						cout << "Insertion end after merge." << endl << endl;
+					}
+					
 					m_front.notifyInsertionEnd( 1 );
 					// END LOAD BALANCE.
 					
@@ -667,6 +677,10 @@ namespace model
 							setParent( child, 0 );
 						}
 						
+						// Debug
+						{
+							cout << "Insertion end after level." << endl << endl;
+						}
 						m_front.notifyInsertionEnd( 1 );
 					}
 					
@@ -743,53 +757,59 @@ namespace model
 		
 	/** Sets the parent pointer for all children of a given node. */
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx ) /*const*/
+	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx, bool infrontEnd ) /*const*/
 	{
-		// Debug
-// 			{
-// 				Morton morton; morton.build( 0x8 );
-// 				if( m_octreeDim.calcMorton( node ) == morton )
-// 				{
-// 					cout << "Setting children parents of " << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
-// 				}
-// 			}
-		
-		// Debug
 		OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-		//
 		
-		NodeArray& children = node.child();
-		for( int i = 0; i < children.size(); ++i )
+		if( infrontEnd )
 		{
-			// Debug
-// 				{
-// 					Morton morton; morton.build( 0x8 );
-// 					if( m_octreeDim.calcMorton( node ) == morton )
-// 					{
-// 						OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-// 						cout << "Setting parent of " << childDim.calcMorton( children[ i ] ).getPathToRoot( true )
-// 							<< ": " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
-// 							<< "addr: " << &node << endl << endl;
-// 					}
-// 				}
-			
-			Node& child = children[ i ];
-			
-// 			m_front.lockPrunning();
-			child.setParent( &node );
-// 			m_front.unlockPrunning();
-			
-			#ifdef DEBUG
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
-// 			}
-			#endif
-			
-			if( child.isLeaf() )
+			for( Node& child : node.child() )
 			{
-				m_front.insertIntoFront( child, childDim.calcMorton( child ), threadIdx );
+				child.setParent( &node );
+				
+				#ifdef DEBUG
+	// 			{
+	// 				lock_guard< mutex > lock( m_logMutex );
+	// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
+	// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
+	// 			}
+				#endif
+				
+				if( child.isLeaf() )
+				{
+					m_front.insertIntoFrontEnd( child, childDim.calcMorton( child ), threadIdx );
+				}
+			}
+		}
+		else
+		{
+			typename Front::FrontListIter iter;
+			bool iterInit = false;
+			
+			for( Node& child : node.child() )
+			{
+				child.setParent( &node );
+				
+				#ifdef DEBUG
+	// 			{
+	// 				lock_guard< mutex > lock( m_logMutex );
+	// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
+	// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
+	// 			}
+				#endif
+				
+				if( child.isLeaf() )
+				{
+					if( iterInit )
+					{
+						auto nextIter = next( iter );
+						iter = m_front.insertIntoFront( nextIter, child, childDim.calcMorton( child ), threadIdx );
+					}
+					else
+					{
+						iter = m_front.insertIntoFrontBegin( child, childDim.calcMorton( child ), threadIdx );
+					}
+				}
 			}
 		}
 	}

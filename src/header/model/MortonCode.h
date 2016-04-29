@@ -8,6 +8,7 @@
 #include <sstream>
 #include <memory>
 #include <glm/ext.hpp>
+#include <qsurfaceformat.h>
 
 #include "Stream.h"
 #include "IMemoryManager.h"
@@ -67,6 +68,10 @@ namespace model
 		
 		shared_ptr< MortonCode< T > > traverseUp() const;
 		vector< shared_ptr< MortonCode< T > >  > traverseDown() const;
+		
+		/** @param lvl is the lvl of the returned descendant.
+		 * @returns the descendant of this MortonCode in the desired level. */
+		MortonCode getAncestorInLvl( uint lvl ) const;
 		
 		/** @returns the first child of this morton code. The first child has the morton code of the father appended
 		 * with the bitmask 000. */
@@ -230,6 +235,19 @@ namespace model
 		}
 		
 		return children;
+	}
+	
+	template <typename T>
+	inline MortonCode< T > MortonCode< T >::getAncestorInLvl( uint lvl ) const
+	{
+		uint thisLvl = getLevel();
+		assert( lvl <= thisLvl && "An ancestor should be in above in the hierarchy." );
+		
+		T ancestorBits = m_bits >> ( thisLvl - lvl ) * 3;
+		
+		MortonCode< T > ancestor;
+		ancestor.build( ancestorBits );
+		return ancestor;
 	}
 	
 	template <typename T>

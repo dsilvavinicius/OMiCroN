@@ -196,8 +196,6 @@ namespace model
 			
 			cout << "Hierarchy creation finished." << endl << endl;
 			
-			cout << "Final placeholders: " << m_front->reportPlaceholders() << endl << endl;
-			
 			#ifdef HIERARCHY_STATS
 				m_processedNodes = m_hierarchyCreator.m_processedNodes;
 			#endif

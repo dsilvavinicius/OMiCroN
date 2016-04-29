@@ -16,9 +16,19 @@ using namespace util;
 
 namespace model
 {
-	// TODO: Probably would be better using list instead of forward_list because of the O(1) splice.
-	/** Visualization front of the hierarchy. The front leaf nodes are assumed to be inserted by threads different of the
-	 * visualization threads. */
+	/** Visualization front of an hierarchy under construction. Front ensures that its nodes are always sorted in
+	 * hierarchy's width and that nodes can be inserted in a multithreaded environment. The nodes must be inserted in
+	 * iterations. For a given iteration, the insertion threads can in parallel insert nodes of a continuous front segment,
+	 * given that these segments are disjoint and that all nodes inserted by all threads also form a continuous segment.
+	 * Also, a given thread should insert nodes in hierarchy's width-order. In order to ensure this ordering, an API for
+	 * defining node placeholders is also available. Placeholders are temporary nodes in the deepest hierarchy level that
+	 * are expected to be substituted by meaninful nodes later on, when they are constructed in the hierarchy. After all
+	 * threads end up inserting nodes in the iteration, notifyInsertionEnd should be called, which will push all new nodes
+	 * into the front in such a way that the final front still sorted in hierarchy's width order.
+	 *
+	 * Front also provides API for front tracking, operation which prunes or branches front nodes in order to enforce a
+	 * rendering performance budget, specified by a box projection threshold. This operation also manages memory stress
+	 * by persisting and releasing prunned sibling groups. */
 	template< typename Morton, typename Point >
 	class Front
 	{
@@ -63,12 +73,31 @@ namespace model
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
 		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads, const ulong memoryLimit );
 		
-		/** Synchronized. Inserts a leaf node into front so it can be tracked later on. If a placeholder in a deeper level
-		 * for this node is already inserted, it is replaced by the new node.
+		/** Synchronized. Inserts a node into thread's buffer end so it can be push to the front later on. After this, the
+		 * tracking method will ensure that the placeholder related with this node, if any, will be substituted by it.
 		 * @param node is a reference to the node to be inserted.
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread. */
-		void insertIntoFront( Node& node, const Morton& morton, int threadIdx );
+		void insertIntoFrontEnd( Node& node, const Morton& morton, int threadIdx );
+		
+		/** Synchronized. Inserts a node into thread's buffer beginning so it can be push to the front later on. After
+		 * this, the tracking method will ensure that the placeholder related with this node, if any, will be substituted
+		 * by it.
+		 * @param node is a reference to the node to be inserted.
+		 * @param morton is node's morton code id.
+		 * @param threadIdx is the hierarchy creation thread index of the caller thread.
+		 * @returns an iterator pointing to the element inserted into front. */
+		FrontListIter insertIntoFrontBegin( Node& node, const Morton& morton, int threadIdx );
+		
+		/** Synchronized. Inserts a node into thread's buffer, before iter, so it can be push to the front later on. After
+		 * this, the tracking method will ensure that the placeholder related with this node, if any, will be substituted
+		 * by it.
+		 * @param iter is an iterator to a position in the thread's buffer returned by Front's API.
+		 * @param node is a reference to the node to be inserted.
+		 * @param morton is node's morton code id.
+		 * @param threadIdx is the hierarchy creation thread index of the caller thread.
+		 * @returns an iterator pointing to the element inserted into front. */
+		FrontListIter insertIntoFront( FrontListIter& iter, Node& node, const Morton& morton, int threadIdx );
 		
 		/** Synchronized. Inserts a placeholder for a node that will be defined later in the shallower levels. This node
 		 * will be replaced on front tracking if a substitute is already defined.
@@ -89,13 +118,6 @@ namespace model
 		 * @param renderer is the responsible of rendering the points of the tracked front.
 		 * @param projThresh is the projection threashold */
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
-		
-		#ifdef DEBUG
-			long reportPlaceholders()
-			{
-				return m_nPlaceholders;
-			}
-		#endif
 		
 	private:
 		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
@@ -133,6 +155,50 @@ namespace model
 			{
 				lock_guard< recursive_mutex > lock( m_logMutex );
 				m_log << msg;
+			}
+		
+			void assertFrontIterator( const FrontListIter& iter )
+			{
+				if( iter != m_front.begin() )
+				{
+					Morton& currMorton = iter->m_morton;
+					Morton& prevMorton = prev( iter )->m_morton;
+					
+					uint currLvl = currMorton.getLevel();
+					uint prevLvl = prevMorton.getLevel();
+					
+					stringstream ss;
+					if( currLvl < prevLvl )
+					{
+						Morton prevAncestorMorton = prevMorton.getAncestorInLvl( currLvl );
+						if( currMorton <= prevAncestorMorton )
+						{
+							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
+								<< "Curr: " << currMorton.getPathToRoot( true ) << endl;
+							logAndFail( ss.str() );
+						}
+					}
+					else if( currLvl > prevLvl )
+					{
+						Morton currAncestorMorton = currMorton.getAncestorInLvl( prevLvl );
+						if( currAncestorMorton <= prevMorton  )
+						{
+							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
+								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << endl;
+							logAndFail( ss.str() );
+						}
+					}
+					else
+					{
+						if( currMorton <= prevMorton )
+						{
+							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
+								<< "Curr: " << currMorton.getPathToRoot( true ) << endl;
+							logAndFail( ss.str() );
+						}
+					}
+				}
+				assertNode( *iter->m_octreeNode, iter->m_morton );
 			}
 		
 			void assertNode( const Node& node, const Morton& morton )
@@ -239,7 +305,8 @@ namespace model
 		#ifdef DEBUG
 			recursive_mutex m_logMutex;
 			ofstream m_log;
-			atomic_long m_nPlaceholders;
+			ulong m_nPlaceholders;
+			ulong m_nSubstituted;
 		#endif
 	};
 	
@@ -257,7 +324,8 @@ namespace model
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
 		,m_log( "Front.txt" ),
-		m_nPlaceholders( 0ul )
+		m_nPlaceholders( 0ul ),
+		m_nSubstituted( 0ul )
 	#endif
 	{}
 	
@@ -298,7 +366,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::insertIntoFront( Node& node, const Morton& morton, int threadIdx )
+	inline void Front< Morton, Point >::insertIntoFrontEnd( Node& node, const Morton& morton, int threadIdx )
 	{
 		#ifdef DEBUG
 		{
@@ -314,6 +382,36 @@ namespace model
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, morton ) );
+	}
+	
+	template< typename Morton, typename Point >
+	inline typename Front< Morton, Point >::FrontListIter Front< Morton, Point >
+	::insertIntoFrontBegin( Node& node, const Morton& morton, int threadIdx )
+	{
+		#ifdef DEBUG
+		{
+			assertNode( node, morton );
+		}
+		#endif
+		
+		FrontList& list = m_currentIterInsertions[ threadIdx ];
+		list.push_front( FrontNode( node, morton ) );
+		
+		return list.begin();
+	}
+	
+	template< typename Morton, typename Point >
+	inline typename Front< Morton, Point >::FrontListIter Front< Morton, Point >
+	::insertIntoFront( FrontListIter& iter, Node& node, const Morton& morton, int threadIdx )
+	{
+		#ifdef DEBUG
+		{
+			assertNode( node, morton );
+		}
+		#endif
+		
+		FrontList& list = m_currentIterInsertions[ threadIdx ];
+		return list.insert( iter, FrontNode( node, morton ) );
 	}
 	
 	template< typename Morton, typename Point >
@@ -343,44 +441,27 @@ namespace model
 			{
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
-				// Debug
-// 				{
-// 					lock_guard< recursive_mutex > lock( m_logMutex );
-// 					m_log << "Notifying insertion end in lvl " << lvl << endl << endl;
-// 				}
+				#ifdef DEBUG
+					ulong insertionSize = 0ul;
+				#endif
 				
 				for( auto it = m_currentIterInsertions.rbegin(); it != m_currentIterInsertions.rend(); ++it )
 				{
+					#ifdef DEBUG
+						insertionSize += it->size();
+					#endif
+						
 					m_perLvlInsertions[ lvl ].splice( m_perLvlInsertions[ lvl ].end(), *it );
 				}
 				
-				// Debug
-	// 			{
-	// 				if( !m_front.empty() )
-	// 				{
-	// 					lock_guard< mutex > lock( m_logMutex );
-	// 					m_log << "Notify insertion end. Fron after insertion:" << endl << endl;
-	// 					for( FrontNode& node : m_front )
-	// 					{
-	// 						m_log << OctreeDim( m_leafLvlDim, node.m_lvl ).calcMorton( node.m_octreeNode ).toString() << endl;
-	// 					}
-	// 				}
-	// 			}
+				#ifdef DEBUG
+					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Size: " << insertionSize << endl
+										<< endl;
+					logDebugMsg( ss.str() );
+				#endif
 			}
 		}
 	}
-	
-// 	template< typename Morton, typename Point >
-// 	inline void Front< Morton, Point >::lockPrunning()
-// 	{
-// 		m_prunningMtx.lock();
-// 	}
-// 	
-// 	template< typename Morton, typename Point >
-// 	inline void Front< Morton, Point >::unlockPrunning()
-// 	{
-// 		m_prunningMtx.unlock();
-// 	}
 	
 	template< typename Morton, typename Point >
 	inline FrontOctreeStats Front< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
@@ -396,15 +477,16 @@ namespace model
 		
 		m_persisted = 0ul;
 		
+		#ifdef DEBUG
+			m_nPlaceholders = 0ul;
+			m_nSubstituted = 0ul;
+		#endif
+		
 		auto start = Profiler::now();
 		
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			// Insert all leaf level pending nodes and placeholders.
-			
-			#ifdef DEBUG
-				m_nPlaceholders += m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ].size();
-			#endif
 			
 			m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
 		}
@@ -426,6 +508,21 @@ namespace model
 					substitutionLvl = i;
 				}
 			}
+			
+			#ifdef DEBUG
+				long expectedToSubstitute;
+				{
+					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
+					expectedToSubstitute = m_perLvlInsertions[ substitutionLvl ].size();
+				}
+				
+				{
+					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
+										<< " Substitution lvl: " << substitutionLvl << " Expected to substitute: "
+										<< expectedToSubstitute << endl << endl;
+					logDebugMsg( ss.str() );
+				}
+			#endif
 			
 			bool transactionNeeded = AllocStatistics::totalAllocated() > m_memoryLimit;
 			m_releaseFlag = transactionNeeded;
@@ -451,7 +548,8 @@ namespace model
 			{
 				#ifdef DEBUG
 				{
-					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
+					assertFrontIterator( frontIt );
+// 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 				}
 				#endif
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
@@ -461,18 +559,26 @@ namespace model
 			{
 				m_sql.endTransaction();
 			}
+			
+			#ifdef DEBUG
+				if( substitutionLvl == m_leafLvlDim.m_nodeLvl )
+				{
+					expectedToSubstitute -= m_nPlaceholders;
+				}
+				{
+					stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
+										<< " Substitution lvl: " << substitutionLvl << " Placeholders: " << m_nPlaceholders
+										<< " Expected to substitute: " << expectedToSubstitute << " Substituted: "
+										<< m_nSubstituted << " Persisted: " << m_persisted << endl << endl;
+					logDebugMsg( ss.str() );
+				}
+			#endif
 		}
-		
-		#ifdef DEBUG
-			stringstream ss; ss << "Front size: " << m_front.size() << " Placeholders: " << m_nPlaceholders
-								<< " Persisted: " << m_persisted << endl << endl;
-			logDebugMsg( ss.str() );
-		#endif
 		
 		if( m_releaseFlag && m_persisted == 0 )
 		{
 			#ifdef DEBUG
-				ss << "No more nodes can be persisted." << endl << endl;
+				stringstream ss; ss << "No more nodes can be persisted." << endl << endl;
 				logDebugMsg( ss.str() );
 			#endif
 			
@@ -500,15 +606,24 @@ namespace model
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
+				#ifdef DEBUG
+					++m_nPlaceholders;
+				#endif
+				
 				frontIt++;
 				return;
 			}
+			#ifdef DEBUG
+			else
+			{
+				assertFrontIterator( frontIt );
+			}
+			#endif
 		}
 		
 		Node& node = *frontNode.m_octreeNode;
 		Morton& morton = frontNode.m_morton;
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
-		
 		
 // 		m_prunningMtx.lock();
 		Node* parentNode = node.parent();
@@ -593,7 +708,6 @@ namespace model
 				#ifdef DEBUG
 				{
 					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
-					--m_nPlaceholders;
 				}
 				#endif
 				
@@ -611,6 +725,10 @@ namespace model
 				{
 					assertNode( *node.m_octreeNode, node.m_morton );
 				}
+				#endif
+				
+				#ifdef DEBUG
+					++m_nSubstituted;
 				#endif
 				
 				return true;
@@ -685,8 +803,8 @@ namespace model
 			
 			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 			
-			stringstream ss; ss << "Prunning group of " << frontIt->m_morton.toString() << endl << endl;
-			logDebugMsg( ss.str() );
+// 			stringstream ss; ss << "Prunning group of " << frontIt->m_morton.toString() << endl << endl;
+// 			logDebugMsg( ss.str() );
 		#endif
 		
 		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
@@ -706,8 +824,8 @@ namespace model
 		if( m_releaseFlag )
 		{
 			#ifdef DEBUG
-				stringstream ss; ss << "Should release" << endl << endl;
-				logDebugMsg( ss.str() );
+// 				stringstream ss; ss << "Should release" << endl << endl;
+// 				logDebugMsg( ss.str() );
 			#endif
 			
 			if( AllocStatistics::totalAllocated() > m_memoryLimit )
@@ -824,8 +942,8 @@ namespace model
 			Morton siblingMorton = dim.calcMorton( sibling );
 			
 			#ifdef DEBUG
-				stringstream ss; ss << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
-				logDebugMsg( ss.str() );
+// 				stringstream ss; ss << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
+// 				logDebugMsg( ss.str() );
 			#endif
 			
 			// Persisting node

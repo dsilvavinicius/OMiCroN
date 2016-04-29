@@ -352,9 +352,15 @@ namespace model
  			checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
 		}
 		
+		TEST( FastParallelOctreeTest, Creation_Shallow_StayPuff_Sanity )
+		{
+			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 3, 16, 10ul * 1024ul * 1024ul );
+			testSanity( params );
+		}
+		
 		TEST( FastParallelOctreeTest, Creation_StayPuff_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 7, 1024, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
 			testSanity( params );
 		}
 		
