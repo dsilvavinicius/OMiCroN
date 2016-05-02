@@ -11,8 +11,8 @@
 #include "Front.h"
 #include "SQLiteManager.h"
 
-//#define HIERARCHY_STATS
-//#define DEBUG
+// #define HIERARCHY_STATS
+// #define DEBUG
 
 using namespace util;
 
@@ -317,10 +317,10 @@ namespace model
 			if( isReleasing && !m_front.isReleasing() )
 			{
 				#ifdef DEBUG
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					m_log << "Turning release off. Front cannot release anymore." << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					m_log << "Turning release off. Front cannot release anymore." << endl << endl;
+// 				}
 				#endif
 				
 				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
@@ -329,11 +329,12 @@ namespace model
 			// BEGIN HIERARCHY CONSTRUCTION LOOP.
 			while( lvl )
 			{
-				// Debug
-// 				{
-// 					lock_guard< mutex > lock( m_logMutex );
-// 					cout << "======== Starting lvl " << lvl << " ========" << endl << endl;
-// 				}
+				#ifdef DEBUG
+				{
+					lock_guard< mutex > lock( m_logMutex );
+					m_log << "======== Starting lvl " << lvl << " ========" << endl << endl;
+				}
+				#endif
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
 				
@@ -344,11 +345,12 @@ namespace model
 				// BEGIN HIERARCHY LEVEL LOOP.
 				while( workListSize > 0 && !increaseLvlFlag )
 				{
-					// Debug
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						cout << "iter start" << endl << endl;
-// 					}
+					#ifdef DEBUG
+					{
+						lock_guard< mutex > lock( m_logMutex );
+						m_log << "iter start" << endl << endl;
+					}
+					#endif
 					
 					// Multipass restriction: the level's last sibling group cannot be processed until the last pass,
 					// since nodes loaded after or in the middle of current pass can have remainings of that sibling group.
@@ -379,11 +381,12 @@ namespace model
 					}
 					
 					int lastThreadIdx = dispatchedThreads - 1;
-					// Debug
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						cout << "Dispatched: " << dispatchedThreads << endl << endl;
-// 					}
+					#ifdef DEBUG
+					{
+						lock_guard< mutex > lock( m_logMutex );
+						m_log << "Dispatched: " << dispatchedThreads << endl << endl;
+					}
+					#endif
 					
 					IterArray iterInput( dispatchedThreads );
 					
@@ -418,13 +421,13 @@ namespace model
 							input.pop_front();
 							int nSiblings = 1;
 							
-							// Debug
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-// 								cout << "T " << omp_get_thread_num() << " sib[ 0 ]: "
-// 										<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-// 							}
-							//
+							#ifdef DEBUG
+							{
+								lock_guard< mutex > lock( m_logMutex );
+								m_log << "T " << omp_get_thread_num() << " sib[ 0 ]: "
+									  << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+							}
+							#endif
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
 							{
@@ -432,12 +435,13 @@ namespace model
 								++nSiblings;
 								input.pop_front();
 								
-								// Debug
-// 								{
-// 									lock_guard< mutex > lock( m_logMutex );
-// 									cout << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1 << " ]: "
-// 										<< m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-// 								}
+								#ifdef DEBUG
+								{
+									lock_guard< mutex > lock( m_logMutex );
+									m_log << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1 << " ]: "
+										  << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+								}
+								#endif
 							}
 							
 							bool isLastSiblingGroup = input.empty();
@@ -445,11 +449,12 @@ namespace model
 							if( workListSize - dispatchedThreads == 0 && !isLastPass && threadIdx == lastThreadIdx
 								&& isLastSiblingGroup )
 							{
-								// Debug
-// 								{
-// 									lock_guard< mutex > lock( m_logMutex );
-// 									cout << "Pushing sib group back." << endl << endl;
-// 								}
+								#ifdef DEBUG
+								{
+									lock_guard< mutex > lock( m_logMutex );
+									m_log << "Pushing sib group back." << endl << endl;
+								}
+								#endif
 								
 								// Send this last sibling group to the lvl WorkList again.
 								NodeList lastSiblingsList;
@@ -561,13 +566,14 @@ namespace model
 							NodeList nextLvlBack = std::move( nextLvlWorkList.back() );
 							nextLvlWorkList.pop_back();
 							
-							// Debug
-	// 						{
-	// 							lock_guard< mutex > lock( m_logMutex );
-	// 							cout << "Merging nextLvl back and output " << lastThreadIdx << endl
-	// 								 << "Next lvl back size: " << nextLvlBack.size() << "output size: "
-	// 								 << iterOutput[ lastThreadIdx ].size() << endl << endl;
-	// 						}
+							#ifdef DEBUG
+							{
+								lock_guard< mutex > lock( m_logMutex );
+								m_log << "Merging nextLvl back and output " << 0 << endl
+									  << "Next lvl back size: " << nextLvlBack.size() << "output size: "
+									  << iterOutput[ 0 ].size() << endl << endl;
+							}
+							#endif
 							
 							mergeOrPushWork( nextLvlBack, 0, iterOutput[ 0 ], nextLvlDim );
 						}
@@ -592,12 +598,14 @@ namespace model
 						}
 					}
 					
-					for( int i = 0; i < lastThreadIdx - 1; ++i )
+					for( int i = 0; i < lastThreadIdx; ++i )
 					{
-						// Debug
-// 						{
-// 							cout << "Merging output " << i << " and " << i - 1 << endl << endl;
-// 						}
+						#ifdef DEBUG
+						{
+							lock_guard< mutex > lock( m_logMutex );
+							m_log << "Merging output " << i << " and " << i + 1 << endl << endl;
+						}
+						#endif
 						
 						mergeOrPushWork( iterOutput[ i ], i, iterOutput[ i + 1 ], nextLvlDim );
 					}
@@ -607,7 +615,7 @@ namespace model
 // 						cout << "Pushing last list to next lvl." << endl << endl;
 // 					}
 					
-					// The last thread NodeList is not collapsed, since the last node can be in a sibling group not
+					// The last thread's NodeList is not collapsed, since the last node can be in a sibling group not
 					// entirely processed in this iteration.
 					if( !iterOutput.empty() && !iterOutput[ lastThreadIdx ].empty() )
 					{
@@ -633,10 +641,10 @@ namespace model
 						if( AllocStatistics::totalAllocated() < m_memoryLimit )
 						{
 							#ifdef DEBUG
-							{
-								lock_guard< mutex > lock( m_logMutex );
-								m_log << "Turning release off. Mem quota respected." << endl << endl;
-							}
+// 							{
+// 								lock_guard< mutex > lock( m_logMutex );
+// 								m_log << "Turning release off. Mem quota respected." << endl << endl;
+// 							}
 							#endif
 							
 							turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
@@ -645,10 +653,10 @@ namespace model
 					else if( AllocStatistics::totalAllocated() > m_memoryLimit )
 					{
 						#ifdef DEBUG
-						{
-							lock_guard< mutex > lock( m_logMutex );
-							m_log << "Turning release on." << endl << endl;
-						}
+// 						{
+// 							lock_guard< mutex > lock( m_logMutex );
+// 							m_log << "Turning release on." << endl << endl;
+// 						}
 						#endif
 						
 						turnReleaseOn( releaseMutex, isReleasing );
@@ -1019,12 +1027,17 @@ namespace model
 			workList.push_back( std::move( previousProcessed ) );
 		}
 		
-		// Debug
-// 			{
-// 				cout << "mergeOrPushWork end" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim ) << endl
-// 					<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					<< "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end" << endl << endl;
-// 			}
+			#ifdef DEBUG
+			{
+				lock_guard< mutex > lock( m_logMutex );
+				m_log << "mergeOrPushWork end" << endl << "prev:" << endl
+					  << nodeListToString( previousProcessed, nextLvlDim ) << endl
+					  << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+					  << "nextLvlWorkList:" << endl
+					  << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end"
+					  << endl << endl;
+			}
+			#endif
 	}
 	
 	template< typename Morton, typename Point >
