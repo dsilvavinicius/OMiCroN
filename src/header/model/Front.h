@@ -16,15 +16,15 @@ using namespace util;
 
 namespace model
 {
-	/** Visualization front of an hierarchy under construction. Front ensures that its nodes are always sorted in
-	 * hierarchy's width and that nodes can be inserted in a multithreaded environment. The nodes must be inserted in
+	/** Out-of-core visualization front of an hierarchy under construction. Front ensures that its nodes are always sorted
+	 * in hierarchy's width and that nodes can be inserted in a multithreaded environment. The nodes must be inserted in
 	 * iterations. For a given iteration, the insertion threads can in parallel insert nodes of a continuous front segment,
 	 * given that these segments are disjoint and that all nodes inserted by all threads also form a continuous segment.
 	 * Also, a given thread should insert nodes in hierarchy's width-order. In order to ensure this ordering, an API for
 	 * defining node placeholders is also available. Placeholders are temporary nodes in the deepest hierarchy level that
-	 * are expected to be substituted by meaninful nodes later on, when they are constructed in the hierarchy. After all
-	 * threads end up inserting nodes in the iteration, notifyInsertionEnd should be called, which will push all new nodes
-	 * into the front in such a way that the final front still sorted in hierarchy's width order.
+	 * are expected to be substituted by meaninful nodes later on, when they are constructed in the hierarchy. All
+	 * insertions go to thread buffers untill notifyInsertionEnd is called, which indicates the iteration ending and
+	 * results in all inserted nodes being pushed into the front data structure itself.
 	 *
 	 * Front also provides API for front tracking, operation which prunes or branches front nodes in order to enforce a
 	 * rendering performance budget, specified by a box projection threshold. This operation also manages memory stress
@@ -73,23 +73,21 @@ namespace model
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
 		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads, const ulong memoryLimit );
 		
-		/** Synchronized. Inserts a node into thread's buffer end so it can be push to the front later on. After this, the
-		 * tracking method will ensure that the placeholder related with this node, if any, will be substituted by it.
+		/** Inserts a node into thread's buffer end so it can be push to the front later on. After this, the tracking
+		 * method will ensure that the placeholder related with this node, if any, will be substituted by it.
 		 * @param node is a reference to the node to be inserted.
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread. */
-		void insertIntoFrontEnd( Node& node, const Morton& morton, int threadIdx );
+		void insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx );
 		
-		/** Synchronized. Inserts a node into thread's buffer beginning so it can be push to the front later on. After
-		 * this, the tracking method will ensure that the placeholder related with this node, if any, will be substituted
-		 * by it.
+		/** Acquire the iterator to the beginning of a thread buffer.
 		 * @param node is a reference to the node to be inserted.
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread.
 		 * @returns an iterator pointing to the element inserted into front. */
-		FrontListIter insertIntoFrontBegin( Node& node, const Morton& morton, int threadIdx );
+		FrontListIter getIteratorToBufferBegin( int threadIdx );
 		
-		/** Synchronized. Inserts a node into thread's buffer, before iter, so it can be push to the front later on. After
+		/** Inserts a node into thread's buffer, before iter, so it can be push to the front later on. After
 		 * this, the tracking method will ensure that the placeholder related with this node, if any, will be substituted
 		 * by it.
 		 * @param iter is an iterator to a position in the thread's buffer returned by Front's API.
@@ -97,7 +95,7 @@ namespace model
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread.
 		 * @returns an iterator pointing to the element inserted into front. */
-		FrontListIter insertIntoFront( FrontListIter& iter, Node& node, const Morton& morton, int threadIdx );
+		void insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton, int threadIdx );
 		
 		/** Synchronized. Inserts a placeholder for a node that will be defined later in the shallower levels. This node
 		 * will be replaced on front tracking if a substitute is already defined.
@@ -366,7 +364,7 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::insertIntoFrontEnd( Node& node, const Morton& morton, int threadIdx )
+	inline void Front< Morton, Point >::insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx )
 	{
 		#ifdef DEBUG
 		{
@@ -385,24 +383,14 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	inline typename Front< Morton, Point >::FrontListIter Front< Morton, Point >
-	::insertIntoFrontBegin( Node& node, const Morton& morton, int threadIdx )
+	inline typename Front< Morton, Point >::FrontListIter Front< Morton, Point >::getIteratorToBufferBegin( int threadIdx )
 	{
-		#ifdef DEBUG
-		{
-			assertNode( node, morton );
-		}
-		#endif
-		
-		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		list.push_front( FrontNode( node, morton ) );
-		
-		return list.begin();
+		return m_currentIterInsertions[ threadIdx ].begin();
 	}
 	
 	template< typename Morton, typename Point >
-	inline typename Front< Morton, Point >::FrontListIter Front< Morton, Point >
-	::insertIntoFront( FrontListIter& iter, Node& node, const Morton& morton, int threadIdx )
+	inline void Front< Morton, Point > ::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
+														   int threadIdx )
 	{
 		#ifdef DEBUG
 		{
@@ -411,7 +399,7 @@ namespace model
 		#endif
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		return list.insert( iter, FrontNode( node, morton ) );
+		list.insert( iter, FrontNode( node, morton ) );
 	}
 	
 	template< typename Morton, typename Point >
@@ -445,7 +433,7 @@ namespace model
 					ulong insertionSize = 0ul;
 				#endif
 				
-				for( auto it = m_currentIterInsertions.rbegin(); it != m_currentIterInsertions.rend(); ++it )
+				for( auto it = m_currentIterInsertions.begin(); it != m_currentIterInsertions.end(); ++it )
 				{
 					#ifdef DEBUG
 						insertionSize += it->size();

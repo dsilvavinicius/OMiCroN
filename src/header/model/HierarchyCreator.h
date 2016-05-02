@@ -70,8 +70,20 @@ namespace model
 		
 		size_t updatedWorkListSize( int lvl );
 		
-		/** Sets the parent pointer for all children of a given node. */
-		void setParent( Node& node, const int threadIdx, bool infrontEnd = true ) /*const*/;
+		/** Sets the parent pointer for all children of a given node, inserting them into front's thread buffer if they
+		 * are leaves.
+		 * @param node is the node which children will have the parent pointer set.
+		 * @param threadIdx is the index of the front's thread buffer which the node belongs to. */
+		void setParent( Node& node, const int threadIdx ) /*const*/;
+		
+		/** Sets the parent pointer for all children of a given node, inserting them into front's thread buffer if they
+		 * are leaves. In this version, an iterator to the thread buffer indicates where the node should be inserted into.
+		 * The thread index should be to the same front segment of the iterator.
+		 * @param node is the node which children will have the parent pointer set.
+		 * @param threadIdx is the index of the thread front segment which the node belongs to.
+		 * @param frontIter is the iterator to the segment index threadIdx. The node will be inserted before the iterator
+		 * (the same way as STL). */
+		void setParent( Node& node, const int threadIdx, typename Front::FrontListIter& frontIter ) /*const*/;
 		
 		/** Collapses (turn into leaf) a node if it has only one child. */
 		void collapse( Node& node ) const;
@@ -81,13 +93,20 @@ namespace model
 		
 		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
-		void removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim )
+		void removeBoundaryDuplicate( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
+									  const OctreeDim& nextLvlDim )
 		/*const*/;
 		
 		/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
 		 * the next level WorkList otherwise. Repetitions are checked while linking lists, since it can occur when the
-		 * lists have nodes from the same sibling group. */
-		void mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim );
+		 * lists have nodes from the same sibling group.
+		 * @param previousProcessed is the previous WorkList.
+		 * @param previousIdx is the thread index of the thread that computed previousProcessed.
+		 * @param nextProcessed is the next WorkList.
+		 * @param nextLvlDim has the dimensions of the octree for the level of the nodes in previousProcessed and
+		 * nextProcessed. */
+		void mergeOrPushWork( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
+							  OctreeDim& nextLvlDim );
 		
 		/** Creates a node from its solo child node. */
 		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx,
@@ -359,6 +378,7 @@ namespace model
 						}
 					}
 					
+					int lastThreadIdx = dispatchedThreads - 1;
 					// Debug
 // 					{
 // 						lock_guard< mutex > lock( m_logMutex );
@@ -367,7 +387,7 @@ namespace model
 					
 					IterArray iterInput( dispatchedThreads );
 					
-					for( int i = dispatchedThreads - 1; i > -1; --i )
+					for( int i = 0; i < dispatchedThreads; ++i )
 					{
 						iterInput[ i ] = popWork( lvl );
 					}
@@ -422,7 +442,8 @@ namespace model
 							
 							bool isLastSiblingGroup = input.empty();
 							
-							if( workListSize - dispatchedThreads == 0 && !isLastPass && threadIdx == 0 && isLastSiblingGroup )
+							if( workListSize - dispatchedThreads == 0 && !isLastPass && threadIdx == lastThreadIdx
+								&& isLastSiblingGroup )
 							{
 								// Debug
 // 								{
@@ -517,12 +538,7 @@ namespace model
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					
-					// Debug
-					{
-						cout << "Insertion end after parallel." << endl << endl;
-					}
-					
-					m_front.notifyInsertionEnd( dispatchedThreads );
+					//m_front.notifyInsertionEnd( dispatchedThreads );
 					
 					// BEGIN LOAD BALANCE.
 					// Debug
@@ -538,7 +554,7 @@ namespace model
 					
 					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
 					
-					if( !iterOutput.empty() && !iterOutput[ dispatchedThreads - 1 ].empty() )
+					if( !iterOutput.empty() && !iterOutput[ 0 ].empty() )
 					{
 						if( !nextLvlWorkList.empty() )
 						{
@@ -548,18 +564,18 @@ namespace model
 							// Debug
 	// 						{
 	// 							lock_guard< mutex > lock( m_logMutex );
-	// 							cout << "Merging nextLvl back and output " << dispatchedThreads - 1 << endl
+	// 							cout << "Merging nextLvl back and output " << lastThreadIdx << endl
 	// 								 << "Next lvl back size: " << nextLvlBack.size() << "output size: "
-	// 								 << iterOutput[ dispatchedThreads - 1 ].size() << endl << endl;
+	// 								 << iterOutput[ lastThreadIdx ].size() << endl << endl;
 	// 						}
 							
-							mergeOrPushWork( nextLvlBack, iterOutput[ dispatchedThreads - 1 ], nextLvlDim );
+							mergeOrPushWork( nextLvlBack, 0, iterOutput[ 0 ], nextLvlDim );
 						}
-						else if( iterOutput[ dispatchedThreads - 1 ].size() > 1 )
+						else if( iterOutput[ 0 ].size() > 1 )
 						{
-							// Setup the parent for the first node in thread[ dispatchedThreads - 1 ] output. This is
+							// Setup the parent for the first node in thread[ 0 ] output. This is
 							// necessary because it won't be merged with a previous workList.
-							Node& firstNode = iterOutput[ dispatchedThreads - 1 ].front();							
+							Node& firstNode = iterOutput[ 0 ].front();							
 							for( Node& child : firstNode.child() )
 							{
 								#ifdef DEBUG
@@ -570,19 +586,20 @@ namespace model
 // 								}
 								#endif
 								
-								setParent( child, 0 );
+								auto iter = m_front.getIteratorToBufferBegin( 0 );
+								setParent( child, 0, iter );
 							}
 						}
 					}
 					
-					for( int i = dispatchedThreads - 1; i > 0; --i )
+					for( int i = 0; i < lastThreadIdx - 1; ++i )
 					{
 						// Debug
 // 						{
 // 							cout << "Merging output " << i << " and " << i - 1 << endl << endl;
 // 						}
 						
-						mergeOrPushWork( iterOutput[ i ], iterOutput[ i - 1 ], nextLvlDim );
+						mergeOrPushWork( iterOutput[ i ], i, iterOutput[ i + 1 ], nextLvlDim );
 					}
 					
 					// Debug
@@ -592,13 +609,14 @@ namespace model
 					
 					// The last thread NodeList is not collapsed, since the last node can be in a sibling group not
 					// entirely processed in this iteration.
-					if( !iterOutput.empty() && !iterOutput[ 0 ].empty() )
+					if( !iterOutput.empty() && !iterOutput[ lastThreadIdx ].empty() )
 					{
 						if( !nextLvlWorkList.empty() )
 						{
-							removeBoundaryDuplicate( nextLvlWorkList.back(), iterOutput[ 0 ], nextLvlDim );
+							removeBoundaryDuplicate( nextLvlWorkList.back(), lastThreadIdx, iterOutput[ lastThreadIdx ],
+													 nextLvlDim );
 						}
-						nextLvlWorkList.push_back( std::move( iterOutput[ 0 ] ) );
+						nextLvlWorkList.push_back( std::move( iterOutput[ lastThreadIdx ] ) );
 					}
 					
 					// Debug
@@ -606,7 +624,7 @@ namespace model
 						cout << "Insertion end after merge." << endl << endl;
 					}
 					
-					m_front.notifyInsertionEnd( 1 );
+					m_front.notifyInsertionEnd( dispatchedThreads );
 					// END LOAD BALANCE.
 					
 					// BEGIN NODE RELEASE MANAGEMENT.
@@ -757,59 +775,50 @@ namespace model
 		
 	/** Sets the parent pointer for all children of a given node. */
 	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx, bool infrontEnd ) /*const*/
+	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx ) /*const*/
 	{
 		OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 		
-		if( infrontEnd )
+		for( Node& child : node.child() )
 		{
-			for( Node& child : node.child() )
+			child.setParent( &node );
+			
+			#ifdef DEBUG
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
+// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
+// 			}
+			#endif
+			
+			if( child.isLeaf() )
 			{
-				child.setParent( &node );
-				
-				#ifdef DEBUG
-	// 			{
-	// 				lock_guard< mutex > lock( m_logMutex );
-	// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-	// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
-	// 			}
-				#endif
-				
-				if( child.isLeaf() )
-				{
-					m_front.insertIntoFrontEnd( child, childDim.calcMorton( child ), threadIdx );
-				}
+				m_front.insertIntoBufferEnd( child, childDim.calcMorton( child ), threadIdx );
 			}
 		}
-		else
+	}
+	
+	template< typename Morton, typename Point >
+	void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx,
+													   typename Front::FrontListIter& frontIter )
+	{
+		OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
+		
+		for( Node& child : node.child() )
 		{
-			typename Front::FrontListIter iter;
-			bool iterInit = false;
+			child.setParent( &node );
 			
-			for( Node& child : node.child() )
+			#ifdef DEBUG
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
+// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
+// 			}
+			#endif
+			
+			if( child.isLeaf() )
 			{
-				child.setParent( &node );
-				
-				#ifdef DEBUG
-	// 			{
-	// 				lock_guard< mutex > lock( m_logMutex );
-	// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-	// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
-	// 			}
-				#endif
-				
-				if( child.isLeaf() )
-				{
-					if( iterInit )
-					{
-						auto nextIter = next( iter );
-						iter = m_front.insertIntoFront( nextIter, child, childDim.calcMorton( child ), threadIdx );
-					}
-					else
-					{
-						iter = m_front.insertIntoFrontBegin( child, childDim.calcMorton( child ), threadIdx );
-					}
-				}
+				m_front.insertIntoBuffer( frontIter, child, childDim.calcMorton( child ), threadIdx );
 			}
 		}
 	}
@@ -855,8 +864,10 @@ namespace model
 	 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::removeBoundaryDuplicate( NodeList& previousProcessed, NodeList& nextProcessed, const OctreeDim& nextLvlDim ) /*const*/
+	::removeBoundaryDuplicate( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
+							   const OctreeDim& nextLvlDim ) /*const*/
 	{
+		const int nextIdx = previousIdx + 1;
 		if( !previousProcessed.empty() && !nextProcessed.empty() )
 		{
 			Node& prevLastNode = previousProcessed.back();
@@ -888,8 +899,10 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( mergedChild[ i ], 0 );
+					setParent( mergedChild[ i ], previousIdx );
 				}
+				
+				typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
 				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
 				{
 					int idx = prevLastNodeChild.size() + i;
@@ -903,7 +916,7 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( mergedChild[ idx ], 0 );
+					setParent( mergedChild[ idx ], nextIdx, iter );
 				}
 				
 				nextFirstNode.setChildren( std::move( mergedChild ) );
@@ -934,8 +947,10 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( child, 0 );
+					setParent( child, previousIdx );
 				}
+				
+				typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
 				for( Node& child : nextFirstNodeChild )
 				{
 					#ifdef DEBUG
@@ -946,7 +961,7 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( child, 0 );
+					setParent( child, nextIdx, iter );
 				}
 			}
 			
@@ -966,7 +981,7 @@ namespace model
 		* lists have nodes from the same sibling group. */
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >
-	::mergeOrPushWork( NodeList& previousProcessed, NodeList& nextProcessed, OctreeDim& nextLvlDim )
+	::mergeOrPushWork( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed, OctreeDim& nextLvlDim )
 	{
 		// Debug
 // 			{
@@ -976,7 +991,7 @@ namespace model
 // 					 << "nextLvlWorkList end" << endl << endl;
 // 			}
 		
-		removeBoundaryDuplicate( previousProcessed, nextProcessed, nextLvlDim );
+		removeBoundaryDuplicate( previousProcessed, previousIdx, nextProcessed, nextLvlDim );
 	
 		if( previousProcessed.size() < m_expectedLoadPerThread )
 		{
@@ -998,7 +1013,7 @@ namespace model
 			
 			if( !workList.empty() )
 			{
-				removeBoundaryDuplicate( workList.back(), previousProcessed, nextLvlDim );
+				removeBoundaryDuplicate( workList.back(), previousIdx, previousProcessed, nextLvlDim );
 			}
 			
 			workList.push_back( std::move( previousProcessed ) );
