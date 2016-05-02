@@ -12,7 +12,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-// #define DEBUG
+#define DEBUG
 
 using namespace util;
 
@@ -330,10 +330,10 @@ namespace model
 			while( lvl )
 			{
 				#ifdef DEBUG
-				{
-					lock_guard< mutex > lock( m_logMutex );
-					m_log << "======== Starting lvl " << lvl << " ========" << endl << endl;
-				}
+// 				{
+// 					lock_guard< mutex > lock( m_logMutex );
+// 					m_log << "======== Starting lvl " << lvl << " ========" << endl << endl;
+// 				}
 				#endif
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
@@ -346,10 +346,10 @@ namespace model
 				while( workListSize > 0 && !increaseLvlFlag )
 				{
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "iter start" << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "iter start" << endl << endl;
+// 					}
 					#endif
 					
 					// Multipass restriction: the level's last sibling group cannot be processed until the last pass,
@@ -382,10 +382,10 @@ namespace model
 					
 					int lastThreadIdx = dispatchedThreads - 1;
 					#ifdef DEBUG
-					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Dispatched: " << dispatchedThreads << endl << endl;
-					}
+// 					{
+// 						lock_guard< mutex > lock( m_logMutex );
+// 						m_log << "Dispatched: " << dispatchedThreads << endl << endl;
+// 					}
 					#endif
 					
 					IterArray iterInput( dispatchedThreads );
@@ -422,11 +422,11 @@ namespace model
 							int nSiblings = 1;
 							
 							#ifdef DEBUG
-							{
-								lock_guard< mutex > lock( m_logMutex );
-								m_log << "T " << omp_get_thread_num() << " sib[ 0 ]: "
-									  << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-							}
+// 							{
+// 								lock_guard< mutex > lock( m_logMutex );
+// 								m_log << "T " << omp_get_thread_num() << " sib[ 0 ]: "
+// 									  << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+// 							}
 							#endif
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -436,11 +436,11 @@ namespace model
 								input.pop_front();
 								
 								#ifdef DEBUG
-								{
-									lock_guard< mutex > lock( m_logMutex );
-									m_log << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1 << " ]: "
-										  << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-								}
+// 								{
+// 									lock_guard< mutex > lock( m_logMutex );
+// 									m_log << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1 << " ]: "
+// 										  << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+// 								}
 								#endif
 							}
 							
@@ -450,10 +450,10 @@ namespace model
 								&& isLastSiblingGroup )
 							{
 								#ifdef DEBUG
-								{
-									lock_guard< mutex > lock( m_logMutex );
-									m_log << "Pushing sib group back." << endl << endl;
-								}
+// 								{
+// 									lock_guard< mutex > lock( m_logMutex );
+// 									m_log << "Pushing sib group back." << endl << endl;
+// 								}
 								#endif
 								
 								// Send this last sibling group to the lvl WorkList again.
@@ -567,12 +567,12 @@ namespace model
 							nextLvlWorkList.pop_back();
 							
 							#ifdef DEBUG
-							{
-								lock_guard< mutex > lock( m_logMutex );
-								m_log << "Merging nextLvl back and output " << 0 << endl
-									  << "Next lvl back size: " << nextLvlBack.size() << "output size: "
-									  << iterOutput[ 0 ].size() << endl << endl;
-							}
+// 							{
+// 								lock_guard< mutex > lock( m_logMutex );
+// 								m_log << "Merging nextLvl back and output " << 0 << endl
+// 									  << "Next lvl back size: " << nextLvlBack.size() << "output size: "
+// 									  << iterOutput[ 0 ].size() << endl << endl;
+// 							}
 							#endif
 							
 							mergeOrPushWork( nextLvlBack, 0, iterOutput[ 0 ], nextLvlDim );
@@ -601,10 +601,10 @@ namespace model
 					for( int i = 0; i < lastThreadIdx; ++i )
 					{
 						#ifdef DEBUG
-						{
-							lock_guard< mutex > lock( m_logMutex );
-							m_log << "Merging output " << i << " and " << i + 1 << endl << endl;
-						}
+// 						{
+// 							lock_guard< mutex > lock( m_logMutex );
+// 							m_log << "Merging output " << i << " and " << i + 1 << endl << endl;
+// 						}
 						#endif
 						
 						mergeOrPushWork( iterOutput[ i ], i, iterOutput[ i + 1 ], nextLvlDim );
@@ -627,10 +627,12 @@ namespace model
 						nextLvlWorkList.push_back( std::move( iterOutput[ lastThreadIdx ] ) );
 					}
 					
-					// Debug
+					#ifdef DEBUG
 					{
-						cout << "Insertion end after merge." << endl << endl;
+						lock_guard< mutex > lock( m_logMutex );
+						m_log << "Insertion end after merge." << endl << endl;
 					}
+					#endif
 					
 					m_front.notifyInsertionEnd( dispatchedThreads );
 					// END LOAD BALANCE.
@@ -703,10 +705,13 @@ namespace model
 							setParent( child, 0 );
 						}
 						
-						// Debug
+						#ifdef DEBUG
 						{
-							cout << "Insertion end after level." << endl << endl;
+							lock_guard< mutex > lock( m_logMutex );
+							m_log << "Insertion end after level." << endl << endl;
 						}
+						#endif
+						
 						m_front.notifyInsertionEnd( 1 );
 					}
 					
@@ -1028,15 +1033,15 @@ namespace model
 		}
 		
 			#ifdef DEBUG
-			{
-				lock_guard< mutex > lock( m_logMutex );
-				m_log << "mergeOrPushWork end" << endl << "prev:" << endl
-					  << nodeListToString( previousProcessed, nextLvlDim ) << endl
-					  << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-					  << "nextLvlWorkList:" << endl
-					  << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end"
-					  << endl << endl;
-			}
+// 			{
+// 				lock_guard< mutex > lock( m_logMutex );
+// 				m_log << "mergeOrPushWork end" << endl << "prev:" << endl
+// 					  << nodeListToString( previousProcessed, nextLvlDim ) << endl
+// 					  << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 					  << "nextLvlWorkList:" << endl
+// 					  << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end"
+// 					  << endl << endl;
+// 			}
 			#endif
 	}
 	
