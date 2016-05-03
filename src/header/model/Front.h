@@ -463,17 +463,14 @@ namespace model
 					ulong nPlaceholders = 0ul;
 				#endif
 				
-				if( lvl == m_leafLvlDim.m_nodeLvl )
+				// Move placeholders to the sorted buffer.
+				for( FrontList& list : m_currentIterPlaceholders )
 				{
-					// Move placeholders to the sorted buffer.
-					for( FrontList& list : m_currentIterPlaceholders )
-					{
-						#ifdef DEBUG
-							nPlaceholders += list.size();
-						#endif
-						
-						m_placeholders.splice( m_placeholders.end(), list );
-					}
+					#ifdef DEBUG
+						nPlaceholders += list.size();
+					#endif
+					
+					m_placeholders.splice( m_placeholders.end(), list );
 				}
 				
 				#ifdef DEBUG

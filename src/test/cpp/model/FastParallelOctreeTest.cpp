@@ -354,7 +354,7 @@ namespace model
 		
 		TEST( FastParallelOctreeTest, Creation_Shallow_StayPuff_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 3, 16, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 4, 16, 10ul * 1024ul * 1024ul );
 			testSanity( params );
 		}
 		
