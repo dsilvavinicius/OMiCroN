@@ -276,11 +276,18 @@ namespace model
 		//InsertionVector m_insertionLists;
 		
 		/** Nodes pending insertion in the current insertion iteration. m_currentIterInsertions[ t ] have the insertions
-		 * for thread t. This list is spliced into m_perLvlInsertions after notifyInsertionEnd() is called. */
+		 * of thread t. This lists are moved to m_perLvlInsertions whenever notifyInsertionEnd() is called. */
 		InsertionVector m_currentIterInsertions;
 		
-		/** All pending insertion nodes. m_perLvlInsertions[ l ] have the nodes for level l. */
+		/** All pending insertion nodes. m_perLvlInsertions[ l ] have the nodes for level l, sorted in hierarchy width order. */
 		InsertionVector m_perLvlInsertions;
+		
+		/** All placeholders pending insertion in the current insertion iteration. m_currentIterPlaceholders[ t ] have the
+		 * insertions of thread t. The lists are moved to m_placeholders whenever notifyInsertionEnd() is called. */
+		InsertionVector m_currentIterPlaceholders;
+		
+		/** All placeholders pending insertion. The list is sorted in hierarchy width order.  */
+		FrontList m_placeholders;
 		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
@@ -315,6 +322,7 @@ namespace model
 	m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nThreads ),
+	m_currentIterPlaceholders( nThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_processedNodes( 0ul ),
@@ -368,15 +376,12 @@ namespace model
 	{
 		#ifdef DEBUG
 		{
+			stringstream ss; ss << "Buffer end insertion: " << morton.toString() << endl << endl;
+			logDebugMsg( ss.str() );
+			
 			assertNode( node, morton );
 		}
 		#endif
-		
-		// Debug
-// 		{
-// 			lock_guard< recursive_mutex > lock( m_logMutex );
-// 			m_log << "Front insertion: " << morton.toString() << " Addr: " << &node << endl << endl;
-// 		}
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( FrontNode( node, morton ) );
@@ -394,6 +399,9 @@ namespace model
 	{
 		#ifdef DEBUG
 		{
+			stringstream ss; ss << "Buffer iter insertion: " << morton.toString() << endl << endl;
+			logDebugMsg( ss.str() );
+			
 			assertNode( node, morton );
 		}
 		#endif
@@ -407,7 +415,14 @@ namespace model
 	{
 		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
 		
-		FrontList& list = m_currentIterInsertions[ threadIdx ];
+		#ifdef DEBUG
+		{
+			stringstream ss; ss << "Placeholder insertion: " << morton.toString() << endl << endl;
+			logDebugMsg( ss.str() );
+		}
+		#endif
+		
+		FrontList& list = m_currentIterPlaceholders[ threadIdx ];
 		list.push_back( FrontNode( m_placeholder, morton ) );
 	}
 	
@@ -435,6 +450,7 @@ namespace model
 				
 				for( auto it = m_currentIterInsertions.begin(); it != m_currentIterInsertions.end(); ++it )
 				{
+					// Move nodes to the per-level sorted buffer.
 					#ifdef DEBUG
 						insertionSize += it->size();
 					#endif
@@ -443,8 +459,25 @@ namespace model
 				}
 				
 				#ifdef DEBUG
-					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Size: " << insertionSize << endl
-										<< endl;
+					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Nodes: " << insertionSize;
+					ulong nPlaceholders = 0ul;
+				#endif
+				
+				if( lvl == m_leafLvlDim.m_nodeLvl )
+				{
+					// Move placeholders to the sorted buffer.
+					for( FrontList& list : m_currentIterPlaceholders )
+					{
+						#ifdef DEBUG
+							nPlaceholders += list.size();
+						#endif
+						
+						m_placeholders.splice( m_placeholders.end(), list );
+					}
+				}
+				
+				#ifdef DEBUG
+					ss << " Placeholders: " << nPlaceholders << endl << endl;
 					logDebugMsg( ss.str() );
 				#endif
 			}
@@ -476,7 +509,7 @@ namespace model
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			// Insert all leaf level pending nodes and placeholders.
 			
-			m_front.splice( m_front.end(), m_perLvlInsertions[ m_leafLvlDim.m_nodeLvl ] );
+			m_front.splice( m_front.end(), m_placeholders );
 		}
 		
 		if( !m_front.empty() )
@@ -485,7 +518,7 @@ namespace model
 			// placeholder substitution.
 			size_t maxSize = 1;
 			int substitutionLvl = 0;
-			for( int i = 1; i < m_perLvlInsertions.size() - 1; ++i )
+			for( int i = 1; i < m_perLvlInsertions.size(); ++i )
 			{
 				lock_guard< mutex > lock( m_perLvlMtx[ i ] );
 				size_t lvlSize = m_perLvlInsertions[ i ].size();
@@ -549,10 +582,6 @@ namespace model
 			}
 			
 			#ifdef DEBUG
-				if( substitutionLvl == m_leafLvlDim.m_nodeLvl )
-				{
-					expectedToSubstitute -= m_nPlaceholders;
-				}
 				{
 					stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
 										<< " Substitution lvl: " << substitutionLvl << " Placeholders: " << m_nPlaceholders

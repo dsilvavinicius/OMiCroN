@@ -582,6 +582,7 @@ namespace model
 							// Setup the parent for the first node in thread[ 0 ] output. This is
 							// necessary because it won't be merged with a previous workList.
 							Node& firstNode = iterOutput[ 0 ].front();							
+							auto iter = m_front.getIteratorToBufferBegin( 0 );
 							for( Node& child : firstNode.child() )
 							{
 								#ifdef DEBUG
@@ -591,8 +592,6 @@ namespace model
 // 										  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
 // 								}
 								#endif
-								
-								auto iter = m_front.getIteratorToBufferBegin( 0 );
 								setParent( child, 0, iter );
 							}
 						}
@@ -915,7 +914,7 @@ namespace model
 					setParent( mergedChild[ i ], previousIdx );
 				}
 				
-				typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
+				//typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
 				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
 				{
 					int idx = prevLastNodeChild.size() + i;
@@ -929,7 +928,7 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( mergedChild[ idx ], nextIdx, iter );
+					setParent( mergedChild[ idx ], previousIdx );
 				}
 				
 				nextFirstNode.setChildren( std::move( mergedChild ) );
@@ -963,7 +962,7 @@ namespace model
 					setParent( child, previousIdx );
 				}
 				
-				typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
+				//typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
 				for( Node& child : nextFirstNodeChild )
 				{
 					#ifdef DEBUG
@@ -974,7 +973,7 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( child, nextIdx, iter );
+					setParent( child, previousIdx );
 				}
 			}
 			
