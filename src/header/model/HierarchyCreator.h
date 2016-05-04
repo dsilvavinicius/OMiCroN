@@ -14,6 +14,10 @@
 // #define HIERARCHY_STATS
 #define DEBUG
 
+#ifdef DEBUG
+	#include "HierarchyCreationLog.h"
+#endif
+
 using namespace util;
 
 namespace model
@@ -151,11 +155,6 @@ namespace model
 		
 		mutex m_listMutex;
 		
-		#ifdef DEBUG
-			mutex m_logMutex;
- 			ofstream m_log;
-		#endif
-		
 		ulong m_memoryLimit;
 		
 		ulong m_expectedLoadPerThread;
@@ -180,9 +179,6 @@ namespace model
 	
 	#ifdef HIERARCHY_STATS
 		, m_processedNodes( 0 )
-	#endif
-	#ifdef DEBUG
-		, m_log( "HierarchyCreation.log" )
 	#endif
 	{
 		srand( 1 );
@@ -628,8 +624,8 @@ namespace model
 					
 					#ifdef DEBUG
 					{
-						lock_guard< mutex > lock( m_logMutex );
-						m_log << "Insertion end after merge." << endl << endl;
+						stringstream ss; ss << "Insertion end after merge." << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
 					}
 					#endif
 					
@@ -706,8 +702,8 @@ namespace model
 						
 						#ifdef DEBUG
 						{
-							lock_guard< mutex > lock( m_logMutex );
-							m_log << "Insertion end after level." << endl << endl;
+							stringstream ss; ss << "Insertion end after level." << endl << endl;
+							HierarchyCreationLog::logDebugMsg( ss.str() );
 						}
 						#endif
 						

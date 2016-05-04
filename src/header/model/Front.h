@@ -11,6 +11,10 @@
 
 #define DEBUG
 
+#ifdef DEBUG
+	#include "HierarchyCreationLog.h"
+#endif
+
 using namespace std;
 using namespace util;
 
@@ -142,19 +146,6 @@ namespace model
 		void setupNodeRenderingNoFront( FrontListIter& iter, const Node& node, Renderer& renderer ) const;
 		
 		#ifdef DEBUG
-			void logAndFail( const string& msg )
-			{
-				logDebugMsg( msg );
-				m_log.flush();
-				assert( false );
-			}
-		
-			void logDebugMsg( const string& msg )
-			{
-				lock_guard< recursive_mutex > lock( m_logMutex );
-				m_log << msg;
-			}
-		
 			void assertFrontIterator( const FrontListIter& iter )
 			{
 				if( iter != m_front.begin() )
@@ -173,7 +164,7 @@ namespace model
 						{
 							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
 								<< "Curr: " << currMorton.getPathToRoot( true ) << endl;
-							logAndFail( ss.str() );
+							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
 					else if( currLvl > prevLvl )
@@ -183,7 +174,7 @@ namespace model
 						{
 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
 								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << endl;
-							logAndFail( ss.str() );
+							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
 					else
@@ -192,7 +183,7 @@ namespace model
 						{
 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
 								<< "Curr: " << currMorton.getPathToRoot( true ) << endl;
-							logAndFail( ss.str() );
+							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
 				}
@@ -213,7 +204,7 @@ namespace model
 					if( level != m_leafLvlDim.m_nodeLvl )
 					{
 						ss << "Placeholder is not from leaf level." << endl << endl;
-						logAndFail( ss.str() );
+						HierarchyCreationLog::logAndFail( ss.str() );
 					}
 				}
 				else
@@ -221,13 +212,13 @@ namespace model
 					if( node.getContents().empty() )
 					{
 						ss << "Empty node" << endl << endl;
-						logAndFail( ss.str() );
+						HierarchyCreationLog::logAndFail( ss.str() );
 					}
 					Morton calcMorton = nodeDim.calcMorton( node );
 					if( calcMorton != morton )
 					{
 						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
-						logAndFail( ss.str() );
+						HierarchyCreationLog::logAndFail( ss.str() );
 					}
 					
 					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
@@ -238,7 +229,7 @@ namespace model
 						if( parentNode->getContents().empty() )
 						{
 							ss << "Empty parent" << endl << endl;
-							logAndFail( ss.str() );
+							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 						
 						Morton parentMorton = *morton.traverseUp();
@@ -247,7 +238,7 @@ namespace model
 						{
 							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
 							<< calcParentMorton.toString() << endl;
-							logAndFail( ss.str() );
+							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
 				}
@@ -308,8 +299,6 @@ namespace model
 		atomic_bool m_leafLvlLoadedFlag;
 		
 		#ifdef DEBUG
-			recursive_mutex m_logMutex;
-			ofstream m_log;
 			ulong m_nPlaceholders;
 			ulong m_nSubstituted;
 		#endif
@@ -329,8 +318,7 @@ namespace model
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
-		,m_log( "Front.txt" ),
-		m_nPlaceholders( 0ul ),
+		, m_nPlaceholders( 0ul ),
 		m_nSubstituted( 0ul )
 	#endif
 	{}
@@ -377,7 +365,7 @@ namespace model
 		#ifdef DEBUG
 		{
 			stringstream ss; ss << "Buffer end insertion: " << morton.toString() << endl << endl;
-			logDebugMsg( ss.str() );
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
 			assertNode( node, morton );
 		}
@@ -400,7 +388,7 @@ namespace model
 		#ifdef DEBUG
 		{
 			stringstream ss; ss << "Buffer iter insertion: " << morton.toString() << endl << endl;
-			logDebugMsg( ss.str() );
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
 			assertNode( node, morton );
 		}
@@ -418,7 +406,7 @@ namespace model
 		#ifdef DEBUG
 		{
 			stringstream ss; ss << "Placeholder insertion: " << morton.toString() << endl << endl;
-			logDebugMsg( ss.str() );
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
 		
@@ -475,7 +463,7 @@ namespace model
 				
 				#ifdef DEBUG
 					ss << " Placeholders: " << nPlaceholders << endl << endl;
-					logDebugMsg( ss.str() );
+					HierarchyCreationLog::logDebugMsg( ss.str() );
 				#endif
 			}
 		}
@@ -498,14 +486,19 @@ namespace model
 		#ifdef DEBUG
 			m_nPlaceholders = 0ul;
 			m_nSubstituted = 0ul;
+			ulong insertedPlaceholders = 0ul;
 		#endif
 		
 		auto start = Profiler::now();
 		
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
-			// Insert all leaf level pending nodes and placeholders.
 			
+			#ifdef DEBUG
+				insertedPlaceholders += m_placeholders.size();
+			#endif
+			
+			// Insert all leaf level pending nodes and placeholders.
 			m_front.splice( m_front.end(), m_placeholders );
 		}
 		
@@ -536,9 +529,10 @@ namespace model
 				
 				{
 					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
-										<< " Substitution lvl: " << substitutionLvl << " Expected to substitute: "
-										<< expectedToSubstitute << endl << endl;
-					logDebugMsg( ss.str() );
+										<< " Inserted placeholders: " << insertedPlaceholders << " Substitution lvl: "
+										<< substitutionLvl << " Expected to substitute: " << expectedToSubstitute << endl
+										<< endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 			#endif
 			
@@ -551,7 +545,7 @@ namespace model
 				
 				#ifdef DEBUG
 // 					stringstream ss; ss << "Front size: " << m_front.size() << endl << endl;
-// 					logDebugMsg( ss.str() );
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				#endif
 			}
 			
@@ -581,10 +575,11 @@ namespace model
 			#ifdef DEBUG
 				{
 					stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
-										<< " Substitution lvl: " << substitutionLvl << " Placeholders: " << m_nPlaceholders
-										<< " Expected to substitute: " << expectedToSubstitute << " Substituted: "
-										<< m_nSubstituted << " Persisted: " << m_persisted << endl << endl;
-					logDebugMsg( ss.str() );
+										<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
+										<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
+										<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
+										<< endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 			#endif
 		}
@@ -593,7 +588,7 @@ namespace model
 		{
 			#ifdef DEBUG
 				stringstream ss; ss << "No more nodes can be persisted." << endl << endl;
-				logDebugMsg( ss.str() );
+				HierarchyCreationLog::logDebugMsg( ss.str() );
 			#endif
 			
 			m_releaseFlag = false;
@@ -646,7 +641,7 @@ namespace model
 		#ifdef DEBUG
 // 		{
 // 			stringstream ss; ss << "Tracking: " << morton.toString() << endl << endl;
-// 			logDebugMsg( ss.str() );
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
 // 		}
 		#endif
 		
@@ -669,7 +664,7 @@ namespace model
 // 				{
 // 					stringstream ss; ss << "Prunning: " << morton.toString() << " Parent: " << parentMorton.toString()
 // 										<< endl << endl;
-// 					logDebugMsg( ss.str() );
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
 // 				}
 				#endif
 				
@@ -818,7 +813,7 @@ namespace model
 			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 			
 // 			stringstream ss; ss << "Prunning group of " << frontIt->m_morton.toString() << endl << endl;
-// 			logDebugMsg( ss.str() );
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
 		#endif
 		
 		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
@@ -828,7 +823,7 @@ namespace model
 			#ifdef DEBUG
 // 			{
 // 				stringstream ss; ss << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
-// 				logDebugMsg( ss.str() );
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
 // 			}
 			#endif
 			
@@ -839,7 +834,7 @@ namespace model
 		{
 			#ifdef DEBUG
 // 				stringstream ss; ss << "Should release" << endl << endl;
-// 				logDebugMsg( ss.str() );
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
 			#endif
 			
 			if( AllocStatistics::totalAllocated() > m_memoryLimit )
@@ -862,7 +857,7 @@ namespace model
 			{
 				stringstream ss; ss << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: "
 									<< parentNode << " found: " << m_front.front().m_octreeNode->parent() << endl << endl;
-				logAndFail( ss.str() );
+				HierarchyCreationLog::logAndFail( ss.str() );
 				assert( false && "All persisted nodes should also be released." );
 			}
 		}
@@ -957,7 +952,7 @@ namespace model
 			
 			#ifdef DEBUG
 // 				stringstream ss; ss << "2DB: " << siblingMorton.getPathToRoot( true ) << endl;
-// 				logDebugMsg( ss.str() );
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
 			#endif
 			
 			// Persisting node

@@ -121,6 +121,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h				${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h						${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h						${CPP_DIR}/${MODEL_DIR}/Camera.cpp
+	${HEADER_DIR}/${MODEL_DIR}/HierarchyCreationLog.h		${CPP_DIR}/${MODEL_DIR}/HierarchyCreationLog.cpp
 	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h				${CPP_DIR}/${MODEL_DIR}/RenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/TransientRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp
