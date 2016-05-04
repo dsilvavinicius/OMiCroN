@@ -12,7 +12,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -326,10 +326,10 @@ namespace model
 			while( lvl )
 			{
 				#ifdef DEBUG
-// 				{
-// 					lock_guard< mutex > lock( m_logMutex );
-// 					m_log << "======== Starting lvl " << lvl << " ========" << endl << endl;
-// 				}
+				{
+					stringstream ss; ss << "======== Starting lvl " << lvl << " ========" << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
 				#endif
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
@@ -342,10 +342,10 @@ namespace model
 				while( workListSize > 0 && !increaseLvlFlag )
 				{
 					#ifdef DEBUG
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						m_log << "iter start" << endl << endl;
-// 					}
+					{
+						stringstream ss; ss << "iter start" << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					// Multipass restriction: the level's last sibling group cannot be processed until the last pass,
@@ -418,11 +418,11 @@ namespace model
 							int nSiblings = 1;
 							
 							#ifdef DEBUG
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-// 								m_log << "T " << omp_get_thread_num() << " sib[ 0 ]: "
-// 									  << m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-// 							}
+							{
+								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
+									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+								HierarchyCreationLog::logDebugMsg( ss.str() );
+							}
 							#endif
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -432,11 +432,11 @@ namespace model
 								input.pop_front();
 								
 								#ifdef DEBUG
-// 								{
-// 									lock_guard< mutex > lock( m_logMutex );
-// 									m_log << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1 << " ]: "
-// 										  << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-// 								}
+								{
+									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
+										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+									HierarchyCreationLog::logDebugMsg( ss.str() );
+								}
 								#endif
 							}
 							
@@ -585,7 +585,7 @@ namespace model
 // 								{
 // 									lock_guard< mutex > lock( m_logMutex );
 // 									m_log << "Case -1 addr:" << &child << " code: "
-// 										  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
+// 										  << m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
 // 								}
 								#endif
 								setParent( child, 0, iter );
@@ -624,7 +624,11 @@ namespace model
 					
 					#ifdef DEBUG
 					{
-						stringstream ss; ss << "Insertion end after merge." << endl << endl;
+// 						stringstream ss; ss << "Insertion end after merge." << endl << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+						
+						stringstream ss; ss << "Next lvl worklist: " << endl
+							<< workListToString( m_lvlWorkLists[ lvl - 1 ], nextLvlDim ) << endl;
 						HierarchyCreationLog::logDebugMsg( ss.str() );
 					}
 					#endif
@@ -690,21 +694,21 @@ namespace model
 						for( Node& child : lastList.back().child() )
 						{
 							#ifdef DEBUG
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-// 								m_log << "Case -2 addr: " << &child << " code: "
-// 									  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-// 							}
+							{
+								stringstream ss; ss << "Case: last pass, last node. addr: " << &child << " code: "
+									<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+								HierarchyCreationLog::logDebugMsg( ss.str() );
+							}
 							#endif
 							
 							setParent( child, 0 );
 						}
 						
 						#ifdef DEBUG
-						{
-							stringstream ss; ss << "Insertion end after level." << endl << endl;
-							HierarchyCreationLog::logDebugMsg( ss.str() );
-						}
+// 						{
+// 							stringstream ss; ss << "Insertion end after level." << endl << endl;
+// 							HierarchyCreationLog::logDebugMsg( ss.str() );
+// 						}
 						#endif
 						
 						m_front.notifyInsertionEnd( 1 );
@@ -785,23 +789,27 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx ) /*const*/
 	{
-		OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-		
-		for( Node& child : node.child() )
+		// Parents are expected to be set once.
+		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
 		{
-			child.setParent( &node );
+			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 			
-			#ifdef DEBUG
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
-// 			}
-			#endif
-			
-			if( child.isLeaf() )
+			for( Node& child : node.child() )
 			{
-				m_front.insertIntoBufferEnd( child, childDim.calcMorton( child ), threadIdx );
+				child.setParent( &node );
+				
+				#ifdef DEBUG
+	// 			{
+	// 				lock_guard< mutex > lock( m_logMutex );
+	// 				m_log << "setParent of " << childDim.calcMorton( child ).getPathToRoot( true ) << " to "
+	// 					  << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+	// 			}
+				#endif
+				
+				if( child.isLeaf() )
+				{
+					m_front.insertIntoBufferEnd( child, childDim.calcMorton( child ), threadIdx );
+				}
 			}
 		}
 	}
@@ -810,23 +818,27 @@ namespace model
 	void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx,
 													   typename Front::FrontListIter& frontIter )
 	{
-		OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
-		
-		for( Node& child : node.child() )
+		// Parents are expected to be set once.
+		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
 		{
-			child.setParent( &node );
+			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 			
-			#ifdef DEBUG
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "setParent of " << childDim.calcMorton( child ).toString() << " to "
-// 					  << m_octreeDim.calcMorton( node ).toString() << endl << endl;
-// 			}
-			#endif
-			
-			if( child.isLeaf() )
+			for( Node& child : node.child() )
 			{
-				m_front.insertIntoBuffer( frontIter, child, childDim.calcMorton( child ), threadIdx );
+				child.setParent( &node );
+				
+				#ifdef DEBUG
+	// 			{
+	// 				lock_guard< mutex > lock( m_logMutex );
+	// 				m_log << "setParent of " << childDim.calcMorton( child ).getPathToRoot( true ) << " to "
+	// 					  << m_octreeDim.calcMorton( node ).getPathToRoot( true ) << endl;
+	// 			}
+				#endif
+				
+				if( child.isLeaf() )
+				{
+					m_front.insertIntoBuffer( frontIter, child, childDim.calcMorton( child ), threadIdx );
+				}
 			}
 		}
 	}
@@ -890,7 +902,7 @@ namespace model
 				
 				// Debug
 // 				{
-// 					cout << "Duplicate found: " << nextLvlDim.calcMorton( prevLastNode ).getPathToRoot( true ) << endl << endl;
+// 					cout << "Duplicate found: " << nextLvlDim.calcMorton( prevLastNode ).getPathToRoot( true ) << endl;
 // 				}
 				
 				NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
@@ -900,11 +912,11 @@ namespace model
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					
 					#ifdef DEBUG
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						m_log << "Case 0 (1) addr: " << &mergedChild[ i ] << " code: "
-// 							  << m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl << endl;
-// 					}
+					{
+						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ i ] << " code: "
+							<< m_octreeDim.calcMorton( mergedChild[ i ] ).getPathToRoot( true ) << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					setParent( mergedChild[ i ], previousIdx );
@@ -917,11 +929,11 @@ namespace model
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					
 					#ifdef DEBUG
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						m_log << "Case 0 (2) addr: " << &mergedChild[ idx ] << " code: "
-// 							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl << endl;
-// 					}
+					{
+						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ idx ] << " code: "
+							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).getPathToRoot( true ) << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					setParent( mergedChild[ idx ], previousIdx );
@@ -948,11 +960,11 @@ namespace model
 				for( Node& child : prevLastNodeChild )
 				{
 					#ifdef DEBUG
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						m_log << "Case -3 (1) addr: " << &child << " code: "
-// 							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-// 					}
+					{
+						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
+							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					setParent( child, previousIdx );
@@ -962,11 +974,11 @@ namespace model
 				for( Node& child : nextFirstNodeChild )
 				{
 					#ifdef DEBUG
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						m_log << "Case -3 (2) addr: " << &child << " code: "
-// 							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-// 					}
+					{
+						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
+							  << m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					setParent( child, previousIdx );
@@ -1027,17 +1039,16 @@ namespace model
 			workList.push_back( std::move( previousProcessed ) );
 		}
 		
-			#ifdef DEBUG
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				m_log << "mergeOrPushWork end" << endl << "prev:" << endl
-// 					  << nodeListToString( previousProcessed, nextLvlDim ) << endl
-// 					  << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					  << "nextLvlWorkList:" << endl
-// 					  << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << "nextLvlWorkList end"
-// 					  << endl << endl;
-// 			}
-			#endif
+		#ifdef DEBUG
+// 		{
+// 			stringstream ss; ss << "mergeOrPushWork end" << endl << "prev:" << endl
+// 				<< nodeListToString( previousProcessed, nextLvlDim ) << endl
+// 				<< "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 				<< "nextLvlWorkList:" << endl
+// 				<< workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim ) << endl;
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
+// 		}
+		#endif
 	}
 	
 	template< typename Morton, typename Point >
@@ -1188,11 +1199,11 @@ namespace model
 			if( setParentFlag && !finalChild.isLeaf() )
 			{
 				#ifdef DEBUG
-// 				{
-// 					lock_guard< mutex > lock( m_logMutex );
-// 					m_log << "Case 1. addr: " << &finalChild << " code: "
-// 						  << m_octreeDim.calcMorton( finalChild ).toString() << endl << endl;
-// 				}
+				{
+					stringstream ss; ss << "Case: create node from single child. addr: " << &finalChild << " code: "
+						<< m_octreeDim.calcMorton( finalChild ).getPathToRoot( true ) << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
 				#endif
 				
 				setParent( finalChild, threadIdx );
@@ -1259,11 +1270,11 @@ namespace model
 				if( setParentFlag && !child.isLeaf() )
 				{
 					#ifdef DEBUG
-// 					{
-// 						lock_guard< mutex > lock( m_logMutex );
-// 						m_log << "Case 2 addr: " << &child << " code: "
-// 							  << m_octreeDim.calcMorton( child ).toString() << endl << endl;
-// 					}
+					{
+						stringstream ss; ss << "Case: inner node. addr: " << &child << " code: "
+							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					setParent( child, threadIdx );
@@ -1319,7 +1330,7 @@ namespace model
 	template< typename Morton, typename Point >
 	inline string HierarchyCreator< Morton, Point >::workListToString( const WorkList& list, const OctreeDim& lvlDim )
 	{
-		stringstream ss;
+		stringstream ss; ss << "Size: " << list.size() << endl;
 		
 		for( const NodeList& nodeList : list )
 		{

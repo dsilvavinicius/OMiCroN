@@ -364,7 +364,7 @@ namespace model
 	{
 		#ifdef DEBUG
 		{
-			stringstream ss; ss << "Buffer end insertion: " << morton.toString() << endl << endl;
+			stringstream ss; ss << "Buffer end insertion: " << morton.getPathToRoot( true ) << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
 			assertNode( node, morton );
@@ -387,7 +387,7 @@ namespace model
 	{
 		#ifdef DEBUG
 		{
-			stringstream ss; ss << "Buffer iter insertion: " << morton.toString() << endl << endl;
+			stringstream ss; ss << "Buffer iter insertion: " << morton.getPathToRoot( true ) << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
 			assertNode( node, morton );
@@ -405,7 +405,7 @@ namespace model
 		
 		#ifdef DEBUG
 		{
-			stringstream ss; ss << "Placeholder insertion: " << morton.toString() << endl << endl;
+			stringstream ss; ss << "Placeholder insertion: " << morton.getPathToRoot( true ) << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
@@ -573,22 +573,24 @@ namespace model
 			}
 			
 			#ifdef DEBUG
-				{
-					stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
-										<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
-										<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
-										<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
-										<< endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
+			{
+				stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
+									<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
+									<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
+									<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
+									<< endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
 			#endif
 		}
 		
 		if( m_releaseFlag && m_persisted == 0 )
 		{
 			#ifdef DEBUG
-				stringstream ss; ss << "No more nodes can be persisted." << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			{
+// 				stringstream ss; ss << "No more nodes can be persisted." << endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			}
 			#endif
 			
 			m_releaseFlag = false;
