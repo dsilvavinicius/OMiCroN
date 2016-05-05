@@ -156,6 +156,7 @@ namespace model
 					uint currLvl = currMorton.getLevel();
 					uint prevLvl = prevMorton.getLevel();
 					
+					bool isPlaceholder = ( iter->m_octreeNode == &m_placeholder );
 					stringstream ss;
 					if( currLvl < prevLvl )
 					{
@@ -163,7 +164,8 @@ namespace model
 						if( currMorton <= prevAncestorMorton )
 						{
 							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
-								<< "Curr: " << currMorton.getPathToRoot( true ) << endl;
+								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
+								<< isPlaceholder << endl;
 							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
@@ -173,7 +175,8 @@ namespace model
 						if( currAncestorMorton <= prevMorton  )
 						{
 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << endl;
+								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << " is placeholder? "
+								<< isPlaceholder << endl;
 							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
@@ -182,7 +185,8 @@ namespace model
 						if( currMorton <= prevMorton )
 						{
 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-								<< "Curr: " << currMorton.getPathToRoot( true ) << endl;
+								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
+								<< isPlaceholder << endl;
 							HierarchyCreationLog::logAndFail( ss.str() );
 						}
 					}
@@ -407,6 +411,11 @@ namespace model
 		{
 			stringstream ss; ss << "Placeholder insertion: " << morton.getPathToRoot( true ) << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			if( !m_currentIterPlaceholders[ threadIdx ].empty() )
+			{
+				assert( m_currentIterPlaceholders[ threadIdx ].back().m_morton < morton && 
+						"Placeholder insertion compromises front ordering" );
+			}
 		}
 		#endif
 		
@@ -447,23 +456,27 @@ namespace model
 				}
 				
 				#ifdef DEBUG
-					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Nodes: " << insertionSize;
-					ulong nPlaceholders = 0ul;
+// 					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Nodes: " << insertionSize;
+// 					ulong nPlaceholders = 0ul;
 				#endif
 				
 				// Move placeholders to the sorted buffer.
 				for( FrontList& list : m_currentIterPlaceholders )
 				{
 					#ifdef DEBUG
-						nPlaceholders += list.size();
+// 					{
+// 						nPlaceholders += list.size();
+// 					}
 					#endif
 					
 					m_placeholders.splice( m_placeholders.end(), list );
 				}
 				
 				#ifdef DEBUG
-					ss << " Placeholders: " << nPlaceholders << endl << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				{
+// 					ss << " Placeholders: " << nPlaceholders << endl << endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 				#endif
 			}
 		}
@@ -527,13 +540,13 @@ namespace model
 					expectedToSubstitute = m_perLvlInsertions[ substitutionLvl ].size();
 				}
 				
-				{
-					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
-										<< " Inserted placeholders: " << insertedPlaceholders << " Substitution lvl: "
-										<< substitutionLvl << " Expected to substitute: " << expectedToSubstitute << endl
-										<< endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
+// 				{
+// 					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
+// 										<< " Inserted placeholders: " << insertedPlaceholders << " Substitution lvl: "
+// 										<< substitutionLvl << " Expected to substitute: " << expectedToSubstitute << endl
+// 										<< endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 			#endif
 			
 			bool transactionNeeded = AllocStatistics::totalAllocated() > m_memoryLimit;
@@ -574,12 +587,13 @@ namespace model
 			
 			#ifdef DEBUG
 			{
-				stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
-									<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
-									<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
-									<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
-									<< endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
+// 									<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
+// 									<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
+// 									<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
+// 									<< endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				assert( m_nSubstituted >= expectedToSubstitute && "Expected more placeholders to be substituted" );
 			}
 			#endif
 		}

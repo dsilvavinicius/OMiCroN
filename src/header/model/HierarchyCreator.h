@@ -12,7 +12,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-// #define DEBUG
+ #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -326,10 +326,10 @@ namespace model
 			while( lvl )
 			{
 				#ifdef DEBUG
-				{
-					stringstream ss; ss << "======== Starting lvl " << lvl << " ========" << endl << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
+// 				{
+// 					stringstream ss; ss << "======== Starting lvl " << lvl << " ========" << endl << endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 				#endif
 				
 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
@@ -342,10 +342,10 @@ namespace model
 				while( workListSize > 0 && !increaseLvlFlag )
 				{
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "iter start" << endl << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "iter start" << endl << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					// Multipass restriction: the level's last sibling group cannot be processed until the last pass,
@@ -418,11 +418,11 @@ namespace model
 							int nSiblings = 1;
 							
 							#ifdef DEBUG
-							{
-								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
-									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-								HierarchyCreationLog::logDebugMsg( ss.str() );
-							}
+// 							{
+// 								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
+// 									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
+// 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// 							}
 							#endif
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -432,11 +432,11 @@ namespace model
 								input.pop_front();
 								
 								#ifdef DEBUG
-								{
-									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
-										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-									HierarchyCreationLog::logDebugMsg( ss.str() );
-								}
+// 								{
+// 									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
+// 										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
+// 									HierarchyCreationLog::logDebugMsg( ss.str() );
+// 								}
 								#endif
 							}
 							
@@ -563,12 +563,12 @@ namespace model
 							nextLvlWorkList.pop_back();
 							
 							#ifdef DEBUG
-// 							{
-// 								lock_guard< mutex > lock( m_logMutex );
-// 								m_log << "Merging nextLvl back and output " << 0 << endl
-// 									  << "Next lvl back size: " << nextLvlBack.size() << "output size: "
-// 									  << iterOutput[ 0 ].size() << endl << endl;
-// 							}
+							{
+								stringstream ss; ss << "Merging nextLvl back and output 0" << endl
+									<< "Next lvl back size: " << nextLvlBack.size() << "output size: "
+									<< iterOutput[ 0 ].size() << endl << endl;
+								HierarchyCreationLog::logDebugMsg( ss.str() );
+							}
 							#endif
 							
 							mergeOrPushWork( nextLvlBack, 0, iterOutput[ 0 ], nextLvlDim );
@@ -582,11 +582,11 @@ namespace model
 							for( Node& child : firstNode.child() )
 							{
 								#ifdef DEBUG
-// 								{
-// 									lock_guard< mutex > lock( m_logMutex );
-// 									m_log << "Case -1 addr:" << &child << " code: "
-// 										  << m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
-// 								}
+								{
+									stringstream ss; ss << "Case: first level node. addr:" << &child << " code: "
+										<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+									HierarchyCreationLog::logDebugMsg( ss.str() );
+								}
 								#endif
 								setParent( child, 0, iter );
 							}
@@ -596,10 +596,10 @@ namespace model
 					for( int i = 0; i < lastThreadIdx; ++i )
 					{
 						#ifdef DEBUG
-// 						{
-// 							lock_guard< mutex > lock( m_logMutex );
-// 							m_log << "Merging output " << i << " and " << i + 1 << endl << endl;
-// 						}
+						{
+							stringstream ss; ss << "Merging output " << i << " and " << i + 1 << endl << endl;
+							HierarchyCreationLog::logDebugMsg( ss.str() );
+						}
 						#endif
 						
 						mergeOrPushWork( iterOutput[ i ], i, iterOutput[ i + 1 ], nextLvlDim );
@@ -616,6 +616,13 @@ namespace model
 					{
 						if( !nextLvlWorkList.empty() )
 						{
+							#ifdef DEBUG
+							{
+								stringstream ss; ss << "Removing duplicates of last thread back." << endl << endl;
+								HierarchyCreationLog::logDebugMsg( ss.str() );
+							}
+							#endif
+							
 							removeBoundaryDuplicate( nextLvlWorkList.back(), lastThreadIdx, iterOutput[ lastThreadIdx ],
 													 nextLvlDim );
 						}
@@ -623,14 +630,14 @@ namespace model
 					}
 					
 					#ifdef DEBUG
-					{
-// 						stringstream ss; ss << "Insertion end after merge." << endl << endl;
+// 					{
+// // 						stringstream ss; ss << "Insertion end after merge." << endl << endl;
+// // 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 						
+// 						stringstream ss; ss << "Next lvl worklist: " << endl
+// 							<< workListToString( m_lvlWorkLists[ lvl - 1 ], nextLvlDim ) << endl;
 // 						HierarchyCreationLog::logDebugMsg( ss.str() );
-						
-						stringstream ss; ss << "Next lvl worklist: " << endl
-							<< workListToString( m_lvlWorkLists[ lvl - 1 ], nextLvlDim ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					}
 					#endif
 					
 					m_front.notifyInsertionEnd( dispatchedThreads );
