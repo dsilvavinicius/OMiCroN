@@ -563,12 +563,12 @@ namespace model
 							nextLvlWorkList.pop_back();
 							
 							#ifdef DEBUG
-							{
-								stringstream ss; ss << "Merging nextLvl back and output 0" << endl
-									<< "Next lvl back size: " << nextLvlBack.size() << "output size: "
-									<< iterOutput[ 0 ].size() << endl << endl;
-								HierarchyCreationLog::logDebugMsg( ss.str() );
-							}
+// 							{
+// 								stringstream ss; ss << "Merging nextLvl back and output 0" << endl
+// 									<< "Next lvl back size: " << nextLvlBack.size() << "output size: "
+// 									<< iterOutput[ 0 ].size() << endl << endl;
+// 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// 							}
 							#endif
 							
 							mergeOrPushWork( nextLvlBack, 0, iterOutput[ 0 ], nextLvlDim );
@@ -582,11 +582,11 @@ namespace model
 							for( Node& child : firstNode.child() )
 							{
 								#ifdef DEBUG
-								{
-									stringstream ss; ss << "Case: first level node. addr:" << &child << " code: "
-										<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
-									HierarchyCreationLog::logDebugMsg( ss.str() );
-								}
+// 								{
+// 									stringstream ss; ss << "Case: first level node. addr:" << &child << " code: "
+// 										<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 									HierarchyCreationLog::logDebugMsg( ss.str() );
+// 								}
 								#endif
 								setParent( child, 0, iter );
 							}
@@ -596,10 +596,10 @@ namespace model
 					for( int i = 0; i < lastThreadIdx; ++i )
 					{
 						#ifdef DEBUG
-						{
-							stringstream ss; ss << "Merging output " << i << " and " << i + 1 << endl << endl;
-							HierarchyCreationLog::logDebugMsg( ss.str() );
-						}
+// 						{
+// 							stringstream ss; ss << "Merging output " << i << " and " << i + 1 << endl << endl;
+// 							HierarchyCreationLog::logDebugMsg( ss.str() );
+// 						}
 						#endif
 						
 						mergeOrPushWork( iterOutput[ i ], i, iterOutput[ i + 1 ], nextLvlDim );
@@ -617,10 +617,10 @@ namespace model
 						if( !nextLvlWorkList.empty() )
 						{
 							#ifdef DEBUG
-							{
-								stringstream ss; ss << "Removing duplicates of last thread back." << endl << endl;
-								HierarchyCreationLog::logDebugMsg( ss.str() );
-							}
+// 							{
+// 								stringstream ss; ss << "Removing duplicates of last thread back." << endl << endl;
+// 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// 							}
 							#endif
 							
 							removeBoundaryDuplicate( nextLvlWorkList.back(), lastThreadIdx, iterOutput[ lastThreadIdx ],
@@ -701,11 +701,11 @@ namespace model
 						for( Node& child : lastList.back().child() )
 						{
 							#ifdef DEBUG
-							{
-								stringstream ss; ss << "Case: last pass, last node. addr: " << &child << " code: "
-									<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
-								HierarchyCreationLog::logDebugMsg( ss.str() );
-							}
+// 							{
+// 								stringstream ss; ss << "Case: last pass, last node. addr: " << &child << " code: "
+// 									<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// 							}
 							#endif
 							
 							setParent( child, 0 );
@@ -919,11 +919,11 @@ namespace model
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ i ] << " code: "
-							<< m_octreeDim.calcMorton( mergedChild[ i ] ).getPathToRoot( true ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ i ] << " code: "
+// 							<< m_octreeDim.calcMorton( mergedChild[ i ] ).getPathToRoot( true ) << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					setParent( mergedChild[ i ], previousIdx );
@@ -936,11 +936,11 @@ namespace model
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
 					
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ idx ] << " code: "
-							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).getPathToRoot( true ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ idx ] << " code: "
+// 							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).getPathToRoot( true ) << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					setParent( mergedChild[ idx ], previousIdx );
@@ -967,11 +967,11 @@ namespace model
 				for( Node& child : prevLastNodeChild )
 				{
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
-							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
+// 							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					setParent( child, previousIdx );
@@ -981,11 +981,11 @@ namespace model
 				for( Node& child : nextFirstNodeChild )
 				{
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
-							  << m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
+// 							  << m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					setParent( child, previousIdx );
@@ -1206,11 +1206,11 @@ namespace model
 			if( setParentFlag && !finalChild.isLeaf() )
 			{
 				#ifdef DEBUG
-				{
-					stringstream ss; ss << "Case: create node from single child. addr: " << &finalChild << " code: "
-						<< m_octreeDim.calcMorton( finalChild ).getPathToRoot( true ) << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
+// 				{
+// 					stringstream ss; ss << "Case: create node from single child. addr: " << &finalChild << " code: "
+// 						<< m_octreeDim.calcMorton( finalChild ).getPathToRoot( true ) << endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 				#endif
 				
 				setParent( finalChild, threadIdx );
@@ -1277,11 +1277,11 @@ namespace model
 				if( setParentFlag && !child.isLeaf() )
 				{
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "Case: inner node. addr: " << &child << " code: "
-							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "Case: inner node. addr: " << &child << " code: "
+// 							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					setParent( child, threadIdx );
