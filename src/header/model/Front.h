@@ -146,107 +146,107 @@ namespace model
 		void setupNodeRenderingNoFront( FrontListIter& iter, const Node& node, Renderer& renderer ) const;
 		
 		#ifdef DEBUG
-			void assertFrontIterator( const FrontListIter& iter )
-			{
-				if( iter != m_front.begin() )
-				{
-					Morton& currMorton = iter->m_morton;
-					Morton& prevMorton = prev( iter )->m_morton;
-					
-					uint currLvl = currMorton.getLevel();
-					uint prevLvl = prevMorton.getLevel();
-					
-					bool isPlaceholder = ( iter->m_octreeNode == &m_placeholder );
-					stringstream ss;
-					if( currLvl < prevLvl )
-					{
-						Morton prevAncestorMorton = prevMorton.getAncestorInLvl( currLvl );
-						if( currMorton <= prevAncestorMorton )
-						{
-							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
-								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
-								<< isPlaceholder << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-					else if( currLvl > prevLvl )
-					{
-						Morton currAncestorMorton = currMorton.getAncestorInLvl( prevLvl );
-						if( currAncestorMorton <= prevMorton  )
-						{
-							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << " is placeholder? "
-								<< isPlaceholder << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-					else
-					{
-						if( currMorton <= prevMorton )
-						{
-							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
-								<< isPlaceholder << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-				}
-				assertNode( *iter->m_octreeNode, iter->m_morton );
-			}
-		
-			void assertNode( const Node& node, const Morton& morton )
-			{
-				uint nodeLvl = morton.getLevel();
-				OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
-				
-				stringstream ss;
-				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
-				
-				if( &node == &m_placeholder )
-				{
-					uint level = morton.getLevel();
-					if( level != m_leafLvlDim.m_nodeLvl )
-					{
-						ss << "Placeholder is not from leaf level." << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
-				}
-				else
-				{
-					if( node.getContents().empty() )
-					{
-						ss << "Empty node" << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
-					Morton calcMorton = nodeDim.calcMorton( node );
-					if( calcMorton != morton )
-					{
-						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
-					
-					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
-					Node* parentNode = node.parent();
-					
-					if( parentNode != nullptr )
-					{
-						if( parentNode->getContents().empty() )
-						{
-							ss << "Empty parent" << endl << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-						
-						Morton parentMorton = *morton.traverseUp();
-						Morton calcParentMorton = parentDim.calcMorton( *parentNode );
-						if( parentMorton != calcParentMorton )
-						{
-							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
-							<< calcParentMorton.toString() << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-				}
-			}
+// 			void assertFrontIterator( const FrontListIter& iter )
+// 			{
+// 				if( iter != m_front.begin() )
+// 				{
+// 					Morton& currMorton = iter->m_morton;
+// 					Morton& prevMorton = prev( iter )->m_morton;
+// 					
+// 					uint currLvl = currMorton.getLevel();
+// 					uint prevLvl = prevMorton.getLevel();
+// 					
+// 					bool isPlaceholder = ( iter->m_octreeNode == &m_placeholder );
+// 					stringstream ss;
+// 					if( currLvl < prevLvl )
+// 					{
+// 						Morton prevAncestorMorton = prevMorton.getAncestorInLvl( currLvl );
+// 						if( currMorton <= prevAncestorMorton )
+// 						{
+// 							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
+// 								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
+// 								<< isPlaceholder << endl;
+// 							HierarchyCreationLog::logAndFail( ss.str() );
+// 						}
+// 					}
+// 					else if( currLvl > prevLvl )
+// 					{
+// 						Morton currAncestorMorton = currMorton.getAncestorInLvl( prevLvl );
+// 						if( currAncestorMorton <= prevMorton  )
+// 						{
+// 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
+// 								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << " is placeholder? "
+// 								<< isPlaceholder << endl;
+// 							HierarchyCreationLog::logAndFail( ss.str() );
+// 						}
+// 					}
+// 					else
+// 					{
+// 						if( currMorton <= prevMorton )
+// 						{
+// 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
+// 								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
+// 								<< isPlaceholder << endl;
+// 							HierarchyCreationLog::logAndFail( ss.str() );
+// 						}
+// 					}
+// 				}
+// 				assertNode( *iter->m_octreeNode, iter->m_morton );
+// 			}
+// 		
+// 			void assertNode( const Node& node, const Morton& morton )
+// 			{
+// 				uint nodeLvl = morton.getLevel();
+// 				OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
+// 				
+// 				stringstream ss;
+// 				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
+// 				
+// 				if( &node == &m_placeholder )
+// 				{
+// 					uint level = morton.getLevel();
+// 					if( level != m_leafLvlDim.m_nodeLvl )
+// 					{
+// 						ss << "Placeholder is not from leaf level." << endl << endl;
+// 						HierarchyCreationLog::logAndFail( ss.str() );
+// 					}
+// 				}
+// 				else
+// 				{
+// 					if( node.getContents().empty() )
+// 					{
+// 						ss << "Empty node" << endl << endl;
+// 						HierarchyCreationLog::logAndFail( ss.str() );
+// 					}
+// 					Morton calcMorton = nodeDim.calcMorton( node );
+// 					if( calcMorton != morton )
+// 					{
+// 						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
+// 						HierarchyCreationLog::logAndFail( ss.str() );
+// 					}
+// 					
+// 					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
+// 					Node* parentNode = node.parent();
+// 					
+// 					if( parentNode != nullptr )
+// 					{
+// 						if( parentNode->getContents().empty() )
+// 						{
+// 							ss << "Empty parent" << endl << endl;
+// 							HierarchyCreationLog::logAndFail( ss.str() );
+// 						}
+// 						
+// 						Morton parentMorton = *morton.traverseUp();
+// 						Morton calcParentMorton = parentDim.calcMorton( *parentNode );
+// 						if( parentMorton != calcParentMorton )
+// 						{
+// 							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
+// 							<< calcParentMorton.toString() << endl;
+// 							HierarchyCreationLog::logAndFail( ss.str() );
+// 						}
+// 					}
+// 				}
+// 			}
 		#endif
 		
 		/** Database connection used to persist nodes. */
@@ -371,7 +371,7 @@ namespace model
 // 			stringstream ss; ss << "Buffer end insertion: " << morton.getPathToRoot( true ) << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
-			assertNode( node, morton );
+// 			assertNode( node, morton );
 		}
 		#endif
 		
@@ -394,7 +394,7 @@ namespace model
 // 			stringstream ss; ss << "Buffer iter insertion: " << morton.getPathToRoot( true ) << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
-			assertNode( node, morton );
+// 			assertNode( node, morton );
 		}
 		#endif
 		
@@ -409,13 +409,13 @@ namespace model
 		
 		#ifdef DEBUG
 		{
-			stringstream ss; ss << "Placeholder insertion: " << morton.getPathToRoot( true ) << endl;
-			if( !m_currentIterPlaceholders[ threadIdx ].empty()
-				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
-			{
-				ss << "Placeholder insertion compromises ordering" << endl << endl;
-				HierarchyCreationLog::logAndFail( ss.str() );
-			}
+// 			stringstream ss; ss << "Placeholder insertion: " << morton.getPathToRoot( true ) << endl;
+// 			if( !m_currentIterPlaceholders[ threadIdx ].empty()
+// 				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
+// 			{
+// 				ss << "Placeholder insertion compromises ordering" << endl << endl;
+// 				HierarchyCreationLog::logAndFail( ss.str() );
+// 			}
 		}
 		#endif
 		
@@ -469,21 +469,21 @@ namespace model
 				for( FrontList& list : m_currentIterPlaceholders )
 				{
 					#ifdef DEBUG
-					{
-// 						nPlaceholders += list.size();
-						if( !m_placeholders.empty() && !list.empty() )
-						{
-							Morton& prev = m_placeholders.back().m_morton;
-							Morton& next = list.front().m_morton;
-							
-							if( next <= prev )
-							{
-								stringstream ss; ss << "Placeholder ordering compromised when moving thread insertions. Prev:"
-									<< prev.getPathToRoot( true ) << "Next: " << next.getPathToRoot( true );
-								HierarchyCreationLog::logAndFail( ss.str() );
-							}
-						}
-					}
+// 					{
+// // 						nPlaceholders += list.size();
+// 						if( !m_placeholders.empty() && !list.empty() )
+// 						{
+// 							Morton& prev = m_placeholders.back().m_morton;
+// 							Morton& next = list.front().m_morton;
+// 							
+// 							if( next <= prev )
+// 							{
+// 								stringstream ss; ss << "Placeholder ordering compromised when moving thread insertions. Prev:"
+// 									<< prev.getPathToRoot( true ) << "Next: " << next.getPathToRoot( true );
+// 								HierarchyCreationLog::logAndFail( ss.str() );
+// 							}
+// 						}
+// 					}
 					#endif
 					
 					m_placeholders.splice( m_placeholders.end(), list );
@@ -514,9 +514,9 @@ namespace model
 		m_persisted = 0ul;
 		
 		#ifdef DEBUG
-			m_nPlaceholders = 0ul;
-			m_nSubstituted = 0ul;
-			ulong insertedPlaceholders = 0ul;
+// 			m_nPlaceholders = 0ul;
+// 			m_nSubstituted = 0ul;
+// 			ulong insertedPlaceholders = 0ul;
 		#endif
 		
 		auto start = Profiler::now();
@@ -525,7 +525,7 @@ namespace model
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			
 			#ifdef DEBUG
-				insertedPlaceholders += m_placeholders.size();
+// 				insertedPlaceholders += m_placeholders.size();
 			#endif
 			
 			// Insert all leaf level pending nodes and placeholders.
@@ -551,19 +551,19 @@ namespace model
 			}
 			
 			#ifdef DEBUG
-				long expectedToSubstitute;
-				{
-					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-					expectedToSubstitute = m_perLvlInsertions[ substitutionLvl ].size();
-				}
+// 				long expectedToSubstitute;
+// 				{
+// 					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
+// 					expectedToSubstitute = m_perLvlInsertions[ substitutionLvl ].size();
+// 				}
 				
-				{
-					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
-										<< " Inserted placeholders: " << insertedPlaceholders << " Substitution lvl: "
-										<< substitutionLvl << " Expected to substitute: " << expectedToSubstitute << endl
-										<< endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
+// 				{
+// 					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
+// 										<< " Inserted placeholders: " << insertedPlaceholders << " Substitution lvl: "
+// 										<< substitutionLvl << " Expected to substitute: " << expectedToSubstitute << endl
+// 										<< endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 			#endif
 			
 			bool transactionNeeded = AllocStatistics::totalAllocated() > m_memoryLimit;
@@ -590,7 +590,7 @@ namespace model
 			{
 				#ifdef DEBUG
 				{
-					assertFrontIterator( frontIt );
+// 					assertFrontIterator( frontIt );
 // 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 				}
 				#endif
@@ -603,15 +603,15 @@ namespace model
 			}
 			
 			#ifdef DEBUG
-			{
-				stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
-									<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
-									<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
-									<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
-									<< endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				assert( m_nSubstituted >= expectedToSubstitute && "Expected more placeholders to be substituted" );
-			}
+// 			{
+// 				stringstream ss; ss << "==== FRONT TRACKING END ====" << endl << "Front size: " << m_front.size()
+// 									<< " Substitution lvl: " << substitutionLvl << " Placeholders after: "
+// 									<< m_nPlaceholders << " Expected to substitute: " << expectedToSubstitute
+// 									<< " Substituted: " << m_nSubstituted << " Persisted: " << m_persisted << endl
+// 									<< endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// // 				assert( m_nSubstituted >= expectedToSubstitute && "Expected more placeholders to be substituted" );
+// 			}
 			#endif
 		}
 		
@@ -649,17 +649,17 @@ namespace model
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
 				#ifdef DEBUG
-					++m_nPlaceholders;
+// 					++m_nPlaceholders;
 				#endif
 				
 				frontIt++;
 				return;
 			}
 			#ifdef DEBUG
-			else
-			{
-				assertFrontIterator( frontIt );
-			}
+// 			else
+// 			{
+// 				assertFrontIterator( frontIt );
+// 			}
 			#endif
 		}
 		
@@ -687,7 +687,7 @@ namespace model
 			
 			#ifdef DEBUG
 			{
-				assertNode( node, morton );
+// 				assertNode( node, morton );
 			}
 			#endif
 			
@@ -706,8 +706,8 @@ namespace model
 				
 				#ifdef DEBUG
 				{
-					auto tempIt = prev( frontIt );
-					assertNode( *tempIt->m_octreeNode, tempIt->m_morton );
+// 					auto tempIt = prev( frontIt );
+// 					assertNode( *tempIt->m_octreeNode, tempIt->m_morton );
 				}
 				#endif
 				
@@ -749,7 +749,7 @@ namespace model
 			{
 				#ifdef DEBUG
 				{
-					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
+// 					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
 				}
 				#endif
 				
@@ -757,7 +757,7 @@ namespace model
 				
 				#ifdef DEBUG
 				{
-					assertNode( *node.m_octreeNode, node.m_morton );
+// 					assertNode( *node.m_octreeNode, node.m_morton );
 				}
 				#endif
 				
@@ -765,7 +765,7 @@ namespace model
 				
 				#ifdef DEBUG
 				{
-					assertNode( *node.m_octreeNode, node.m_morton );
+// 					assertNode( *node.m_octreeNode, node.m_morton );
 				}
 				#endif
 				
@@ -839,11 +839,11 @@ namespace model
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
 		
 		#ifdef DEBUG
-			int toRelease = parentNode->child().size();
-			ulong processedBefore = m_processedNodes;
-			bool released = false;
+// 			int toRelease = parentNode->child().size();
+// 			ulong processedBefore = m_processedNodes;
+// 			bool released = false;
 			
-			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
+// 			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 			
 // 			stringstream ss; ss << "Prunning group of " << frontIt->m_morton.toString() << endl << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -873,7 +873,7 @@ namespace model
 			if( AllocStatistics::totalAllocated() > m_memoryLimit )
 			{
 				#ifdef DEBUG
-					released = true;
+// 					released = true;
 				#endif
 				
 				releaseSiblings( parentNode->child(), nodeLvlDim );
@@ -885,22 +885,22 @@ namespace model
 		}
 		
 		#ifdef DEBUG
-		{
-			if( released && toRelease != m_processedNodes - processedBefore )
-			{
-				stringstream ss; ss << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: "
-									<< parentNode << " found: " << m_front.front().m_octreeNode->parent() << endl
-									<< "All persisted nodes should also be released." << endl << endl;
-				HierarchyCreationLog::logAndFail( ss.str() );
-			}
-		}
+// 		{
+// 			if( released && toRelease != m_processedNodes - processedBefore )
+// 			{
+// 				stringstream ss; ss << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: "
+// 									<< parentNode << " found: " << m_front.front().m_octreeNode->parent() << endl
+// 									<< "All persisted nodes should also be released." << endl << endl;
+// 				HierarchyCreationLog::logAndFail( ss.str() );
+// 			}
+// 		}
 		#endif
 		
 		FrontNode frontNode( *parentNode, parentMorton );
 		
 		#ifdef DEBUG
 		{
-			assertNode( *frontNode.m_octreeNode, frontNode.m_morton );
+// 			assertNode( *frontNode.m_octreeNode, frontNode.m_morton );
 		}
 		#endif
 		
