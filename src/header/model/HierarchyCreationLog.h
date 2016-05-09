@@ -24,9 +24,14 @@ namespace model
 			{
 				lock_guard< recursive_mutex > lock( m_logMutex );
 				logDebugMsg( msg );
-				m_log.flush();
+				flush();
 			}
 			throw logic_error( msg );
+		}
+	
+		static void flush()
+		{
+			m_log.flush();
 		}
 	
 	private:

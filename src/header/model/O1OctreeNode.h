@@ -2,10 +2,6 @@
 #define O1_OCTREE_NODE_H
 
 #include <memory>
-// Debug
-#include <fstream>
-#include <execinfo.h>
-//
 #include "Array.h"
 
 using namespace std;
@@ -58,24 +54,6 @@ namespace model
 		
 		~O1OctreeNode()
 		{
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				
-// 				void* buffer[ 10 ];
-// 				int entries = backtrace( buffer, 10 );
-// 				char** strings = backtrace_symbols( buffer, entries );
-// 				
-// 				m_log << "dest: " << this << endl;
-// 				for( int i = 0; i < entries; ++i )
-// 				{
-// 					 m_log << strings[ i ] << endl;
-// 				}
-// 				m_log << endl;
-// 				
-// 				free( strings );
-// 			}
-			
 			m_parent = nullptr;
 		}
 		
@@ -97,47 +75,11 @@ namespace model
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf )
 		{
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				
-// 				void* buffer[ 10 ];
-// 				int entries = backtrace( buffer, 10 );
-// 				char** strings = backtrace_symbols( buffer, entries );
-// 				
-// 				m_log << "mov: " << &other << endl;
-// 				for( int i = 0; i < entries; ++i )
-// 				{
-// 					 m_log << strings[ i ] << endl;
-// 				}
-// 				m_log << endl;
-// 				
-// 				free( strings );
-// 			}
-			
 			other.m_parent = nullptr;
 		}
 		
 		O1OctreeNode& operator=( O1OctreeNode&& other )
 		{
-			// Debug
-// 			{
-// 				lock_guard< mutex > lock( m_logMutex );
-// 				
-// 				void* buffer[ 10 ];
-// 				int entries = backtrace( buffer, 10 );
-// 				char** strings = backtrace_symbols( buffer, entries );
-// 				
-// 				m_log << "mov: " << &other << endl;
-// 				for( int i = 0; i < entries; ++i )
-// 				{
-// 					 m_log << strings[ i ] << endl;
-// 				}
-// 				m_log << endl;
-// 				
-// 				free( strings );
-// 			}
-			
 			m_contents = std::move( other.m_contents );
 			m_children = std::move( other.m_children );
 			m_parent = other.m_parent;

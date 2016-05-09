@@ -5,6 +5,7 @@
 #include <fstream>
 #include <condition_variable>
 #include <future>
+#include <signal.h>
 #include "ManagedAllocator.h"
 #include "O1OctreeNode.h"
 #include "OctreeDimensions.h"

@@ -326,31 +326,7 @@ namespace model
 		m_nSubstituted( 0ul )
 	#endif
 	{}
-	
-// 	template< typename Morton, typename Point >
-// 	inline void Front< Morton, Point >::turnReleaseOn()
-// 	{
-// 		Debug
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			m_log << "Front release on" << endl << endl;
-// 		}
-// 		
-// 		m_releaseFlag = true;
-// 	}
-	
-// 	template< typename Morton, typename Point >
-// 	void Front< Morton, Point >::turnReleaseOff()
-// 	{
-// 		// Debug
-// // 		{
-// // 			lock_guard< mutex > lock( m_logMutex );
-// // 			m_log << "Front release off" << endl << endl;
-// // 		}
-// 		
-// 		m_releaseFlag = false;
-// 	}
-	
+
 	template< typename Morton, typename Point >
 	void Front< Morton, Point >::notifyLeafLvlLoaded()
 	{
@@ -590,11 +566,19 @@ namespace model
 			{
 				#ifdef DEBUG
 				{
+// 					HierarchyCreationLog::logDebugMsg( "track starts\n" );
 // 					assertFrontIterator( frontIt );
 // 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
 				}
 				#endif
+				
 				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
+				
+				#ifdef DEBUG
+				{
+// 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
+				}
+				#endif
 			}
 			
 			if( transactionNeeded )
@@ -663,19 +647,26 @@ namespace model
 			#endif
 		}
 		
+		#ifdef DEBUG
+// 		if( frontNode.m_octreeNode == nullptr )
+// 		{
+// 			stringstream ss; ss << "Null node: " << frontNode.m_morton.getPathToRoot( true ) << endl;
+// 			HierarchyCreationLog::logAndFail( ss.str() );
+// 		}
+		#endif
+		
 		Node& node = *frontNode.m_octreeNode;
 		Morton& morton = frontNode.m_morton;
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
 		
-// 		m_prunningMtx.lock();
 		Node* parentNode = node.parent();
-// 		m_prunningMtx.unlock();
 		
 		#ifdef DEBUG
-// 		{
+		{
+			
 // 			stringstream ss; ss << "Tracking: " << morton.toString() << endl << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
-// 		}
+		}
 		#endif
 		
 		// If parentNode == lastParent, prunning was not sucessful for a sibling of the current node, so the prunning
@@ -708,6 +699,7 @@ namespace model
 				{
 // 					auto tempIt = prev( frontIt );
 // 					assertNode( *tempIt->m_octreeNode, tempIt->m_morton );
+// 					HierarchyCreationLog::logDebugMsg( "a prune\n" );
 				}
 				#endif
 				
@@ -770,7 +762,7 @@ namespace model
 				#endif
 				
 				#ifdef DEBUG
-					++m_nSubstituted;
+// 					++m_nSubstituted;
 				#endif
 				
 				return true;
@@ -810,14 +802,34 @@ namespace model
 			FrontListIter siblingIter = frontIt;
 			while( siblingIter != m_front.end() )
 			{
+				#ifdef DEBUG
+					bool wasPlaceholder = siblingIter->m_octreeNode == &m_placeholder;
+					bool wasSubstituted = false;
+				#endif
+				
 				if( siblingIter->m_octreeNode == &m_placeholder )
 				{
+					#ifdef DEBUG
+						wasSubstituted =
+					#endif
 					substitutePlaceholder( *siblingIter, substitutionLvl );
 				}
+				
+				#ifdef DEBUG
+					if( siblingIter->m_octreeNode == nullptr )
+					{
+						stringstream ss; ss << siblingIter->m_morton.getPathToRoot( true ) << "Iter with null node pointer."
+							<< "Was placeholder: " << wasPlaceholder << " Was substituted: " << wasSubstituted << endl << endl;
+						HierarchyCreationLog::logAndFail( ss.str() );
+					}
+					//
+				#endif
+					
 				if( siblingIter++->m_octreeNode->parent() != parentNode )
 				{
 					break;
 				}
+				
 				++nSiblings;
 			}
 			

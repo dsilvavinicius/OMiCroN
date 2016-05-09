@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <MockRenderer.h>
 #include "FastParallelOctree.h"
+#include <StackTrace.h>
 #include "FastParallelOctreeTestParam.h"
 
 namespace model
@@ -338,18 +339,18 @@ namespace model
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			
 			Octree octree( params.m_plyFilename, params.m_hierarchyLvl, params.m_workItemSize, params.m_memoryQuota,
-						   params.m_nThreads );
+						params.m_nThreads );
 			waitAsynCreation( octree );
 			
 			string dbFilename = params.m_plyFilename;
- 			dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
- 			dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
- 			
- 			cout << "Sanity check..." << endl << dbFilename << endl << endl;
- 				
- 			Sql sql( dbFilename, false );
- 			Morton rootCode; rootCode.build( 0x1 );
- 			checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
+			dbFilename.insert( dbFilename.find_last_of( '/' ) + 1, "sorted_" );
+			dbFilename.replace( dbFilename.find_last_of( "." ), dbFilename.npos, ".db" );
+			
+			cout << "Sanity check..." << endl << dbFilename << endl << endl;
+				
+			Sql sql( dbFilename, false );
+			Morton rootCode; rootCode.build( 0x1 );
+			checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
 		}
 		
 		TEST( FastParallelOctreeTest, Creation_Shallow_StayPuff_Sanity )
