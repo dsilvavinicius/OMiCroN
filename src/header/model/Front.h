@@ -8,6 +8,7 @@
 #include "OctreeStats.h"
 #include "RenderingState.h"
 #include "Profiler.h"
+#include <StackTrace.h>
 
 #define DEBUG
 
@@ -50,19 +51,73 @@ namespace model
 			FrontNode( Node& node, const Morton& morton )
 			: m_octreeNode( &node ),
 			m_morton( morton )
-			{}
+			{
+				#ifdef DEBUG
+				{
+					stringstream ss; ss << this << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+					StackTrace::log();
+				}
+				#endif
+			}
 			
 			FrontNode( const FrontNode& other )
 			: m_octreeNode( other.m_octreeNode ),
 			m_morton( other.m_morton )
-			{}
+			{
+				#ifdef DEBUG
+				{
+					stringstream ss; ss << this << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+					StackTrace::log();
+				}
+				#endif
+			}
 			
 			FrontNode& operator=( const FrontNode& other )
 			{
 				m_octreeNode = other.m_octreeNode;
 				m_morton = other.m_morton;
+				
+				#ifdef DEBUG
+				if( other.m_octreeNode == nullptr )
+				{
+					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
+					throw logic_error( ss.str() );
+				}
+				if( other.m_morton.getBits() == 0x0 )
+				{
+					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
+					throw logic_error( ss.str() );
+				}
+				
+				stringstream ss; ss << this << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+				StackTrace::log();
+				
+				//other.assertNode();
+				//assertNode();
+				#endif
+				
 				return *this;
 			}
+			
+			#ifdef DEBUG
+// 			void assertNode() const
+// 			{
+// 				//stringstream ss;
+// 				if( m_octreeNode == nullptr )
+// 				{
+// 					//ss << "Front node with null octree node. Addr: " << this << endl << endl;
+// 					throw logic_error( "Front node with null octree node" );
+// 				}
+// 				if( m_morton.getBits() == 0x0 )
+// 				{
+// 					//ss << "Front node with null morton code. Addr: " << this << endl << endl;
+// 					throw logic_error( "Front node with null morton code." );
+// 				}
+// 			}
+			#endif
 			
 			Node* m_octreeNode;
 			Morton m_morton;
@@ -194,59 +249,59 @@ namespace model
 // 				assertNode( *iter->m_octreeNode, iter->m_morton );
 // 			}
 // 		
-// 			void assertNode( const Node& node, const Morton& morton )
-// 			{
-// 				uint nodeLvl = morton.getLevel();
-// 				OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
-// 				
-// 				stringstream ss;
-// 				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
-// 				
-// 				if( &node == &m_placeholder )
-// 				{
-// 					uint level = morton.getLevel();
-// 					if( level != m_leafLvlDim.m_nodeLvl )
-// 					{
-// 						ss << "Placeholder is not from leaf level." << endl << endl;
-// 						HierarchyCreationLog::logAndFail( ss.str() );
-// 					}
-// 				}
-// 				else
-// 				{
-// 					if( node.getContents().empty() )
-// 					{
-// 						ss << "Empty node" << endl << endl;
-// 						HierarchyCreationLog::logAndFail( ss.str() );
-// 					}
-// 					Morton calcMorton = nodeDim.calcMorton( node );
-// 					if( calcMorton != morton )
-// 					{
-// 						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
-// 						HierarchyCreationLog::logAndFail( ss.str() );
-// 					}
-// 					
-// 					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
-// 					Node* parentNode = node.parent();
-// 					
-// 					if( parentNode != nullptr )
-// 					{
-// 						if( parentNode->getContents().empty() )
-// 						{
-// 							ss << "Empty parent" << endl << endl;
-// 							HierarchyCreationLog::logAndFail( ss.str() );
-// 						}
-// 						
-// 						Morton parentMorton = *morton.traverseUp();
-// 						Morton calcParentMorton = parentDim.calcMorton( *parentNode );
-// 						if( parentMorton != calcParentMorton )
-// 						{
-// 							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
-// 							<< calcParentMorton.toString() << endl;
-// 							HierarchyCreationLog::logAndFail( ss.str() );
-// 						}
-// 					}
-// 				}
-// 			}
+			void assertNode( const Node& node, const Morton& morton )
+			{
+				uint nodeLvl = morton.getLevel();
+				OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
+				
+				stringstream ss;
+				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
+				
+				if( &node == &m_placeholder )
+				{
+					uint level = morton.getLevel();
+					if( level != m_leafLvlDim.m_nodeLvl )
+					{
+						ss << "Placeholder is not from leaf level." << endl << endl;
+						HierarchyCreationLog::logAndFail( ss.str() );
+					}
+				}
+				else
+				{
+					if( node.getContents().empty() )
+					{
+						ss << "Empty node" << endl << endl;
+						HierarchyCreationLog::logAndFail( ss.str() );
+					}
+					Morton calcMorton = nodeDim.calcMorton( node );
+					if( calcMorton != morton )
+					{
+						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
+						HierarchyCreationLog::logAndFail( ss.str() );
+					}
+					
+					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
+					Node* parentNode = node.parent();
+					
+					if( parentNode != nullptr )
+					{
+						if( parentNode->getContents().empty() )
+						{
+							ss << "Empty parent" << endl << endl;
+							HierarchyCreationLog::logAndFail( ss.str() );
+						}
+						
+						Morton parentMorton = *morton.traverseUp();
+						Morton calcParentMorton = parentDim.calcMorton( *parentNode );
+						if( parentMorton != calcParentMorton )
+						{
+							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
+							<< calcParentMorton.toString() << endl;
+							HierarchyCreationLog::logAndFail( ss.str() );
+						}
+					}
+				}
+			}
 		#endif
 		
 		/** Database connection used to persist nodes. */
@@ -342,12 +397,13 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx )
 	{
+		
 		#ifdef DEBUG
 		{
 // 			stringstream ss; ss << "Buffer end insertion: " << morton.getPathToRoot( true ) << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
-// 			assertNode( node, morton );
+			assertNode( node, morton );
 		}
 		#endif
 		
@@ -370,7 +426,7 @@ namespace model
 // 			stringstream ss; ss << "Buffer iter insertion: " << morton.getPathToRoot( true ) << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
-// 			assertNode( node, morton );
+			assertNode( node, morton );
 		}
 		#endif
 		
@@ -426,7 +482,12 @@ namespace model
 				{
 					// Move nodes to the per-level sorted buffer.
 					#ifdef DEBUG
-						insertionSize += it->size();
+// 						insertionSize += it->size();
+						
+// 						for( FrontNode& node : *it )
+// 						{
+// 							node.assertNode();
+// 						}
 					#endif
 						
 					m_perLvlInsertions[ lvl ].splice( m_perLvlInsertions[ lvl ].end(), *it );
@@ -650,8 +711,10 @@ namespace model
 		#ifdef DEBUG
 // 		if( frontNode.m_octreeNode == nullptr )
 // 		{
-// 			stringstream ss; ss << "Null node: " << frontNode.m_morton.getPathToRoot( true ) << endl;
-// 			HierarchyCreationLog::logAndFail( ss.str() );
+// 			cout << frontNode.m_morton.toString() << endl << endl;
+// 			cout.flush();
+// // 			stringstream ss; ss << "Null node: " << frontNode.m_morton.getPathToRoot( true ) << endl;
+// // 			HierarchyCreationLog::logAndFail( ss.str() );
 // 		}
 		#endif
 		
