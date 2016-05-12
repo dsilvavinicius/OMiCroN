@@ -36,7 +36,6 @@ namespace util
 			exit( 1 );
 		}
 		
-	private:
 		static string toString()
 		{
 			constexpr const int STACK_SIZE = 100;

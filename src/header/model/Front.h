@@ -10,7 +10,7 @@
 #include "Profiler.h"
 #include <StackTrace.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -53,24 +53,20 @@ namespace model
 			m_morton( morton )
 			{
 				#ifdef DEBUG
-				{
-					stringstream ss; ss << this << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-					StackTrace::log();
-				}
+// 				{
+// 					stringstream ss; ss << "Ctor: " << this << endl << StackTrace::toString();
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 				#endif
 			}
 			
-			FrontNode( const FrontNode& other )
-			: m_octreeNode( other.m_octreeNode ),
-			m_morton( other.m_morton )
+			~FrontNode()
 			{
 				#ifdef DEBUG
-				{
-					stringstream ss; ss << this << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-					StackTrace::log();
-				}
+// 				{
+// 					stringstream ss; ss << "Dtor: " << this << endl << StackTrace::toString();
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 				#endif
 			}
 			
@@ -82,18 +78,20 @@ namespace model
 				#ifdef DEBUG
 				if( other.m_octreeNode == nullptr )
 				{
+					HierarchyCreationLog::flush();
 					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
 					throw logic_error( ss.str() );
 				}
 				if( other.m_morton.getBits() == 0x0 )
 				{
+					HierarchyCreationLog::flush();
 					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
 					throw logic_error( ss.str() );
 				}
 				
-				stringstream ss; ss << this << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-				StackTrace::log();
+// 				stringstream ss; ss << this << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				StackTrace::log();
 				
 				//other.assertNode();
 				//assertNode();
@@ -108,13 +106,13 @@ namespace model
 // 				//stringstream ss;
 // 				if( m_octreeNode == nullptr )
 // 				{
-// 					//ss << "Front node with null octree node. Addr: " << this << endl << endl;
-// 					throw logic_error( "Front node with null octree node" );
+// 					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
+// 					throw logic_error( ss.str() );
 // 				}
 // 				if( m_morton.getBits() == 0x0 )
 // 				{
-// 					//ss << "Front node with null morton code. Addr: " << this << endl << endl;
-// 					throw logic_error( "Front node with null morton code." );
+// 					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
+// 					throw logic_error( ss.str() );
 // 				}
 // 			}
 			#endif
@@ -408,7 +406,16 @@ namespace model
 		#endif
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		list.push_back( FrontNode( node, morton ) );
+		FrontNode frontNode( node, morton );
+		
+		#ifdef DEBUG
+		{
+// 			stringstream ss; ss << "insertIntoBufferEnd: " << morton.toString() << endl << endl;
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
+		list.push_back( frontNode );
 	}
 	
 	template< typename Morton, typename Point >
@@ -426,12 +433,21 @@ namespace model
 // 			stringstream ss; ss << "Buffer iter insertion: " << morton.getPathToRoot( true ) << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
-			assertNode( node, morton );
+// 			assertNode( node, morton );
 		}
 		#endif
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		list.insert( iter, FrontNode( node, morton ) );
+		FrontNode frontNode( node, morton );
+		
+		#ifdef DEBUG
+		{
+// 			stringstream ss; ss << "insertIntoBuffer: " << morton.toString() << endl << endl;
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
+		list.insert( iter, frontNode );
 	}
 	
 	template< typename Morton, typename Point >
@@ -475,26 +491,32 @@ namespace model
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
 				#ifdef DEBUG
-					ulong insertionSize = 0ul;
+// 					ulong totalInsertionSize = 0ul;
 				#endif
 				
-				for( auto it = m_currentIterInsertions.begin(); it != m_currentIterInsertions.end(); ++it )
+				for( FrontList& list : m_currentIterInsertions )
 				{
-					// Move nodes to the per-level sorted buffer.
 					#ifdef DEBUG
-// 						insertionSize += it->size();
-						
-// 						for( FrontNode& node : *it )
-// 						{
-// 							node.assertNode();
-// 						}
+// 						ulong insertionSize = list.size();
+// 						totalInsertionSize += insertionSize;
 					#endif
-						
-					m_perLvlInsertions[ lvl ].splice( m_perLvlInsertions[ lvl ].end(), *it );
+					
+					FrontList& lvlInsertions = m_perLvlInsertions[ lvl ];
+					// Move nodes to the per-level sorted buffer.
+					lvlInsertions.splice( lvlInsertions.end(), list );
 				}
 				
 				#ifdef DEBUG
-// 					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Nodes: " << insertionSize;
+// 					stringstream ss; ss << "Notifying insertion end in lvl " << lvl << ". Nodes: " << totalInsertionSize
+// 						<< " Final lvl insertion list: size: " << m_perLvlInsertions[ lvl ].size() << endl;
+// 					
+// 					FrontList& lvlInsertions = m_perLvlInsertions[ lvl ];
+// 					for( FrontNode& frontNode : lvlInsertions )
+// 					{
+// 						ss << &frontNode << ": " << frontNode.m_morton.toString() << endl;
+// 					}
+// 					ss << endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
 // 					ulong nPlaceholders = 0ul;
 				#endif
 			}
@@ -588,6 +610,12 @@ namespace model
 			}
 			
 			#ifdef DEBUG
+			{
+// 				lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
+// 				stringstream ss; ss << "subs lvl: " << substitutionLvl << " candidate: "
+// 					<< &m_perLvlInsertions[ substitutionLvl ].front() << endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+			
 // 				long expectedToSubstitute;
 // 				{
 // 					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
@@ -601,6 +629,7 @@ namespace model
 // 										<< endl;
 // 					HierarchyCreationLog::logDebugMsg( ss.str() );
 // 				}
+			}
 			#endif
 			
 			bool transactionNeeded = AllocStatistics::totalAllocated() > m_memoryLimit;
@@ -797,42 +826,47 @@ namespace model
 		if( substitutionLvl != 0 )
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-			FrontList& substitutionLvlList = m_perLvlInsertions[ substitutionLvl ];
-			FrontNode& substituteCandidate = substitutionLvlList.front();
 			
-			if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
+			FrontList& substitutionLvlList = m_perLvlInsertions[ substitutionLvl ];
+			
+			if( !substitutionLvlList.empty() )
 			{
-				#ifdef DEBUG
+				FrontNode& substituteCandidate = substitutionLvlList.front();
+				
+				if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
 				{
-// 					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
+					#ifdef DEBUG
+					{
+	// 					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
+					}
+					#endif
+					
+					node = substituteCandidate;
+					
+					#ifdef DEBUG
+					{
+	// 					assertNode( *node.m_octreeNode, node.m_morton );
+					}
+					#endif
+					
+					substitutionLvlList.erase( substitutionLvlList.begin() );
+					
+					#ifdef DEBUG
+					{
+	// 					assertNode( *node.m_octreeNode, node.m_morton );
+					}
+					#endif
+					
+					#ifdef DEBUG
+	// 					++m_nSubstituted;
+					#endif
+					
+					return true;
 				}
-				#endif
-				
-				node = substituteCandidate;
-				
-				#ifdef DEBUG
+				else 
 				{
-// 					assertNode( *node.m_octreeNode, node.m_morton );
+					return false;
 				}
-				#endif
-				
-				substitutionLvlList.erase( substitutionLvlList.begin() );
-				
-				#ifdef DEBUG
-				{
-// 					assertNode( *node.m_octreeNode, node.m_morton );
-				}
-				#endif
-				
-				#ifdef DEBUG
-// 					++m_nSubstituted;
-				#endif
-				
-				return true;
-			}
-			else 
-			{
-				return false;
 			}
 		}
 		
@@ -866,25 +900,25 @@ namespace model
 			while( siblingIter != m_front.end() )
 			{
 				#ifdef DEBUG
-					bool wasPlaceholder = siblingIter->m_octreeNode == &m_placeholder;
-					bool wasSubstituted = false;
+// 					bool wasPlaceholder = siblingIter->m_octreeNode == &m_placeholder;
+// 					bool wasSubstituted = false;
 				#endif
 				
 				if( siblingIter->m_octreeNode == &m_placeholder )
 				{
 					#ifdef DEBUG
-						wasSubstituted =
+// 						wasSubstituted =
 					#endif
 					substitutePlaceholder( *siblingIter, substitutionLvl );
 				}
 				
 				#ifdef DEBUG
-					if( siblingIter->m_octreeNode == nullptr )
-					{
-						stringstream ss; ss << siblingIter->m_morton.getPathToRoot( true ) << "Iter with null node pointer."
-							<< "Was placeholder: " << wasPlaceholder << " Was substituted: " << wasSubstituted << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
+// 					if( siblingIter->m_octreeNode == nullptr )
+// 					{
+// 						stringstream ss; ss << siblingIter->m_morton.getPathToRoot( true ) << "Iter with null node pointer."
+// 							<< "Was placeholder: " << wasPlaceholder << " Was substituted: " << wasSubstituted << endl << endl;
+// 						HierarchyCreationLog::logAndFail( ss.str() );
+// 					}
 					//
 				#endif
 					
@@ -975,6 +1009,8 @@ namespace model
 		
 		#ifdef DEBUG
 		{
+// 			stringstream ss; ss << "prune: " << &frontNode << endl << endl;
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
 // 			assertNode( *frontNode.m_octreeNode, frontNode.m_morton );
 		}
 		#endif
