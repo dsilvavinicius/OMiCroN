@@ -885,9 +885,7 @@ namespace model
 			collapse( list.back() );
 		}
 	}
-		
-	// TODO: This method is wrong. The duplicate removal should also choose again the node points, since the children
-	// changed.
+
 	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 	 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 	template< typename Morton, typename Point >
@@ -906,7 +904,6 @@ namespace model
 			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
 			{
 				// Nodes from same sibling groups were in different threads
-				// TODO: the merge operation needs to select again the points in nextFirstNode.
 				
 				// Debug
 // 				{
@@ -1221,7 +1218,6 @@ namespace model
 		return node;
 	}
 	
-	// TODO: Probably there is no need for the first for loop...
 	template< typename Morton, typename Point >
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
 	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/
@@ -1240,6 +1236,8 @@ namespace model
 			// Verify if placeholders are necessary.
 			bool frontPlaceholdersOn = ( m_octreeDim.calcMorton( inChildren[ 0 ] ).getLevel() == m_leafLvlDim.m_nodeLvl );
 			
+			int nPoints = 0;
+			Map prefixMap;
 			for( int i = 0; i < children.size(); ++i )
 			{
 				children[ i ] = std::move( inChildren[ i ] );
@@ -1249,26 +1247,6 @@ namespace model
 					m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
 				}
 				
-				// Debug
-// 				if( i > 0 )
-// 				{
-// 					Morton prevMorton = m_octreeDim.calcMorton( children[ i - 1 ] );
-// 					Morton currentMorton = m_octreeDim.calcMorton( children[ i ] );
-// 					if( currentMorton <= prevMorton )
-// 					{
-// 						stringstream ss;
-// 						ss 	<< "Current: " << currentMorton.getPathToRoot( true ) << " <= "
-// 							<< prevMorton.getPathToRoot( true ) << endl;
-// 						throw logic_error( ss.str() );
-// 					}
-// 				}
-				//
-			}
-			
-			int nPoints = 0;
-			Map prefixMap;
-			for( int i = 0; i < children.size(); ++i )
-			{
 				Node& child = children[ i ];
 				
 				prefixMap.insert( prefixMap.end(), MapEntry( nPoints, child ) );
