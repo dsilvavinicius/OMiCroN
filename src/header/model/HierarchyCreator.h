@@ -31,6 +31,7 @@ namespace model
 	public:
 		using PointPtr = shared_ptr< Point >;
 		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
+		using PointArray = Array< PointPtr >;
 		using Node = O1OctreeNode< PointPtr >;
 		using NodeArray = Array< Node >;
 		
@@ -65,6 +66,11 @@ namespace model
 		#endif
 		
 	private:
+		/** Map type used to perform a prefix-sum in nodes of a sibling group. */
+		using SiblingPointsPrefixMap = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
+		/** Entry type of SiblingPointsPrefixMap. */
+		using SiblingPointsPrefixMapEntry = typename SiblingPointsPrefixMap::value_type;
+		
 		/** Creates the hierarchy.
 		 * @return hierarchy's root node. The pointer ownership is caller's. */
 		Node* create();
@@ -121,6 +127,9 @@ namespace model
 		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx,
 							  const bool setParentFlag ) /*const*/;
 		
+		/** Creates a point sample with 1/8 of the points in the prefix-sum map. */
+		PointArray samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
+							  
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
 		
@@ -1222,9 +1231,6 @@ namespace model
 	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
 	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
-		using Map = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
-		using MapEntry = typename Map::value_type;
-		
 		if( nChildren == 1 )
 		{
 			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, threadIdx, setParentFlag );
@@ -1237,7 +1243,7 @@ namespace model
 			bool frontPlaceholdersOn = ( m_octreeDim.calcMorton( inChildren[ 0 ] ).getLevel() == m_leafLvlDim.m_nodeLvl );
 			
 			int nPoints = 0;
-			Map prefixMap;
+			SiblingPointsPrefixMap prefixMap;
 			for( int i = 0; i < children.size(); ++i )
 			{
 				children[ i ] = std::move( inChildren[ i ] );
@@ -1249,7 +1255,7 @@ namespace model
 				
 				Node& child = children[ i ];
 				
-				prefixMap.insert( prefixMap.end(), MapEntry( nPoints, child ) );
+				prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
 				nPoints += child.getContents().size();
 				
 				// Set parental relationship of children.
@@ -1267,16 +1273,7 @@ namespace model
 				}
 			}
 			
-			// LoD has 1/8 of children points.
-			int numSamplePoints = std::max( 1., nPoints * 0.125 );
-			Array< PointPtr > selectedPoints( numSamplePoints );
-			
-			for( int i = 0; i < numSamplePoints; ++i )
-			{
-				int choosenIdx = rand() % nPoints;
-				MapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
-				selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
-			}
+			Array< PointPtr > selectedPoints = samplePoints( prefixMap, nPoints );
 			
 			Node node( std::move( selectedPoints ), false );
 			node.setChildren( std::move( children ) );
@@ -1298,6 +1295,24 @@ namespace model
 			
 			return node;
 		}
+	}
+	
+	template< typename Morton, typename Point >
+	inline typename HierarchyCreator< Morton, Point >::PointArray HierarchyCreator< Morton, Point >
+	::samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const
+	{
+		// LoD has 1/8 of children points.
+		int numSamplePoints = std::max( 1., nPoints * 0.125 );
+		Array< PointPtr > selectedPoints( numSamplePoints );
+		
+		for( int i = 0; i < numSamplePoints; ++i )
+		{
+			int choosenIdx = rand() % nPoints;
+			SiblingPointsPrefixMapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
+			selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
+		}
+		
+		return selectedPoints;
 	}
 	
 	template< typename Morton, typename Point >
