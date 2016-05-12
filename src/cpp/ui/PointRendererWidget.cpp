@@ -36,7 +36,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	//	1.625f * 1024ul * 1024ul * 1024ul / sizeof( LeafNode ) /* 1.625GB for Nodes */
 	//);
 	
-	cout << "MemoryManager initialized: " << endl << SingletonMemoryManager::instance() << endl;
+// 	cout << "MemoryManager initialized: " << endl << SingletonMemoryManager::instance() << endl;
 	
 	Tucano::QtFreecameraWidget::initialize();
 	
@@ -259,7 +259,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	cout << endl << "Database filename: " << dbFilename << endl << endl;
 // 	m_octree = new Octree( 1, 10, dbFilename );
 // 	m_octree->buildFromFile( filename, PointReader::SINGLE );
-	m_octree = new Octree( filename, 20, 1024, 1024ul * 1024ul * 1024ul * 7ul, 4, true );
+	m_octree = new Octree( filename, 12, 1024, 1024ul * 1024ul * 1024ul * 1ul, 4, true );
 	
 	cout << "Octree built." << endl;
 	

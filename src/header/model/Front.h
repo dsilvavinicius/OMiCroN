@@ -343,9 +343,6 @@ namespace model
 		/** Memory usage limit. Used to turn on/off node release. */
 		ulong m_memoryLimit;
 		
-		/** Number of nodes processed in a frame. */
-		ulong m_processedNodes;
-		
 		/** Number of persisted nodes in the last front tracking operation. */
 		ulong m_persisted;
 		
@@ -371,7 +368,6 @@ namespace model
 	m_currentIterPlaceholders( nThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
-	m_processedNodes( 0ul ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
@@ -561,8 +557,6 @@ namespace model
 	template< typename Morton, typename Point >
 	inline FrontOctreeStats Front< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
 	{
-		m_processedNodes = 0ul;
-		
 		// Debug
 // 		if( m_persisted )
 // 		{
@@ -709,7 +703,7 @@ namespace model
 		
 		int renderingTime = Profiler::elapsedTime( start );
 		
-		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_processedNodes );
+		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_front.size() );
 	}
 	
 	template< typename Morton, typename Point >
@@ -960,8 +954,6 @@ namespace model
 		
 		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
 		{
-			++m_processedNodes;
-			
 			#ifdef DEBUG
 // 			{
 // 				stringstream ss; ss << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
@@ -1039,7 +1031,6 @@ namespace model
 	inline void Front< Morton, Point >::branch( FrontListIter& frontIt, Node& node, const OctreeDim& nodeLvlDim,
 												Renderer& renderer )
 	{
-		++m_processedNodes;
 		frontIt = m_front.erase( frontIt );
 		
 		OctreeDim childLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl + 1 );
