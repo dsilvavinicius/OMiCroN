@@ -112,6 +112,12 @@ namespace model
 		
 		bool isLeaf() const { return m_isLeaf; }
 		
+		void setContents( ContentsArray&& contents )
+		{
+			m_contents.~ContentsArray();
+			m_contents = std::move( contents );
+		}
+		
 		/** Sets parent pointer. */
 		void setParent( O1OctreeNode* parent ) { m_parent = parent; }
 		

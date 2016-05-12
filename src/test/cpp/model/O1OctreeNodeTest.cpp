@@ -89,11 +89,17 @@ namespace model
 				
 				node->setChildren( children );
 				
+				ASSERT_EQ( node->getContents(), points );
+				
+				PointArray points2( points );
+				node->setContents( std::move( points2 ) );
+				
+				ASSERT_EQ( node->getContents(), points );
+				
 				ASSERT_EQ( node->parent(), parent );
 				ASSERT_EQ( node->leftSibling(), siblings.data() );
 				ASSERT_EQ( node->rightSibling(), node + 1 );
 			
-				ASSERT_EQ( node->getContents(), points );
 				ASSERT_EQ( node->parent()->getContents(), parentPoints );
 				ASSERT_EQ( node->leftSibling()->getContents(), points );
 				ASSERT_EQ( node->rightSibling()->getContents(), points );

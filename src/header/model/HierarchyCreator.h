@@ -919,11 +919,17 @@ namespace model
 // 					cout << "Duplicate found: " << nextLvlDim.calcMorton( prevLastNode ).getPathToRoot( true ) << endl;
 // 				}
 				
+				int nPoints = 0;
+				SiblingPointsPrefixMap prefixMap;
 				NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
 				
 				for( int i = 0; i < prevLastNodeChild.size(); ++i )
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
+					Node& child = mergedChild[ i ];
+					
+					prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
+					nPoints += child.getContents().size();
 					
 					#ifdef DEBUG
 // 					{
@@ -933,7 +939,7 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( mergedChild[ i ], previousIdx );
+					setParent( child, previousIdx );
 				}
 				
 				//typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
@@ -941,6 +947,11 @@ namespace model
 				{
 					int idx = prevLastNodeChild.size() + i;
 					mergedChild[ idx ] = std::move( nextFirstNodeChild[ i ] );
+					
+					Node& child = mergedChild[ idx ];
+					
+					prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
+					nPoints += child.getContents().size();
 					
 					#ifdef DEBUG
 // 					{
@@ -950,9 +961,11 @@ namespace model
 // 					}
 					#endif
 					
-					setParent( mergedChild[ idx ], previousIdx );
+					setParent( child, previousIdx );
 				}
 				
+				Array< PointPtr > selectedPoints = samplePoints( prefixMap, nPoints );
+				nextFirstNode.setContents( std::move( selectedPoints ) );
 				nextFirstNode.setChildren( std::move( mergedChild ) );
 				
 				// Debug
