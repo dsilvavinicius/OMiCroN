@@ -97,7 +97,7 @@ namespace model
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
-		omp_set_num_threads( nThreads );
+		omp_set_num_threads( 8 );
 		
 		PointSorter< Morton, Point > sorter( plyFilename, maxLvl );
 		
@@ -152,7 +152,7 @@ namespace model
 			m_processedNodes = 0;
 		#endif
 		
-		omp_set_num_threads( nThreads );
+		omp_set_num_threads( 8 );
 		
 		m_dim = dim;
 		
