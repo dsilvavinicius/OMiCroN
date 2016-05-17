@@ -61,6 +61,8 @@ namespace model
 		
 		glEnable( GL_DEPTH_TEST );
 		
+		glPointSize( 3 );
+		
 		m_textEffect.setColor( Vector4f( 0.f, 0.f, 0.f, 1.f ) );
 		
 		clearAttribs();
