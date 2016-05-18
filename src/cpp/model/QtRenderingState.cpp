@@ -4,22 +4,22 @@ namespace model
 {
 	QtRenderingState::~QtRenderingState() {}
 	
-	inline bool QtRenderingState::isCullable( const pair< Vec3, Vec3 >& box ) const
+	inline bool QtRenderingState::isCullable( const AlignedBox3f& box ) const
 	{
-		Vec3 minBoxVert = box.first;
-		Vec3 maxBoxVert = box.second;
-		QBox3D qBox( QVector3D( minBoxVert.x, minBoxVert.y, minBoxVert.z ),
-					 QVector3D( maxBoxVert.x, maxBoxVert.y, maxBoxVert.z ) );
+		const Vec3& minBoxVert = box.min();
+		const Vec3& maxBoxVert = box.max();
+		QBox3D qBox( QVector3D( minBoxVert.x(), minBoxVert.y(), minBoxVert.z() ),
+					 QVector3D( maxBoxVert.x(), maxBoxVert.y(), maxBoxVert.z() ) );
 		
 		return m_painter->isCullable( qBox );
 	}
 	
-	inline bool QtRenderingState::isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const
+	inline bool QtRenderingState::isRenderable( const AlignedBox3f& box, const Float& projThresh ) const
 	{
-		Vec3 rawMin = box.first;
-		Vec3 rawMax = box.second;
-		QVector4D min( rawMin.x, rawMin.y, rawMin.z, 1 );
-		QVector4D max( rawMax.x, rawMax.y, rawMax.z, 1 );
+		const Vec3& rawMin = box.min();
+		const Vec3& rawMax = box.max();
+		QVector4D min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
+		QVector4D max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
 		
 		QGLPainter* painter = m_painter;
 		QMatrix4x4 viewProj = painter->combinedMatrix();
@@ -30,7 +30,7 @@ namespace model
 		QVector2D diagonal0 = proj1 - proj0;
 		
 		Vec3 rawSize = rawMax - rawMin;
-		QVector3D boxSize( rawSize.x, rawSize.y, rawSize.z );
+		QVector3D boxSize( rawSize.x(), rawSize.y(), rawSize.z() );
 		
 		proj0 = projToWindowCoords( QVector4D( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), viewProj );
 		proj1 = projToWindowCoords( QVector4D( max.x(), max.y(), max.z() + boxSize.z(), 1 ), viewProj );
@@ -70,7 +70,7 @@ namespace model
 			: *octree.getHierarchy() )
 		{
 			shared_ptr< MortonCode > code = entry.first;
-			pair< Vec3, Vec3 > box = octree.getBoundaries( code );
+			AlignedBox3f box = octree.getBoundaries( code );
 			bool cullable = isCullable( box );
 			bool renderable = isRenderable( box, projThresh );
 			
@@ -103,23 +103,23 @@ namespace model
 	}
 	
 	inline void QtRenderingState::insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors,
-														const pair< Vec3, Vec3 >& box, const bool& isCullable,
+														const AlignedBox3f& box, const bool& isCullable,
 													 const bool& isRenderable )
 	{
-		Vec3 min = box.first;
-		Vec3 max = box.second;
-		QVector3D qv0( min.x, min.y, min.z );
-		QVector3D qv6( max.x, max.y, max.z );
+		const Vec3& min = box.min();
+		const Vec3& max = box.max();
+		QVector3D qv0( min.x(), min.y(), min.z() );
+		QVector3D qv6( max.x(), max.y(), max.z() );
 			
-		Vec3 v0(qv0.x(), qv0.y(), qv0.z());
-		Vec3 v6(qv6.x(), qv6.y(), qv6.z());
+		Vec3 v0( qv0.x(), qv0.y(), qv0.z() );
+		Vec3 v6( qv6.x(), qv6.y(), qv6.z() );
 		Vec3 size = v6 - v0;
-		Vec3 v1(v0.x + size.x, v0.y			, v0.z);
-		Vec3 v2(v1.x		 , v1.y + size.y, v1.z);
-		Vec3 v3(v2.x - size.x, v2.y			, v2.z);
-		Vec3 v4(v0.x		 , v0.y			, v0.z + size.z);
-		Vec3 v5(v4.x + size.x, v4.y			, v4.z);
-		Vec3 v7(v6.x - size.x, v6.y			, v6.z);
+		Vec3 v1(v0.x() + size.x()	, v0.y()			, v0.z());
+		Vec3 v2(v1.x()		 		, v1.y() + size.y()	, v1.z());
+		Vec3 v3(v2.x() - size.x()	, v2.y()			, v2.z());
+		Vec3 v4(v0.x()		 		, v0.y()			, v0.z() + size.z());
+		Vec3 v5(v4.x() + size.x()	, v4.y()			, v4.z());
+		Vec3 v7(v6.x() - size.x()	, v6.y()			, v6.z());
 		
 		// Face 0.
 		verts.push_back(v0); verts.push_back(v1);

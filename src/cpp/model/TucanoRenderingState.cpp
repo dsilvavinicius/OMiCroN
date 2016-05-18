@@ -61,7 +61,7 @@ namespace model
 		
 		glEnable( GL_DEPTH_TEST );
 		
-		glPointSize( 3 );
+		glPointSize( 2 );
 		
 		m_textEffect.setColor( Vector4f( 0.f, 0.f, 0.f, 1.f ) );
 		
@@ -83,26 +83,19 @@ namespace model
 		for( unsigned long int i = 0; i < nPoints; ++i )
 		{
 			Vec3 pos = RenderingState::m_positions[ i ];
-			vertData[ i ] = Vector4f( pos.x, pos.y, pos.z, 1.f );
+			vertData[ i ] = Vector4f( pos.x(), pos.y(), pos.z(), 1.f );
 			indices[ i ] = i;
 		}
 		m_mesh->loadVertices( vertData );
 		m_mesh->loadIndices( indices );
-		
-		vector< Vector3f > normalData( nPoints );
-		for( int i = 0; i < nPoints; ++i )
-		{
-			Vec3 normal = RenderingState::m_normals[ i ];
-			normalData[ i ] = Vector3f( normal.x, normal.y, normal.z );
-		}
-		m_mesh->loadNormals( normalData );
+		m_mesh->loadNormals( RenderingState::m_normals );
 		
 		if( m_colors.size() > 0  )
 		{
 			for( int i = 0; i < nPoints; ++i )
 			{
 				Vec3 color = RenderingState::m_colors[ i ];
-				vertData[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
+				vertData[ i ] = Vector4f( color( 0 ), color( 1 ), color( 2 ), 1.f );
 			}
 			m_mesh->loadColors( vertData );
 		}
@@ -122,22 +115,35 @@ namespace model
 		return RenderingState::m_positions.size();
 	}
 	
-	inline bool TucanoRenderingState::isCullable( const pair< Vec3, Vec3 >& rawBox ) const
+	inline bool TucanoRenderingState::isCullable( const AlignedBox3f& box ) const
 	{
-		Vec3 min = rawBox.first;
-		Vec3 max = rawBox.second;
-		
-		Box box( Vector3f( min.x, min.y, min.z ), Vector3f( max.x, max.y, max.z ) );
 		return m_frustum->isCullable( box );
 	}
 	
-	inline bool TucanoRenderingState::isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh )
+	inline bool TucanoRenderingState::isRenderable( const AlignedBox3f& box, const Float& projThresh )
 	const
 	{
-		Vec3 rawMin = box.first;
-		Vec3 rawMax = box.second;
-		Vector4f min( rawMin.x, rawMin.y, rawMin.z, 1 );
-		Vector4f max( rawMax.x, rawMax.y, rawMax.z, 1 );
+// 		Float sqrDistance = 0;
+// 		for( int i = 0; i < 3; ++i )
+// 		{
+// 			if( cameraPos[ i ] < -boxExtent[i] )
+// 			{
+// 				Real delta = point[i] + boxExtent[i];
+// 				result.sqrDistance += delta * delta;
+// 				point[i] = -boxExtent[i];
+// 			}
+// 			else if (point[i] > boxExtent[i])
+// 			{
+// 				Real delta = point[i] - boxExtent[i];
+// 				result.sqrDistance += delta * delta;
+// 				point[i] = boxExtent[i];
+// 			}
+// 		}
+		
+		const Vec3& rawMin = box.min();
+		const Vec3& rawMax = box.max();
+		Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
+		Vector4f max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
 		
 		Vector2i viewportSize = m_camera->getViewportSize();
 		
@@ -148,9 +154,9 @@ namespace model
 		
 		Vec3 boxSize = rawMax - rawMin;
 		
-		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x, min.y() + boxSize.y, min.z(), 1 ), m_viewProj,
+		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), m_viewProj,
 									viewportSize );
-		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z, 1 ), m_viewProj, viewportSize );
+		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), m_viewProj, viewportSize );
 		
 		Vector2f diagonal1 = proj1 - proj0;
 		
@@ -161,7 +167,7 @@ namespace model
 	
 	inline void TucanoRenderingState::renderText( const Vec3& pos, const string& str )
 	{
-		m_textEffect.render( str, Vector4f( pos.x, pos.y, pos.z, 1.f ), *m_camera );
+		m_textEffect.render( str, Vector4f( pos.x(), pos.y(), pos.z(), 1.f ), *m_camera );
 	}
 	
 	inline Matrix4f TucanoRenderingState::getViewProjection() const

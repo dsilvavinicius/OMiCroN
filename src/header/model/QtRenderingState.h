@@ -23,12 +23,12 @@ namespace model
 		/** This method should be called on the starting of the rendering loop, when the painter is known. */
 		void setPainter( QGLPainter* painter, const QSize& viewportSize );
 		
-		virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const;
+		virtual bool isCullable( const AlignedBox3f& box ) const override;
 		
 		/** This implementation will compare the size of the maximum box diagonal in window coordinates with the projection
 		 * threshold.
 		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
-		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
+		virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const;
 		
 		virtual void renderText( const Vec3& pos, const string& str ) override;
 		
@@ -39,7 +39,7 @@ namespace model
 		
 		/** Utility method to insert node boundary point into vectors for rendering. */
 		static void insertBoundaryPoints( vector< Vec3 >& verts, vector< Vec3 >& colors,
-										  const pair< Vec3, Vec3 >& box, const bool& isCullable,
+										  const AlignedBox3f& box, const bool& isCullable,
 									const bool& isRenderable );
 	
 	protected:

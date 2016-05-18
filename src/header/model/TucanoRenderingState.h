@@ -17,7 +17,6 @@ namespace model
 	class TucanoRenderingState
 	: public RenderingState
 	{
-		using Box = AlignedBox< Float, 3 >;
 	public:
 		enum Effect
 		{
@@ -39,12 +38,12 @@ namespace model
 		
 		virtual unsigned int render();
 		
-		virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const;
+		virtual bool isCullable( const AlignedBox3f& box ) const override;
 		
 		/** This implementation will compare the size of the maximum box diagonal in window coordinates with the projection
 		 *	threshold.
 		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
-		virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const;
+		virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const override;
 	
 		virtual void renderText( const Vec3& pos, const string& str );
 		

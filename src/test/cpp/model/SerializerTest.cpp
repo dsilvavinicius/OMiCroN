@@ -18,9 +18,9 @@ namespace model
 		{
 			SPV_DefaultManager::initInstance( 1000000 );
 			
-			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
-			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
-			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
+			Point p0( Vec3( 11.321565f, 4.658535f, 7.163479f ), Vec3( 7.163479f, 4.658535f, 11.321565f ) );
+			Point p1( Vec3( 11.201763f, 5.635769f, 6.996898f ), Vec3( 6.996898f, 5.635769f, 11.201763f ) );
+			Point p2( Vec3( 11.198129f, 4.750132f, 7.202037f ), Vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
 			PointPtr pointArray[3] = { makeManaged< Point >( p0 ), makeManaged< Point >( p1 ), makeManaged< Point >( p2 ) };
 			PointVector points( pointArray, pointArray + 3 );
@@ -48,9 +48,9 @@ namespace model
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
-			PointPtr p0 = makeManaged< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
-			PointPtr p1 = makeManaged< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-			PointPtr p2 = makeManaged< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
+			PointPtr p0 = makeManaged< Point >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 1.f, 15.f ,2.f ) );
+			PointPtr p1 = makeManaged< Point >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
+			PointPtr p2 = makeManaged< Point >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
 			
 			PointPtr pointArray[3] = { p0, p1, p2 };
 			PointVector points( pointArray, pointArray + 3 );
@@ -122,9 +122,9 @@ namespace model
 			
 			SPV_DefaultManager::initInstance( 1000000 );
 			
-			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
-			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
-			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
+			Point p0( Vec3( 11.321565f, 4.658535f, 7.163479f ), Vec3( 7.163479f, 4.658535f, 11.321565f ) );
+			Point p1( Vec3( 11.201763f, 5.635769f, 6.996898f ), Vec3( 6.996898f, 5.635769f, 11.201763f ) );
+			Point p2( Vec3( 11.198129f, 4.750132f, 7.202037f ), Vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
 			PointPtr pointArray[3] = { makeManaged< Point >( p0 ), makeManaged< Point >( p1 ), makeManaged< Point >( p2 ) };
 			PointVector points( pointArray, pointArray + 3 );
@@ -158,9 +158,9 @@ namespace model
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
-			PointPtr p0 = makeManaged< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
-			PointPtr p1 = makeManaged< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-			PointPtr p2 = makeManaged< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
+			PointPtr p0 = makeManaged< Point >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 1.f, 15.f ,2.f ) );
+			PointPtr p1 = makeManaged< Point >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
+			PointPtr p2 = makeManaged< Point >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
 			PointPtr pointArray[3] = { p0, p1, p2 };
 			PointVector points( pointArray, pointArray + 3 );
 			

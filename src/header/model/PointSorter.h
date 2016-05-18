@@ -112,34 +112,34 @@ namespace model
 	template< typename M, typename P >
 	inline void PointSorter< M, P >::write( const Point& p )
 	{
-		Vec3 pos = p.getPos();
-		ply_write( m_output, pos.x );
-		ply_write( m_output, pos.y );
-		ply_write( m_output, pos.z );
+		const Vec3& pos = p.getPos();
+		ply_write( m_output, pos.x() );
+		ply_write( m_output, pos.y() );
+		ply_write( m_output, pos.z() );
 		
-		Vec3 normal = p.getColor();
-		ply_write( m_output, normal.x );
-		ply_write( m_output, normal.y );
-		ply_write( m_output, normal.z );
+		const Vec3& normal = p.getColor();
+		ply_write( m_output, normal.x() );
+		ply_write( m_output, normal.y() );
+		ply_write( m_output, normal.z() );
 	}
 	
 	template< typename M, typename P >
 	inline void PointSorter< M, P >::write( const ExtendedPoint& p )
 	{
-		Vec3 pos = p.getPos();
-		ply_write( m_output, pos.x );
-		ply_write( m_output, pos.y );
-		ply_write( m_output, pos.z );
+		const Vec3& pos = p.getPos();
+		ply_write( m_output, pos.x() );
+		ply_write( m_output, pos.y() );
+		ply_write( m_output, pos.z() );
 		
-		Vec3 normal = p.getNormal();
-		ply_write( m_output, normal.x );
-		ply_write( m_output, normal.y );
-		ply_write( m_output, normal.z );
+		const Vec3& normal = p.getNormal();
+		ply_write( m_output, normal.x() );
+		ply_write( m_output, normal.y() );
+		ply_write( m_output, normal.z() );
 		
-		Vec3 color = p.getColor();
-		ply_write( m_output, color.x );
-		ply_write( m_output, color.y );
-		ply_write( m_output, color.z );
+		const Vec3& color = p.getColor();
+		ply_write( m_output, color.x() );
+		ply_write( m_output, color.y() );
+		ply_write( m_output, color.z() );
 	}
 }
 

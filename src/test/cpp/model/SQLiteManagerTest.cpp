@@ -22,9 +22,9 @@ namespace model
 			
 			SPV_DefaultManager::initInstance( 1000000 );
 			
-			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
-			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
-			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
+			Point p0( Vec3( 11.321565f, 4.658535f, 7.163479f ), Vec3( 7.163479f, 4.658535f, 11.321565f ) );
+			Point p1( Vec3( 11.201763f, 5.635769f, 6.996898f ), Vec3( 6.996898f, 5.635769f, 11.201763f ) );
+			Point p2( Vec3( 11.198129f, 4.750132f, 7.202037f ), Vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
 			SQLiteManager sqLite( "Octree.db" );
 			sqLite.insertPoint( p0 );
@@ -84,9 +84,9 @@ namespace model
 			
 			SPV_DefaultManager::initInstance( 1000000 );
 			
-			Point p0( vec3( 11.321565f, 4.658535f, 7.163479f ), vec3( 7.163479f, 4.658535f, 11.321565f ) );
-			Point p1( vec3( 11.201763f, 5.635769f, 6.996898f ), vec3( 6.996898f, 5.635769f, 11.201763f ) );
-			Point p2( vec3( 11.198129f, 4.750132f, 7.202037f ), vec3( 7.202037f, 4.750132f, 11.198129f ) );
+			Point p0( Vec3( 11.321565f, 4.658535f, 7.163479f ), Vec3( 7.163479f, 4.658535f, 11.321565f ) );
+			Point p1( Vec3( 11.201763f, 5.635769f, 6.996898f ), Vec3( 6.996898f, 5.635769f, 11.201763f ) );
+			Point p2( Vec3( 11.198129f, 4.750132f, 7.202037f ), Vec3( 7.202037f, 4.750132f, 11.198129f ) );
 			
 			PointVector points;
 			points.push_back( makeManaged< Point >( p0 ) );
@@ -197,9 +197,9 @@ namespace model
 
 			SEV_DefaultManager::initInstance( 1000000 );
 			
-			Point p0( vec3( 0.000510f, 0.000549f, 0.000588f ), vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f, 24.f ) );
-			Point p1( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-			Point p2( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
+			Point p0( Vec3( 0.000510f, 0.000549f, 0.000588f ), Vec3( 0.13f, 0.14f, 0.15f ), Vec3( 9.f, 10.f, 24.f ) );
+			Point p1( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
+			Point p2( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
 			
 			PointVector points;
 			points.push_back( makeManaged< Point >( p0 ) );
@@ -234,12 +234,12 @@ namespace model
 			
 			SEV_DefaultManager::initInstance( 1000000 );
 			
-			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-																vec3( 1.f, 15.f ,2.f ) );
-			ExtendedPointPtr p1 = makeManaged< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-																vec3( 3.f, -31.f ,4.f ) );
-			ExtendedPointPtr p2 = makeManaged< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-																vec3( -14.f, 5.f ,6.f ) );
+			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ),
+																Vec3( 1.f, 15.f ,2.f ) );
+			ExtendedPointPtr p1 = makeManaged< ExtendedPoint >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ),
+																Vec3( 3.f, -31.f ,4.f ) );
+			ExtendedPointPtr p2 = makeManaged< ExtendedPoint >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ),
+																Vec3( -14.f, 5.f ,6.f ) );
 			
 			ExtendedPointPtr rawPoints0[ 3 ] = { p0, p1, p2 };
 			ExtendedPointPtr rawPoints1[ 3 ] = { p2, p1, p0 };
@@ -360,12 +360,12 @@ namespace model
 			SEV_DefaultManager::initInstance( 1000000 );
 			//SEV_Ken12MemoryManager::initInstance( 100000, 100000, 100000, 100000 );
 			
-			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ),
-																vec3( 1.f, 15.f ,2.f ) );
-			ExtendedPointPtr p1 = makeManaged< ExtendedPoint >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ),
-																vec3( 3.f, -31.f ,4.f ) );
-			ExtendedPointPtr p2 = makeManaged< ExtendedPoint >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ),
-																vec3( -14.f, 5.f ,6.f ) );
+			ExtendedPointPtr p0 = makeManaged< ExtendedPoint >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ),
+																Vec3( 1.f, 15.f ,2.f ) );
+			ExtendedPointPtr p1 = makeManaged< ExtendedPoint >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ),
+																Vec3( 3.f, -31.f ,4.f ) );
+			ExtendedPointPtr p2 = makeManaged< ExtendedPoint >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ),
+																Vec3( -14.f, 5.f ,6.f ) );
 			
 			//cout << "p1 ptr: " << p1.get() << endl << endl;
 			

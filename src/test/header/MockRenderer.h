@@ -11,9 +11,9 @@ namespace model
 		{
 			virtual unsigned int render() override {};
 			
-			virtual bool isCullable( const pair< Vec3, Vec3 >& box ) const override { return true; }
+			virtual bool isCullable( const AlignedBox3f& box ) const override { return true; }
 			
-			virtual bool isRenderable( const pair< Vec3, Vec3 >& box, const Float& projThresh ) const override
+			virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const override
 			{ return false; }
 			
 			virtual void renderText( const Vec3& pos, const string& str ) override {}

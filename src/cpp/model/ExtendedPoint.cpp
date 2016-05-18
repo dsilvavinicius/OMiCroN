@@ -86,7 +86,7 @@ namespace model
 	
 	bool ExtendedPoint::equal( const ExtendedPoint& other, const float& epsilon ) const
 	{
-		return Point::equal( other, epsilon ) && glm::distance2( m_normal, other.m_normal ) < epsilon;
+		return Point::equal( other, epsilon ) && m_normal.isApprox( other.m_normal, epsilon );
 	}
 	
 	ExtendedPoint ExtendedPoint::multiply( const Float& multiplier ) const
@@ -117,9 +117,9 @@ namespace model
 	ostream& operator<<( ostream &out, const ExtendedPoint &point )
 	{
 		out << "Point:" << endl
-			<< "pos = " << glm::to_string( point.m_pos ) << endl
-			<< "color = " << glm::to_string( point.m_color ) << endl
-			<< "normal = " << glm::to_string( point.m_normal ) << endl;
+			<< "pos = " << point.m_pos << endl
+			<< "color = " << point.m_color << endl
+			<< "normal = " << point.m_normal << endl;
 			
 		return out;
 	}

@@ -20,8 +20,8 @@ namespace model
 		{
 			SPV_DefaultManager::initInstance( 1000000 );
 			
-			Point p0( vec3( 1.f, 2.f, 3.f ), vec3( 4.f, 5.f, 6.f ) );
-			Point p1( vec3( 7.f, 8.f, 9.f ), vec3( 10.f, 11.f, 12.f ) );
+			Point p0( Vec3( 1.f, 2.f, 3.f ), Vec3( 4.f, 5.f, 6.f ) );
+			Point p1( Vec3( 7.f, 8.f, 9.f ), Vec3( 10.f, 11.f, 12.f ) );
 			PointVector points;
 			points.push_back( makeManaged< Point >( p0 ) );
 			points.push_back( makeManaged< Point >( p1 ) );

@@ -15,19 +15,19 @@ namespace model
 		void generatePoints( PointVector& points )
 		{
 			// These points should define the boundaries of the octree hexahedron.
-			PointPtr up = makeManaged< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
-			PointPtr down = makeManaged< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-			PointPtr left = makeManaged< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
-			PointPtr right = makeManaged< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) );
-			PointPtr front = makeManaged< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) );
-			PointPtr back = makeManaged< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) );
+			PointPtr up = makeManaged< Point >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 1.f, 15.f ,2.f ) );
+			PointPtr down = makeManaged< Point >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
+			PointPtr left = makeManaged< Point >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
+			PointPtr right = makeManaged< Point >( Vec3( 0.1f, 0.11f, 0.12f ), Vec3( 46.f, 7.f ,8.f ) );
+			PointPtr front = makeManaged< Point >( Vec3( 0.13f, 0.14f, 0.15f ), Vec3( 9.f, 10.f ,24.f ) );
+			PointPtr back = makeManaged< Point >( Vec3( 0.16f, 0.17f, 0.18f ), Vec3( 11.f, 12.f ,-51.f ) );
 			
 			// Additional points inside the hexahedron.
-			PointPtr addPoint0 = makeManaged< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) );
-			PointPtr addPoint1 = makeManaged< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) );
-			PointPtr addPoint2 = makeManaged< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) );
-			PointPtr addPoint3 = makeManaged< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) );
-			PointPtr addPoint4 = makeManaged< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) );
+			PointPtr addPoint0 = makeManaged< Point >( Vec3( 0.19f, 0.2f, 0.21f ), Vec3( 13.f, -12.f, 9.f ) );
+			PointPtr addPoint1 = makeManaged< Point >( Vec3( 0.22f, 0.23f, 0.24f ), Vec3( -5.f, -8.f, 1.f ) );
+			PointPtr addPoint2 = makeManaged< Point >( Vec3( 0.25f, 0.26f, 0.27f ), Vec3( 14.f, 11.f, -4.f ) );
+			PointPtr addPoint3 = makeManaged< Point >( Vec3( 0.28f, 0.29f, 0.30f ), Vec3( 7.f, 3.f, -12.f ) );
+			PointPtr addPoint4 = makeManaged< Point >( Vec3( 0.31f, 0.32f, 0.33f ), Vec3( 12.f, 5.f, 0.f ) );
 			
 			points.push_back( back );
 			points.push_back( front );
@@ -50,19 +50,19 @@ namespace model
 			using PointVector = ExtendedPointVector;
 			
 			// These points should define the boundaries of the octree hexahedron.
-			PointPtr up = makeManaged< Point >( vec3( 0.01f, 0.02f, 0.03f ), vec3( 0.01f, 0.02f, 0.03f ), vec3( 1.f, 15.f ,2.f ) );
-			PointPtr down = makeManaged< Point >( vec3( 0.04f, 0.05f, 0.06f ), vec3( 0.04f, 0.05f, 0.06f ), vec3( 3.f, -31.f ,4.f ) );
-			PointPtr left = makeManaged< Point >( vec3( 0.07f, 0.08f, 0.09f ), vec3( 0.07f, 0.08f, 0.09f ), vec3( -14.f, 5.f ,6.f ) );
-			PointPtr right = makeManaged< Point >( vec3( 0.1f, 0.11f, 0.12f ), vec3( 0.1f, 0.11f, 0.12f ), vec3( 46.f, 7.f ,8.f ) );
-			PointPtr front = makeManaged< Point >( vec3( 0.13f, 0.14f, 0.15f ), vec3( 0.13f, 0.14f, 0.15f ), vec3( 9.f, 10.f ,24.f ) );
-			PointPtr back = makeManaged< Point >( vec3( 0.16f, 0.17f, 0.18f ), vec3( 0.16f, 0.17f, 0.18f ), vec3( 11.f, 12.f ,-51.f ) );
+			PointPtr up = makeManaged< Point >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 1.f, 15.f ,2.f ) );
+			PointPtr down = makeManaged< Point >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
+			PointPtr left = makeManaged< Point >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
+			PointPtr right = makeManaged< Point >( Vec3( 0.1f, 0.11f, 0.12f ), Vec3( 0.1f, 0.11f, 0.12f ), Vec3( 46.f, 7.f ,8.f ) );
+			PointPtr front = makeManaged< Point >( Vec3( 0.13f, 0.14f, 0.15f ), Vec3( 0.13f, 0.14f, 0.15f ), Vec3( 9.f, 10.f ,24.f ) );
+			PointPtr back = makeManaged< Point >( Vec3( 0.16f, 0.17f, 0.18f ), Vec3( 0.16f, 0.17f, 0.18f ), Vec3( 11.f, 12.f ,-51.f ) );
 			
 			// Additional points inside the hexahedron.
-			PointPtr addPoint0 = makeManaged< Point >( vec3( 0.19f, 0.2f, 0.21f ), vec3( 0.19f, 0.2f, 0.21f ), vec3( 13.f, -12.f, 9.f ) );
-			PointPtr addPoint1 = makeManaged< Point >( vec3( 0.22f, 0.23f, 0.24f ), vec3( 0.22f, 0.23f, 0.24f ), vec3( -5.f, -8.f, 1.f ) );
-			PointPtr addPoint2 = makeManaged< Point >( vec3( 0.25f, 0.26f, 0.27f ), vec3( 0.25f, 0.26f, 0.27f ), vec3( 14.f, 11.f, -4.f ) );
-			PointPtr addPoint3 = makeManaged< Point >( vec3( 0.28f, 0.29f, 0.30f ), vec3( 0.28f, 0.29f, 0.30f ), vec3( 7.f, 3.f, -12.f ) );
-			PointPtr addPoint4 = makeManaged< Point >( vec3( 0.31f, 0.32f, 0.33f ), vec3( 0.31f, 0.32f, 0.33f ), vec3( 12.f, 5.f, 0.f ) );
+			PointPtr addPoint0 = makeManaged< Point >( Vec3( 0.19f, 0.2f, 0.21f ), Vec3( 0.19f, 0.2f, 0.21f ), Vec3( 13.f, -12.f, 9.f ) );
+			PointPtr addPoint1 = makeManaged< Point >( Vec3( 0.22f, 0.23f, 0.24f ), Vec3( 0.22f, 0.23f, 0.24f ), Vec3( -5.f, -8.f, 1.f ) );
+			PointPtr addPoint2 = makeManaged< Point >( Vec3( 0.25f, 0.26f, 0.27f ), Vec3( 0.25f, 0.26f, 0.27f ), Vec3( 14.f, 11.f, -4.f ) );
+			PointPtr addPoint3 = makeManaged< Point >( Vec3( 0.28f, 0.29f, 0.30f ), Vec3( 0.28f, 0.29f, 0.30f ), Vec3( 7.f, 3.f, -12.f ) );
+			PointPtr addPoint4 = makeManaged< Point >( Vec3( 0.31f, 0.32f, 0.33f ), Vec3( 0.31f, 0.32f, 0.33f ), Vec3( 12.f, 5.f, 0.f ) );
 			
 			points.push_back( back );
 			points.push_back( front );

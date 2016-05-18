@@ -19,14 +19,14 @@ namespace model
 			ASSERT_EQ( octree.getMaxLevel(), 10 );
 			ASSERT_EQ( octree.getMaxPointsPerNode(), 1 );
 		
-			vec3 origin = *octree.getOrigin();
-			vec3 size = *octree.getSize();
-			vec3 leafSize = *octree.getLeafSize();
+			Vec3 origin = *octree.getOrigin();
+			Vec3 size = *octree.getSize();
+			Vec3 leafSize = *octree.getLeafSize();
 		
 			float epsilon = 10.e-15f;
-			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) ) < epsilon );
-			ASSERT_TRUE( distance2( size, vec3(60.f, 46.f, 75.f) ) < epsilon );
-			ASSERT_TRUE( distance2( leafSize, vec3(0.05859375f, 0.044921875f, 0.073242188f ) ) < epsilon );
+			ASSERT_TRUE( origin.isApprox( Vec3( -14.f, -31.f, -51.f ), epsilon ) );
+			ASSERT_TRUE( size.isApprox( Vec3( 60.f, 46.f, 75.f ), epsilon ) );
+			ASSERT_TRUE( leafSize.isApprox( Vec3( 0.05859375f, 0.044921875f, 0.073242188f ), epsilon ) );
 		}
 		
 		template< typename Octree >
@@ -35,14 +35,14 @@ namespace model
 			ASSERT_EQ( octree.getMaxLevel(), 20 );
 			ASSERT_EQ( octree.getMaxPointsPerNode(), 1 );
 			
-			vec3 origin = *octree.getOrigin();
-			vec3 size = *octree.getSize();
-			vec3 leafSize = *octree.getLeafSize();
+			Vec3 origin = *octree.getOrigin();
+			Vec3 size = *octree.getSize();
+			Vec3 leafSize = *octree.getLeafSize();
 			
 			float epsilon = 10.e-15f;
-			ASSERT_TRUE( distance2( origin, vec3( -14.f, -31.f, -51.f ) )  < epsilon );
-			ASSERT_TRUE( distance2( size, vec3( 60.f, 46.f, 75.f ) ) < epsilon );
-			ASSERT_TRUE( distance2( leafSize, vec3( 0.00005722f, 0.000043869f, 0.000071526f ) ) < epsilon );
+			ASSERT_TRUE( origin.isApprox( Vec3( -14.f, -31.f, -51.f ), epsilon ) );
+			ASSERT_TRUE( size.isApprox( Vec3( 60.f, 46.f, 75.f ), epsilon ) );
+			ASSERT_TRUE( leafSize.isApprox( Vec3( 0.00005722f, 0.000043869f, 0.000071526f ), epsilon ) );
 		}
 		
 		template< typename MortonCode, typename OctreeNode >

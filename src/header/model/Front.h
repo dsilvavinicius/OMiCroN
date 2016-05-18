@@ -872,7 +872,7 @@ namespace model
 													const OctreeDim& parentLvlDim, FrontListIter& frontIt,
 												 int substitutionLvl, Renderer& renderer, const Float projThresh )
 	{
-		pair< Vec3, Vec3 > parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
+		AlignedBox3f parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
 		bool pruneFlag = false;
 		if( renderer.isCullable( parentBox ) )
@@ -1015,7 +1015,7 @@ namespace model
 													 Renderer& renderer, const Float projThresh, bool& out_isCullable )
 	const
 	{
-		pair< Vec3, Vec3 > box = nodeLvlDim.getMortonBoundaries( morton );
+		AlignedBox3f box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
 		
 		if( !node.isLeaf() && !node.child().empty() )
@@ -1039,7 +1039,7 @@ namespace model
 		for( int i = 0; i < children.size(); ++i )
 		{
 			Node& child = children[ i ];
-			pair< Vec3, Vec3 > box = childLvlDim.getNodeBoundaries( child );
+			AlignedBox3f box = childLvlDim.getNodeBoundaries( child );
 			FrontNode frontNode( child, childLvlDim.calcMorton( child ) );
 			
 			assert( frontNode.m_morton.getBits() != 1 && "Inserting root node into front (branch)." );

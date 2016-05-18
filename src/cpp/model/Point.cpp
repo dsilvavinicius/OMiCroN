@@ -90,7 +90,7 @@ namespace model
 	
 	bool Point::equal( const Point& other, const Float& epsilon ) const
 	{
-		return 	glm::distance2( m_color, other.m_color ) < epsilon && glm::distance2( m_pos, other.m_pos ) < epsilon;
+		return m_color.isApprox( other.m_color, epsilon ) && m_pos.isApprox( other.m_pos, epsilon );
 	}
 	
 	Point Point::multiply( const Float& multiplier ) const
@@ -121,8 +121,8 @@ namespace model
 	ostream& operator<< ( ostream &out, const Point &point )
 	{
 		out << "Point:" << endl
-			<< "color = " << glm::to_string( point.m_color ) << endl
-			<< "pos = " << glm::to_string( point.m_pos ) << endl;
+			<< "color = " << point.m_color << endl
+			<< "pos = " << point.m_pos << endl;
 			
 		return out;
 	}

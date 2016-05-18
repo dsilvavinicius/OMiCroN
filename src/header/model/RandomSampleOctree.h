@@ -68,11 +68,10 @@ namespace model
 		 * @returns the number of rendered points. */
 		virtual OctreeStats traverse( RenderingState& renderingState, const Float& projThresh );
 		
-		// TODO: Make tests for this function.
 		/** Computes the boundaries of the node indicated by the given morton code.
 		 * @returns a pair of vertices: the first is the box's minimum vertex an the last is the box's maximum
 		 * vertex. */
-		pair< Vec3, Vec3 > getBoundaries( MortonCodePtr ) const;
+		AlignedBox3f getBoundaries( MortonCodePtr ) const;
 		
 		virtual OctreeMapPtr getHierarchy() const;
 		
@@ -272,9 +271,9 @@ namespace model
 	::calcMorton( const Point& point ) const
 	{
 		const Vec3& pos = point.getPos();
-		Vec3 index = ( pos - ( *m_origin ) ) / ( *m_leafSize );
+		Vec3 index = ( pos - ( *m_origin ) ).array() / m_leafSize->array();
 		MortonCode code;
-		code.build( index.x, index.y, index.z, m_maxLevel );
+		code.build( index( 0 ), index( 1 ), index( 2 ), m_maxLevel );
 		
 		return code;
 	}
@@ -446,7 +445,7 @@ namespace model
 	}
 	
 	template< typename OctreeParams >
-	inline pair< Vec3, Vec3 > RandomSampleOctree< OctreeParams >::getBoundaries( MortonCodePtr code ) const
+	inline AlignedBox3f RandomSampleOctree< OctreeParams >::getBoundaries( MortonCodePtr code ) const
 	{
 		unsigned int level = code->getLevel();
 		auto nodeCoordsVec = code->decode(level);
@@ -454,7 +453,7 @@ namespace model
 		Float nodeSizeFactor = Float( 1 ) / Float( 1 << level );
 		Vec3 levelNodeSize = ( *m_size ) * nodeSizeFactor;
 		
-		Vec3 minBoxVert = ( *m_origin ) + nodeCoords * levelNodeSize;
+		Vec3 minBoxVert = ( *m_origin ) + ( nodeCoords.array() * levelNodeSize.array() ).matrix();
 		Vec3 maxBoxVert = minBoxVert + levelNodeSize;
 		
 		/*cout << "Boundaries for node 0x" << hex << code->getBits() << dec << endl
@@ -465,9 +464,7 @@ namespace model
 			 << "min coords = " << glm::to_string(minBoxVert) << endl
 			 << "max coords = " << glm::to_string(maxBoxVert) << endl;*/
 		
-		pair< Vec3, Vec3 > box( minBoxVert, maxBoxVert );
-		
-		return box;
+		return AlignedBox3f( minBoxVert, maxBoxVert );
 	}
 	
 	template< typename OctreeParams >
@@ -480,7 +477,7 @@ namespace model
 		{
 			MortonCodePtr code = nodeIt->first;
 			OctreeNodePtr node = nodeIt->second;
-			pair< Vec3, Vec3 > box = getBoundaries( code );
+			AlignedBox3f box = getBoundaries( code );
 			
 			if( !renderingState.isCullable( box ) )
 			{
@@ -587,9 +584,9 @@ namespace model
 		using OctreeMapPtr = shared_ptr< typename OctreeParams::Hierarchy >;
 		
 		out << "=========== Begin Octree ============" << endl << endl
-			<< "origin: " << glm::to_string( *octree.m_origin ) << endl
-			<< "size: " << glm::to_string( *octree.m_size ) << endl
-			<< "leaf size: " << glm::to_string( *octree.m_leafSize ) << endl
+			<< "origin: " << *octree.m_origin << endl
+			<< "size: " << *octree.m_size << endl
+			<< "leaf size: " << *octree.m_leafSize << endl
 			<< "max points per node: " << octree.m_maxPointsPerNode << endl << endl;
 		
 		/** Maximum level of this octree. */

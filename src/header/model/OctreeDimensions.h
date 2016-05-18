@@ -40,9 +40,9 @@ namespace model
 		M calcMorton( const P& point ) const
 		{
 			const Vec3& pos = point.getPos();
-			Vec3 index = ( pos - m_origin ) / m_nodeSize;
+			Vec3 index = ( pos - m_origin ).array() / m_nodeSize.array();
 			M code;
-			code.build( index.x, index.y, index.z, m_nodeLvl );
+			code.build( index.x(), index.y(), index.z(), m_nodeLvl );
 			
 			return code;
 		}
@@ -54,7 +54,7 @@ namespace model
 		}
 		
 		/** Returns the boundaries of the node identified by the given MortonCode */
-		pair< Vec3, Vec3 > getMortonBoundaries( const M& code ) const
+		AlignedBox3f getMortonBoundaries( const M& code ) const
 		{
 			uint level = code.getLevel();
 			
@@ -65,7 +65,7 @@ namespace model
 			Float nodeSizeFactor = Float( 1 ) / Float( 1 << level );
 			Vec3 levelNodeSize = m_size * nodeSizeFactor;
 			
-			Vec3 minBoxVert = m_origin + nodeCoords * levelNodeSize;
+			Vec3 minBoxVert = m_origin + ( nodeCoords.array() * levelNodeSize.array() ).matrix();
 			Vec3 maxBoxVert = minBoxVert + levelNodeSize;
 			
 			/*cout << "Boundaries for node 0x" << hex << code->getBits() << dec << endl
@@ -76,14 +76,12 @@ namespace model
 				<< "min coords = " << glm::to_string(minBoxVert) << endl
 				<< "max coords = " << glm::to_string(maxBoxVert) << endl;*/
 			
-			pair< Vec3, Vec3 > box( minBoxVert, maxBoxVert );
-			
-			return box;
+			return AlignedBox3f( minBoxVert, maxBoxVert );
 		}
 		
 		/** Returns the boundaries of the node. */
 		template< typename Node >
-		pair< Vec3, Vec3 > getNodeBoundaries( const Node& node )
+		AlignedBox3f getNodeBoundaries( const Node& node )
 		{
 			return getMortonBoundaries( calcMorton( node ) );
 		}

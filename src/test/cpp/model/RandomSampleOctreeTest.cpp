@@ -45,7 +45,7 @@ namespace model
 				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
 				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
 					
-				PointPtr point = makeManaged< Point >( vec3( 1.f, 1.f, 1.f ), vec3( x, y, z ) );
+				PointPtr point = makeManaged< Point >( Vec3( 1.f, 1.f, 1.f ), Vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
 		}
@@ -59,8 +59,8 @@ namespace model
 				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
 				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
 					
-				ExtendedPointPtr point = makeManaged< ExtendedPoint >( vec3( 1.f, 1.f, 1.f ), vec3( 1.f, 1.f, 1.f ),
-																	   vec3( x, y, z ) );
+				ExtendedPointPtr point = makeManaged< ExtendedPoint >( Vec3( 1.f, 1.f, 1.f ), Vec3( 1.f, 1.f, 1.f ),
+																	   Vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
 		}

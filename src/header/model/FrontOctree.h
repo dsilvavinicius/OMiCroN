@@ -202,7 +202,7 @@ namespace model
 		}
 		
 		MortonCodePtr parent = code->traverseUp();
-		pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( parent );
+		AlignedBox3f box = ParentOctree::getBoundaries( parent );
 		bool parentIsCullable = renderingState.isCullable( box );
 		
 		if( parentIsCullable )
@@ -257,7 +257,7 @@ namespace model
 	::checkBranch( RenderingState& renderingState, const MortonCodePtr& code, const Float& projThresh,
 				   bool& out_isCullable ) const
 	{
-		pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( code );
+		AlignedBox3f box = ParentOctree::getBoundaries( code );
 		out_isCullable = renderingState.isCullable( box );
 		
 		return !renderingState.isRenderable( box, projThresh ) && !out_isCullable;
@@ -297,7 +297,7 @@ namespace model
 				
 				m_frontBehavior->insert( *childCode );
 				
-				pair< Vec3, Vec3 > box = ParentOctree::getBoundaries( childCode );
+				AlignedBox3f box = ParentOctree::getBoundaries( childCode );
 				if( !renderingState.isCullable( box ) )
 				{
 					//cout << "Point set to render: " << hex << child->getBits() << dec << endl;
