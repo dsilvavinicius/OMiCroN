@@ -30,17 +30,17 @@ namespace model
 		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Lesser values incur in
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
-		FastParallelOctree( const string& plyFilename, const int& maxLvl, ulong loadPerThread = 1024,
+		FastParallelOctree( const string& plyFilename, const int maxLvl, ulong loadPerThread = 1024,
 							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
 		
-		/** Ctor. Creates the octree from a sorted .ply file. */
-		FastParallelOctree( const string& plyFilename, const Dim& dim, ulong loadPerThread = 1024,
-							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
+		/** Ctor. Creates the octree from a octree file. */
+// 		FastParallelOctree( const Json::Value& octreeJson, ulong loadPerThread = 1024,
+// 							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
 		
 		~FastParallelOctree();
 		
 		/** Tracks the rendering front of the octree. */
-		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
+		FrontOctreeStats trackFront( Renderer& renderer, const Float coarsestLoDSqrDistance );
 		
 		/** Checks if the async creation is finished. */
 		bool isCreationFinished();
@@ -61,10 +61,9 @@ namespace model
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, Pt >& octree );
 		
 	private:
-		/** Builds from a .ply file. The file is assumed to be sorted in z-order. Also, the octree dimensions are expected
-		 * to be known. */
-		void buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit,
-								  int nThreads, bool async );
+		/** Builds from a octree file json. */
+		void buildFromSortedFile( const Json::Value& octreeJson, ulong loadPerThread, ulong memoryLimit, int nThreads,
+								  bool async );
 		
 		string toString( const Node& node, const Dim& nodeLvlDim ) const;
 		
@@ -89,7 +88,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	FastParallelOctree< Morton, Point >
-	::FastParallelOctree( const string& plyFilename, const int& maxLvl, ulong loadPerThread, ulong memoryLimit,
+	::FastParallelOctree( const string& plyFilename, const int maxLvl, ulong loadPerThread, ulong memoryLimit,
 						  int nThreads, bool async )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
@@ -112,21 +111,20 @@ namespace model
 			sortedFilename.insert( 0, "sorted_" );
 		}
 		
-		sorter.sort( sortedFilename );
+		Json::Value octreeJson = sorter.sort( sortedFilename );
 		
-		buildFromSortedFile( sortedFilename, sorter.comp(), loadPerThread, memoryLimit, nThreads, async );
+		buildFromSortedFile( octreeJson, loadPerThread, memoryLimit, nThreads, async );
 	}
 	
-	template< typename Morton, typename Point >
-	FastParallelOctree< Morton, Point >
-	::FastParallelOctree( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit, int nThreads,
-						  bool async )
-	: m_hierarchyCreator( nullptr ),
-	m_front( nullptr ),
-	m_root( nullptr )
-	{
-		buildFromSortedFile( plyFilename, dim, loadPerThread, memoryLimit, nThreads, async );
-	}
+// 	template< typename Morton, typename Point >
+// 	FastParallelOctree< Morton, Point >
+// 	::FastParallelOctree( const Json::Value& octreeJson, ulong loadPerThread, ulong memoryLimit, int nThreads, bool async )
+// 	: m_hierarchyCreator( nullptr ),
+// 	m_front( nullptr ),
+// 	m_root( nullptr )
+// 	{
+// 		buildFromSortedFile( octreeJson, loadPerThread, memoryLimit, nThreads, async );
+// 	}
 	
 	template< typename Morton, typename Point >
 	FastParallelOctree< Morton, Point >::~FastParallelOctree()
@@ -145,7 +143,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromSortedFile( const string& plyFilename, const Dim& dim, ulong loadPerThread, ulong memoryLimit,
+	::buildFromSortedFile( const Json::Value& octreeJson, ulong loadPerThread, ulong memoryLimit,
 						   int nThreads, bool async )
 	{
 		#ifdef HIERARCHY_STATS
@@ -154,20 +152,24 @@ namespace model
 		
 		omp_set_num_threads( 8 );
 		
-		m_dim = dim;
+		Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(),
+						 octreeJson[ "size" ][ "y" ].asFloat(),
+						 octreeJson[ "size" ][ "z" ].asFloat() );
+		m_dim = Dim( Vec3( 0.f, 0.f, 0.f ), Vec3( octreeSize ), octreeJson[ "depth" ].asUInt() );
 		
-		string dbFilename = plyFilename.substr( 0, plyFilename.find_last_of( "." ) ).append( ".db" );
-		m_front = new Front( dbFilename, m_dim, nThreads, memoryLimit );
+		m_front = new Front( octreeJson[ "database" ].asString(), m_dim, nThreads, memoryLimit );
 		
-		m_hierarchyCreator = new HierarchyCreator( plyFilename, m_dim, *m_front, loadPerThread, memoryLimit, nThreads );
+		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim, *m_front, loadPerThread,
+												   memoryLimit, nThreads );
 		
 		m_creationFuture = m_hierarchyCreator->createAsync();
 	}
 	
 	template< typename Morton, typename Point >
-	FrontOctreeStats FastParallelOctree< Morton, Point >::trackFront( Renderer& renderer, const Float projThresh )
+	FrontOctreeStats FastParallelOctree< Morton, Point >
+	::trackFront( Renderer& renderer, const Float coarsestLoDSqrDistance )
 	{
-		return m_front->trackFront( renderer, projThresh );
+		return m_front->trackFront( renderer, coarsestLoDSqrDistance );
 	}
 	
 	template< typename Morton, typename Point >

@@ -3,12 +3,13 @@
 namespace model
 {
 	TucanoRenderingState::TucanoRenderingState( Camera* camera, Camera* lightCamera, Mesh* mesh,
-												const string& shaderPath, const int& jfpbrFrameskip,
+												const string& shaderPath, uint maxOctreeDepth, const int& jfpbrFrameskip,
 											 const Effect& effect )
 	: RenderingState(),
 	m_camera( camera ),
 	m_lightCamera( lightCamera ),
 	m_mesh( mesh ),
+	m_maxOctreeDepth( maxOctreeDepth ),
 	m_viewProj( getViewProjection() ),
 	m_jfpbrFrameskip( jfpbrFrameskip ),
 	m_effect( effect ),
@@ -120,26 +121,19 @@ namespace model
 		return m_frustum->isCullable( box );
 	}
 	
-	inline bool TucanoRenderingState::isRenderable( const AlignedBox3f& box, const Float& projThresh )
-	const
+	inline bool TucanoRenderingState
+	::isRenderableByDistance( const AlignedBox3f& box, uint nodeLvl, const Float coarsestLoDSqrDistance ) const
 	{
-// 		Float sqrDistance = 0;
-// 		for( int i = 0; i < 3; ++i )
-// 		{
-// 			if( cameraPos[ i ] < -boxExtent[i] )
-// 			{
-// 				Real delta = point[i] + boxExtent[i];
-// 				result.sqrDistance += delta * delta;
-// 				point[i] = -boxExtent[i];
-// 			}
-// 			else if (point[i] > boxExtent[i])
-// 			{
-// 				Real delta = point[i] - boxExtent[i];
-// 				result.sqrDistance += delta * delta;
-// 				point[i] = boxExtent[i];
-// 			}
-// 		}
+		Float sqrDistance = box.squaredExteriorDistance( m_camera->getCenter() );
 		
+		int lod = ( sqrDistance > coarsestLoDSqrDistance ) ? m_maxOctreeDepth :
+					sqrDistance * m_maxOctreeDepth / coarsestLoDSqrDistance;
+					
+		return nodeLvl <= lod;
+	}
+	
+	inline bool TucanoRenderingState::isRenderable( const AlignedBox3f& box, const Float projThresh ) const
+	{
 		const Vec3& rawMin = box.min();
 		const Vec3& rawMax = box.max();
 		Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );

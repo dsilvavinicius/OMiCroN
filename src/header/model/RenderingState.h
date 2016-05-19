@@ -43,7 +43,13 @@ namespace model
 		/** Checks if the axis-aligned box is renderable with the current projection threshold.
 		 * @returns true if the box has a projection compatible with the current threshold and, thus, should be
 		 * rendered. False otherwise (indicating that the traversal should proceed deeper in the hierarchy). */
-		virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const = 0;
+		virtual bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const = 0;
+		
+		/** Checks if the axis-aligned box is renderable with the current distance threshold.
+		 * @returns true if the box has a distance compatible with the current threshold and, thus, should be
+		 * rendered. False otherwise (indicating that the traversal should proceed deeper in the hierarchy). */
+		virtual bool isRenderableByDistance( const AlignedBox3f& box, uint nodeLvl, const Float coarsestLoDSqrDistance )
+		const {};
 		
 		/** Indicates that the passed string should be rendered at the position also passed as parameter. Useful for
 		 * debugging and labelling. */

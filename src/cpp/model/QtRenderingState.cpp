@@ -14,7 +14,7 @@ namespace model
 		return m_painter->isCullable( qBox );
 	}
 	
-	inline bool QtRenderingState::isRenderable( const AlignedBox3f& box, const Float& projThresh ) const
+	inline bool QtRenderingState::isRenderable( const AlignedBox3f& box, const Float projThresh ) const
 	{
 		const Vec3& rawMin = box.min();
 		const Vec3& rawMax = box.max();

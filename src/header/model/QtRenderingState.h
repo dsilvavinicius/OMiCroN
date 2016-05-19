@@ -28,7 +28,7 @@ namespace model
 		/** This implementation will compare the size of the maximum box diagonal in window coordinates with the projection
 		 * threshold.
 		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
-		virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const;
+		virtual bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const;
 		
 		virtual void renderText( const Vec3& pos, const string& str ) override;
 		

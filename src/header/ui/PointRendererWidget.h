@@ -103,10 +103,10 @@ private:
 		TOP
 	};
 	
-	/** Adaps the projection threshold based on m_desiredRenderTime. */
-	void adaptProjThresh();
+	/** Adapts the rendering threshold for the next frame. */
+	void adaptRenderingThresh();
 
-	/** Render auxiliary viewports for debugging purposes. */
+	/** Renders auxiliary viewports for debugging purposes. */
 	void renderAuxViewport( const Viewport& viewport );
 	
 	/// Flag to draw or not trackball
@@ -121,8 +121,8 @@ private:
 	
 	QTimer *m_timer;
 	
-	/** Current projection threshold used in octree traversal. */
-	float m_projThresh;
+	/** Current normalized distance threshold used to control octree node rendering. */
+	float m_distanceThresh;
 	
 	/** Current render time used to adapt the projection threshold. In ms. */
 	float m_renderTime;

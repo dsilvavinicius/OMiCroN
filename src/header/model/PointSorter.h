@@ -1,6 +1,8 @@
 #ifndef POINT_SORTER_H
 #define POINT_SORTER_H
 
+#include <jsoncpp/json/json.h>
+#include <fstream>
 #include "MortonCode.h"
 #include "PlyPointReader.h"
 #include "OctreeDimensions.h"
@@ -23,7 +25,7 @@ namespace model
 		
 		PointSorter( const string& input, uint leafLvl );
 		~PointSorter();
-		void sort( const string& outFilename );
+		Json::Value sort( const string& outFilename );
 		OctreeDim& comp() { return m_comp; }
 		
 	private:
@@ -74,7 +76,18 @@ namespace model
 		cout << "Reading time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		Vec3 octreeSize = maxCoords - origin;
-		m_comp.init( origin, octreeSize, leafLvl );
+		
+		// Normalizing model.
+		float scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
+		
+		#pragma omp parallel for
+		for( ulong i = 0; i < m_nPoints; ++i )
+		{
+			Vec3& pos = m_points[ i ].getPos();
+			pos = ( pos - origin ) * scale;
+		}
+		
+		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * scale, leafLvl );
 	}
 	
 	template< typename M, typename P >
@@ -85,11 +98,32 @@ namespace model
 	}
 	
 	template< typename M, typename P >
-	void PointSorter< M, P >::sort( const string& outFilename )
+	Json::Value PointSorter< M, P >::sort( const string& outFilename )
 	{
 		cout << "Start sorting to " << outFilename << endl << endl;
+		
+		// Write the octree file.
+		string dbFilename = outFilename.substr( 0, outFilename.find_last_of( '.' ) - 1 );
+		string octreeFilename = dbFilename;
+		dbFilename.append( ".db" );
+		octreeFilename.append( ".oct" );
+		
+		Json::Value octreeJson;
+		octreeJson[ "points" ] = outFilename;
+		octreeJson[ "database" ] = dbFilename;
+		octreeJson[ "size" ][ "x" ] = m_comp.m_size.x();
+		octreeJson[ "size" ][ "y" ] = m_comp.m_size.y();
+		octreeJson[ "size" ][ "z" ] = m_comp.m_size.z();
+		octreeJson[ "depth" ] = m_comp.m_nodeLvl;
+		
+// 		Json::StyledStreamWriter writer;
+		ofstream octreeFile( octreeFilename, ofstream::out );
+		octreeFile << octreeJson << endl;
+// 		writer.write( octreeFile, octreeJson );
+		
 		auto start = Profiler::now();
 		
+		// Sort points.
 		std::sort( m_points, m_points + m_nPoints, m_comp );
 		
 		cout << "Sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
@@ -97,7 +131,8 @@ namespace model
 		cout << "Start writing. " << endl << endl;
 		
 		start = Profiler::now();
-		// Write output file
+		
+		// Write output point file.
 		m_output = m_reader->copyHeader( outFilename );
 		for( long i = 0; i < m_nPoints; ++i )
 		{
@@ -107,6 +142,8 @@ namespace model
 		cout << "Writing time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		ply_close( m_output );
+		
+		return octreeJson;
 	}
 	
 	template< typename M, typename P >

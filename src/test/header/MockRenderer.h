@@ -13,8 +13,7 @@ namespace model
 			
 			virtual bool isCullable( const AlignedBox3f& box ) const override { return true; }
 			
-			virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const override
-			{ return false; }
+			virtual bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const override { return false; }
 			
 			virtual void renderText( const Vec3& pos, const string& str ) override {}
 			

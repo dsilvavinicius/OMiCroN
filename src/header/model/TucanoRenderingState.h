@@ -25,7 +25,7 @@ namespace model
 		};
 		
 		TucanoRenderingState( Camera* camera, Camera* lightCam , Mesh* mesh, const string& shaderPath,
-							  const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
+							  uint maxOctreeDepth, const int& jfpbrFrameskip = 1, const Effect& effect = PHONG );
 		
 		~TucanoRenderingState();
 		
@@ -43,7 +43,13 @@ namespace model
 		/** This implementation will compare the size of the maximum box diagonal in window coordinates with the projection
 		 *	threshold.
 		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
-		virtual bool isRenderable( const AlignedBox3f& box, const Float& projThresh ) const override;
+		virtual bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const override;
+		
+		/** Rendering test based on distance.
+		 * @param coarsestLoDSqrDistance is the normalized squared distance where the model wll be rendered with the
+		 * coarsest level of detail. */
+		bool isRenderableByDistance( const AlignedBox3f& box, uint nodeLvl, const Float coarsestLoDSqrDistance ) const
+		override;
 	
 		virtual void renderText( const Vec3& pos, const string& str );
 		
@@ -91,6 +97,9 @@ namespace model
 		
 		/** Frame counter. Used in order to skip frames properly. */
 		unsigned int m_nFrames;
+		
+		/** The maximum octree depth. */
+		uint m_maxOctreeDepth;
 	};
 }
 
