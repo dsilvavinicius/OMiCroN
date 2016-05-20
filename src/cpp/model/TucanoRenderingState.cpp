@@ -8,11 +8,12 @@ namespace model
 	m_camera( camera ),
 	m_lightCamera( lightCamera ),
 	m_mesh( mesh ),
-	m_viewProj( getViewProjection() ),
 	m_jfpbrFrameskip( jfpbrFrameskip ),
 	m_effect( effect ),
 	m_nFrames( 0 )
 	{
+		updateViewProjection();
+		updateViewOrthoProjection();
 		m_frustum = new Frustum( m_viewProj );
 		
 		m_phong = new Phong();
@@ -37,13 +38,11 @@ namespace model
 		delete m_frustum;
 	}
 	
-	void TucanoRenderingState::updateFrustum()
+	void TucanoRenderingState::update()
 	{
-		m_viewProj = getViewProjection();
-		
+		updateViewProjection();
+		updateViewOrthoProjection();
 		m_frustum->update( m_viewProj );
-		
-		//cout << "New frustum: " << endl << *m_frustum << endl << endl;
 	}
 	
 	void TucanoRenderingState::setupRendering()
@@ -66,7 +65,7 @@ namespace model
 		
 		clearAttribs();
 		//clearIndices();
-		updateFrustum();
+		update();
 	}
 	
 	inline unsigned int TucanoRenderingState::render()
@@ -121,23 +120,24 @@ namespace model
 	
 	inline bool TucanoRenderingState::isRenderable( const AlignedBox3f& box, const Float projThresh ) const
 	{
+// 		return false;
 		const Vec3& rawMin = box.min();
 		const Vec3& rawMax = box.max();
 		Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
 		Vector4f max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
 		
-		Vector2i viewportSize = m_camera->getViewportSize();
+// 		Vector2i viewportSize = m_camera->getViewportSize();
 		
-		Vector2f proj0 = projToWindowCoords( min, m_viewProj, viewportSize );
-		Vector2f proj1 = projToWindowCoords( max, m_viewProj, viewportSize );
+		Vector2f proj0 = projToWindowCoords( min, m_viewProj/*, viewportSize*/ );
+		Vector2f proj1 = projToWindowCoords( max, m_viewProj/*, viewportSize*/ );
 		
 		Vector2f diagonal0 = proj1 - proj0;
 		
 		Vec3 boxSize = rawMax - rawMin;
 		
-		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), m_viewProj,
-									viewportSize );
-		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), m_viewProj, viewportSize );
+		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), m_viewProj/*,
+									viewportSize*/ );
+		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), m_viewProj/*, viewportSize*/ );
 		
 		Vector2f diagonal1 = proj1 - proj0;
 		
@@ -151,18 +151,38 @@ namespace model
 		m_textEffect.render( str, Vector4f( pos.x(), pos.y(), pos.z(), 1.f ), *m_camera );
 	}
 	
-	inline Matrix4f TucanoRenderingState::getViewProjection() const
+	inline void TucanoRenderingState::updateViewProjection()
 	{
 		Matrix4f view = m_camera->getViewMatrix().matrix();
 		Matrix4f proj = m_camera->getProjectionMatrix();
 		
-		//cout << "Projection to renderer: " << endl << proj << endl << endl;
+		m_viewProj = proj * view;
+	}
+	
+	inline void TucanoRenderingState::updateViewOrthoProjection()
+	{
+		Vector2i viewport = m_camera->getViewportSize();
+		Float halfWidth = Float( viewport.x() ) * 0.5f;
+		Float halfHeight = Float( viewport.y() ) * 0.5f;
+		m_viewOrthoProj = Camera::createOrthographicMatrix( -halfWidth, halfWidth, -halfHeight, halfHeight,
+														m_camera->getNearPlane(), m_camera->getFarPlane() );
 		
-		return proj * view;
+		// Debug
+// 		{
+// 			cout << "half width: " << halfWidth << " half height: " << halfHeight << " near: "
+// 				 << m_camera->getNearPlane() << " far: " << m_camera->getFarPlane() << endl << endl;
+// 				 
+// 			m_camera->setOrthographicMatrix( -halfWidth, halfWidth, -halfHeight, halfHeight,
+// 											m_camera->getNearPlane(), m_camera->getFarPlane() );
+// 		}
+		//
+		
+		m_viewOrthoProj *= m_camera->getViewMatrix().matrix();
+		//cout << "View ortho: " << endl <<  m_viewOrthoProj << endl << endl;
 	}
 	
 	inline Vector2f TucanoRenderingState
-	::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
+	::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj/*, const Vector2i& viewportSize*/ ) const
 	{
 		Vector4f proj = viewProj * point;
 		Vector2f normalizedProj( proj.x() / proj.w(), proj.y() / proj.w() );

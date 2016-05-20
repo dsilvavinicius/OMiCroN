@@ -30,7 +30,7 @@ namespace model
 		~TucanoRenderingState();
 		
 		/** Updates the frustum after changes on camera. */
-		void updateFrustum();
+		void update();
 		
 		/** This implementation clears up color and depth buffers, the attributes of the vertices and updates the viewing
 		 * frustum data. */
@@ -66,10 +66,12 @@ namespace model
 		
 	protected:
 		/** Acquires current traball's view-projection matrix. */
-		Matrix4f getViewProjection() const;
+		void updateViewProjection();
+		
+		void updateViewOrthoProjection();
 		
 		/** Projects the point in world coordinates to window coordinates. */
-		Vector2f projToWindowCoords( const Vector4f& point, const Matrix4f& viewProjection, const Vector2i& viewportSize )
+		Vector2f projToWindowCoords( const Vector4f& point, const Matrix4f& viewProjection/*, const Vector2i& viewportSize*/ )
 		const;
 		
 		Frustum* m_frustum;
@@ -77,6 +79,8 @@ namespace model
 		Camera* m_lightCamera;
 		
 		Matrix4f m_viewProj;
+		/** Orthographic projection matrix used to calculate box projections. */
+		Matrix4f m_viewOrthoProj;
 		
 		Mesh* m_mesh;
 		Phong* m_phong;
