@@ -350,6 +350,7 @@ namespace model
 				
 			Sql sql( dbFilename, false );
 			Morton rootCode; rootCode.build( 0x1 );
+			
 			checkNodeGeneral( octree.root(), rootCode, OctreeDim( octree.dim(), 0 ), sql );
 		}
 		

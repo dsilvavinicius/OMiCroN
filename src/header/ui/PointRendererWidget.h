@@ -122,7 +122,7 @@ private:
 	QTimer *m_timer;
 	
 	/** Current normalized distance threshold used to control octree node rendering. */
-	float m_distanceThresh;
+	float m_projThresh;
 	
 	/** Current render time used to adapt the projection threshold. In ms. */
 	float m_renderTime;

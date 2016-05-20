@@ -40,7 +40,7 @@ namespace model
 		~FastParallelOctree();
 		
 		/** Tracks the rendering front of the octree. */
-		FrontOctreeStats trackFront( Renderer& renderer, const Float coarsestLoDSqrDistance );
+		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 		/** Checks if the async creation is finished. */
 		bool isCreationFinished();
@@ -167,9 +167,9 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	FrontOctreeStats FastParallelOctree< Morton, Point >
-	::trackFront( Renderer& renderer, const Float coarsestLoDSqrDistance )
+	::trackFront( Renderer& renderer, const Float projThresh )
 	{
-		return m_front->trackFront( renderer, coarsestLoDSqrDistance );
+		return m_front->trackFront( renderer, projThresh );
 	}
 	
 	template< typename Morton, typename Point >

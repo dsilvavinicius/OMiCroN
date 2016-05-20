@@ -2,14 +2,12 @@
 
 namespace model
 {
-	TucanoRenderingState::TucanoRenderingState( Camera* camera, Camera* lightCamera, Mesh* mesh,
-												const string& shaderPath, uint maxOctreeDepth, const int& jfpbrFrameskip,
-											 const Effect& effect )
+	TucanoRenderingState::TucanoRenderingState( Camera* camera, Camera* lightCamera, Mesh* mesh, const string& shaderPath,
+												const int& jfpbrFrameskip, const Effect& effect )
 	: RenderingState(),
 	m_camera( camera ),
 	m_lightCamera( lightCamera ),
 	m_mesh( mesh ),
-	m_maxOctreeDepth( maxOctreeDepth ),
 	m_viewProj( getViewProjection() ),
 	m_jfpbrFrameskip( jfpbrFrameskip ),
 	m_effect( effect ),
@@ -121,17 +119,6 @@ namespace model
 		return m_frustum->isCullable( box );
 	}
 	
-	inline bool TucanoRenderingState
-	::isRenderableByDistance( const AlignedBox3f& box, uint nodeLvl, const Float coarsestLoDSqrDistance ) const
-	{
-		Float sqrDistance = box.squaredExteriorDistance( m_camera->getCenter() );
-		
-		int lod = ( sqrDistance > coarsestLoDSqrDistance ) ? m_maxOctreeDepth :
-					sqrDistance * m_maxOctreeDepth / coarsestLoDSqrDistance;
-					
-		return nodeLvl <= lod;
-	}
-	
 	inline bool TucanoRenderingState::isRenderable( const AlignedBox3f& box, const Float projThresh ) const
 	{
 		const Vec3& rawMin = box.min();
@@ -174,9 +161,8 @@ namespace model
 		return proj * view;
 	}
 	
-	inline Vector2f TucanoRenderingState::projToWindowCoords( const Vector4f& point,
-																			 const Matrix4f& viewProj,
-																		  const Vector2i& viewportSize ) const
+	inline Vector2f TucanoRenderingState
+	::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
 	{
 		Vector4f proj = viewProj * point;
 		Vector2f normalizedProj( proj.x() / proj.w(), proj.y() / proj.w() );

@@ -103,7 +103,7 @@ namespace model
 		cout << "Start sorting to " << outFilename << endl << endl;
 		
 		// Write the octree file.
-		string dbFilename = outFilename.substr( 0, outFilename.find_last_of( '.' ) - 1 );
+		string dbFilename = outFilename.substr( 0, outFilename.find_last_of( '.' ) );
 		string octreeFilename = dbFilename;
 		dbFilename.append( ".db" );
 		octreeFilename.append( ".oct" );
@@ -116,10 +116,9 @@ namespace model
 		octreeJson[ "size" ][ "z" ] = m_comp.m_size.z();
 		octreeJson[ "depth" ] = m_comp.m_nodeLvl;
 		
-// 		Json::StyledStreamWriter writer;
+		cout << octreeJson << endl;
 		ofstream octreeFile( octreeFilename, ofstream::out );
 		octreeFile << octreeJson << endl;
-// 		writer.write( octreeFile, octreeJson );
 		
 		auto start = Profiler::now();
 		

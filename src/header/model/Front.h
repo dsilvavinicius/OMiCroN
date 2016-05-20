@@ -171,24 +171,23 @@ namespace model
 		
 		/** Tracks the front based on the projection threshold.
 		 * @param renderer is the responsible of rendering the points of the tracked front.
-		 * @param coarsestLoDSqrDistance is the projection threashold */
-		FrontOctreeStats trackFront( Renderer& renderer, const Float coarsestLoDSqrDistance );
+		 * @param projThresh is the projection threashold */
+		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
 		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
-						const Float coarsestLoDSqrDistance );
+						const Float projThresh );
 		
 		/** Substitute a placeholder with the first node of the given substitution level. */
 		bool substitutePlaceholder( FrontNode& node, uint substitutionLvl );
 		
 		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
-						 FrontListIter& frontIt, int substituionLvl, Renderer& renderer,
-				   const Float coarsestLoDSqrDistance );
+						 FrontListIter& frontIt, int substituionLvl, Renderer& renderer, const Float projThresh );
 		
 		void prune( FrontListIter& frontIt, const OctreeDim& nodeLvlDim, Node* parentNode, Renderer& renderer );
 		
 		bool checkBranch( const OctreeDim& nodeLvlDim, const Node& node, const Morton& morton, Renderer& renderer,
-						  const Float coarsestLoDSqrDistance,  bool& out_isCullable ) const;
+						  const Float projThresh,  bool& out_isCullable ) const;
 		
 		void branch( FrontListIter& iter, Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
 		
@@ -557,7 +556,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline FrontOctreeStats Front< Morton, Point >
-	::trackFront( Renderer& renderer, const Float coarsestLoDSqrDistance )
+	::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		// Debug
 // 		if( m_persisted )
@@ -658,7 +657,7 @@ namespace model
 				}
 				#endif
 				
-				trackNode( frontIt, lastParent, substitutionLvl, renderer, coarsestLoDSqrDistance );
+				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
 				
 				#ifdef DEBUG
 				{
@@ -711,7 +710,7 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >
 	::trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer, 
-				 const Float coarsestLoDSqrDistance )
+				 const Float projThresh )
 	{
 		FrontNode& frontNode = *frontIt;
 		
@@ -772,7 +771,7 @@ namespace model
 			#endif
 			
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer,
-							coarsestLoDSqrDistance ) )
+							projThresh ) )
 			{
 				#ifdef DEBUG
 // 				{
@@ -800,7 +799,7 @@ namespace model
 		
 		bool isCullable = false;
 		
-		if( checkBranch( nodeLvlDim, node, morton, renderer, coarsestLoDSqrDistance, isCullable ) )
+		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
 			branch( frontIt, node, nodeLvlDim, renderer );
 			return;
@@ -874,7 +873,7 @@ namespace model
 	template< typename Morton, typename Point >
 	inline bool Front< Morton, Point >
 	::checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
-				  FrontListIter& frontIt, int substitutionLvl, Renderer& renderer, const Float coarsestLoDSqrDistance )
+				  FrontListIter& frontIt, int substitutionLvl, Renderer& renderer, const Float projThresh )
 	{
 		AlignedBox3f parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
@@ -885,7 +884,7 @@ namespace model
 		}
 		else
 		{
-			if( renderer.isRenderableByDistance( parentBox, parentLvlDim.m_nodeLvl, coarsestLoDSqrDistance ) )
+			if( renderer.isRenderable( parentBox, projThresh ) )
 			{
 				pruneFlag = true;
 			}
@@ -1017,15 +1016,14 @@ namespace model
 	template< typename Morton, typename Point >
 	inline bool Front< Morton, Point >
 	::checkBranch( const OctreeDim& nodeLvlDim, const Node& node, const Morton& morton, Renderer& renderer,
-				   const Float coarsestLoDSqrDistance, bool& out_isCullable ) const
+				   const Float projThresh, bool& out_isCullable ) const
 	{
 		AlignedBox3f box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
 		
 		if( !node.isLeaf() && !node.child().empty() )
 		{
-			return !renderer.isRenderableByDistance( box, nodeLvlDim.m_nodeLvl, coarsestLoDSqrDistance )
-					&& !out_isCullable;
+			return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
 		}
 		
 		return false;
