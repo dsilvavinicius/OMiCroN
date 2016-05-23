@@ -24,18 +24,32 @@ namespace model
 		using Front = model::Front< MortonCode, Point >;
 		using Renderer = RenderingState;
 		
+		typedef struct RuntimeSetup
+		{
+			RuntimeSetup( int nThreads = 8, ulong loadPerThread = 1024, ulong memoryQuota = 1024 * 1024 * 8,
+						  bool isAsync = false )
+			: m_nThreads( nThreads ),
+			m_loadPerThread( loadPerThread ),
+			m_memoryQuota( memoryQuota ),
+			m_isAsync( isAsync )
+			{}
+			
+			int m_nThreads;
+			ulong m_loadPerThread;
+			ulong m_memoryQuota;
+			bool m_isAsync;
+		} RuntimeSetup;
+		
 		/**
 		 * Ctor. Creates the octree from a .ply file, generating a sorted file in the process which can be used with
 		 * the other constructor in order to increase creation performance.
 		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Lesser values incur in
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
-		FastParallelOctree( const string& plyFilename, const int maxLvl, ulong loadPerThread = 1024,
-							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
+		FastParallelOctree( const string& plyFilename, const int maxLvl, const RuntimeSetup& runtime = RuntimeSetup() );
 		
 		/** Ctor. Creates the octree from a octree file. */
-// 		FastParallelOctree( const Json::Value& octreeJson, ulong loadPerThread = 1024,
-// 							ulong memoryLimit = 1024 * 1024 * 8, int nThreads = 8, bool async = false );
+		FastParallelOctree( const Json::Value& octreeJson, const RuntimeSetup& runtime = RuntimeSetup() );
 		
 		~FastParallelOctree();
 		
@@ -62,8 +76,7 @@ namespace model
 		
 	private:
 		/** Builds from a octree file json. */
-		void buildFromSortedFile( const Json::Value& octreeJson, ulong loadPerThread, ulong memoryLimit, int nThreads,
-								  bool async );
+		void buildFromSortedFile( const Json::Value& octreeJson, const RuntimeSetup& runtime );
 		
 		string toString( const Node& node, const Dim& nodeLvlDim ) const;
 		
@@ -88,8 +101,7 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	FastParallelOctree< Morton, Point >
-	::FastParallelOctree( const string& plyFilename, const int maxLvl, ulong loadPerThread, ulong memoryLimit,
-						  int nThreads, bool async )
+	::FastParallelOctree( const string& plyFilename, const int maxLvl, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
 	m_root( nullptr )
@@ -113,18 +125,18 @@ namespace model
 		
 		Json::Value octreeJson = sorter.sort( sortedFilename );
 		
-		buildFromSortedFile( octreeJson, loadPerThread, memoryLimit, nThreads, async );
+		buildFromSortedFile( octreeJson, runtime );
 	}
 	
-// 	template< typename Morton, typename Point >
-// 	FastParallelOctree< Morton, Point >
-// 	::FastParallelOctree( const Json::Value& octreeJson, ulong loadPerThread, ulong memoryLimit, int nThreads, bool async )
-// 	: m_hierarchyCreator( nullptr ),
-// 	m_front( nullptr ),
-// 	m_root( nullptr )
-// 	{
-// 		buildFromSortedFile( octreeJson, loadPerThread, memoryLimit, nThreads, async );
-// 	}
+	template< typename Morton, typename Point >
+	FastParallelOctree< Morton, Point >
+	::FastParallelOctree( const Json::Value& octreeJson, const RuntimeSetup& runtime )
+	: m_hierarchyCreator( nullptr ),
+	m_front( nullptr ),
+	m_root( nullptr )
+	{
+		buildFromSortedFile( octreeJson, runtime );
+	}
 	
 	template< typename Morton, typename Point >
 	FastParallelOctree< Morton, Point >::~FastParallelOctree()
@@ -143,13 +155,14 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	void FastParallelOctree< Morton, Point >
-	::buildFromSortedFile( const Json::Value& octreeJson, ulong loadPerThread, ulong memoryLimit,
-						   int nThreads, bool async )
+	::buildFromSortedFile( const Json::Value& octreeJson, const RuntimeSetup& runtime )
 	{
 		#ifdef HIERARCHY_STATS
 			m_processedNodes = 0;
 		#endif
 		
+		cout << "Octree json: " << endl << octreeJson << endl;
+			
 		omp_set_num_threads( 8 );
 		
 		Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(),
@@ -157,10 +170,10 @@ namespace model
 						 octreeJson[ "size" ][ "z" ].asFloat() );
 		m_dim = Dim( Vec3( 0.f, 0.f, 0.f ), Vec3( octreeSize ), octreeJson[ "depth" ].asUInt() );
 		
-		m_front = new Front( octreeJson[ "database" ].asString(), m_dim, nThreads, memoryLimit );
+		m_front = new Front( octreeJson[ "database" ].asString(), m_dim, runtime.m_nThreads, runtime.m_memoryQuota );
 		
-		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim, *m_front, loadPerThread,
-												   memoryLimit, nThreads );
+		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim, *m_front,
+												   runtime.m_loadPerThread, runtime.m_memoryQuota, runtime.m_nThreads );
 		
 		m_creationFuture = m_hierarchyCreator->createAsync();
 	}

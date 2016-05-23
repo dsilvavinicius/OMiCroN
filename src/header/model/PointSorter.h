@@ -116,7 +116,6 @@ namespace model
 		octreeJson[ "size" ][ "z" ] = m_comp.m_size.z();
 		octreeJson[ "depth" ] = m_comp.m_nodeLvl;
 		
-		cout << octreeJson << endl;
 		ofstream octreeFile( octreeFilename, ofstream::out );
 		octreeFile << octreeJson << endl;
 		

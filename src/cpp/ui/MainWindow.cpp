@@ -53,7 +53,9 @@ void MainWindow::initialize()
 void MainWindow::on_bt_open_cloud_clicked()
 {
 	QFileDialog dialog;
-	dialog.setFileMode(QFileDialog::AnyFile);
+	dialog.setFileMode( QFileDialog::ExistingFile );
+	dialog.setNameFilter( "Octree files or point files (*.oct *.ply);;Octree files (*.oct);;Point files (*.ply)" );
+	dialog.setDirectory( QDir::currentPath().append( "/../../src/data/real/" ) );
 	
 	if( dialog.exec() )
 	{

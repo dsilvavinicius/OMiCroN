@@ -3,6 +3,7 @@
 #include "FastParallelOctree.h"
 #include <StackTrace.h>
 #include "FastParallelOctreeTestParam.h"
+#include <QDir>
 
 namespace model
 {
@@ -164,7 +165,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/simple_point_octree.ply", 10 );
+				Octree octree( QDir::currentPath().append( "/data/simple_point_octree.ply" ).toStdString(), 10 );
 				testInCore( octree );
 			}
 			
@@ -178,7 +179,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/extended_point_octree.ply", 10 );
+				Octree octree( QDir::currentPath().append( "/data/extended_point_octree.ply" ).toStdString(), 10 );
 				testInCore( octree );
 			}
 			
@@ -191,7 +192,7 @@ namespace model
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			{
-				Octree octree( "data/simple_point_octree.ply", 21 );
+				Octree octree( QDir::currentPath().append( "/data/simple_point_octree.ply" ).toStdString(), 21 );
 				testInCore( octree );
 			}
 		}
@@ -203,7 +204,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/extended_point_octree.ply", 21 );
+				Octree octree( QDir::currentPath().append( "/data/extended_point_octree.ply" ).toStdString(), 21 );
 				testInCore( octree );
 			}
 			
@@ -217,7 +218,7 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/simple_point_octree.ply", 10, 2 );
+				Octree octree( QDir::currentPath().append( "/data/simple_point_octree.ply" ).toStdString(), 10, 2 );
 				testInCore( octree );
 			}
 			
@@ -234,7 +235,8 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/simple_point_octree.ply", 10, 3, 1000 );
+				Octree octree(QDir::currentPath().append( "/data/simple_point_octree.ply" ).toStdString(), 10,
+							  Octree::RuntimeSetup( 8, 3, 1000 ) );
 				waitAsynCreation( octree );
 				
 				cout << octree << endl;
@@ -264,7 +266,8 @@ namespace model
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			
 			{
-				Octree octree( "data/simple_point_octree.ply", 10, 6, 1000 );
+				Octree octree( QDir::currentPath().append( "/data/simple_point_octree.ply" ).toStdString(), 10,
+							   Octree::RuntimeSetup( 8, 6, 1000 ) );
 				waitAsynCreation( octree );
 				
 				cout << octree << endl;
@@ -338,8 +341,8 @@ namespace model
 			using OctreeDim = Octree::Dim;
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			
-			Octree octree( params.m_plyFilename, params.m_hierarchyLvl, params.m_workItemSize, params.m_memoryQuota,
-						params.m_nThreads );
+			Octree octree( params.m_plyFilename, params.m_hierarchyLvl,
+						   Octree::RuntimeSetup( params.m_nThreads, params.m_workItemSize, params.m_memoryQuota ) );
 			waitAsynCreation( octree );
 			
 			string dbFilename = params.m_plyFilename;
@@ -356,38 +359,55 @@ namespace model
 		
 		TEST( FastParallelOctreeTest, Creation_Shallow_StayPuff_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 4, 16, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params(
+				QDir::currentPath().append( "/../../../src/data/example/staypuff.ply" ).toStdString(),
+				4, 4, 16, 10ul * 1024ul * 1024ul
+			);
 			testSanity( params );
 		}
 		
 		TEST( FastParallelOctreeTest, Creation_StayPuff_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/example/staypuff.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params(
+				QDir::currentPath().append( "/../../../src/data/example/staypuff.ply" ).toStdString(),
+				4, 20, 1024, 10ul * 1024ul * 1024ul
+			);
 			testSanity( params );
 		}
 		
 		TEST( FastParallelOctreeTest, Creation_Prova5M_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/real/prova5M.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params(
+				QDir::currentPath().append( "/../../../src/data/real/prova5M.ply" ).toStdString(),
+				4, 20, 1024, 10ul * 1024ul * 1024ul
+			);
 			testSanity( params );
 		}
 		
 		TEST( FastParallelOctreeTest, Creation_Prova10M_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/real/prova10M.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params(
+				QDir::currentPath().append( "/../../../src/data/real/prova10M.ply" ).toStdString(),
+				4, 20, 1024, 10ul * 1024ul * 1024ul
+			);
 			testSanity( params );
 		}
 		
 		TEST( FastParallelOctreeTest, Creation_TempiettoAll_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/real/tempietto_all.ply", 4, 20, 1024, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params(
+				QDir::currentPath().append( "/../../../src/data/real/tempietto_all.ply" ).toStdString(),
+				4, 20, 1024, 10ul * 1024ul * 1024ul
+			);
 			testSanity( params );
 		}
 		
 		TEST( FastParallelOctreeTest, Creation_TempiettoSub_Sanity )
 		{
-			FastParallelOctreeTestParam params( "../../../src/data/real/tempietto_sub_tot.ply", 4, 20,
-												1024, 10ul * 1024ul * 1024ul );
+			FastParallelOctreeTestParam params(
+				QDir::currentPath().append( "/../../../src/data/real/tempietto_sub_tot.ply" ).toStdString(),
+				4, 20, 1024, 10ul * 1024ul * 1024ul
+			);
 			testSanity( params );
 		}
 	}

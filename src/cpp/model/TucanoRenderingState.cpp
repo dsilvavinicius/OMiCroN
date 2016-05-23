@@ -13,7 +13,6 @@ namespace model
 	m_nFrames( 0 )
 	{
 		updateViewProjection();
-		updateViewOrthoProjection();
 		m_frustum = new Frustum( m_viewProj );
 		
 		m_phong = new Phong();
@@ -41,7 +40,6 @@ namespace model
 	void TucanoRenderingState::update()
 	{
 		updateViewProjection();
-		updateViewOrthoProjection();
 		m_frustum->update( m_viewProj );
 	}
 	
@@ -126,20 +124,20 @@ namespace model
 		Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
 		Vector4f max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
 		
-// 		Vector2i viewportSize = m_camera->getViewportSize();
+		Vector2i viewportSize = m_camera->getViewportSize();
 		
-		Vector2f proj0 = projToWindowCoords( min, m_viewProj/*, viewportSize*/ );
-		Vector2f proj1 = projToWindowCoords( max, m_viewProj/*, viewportSize*/ );
+		Vector2i proj0 = projToWindowCoords( min, m_viewProj, viewportSize );
+		Vector2i proj1 = projToWindowCoords( max, m_viewProj, viewportSize );
 		
-		Vector2f diagonal0 = proj1 - proj0;
+		Vector2i diagonal0 = proj1 - proj0;
 		
 		Vec3 boxSize = rawMax - rawMin;
 		
-		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), m_viewProj/*,
-									viewportSize*/ );
-		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), m_viewProj/*, viewportSize*/ );
+		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), m_viewProj,
+									viewportSize );
+		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), m_viewProj, viewportSize );
 		
-		Vector2f diagonal1 = proj1 - proj0;
+		Vector2i diagonal1 = proj1 - proj0;
 		
 		Float maxDiagLength = glm::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
 		
@@ -159,35 +157,11 @@ namespace model
 		m_viewProj = proj * view;
 	}
 	
-	inline void TucanoRenderingState::updateViewOrthoProjection()
-	{
-		Vector2i viewport = m_camera->getViewportSize();
-		Float halfWidth = Float( viewport.x() ) * 0.5f;
-		Float halfHeight = Float( viewport.y() ) * 0.5f;
-		m_viewOrthoProj = Camera::createOrthographicMatrix( -halfWidth, halfWidth, -halfHeight, halfHeight,
-														m_camera->getNearPlane(), m_camera->getFarPlane() );
-		
-		// Debug
-// 		{
-// 			cout << "half width: " << halfWidth << " half height: " << halfHeight << " near: "
-// 				 << m_camera->getNearPlane() << " far: " << m_camera->getFarPlane() << endl << endl;
-// 				 
-// 			m_camera->setOrthographicMatrix( -halfWidth, halfWidth, -halfHeight, halfHeight,
-// 											m_camera->getNearPlane(), m_camera->getFarPlane() );
-// 		}
-		//
-		
-		m_viewOrthoProj *= m_camera->getViewMatrix().matrix();
-		//cout << "View ortho: " << endl <<  m_viewOrthoProj << endl << endl;
-	}
-	
-	inline Vector2f TucanoRenderingState
-	::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj/*, const Vector2i& viewportSize*/ ) const
+	inline Vector2i TucanoRenderingState
+	::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
 	{
 		Vector4f proj = viewProj * point;
-		Vector2f normalizedProj( proj.x() / proj.w(), proj.y() / proj.w() );
-		//Vector2f windowProj = ( normalizedProj + Vector2f( 1.f, 1.f ) ) * 0.5f;
-		//return Vector2f( windowProj.x() * viewportSize.x(), windowProj.y() * viewportSize.y() );
-		return normalizedProj;
+		return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
+						 ( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
 	}
 }

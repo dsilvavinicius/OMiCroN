@@ -6,7 +6,7 @@
 
 PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtFreecameraWidget( parent ),
-m_projThresh( 0.001f ),
+m_projThresh( 1.f ),
 m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
@@ -14,7 +14,7 @@ m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
-	camera->setSpeed( 1.f );
+	camera->setSpeed( 0.005f );
 }
 
 PointRendererWidget::~PointRendererWidget()
@@ -44,7 +44,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 	//openMesh( "test/data/extended_point_octree.ply" );
-	openMesh( "data/example/staypuff.ply" );
+	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply").toStdString() );
 	//openMesh( "../../src/data/real/tempietto_all.ply" );
 	//openMesh( "../../src/data/real/filippini1-4.ply" );
 	//openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
@@ -59,7 +59,7 @@ void PointRendererWidget::resizeGL( int width, int height )
 	// TODO: It seems that resing is resulting in memory leak ( probably in jump flooding code... ).
 	
 	camera->setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.1f, 500.0f );
+	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 500.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )
@@ -77,9 +77,9 @@ void PointRendererWidget::adaptRenderingThresh()
 	
 	if( abs( renderTimeDiff ) > m_renderingTimeTolerance )
 	{
-		m_projThresh += renderTimeDiff * 1.0e-6f;
-		m_projThresh = std::max( m_projThresh, 1.0e-15f );
-		m_projThresh = std::min( m_projThresh, 1.f );
+		m_projThresh += renderTimeDiff * 1.0e-1f;
+		m_projThresh = std::max( m_projThresh, 1.f );
+		m_projThresh = std::min( m_projThresh, 200.f );
 	}
 }
 
@@ -253,16 +253,25 @@ void PointRendererWidget::openMesh( const string& filename )
 	{
 		delete m_octree;
 	}
-	//m_octree = new Octree( 1, 10 );
 	
-	int nameBeginning = filename.find_last_of( "/" ) + 1;
-	int nameEnding = filename.find_last_of( "." );
-	string dbFilename = filename.substr( nameBeginning, nameEnding - nameBeginning ) + ".db";
-	cout << endl << "Database filename: " << dbFilename << endl << endl;
-// 	m_octree = new Octree( 1, 10, dbFilename );
-// 	m_octree->buildFromFile( filename, PointReader::SINGLE );
+	Octree::RuntimeSetup runtime( 4, 1024, 1024ul * 1024ul * 1024ul * 1ul, true );
 	
-	m_octree = new Octree( filename, 12, 1024, 1024ul * 1024ul * 1024ul * 1ul, 4, true );
+	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
+	{
+		ifstream file( filename );
+		Json::Value octreeJson;
+		file >> octreeJson;
+		
+		m_octree = new Octree( octreeJson, runtime );
+	}
+	else if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".ply" ) )
+	{
+		m_octree = new Octree( filename, 12, runtime );
+	}
+	else
+	{
+		throw runtime_error( "Supported file formats are .oct for already processed octrees or .ply for raw point clouds." );
+	}
 	
 	cout << "Octree built." << endl;
 	

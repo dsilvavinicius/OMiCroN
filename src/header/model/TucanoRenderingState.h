@@ -68,10 +68,8 @@ namespace model
 		/** Acquires current traball's view-projection matrix. */
 		void updateViewProjection();
 		
-		void updateViewOrthoProjection();
-		
 		/** Projects the point in world coordinates to window coordinates. */
-		Vector2f projToWindowCoords( const Vector4f& point, const Matrix4f& viewProjection/*, const Vector2i& viewportSize*/ )
+		Vector2i projToWindowCoords( const Vector4f& point, const Matrix4f& viewProjection, const Vector2i& viewportSize )
 		const;
 		
 		Frustum* m_frustum;
@@ -79,8 +77,6 @@ namespace model
 		Camera* m_lightCamera;
 		
 		Matrix4f m_viewProj;
-		/** Orthographic projection matrix used to calculate box projections. */
-		Matrix4f m_viewOrthoProj;
 		
 		Mesh* m_mesh;
 		Phong* m_phong;
