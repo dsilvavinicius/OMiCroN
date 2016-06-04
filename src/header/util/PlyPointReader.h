@@ -12,7 +12,7 @@ using namespace model;
 
 namespace util
 {
-	/** Reader for a point .ply file. To access the read points, use getPoints(). */
+	/** Reader for a point .ply file. The file is opened at constructor and closed at destructor. */
 	// TODO: Specialize this class so the precision is infered automatically by template parameters.
 	template< typename Point >
 	class PlyPointReader 
@@ -31,6 +31,8 @@ namespace util
 		 * @param onPointDone is a function that process a read point. */
 		PlyPointReader( const string& fileName );
 		
+		~PlyPointReader() { ply_close( m_ply ); }
+		
 		/** Copies the header of the file managed by this reader to other file. */
 		p_ply copyHeader( const string& outFilename );
 		
@@ -42,9 +44,6 @@ namespace util
 		long getNumPoints() { return m_numPoints; }
 	
 	protected:
-		void openPly();
-		void readHeader();
-		
 		void setupAdditionalCallbacks( p_ply ply, const Precision& precision,
 									   pair< Point*, function< void( const Point& ) >* >& cbNeededData );
 		
@@ -77,8 +76,19 @@ namespace util
 	{
 		cout << "Setup read of " << m_filename << endl << endl;
 		
-		openPly();
-		readHeader();
+		// Open ply.
+		m_ply = ply_open( m_filename.c_str(), NULL, 0, NULL );
+		if( !m_ply )
+		{
+			throw runtime_error( m_filename + ": cannot open .ply point file." );
+		}
+		
+		// Read header.
+		if( !ply_read_header( m_ply ) )
+		{
+			ply_close( m_ply );
+			throw runtime_error( "Cannot read point file header." );
+		}
 		
 		// Verify the properties of the vertex element in the .ply file in order to set the normal flag.
 		p_ply_element vertexElement = ply_get_next_element( m_ply, NULL );
@@ -95,36 +105,11 @@ namespace util
 			property = ply_get_next_property( vertexElement, property );
 		}
 		cout << endl;
-		
-		ply_close( m_ply );
-	}
-	
-	template< typename Point >
-	void PlyPointReader< Point >::openPly()
-	{
-		m_ply = ply_open( m_filename.c_str(), NULL, 0, NULL );
-		if( !m_ply )
-		{
-			throw runtime_error( m_filename + ": cannot open .ply point file." );
-		}
-	}
-	
-	template< typename Point >
-	void PlyPointReader< Point >::readHeader()
-	{
-		if( !ply_read_header( m_ply ) )
-		{
-			ply_close( m_ply );
-			throw runtime_error( "Cannot read point file header." );
-		}
 	}
 	
 	template< typename Point >
 	p_ply PlyPointReader< Point >::copyHeader( const string& outFilename )
 	{
-		openPly();
-		readHeader();
-		
 		p_ply out = ply_create( outFilename.c_str(), PLY_LITTLE_ENDIAN, NULL, 0, NULL );
 		if( !out )
 		{
@@ -158,17 +143,12 @@ namespace util
 			throw runtime_error( "Cannot write .ply header." );
 		}
 		
-		ply_close( m_ply );
-		
 		return out;
 	}
 	
 	template< typename Point >
 	void PlyPointReader< Point >::read( Precision precision, const function< void( const Point& ) >& onPointDone )
 	{
-		openPly();
-		readHeader();
-		
 		m_onPointDone = onPointDone;
 		
 		/* Save application locale */
@@ -184,8 +164,6 @@ namespace util
 			setlocale( LC_NUMERIC, old_locale );
 			throw runtime_error( "Problem while reading points." );
 		}
-		
-		ply_close( m_ply );
 		
 		/* Restore application locale when done */
 		setlocale( LC_NUMERIC, old_locale );
