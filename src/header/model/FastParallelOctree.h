@@ -168,9 +168,25 @@ namespace model
 		Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(),
 						 octreeJson[ "size" ][ "y" ].asFloat(),
 						 octreeJson[ "size" ][ "z" ].asFloat() );
-		m_dim = Dim( Vec3( 0.f, 0.f, 0.f ), Vec3( octreeSize ), octreeJson[ "depth" ].asUInt() );
+		m_dim = Dim( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
+		
+		// Debug
+		{
+			cout << "Dim from Json: " << m_dim << endl;
+		}
 		
 		m_front = new Front( octreeJson[ "database" ].asString(), m_dim, runtime.m_nThreads, runtime.m_memoryQuota );
+		
+		// Debug
+// 		{
+// 			PlyPointReader< Point > reader( octreeJson[ "points" ].asString() );
+// 			reader.read( PlyPointReader< Point >::SINGLE,
+// 				[ & ]( const Point& p )
+// 				{
+// 					cout << m_dim.calcMorton( p ).getPathToRoot( true ) << ": " << p.getPos() << endl << endl;
+// 				}
+// 			);
+// 		}
 		
 		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim, *m_front,
 												   runtime.m_loadPerThread, runtime.m_memoryQuota, runtime.m_nThreads );

@@ -88,6 +88,11 @@ namespace model
 		}
 		
 		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * scale, leafLvl );
+		
+		// Debug
+		{
+			cout << "Octree dim: " <<  m_comp << endl;
+		}
 	}
 	
 	template< typename M, typename P >
