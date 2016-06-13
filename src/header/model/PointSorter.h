@@ -5,6 +5,7 @@
 #include <fstream>
 #include "MortonCode.h"
 #include "PlyPointReader.h"
+#include "PlyPointWritter.h"
 #include "OctreeDimensions.h"
 #include "Profiler.h"
 
@@ -21,11 +22,12 @@ namespace model
 	{
 	public:
 		using Reader = PlyPointReader< P >;
+		using Writter = PlyPointWritter< P >;
 		using OctreeDim = model::OctreeDimensions< M, P >;
 		
-		PointSorter( const string& input, uint leafLvl );
+		PointSorter( const string& input, const string& outFilename, uint leafLvl );
 		~PointSorter();
-		Json::Value sort( const string& outFilename );
+		Json::Value sort();
 		OctreeDim& comp() { return m_comp; }
 		
 	private:
@@ -33,8 +35,8 @@ namespace model
 		void write( const Point& p );
 		void write( const ExtendedPoint& p );
 		
-		Reader* m_reader;
-		p_ply m_output;
+		Reader m_reader;
+		Writter m_writter;
 		
 		P* m_points;
 		long m_nPoints;
@@ -43,12 +45,13 @@ namespace model
 	};
 	
 	template< typename M, typename P >
-	PointSorter< M, P >::PointSorter( const string& input, uint leafLvl )
+	PointSorter< M, P >::PointSorter( const string& input, const string& outFilename, uint leafLvl )
+	: m_reader( input ),
+	m_writter( m_reader, outFilename )
 	{
 		cout << "Setup sorting of " << input << endl << endl;
 		
-		m_reader = new Reader( input );
-		m_nPoints = m_reader->getNumPoints();
+		m_nPoints = m_reader.getNumPoints();
 		m_points = ( P* ) malloc( sizeof( P ) * m_nPoints );
 		
 		Float negInf = -numeric_limits< Float >::max();
@@ -60,7 +63,7 @@ namespace model
 		auto start = Profiler::now();
 		
 		long i = 0;
-		m_reader->read( Reader::SINGLE,
+		m_reader.read( Reader::SINGLE,
 			[ & ]( const P& p )
 			{
 				m_points[ i++ ] = p;
@@ -99,12 +102,12 @@ namespace model
 	PointSorter< M, P >::~ PointSorter()
 	{
 		free( m_points );
-		delete m_reader;
 	}
 	
 	template< typename M, typename P >
-	Json::Value PointSorter< M, P >::sort( const string& outFilename )
+	Json::Value PointSorter< M, P >::sort()
 	{
+		const string& outFilename = m_writter.filename();
 		cout << "Start sorting to " << outFilename << endl << endl;
 		
 		// Write the octree file.
@@ -136,50 +139,14 @@ namespace model
 		start = Profiler::now();
 		
 		// Write output point file.
-		m_output = m_reader->copyHeader( outFilename );
 		for( long i = 0; i < m_nPoints; ++i )
 		{
-			write( m_points[ i ] );
+			m_writter.write( m_points[ i ] );
 		}
 		
 		cout << "Writing time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
-		ply_close( m_output );
-		
 		return octreeJson;
-	}
-	
-	template< typename M, typename P >
-	inline void PointSorter< M, P >::write( const Point& p )
-	{
-		const Vec3& pos = p.getPos();
-		ply_write( m_output, pos.x() );
-		ply_write( m_output, pos.y() );
-		ply_write( m_output, pos.z() );
-		
-		const Vec3& normal = p.getColor();
-		ply_write( m_output, normal.x() );
-		ply_write( m_output, normal.y() );
-		ply_write( m_output, normal.z() );
-	}
-	
-	template< typename M, typename P >
-	inline void PointSorter< M, P >::write( const ExtendedPoint& p )
-	{
-		const Vec3& pos = p.getPos();
-		ply_write( m_output, pos.x() );
-		ply_write( m_output, pos.y() );
-		ply_write( m_output, pos.z() );
-		
-		const Vec3& normal = p.getNormal();
-		ply_write( m_output, normal.x() );
-		ply_write( m_output, normal.y() );
-		ply_write( m_output, normal.z() );
-		
-		const Vec3& color = p.getColor();
-		ply_write( m_output, color.x() );
-		ply_write( m_output, color.y() );
-		ply_write( m_output, color.z() );
 	}
 }
 

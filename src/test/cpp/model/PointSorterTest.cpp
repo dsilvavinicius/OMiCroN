@@ -28,13 +28,13 @@ namespace model
 			Json::Value octreeJson;
 			
 			{
-				PointSorter sorter( inputFilename, lvl );
+				PointSorter sorter( inputFilename, outputFilename, lvl );
 				
 				cout << "Sorting." << endl << endl;
 				
 				auto start = Profiler::now();
 				
-				octreeJson = sorter.sort( outputFilename );
+				octreeJson = sorter.sort();
 				
 				cout << "Total sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}

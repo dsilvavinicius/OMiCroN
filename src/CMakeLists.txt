@@ -114,6 +114,7 @@ add_library (Point_Based_Renderer_Lib
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h						${CPP_DIR}/${UTIL_DIR}/Stream.cpp
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h				${CPP_DIR}/${UTIL_DIR}/PlyPointReader.cpp
+	${HEADER_DIR}/${UTIL_DIR}/PlyPointWritter.h				${CPP_DIR}/${UTIL_DIR}/PlyPointWritter.cpp
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h					${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Point.h						${CPP_DIR}/${MODEL_DIR}/Point.cpp
 	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h				${CPP_DIR}/${MODEL_DIR}/ExtendedPoint.cpp

@@ -110,8 +110,6 @@ namespace model
 		
 		omp_set_num_threads( 8 );
 		
-		PointSorter< Morton, Point > sorter( plyFilename, maxLvl );
-		
 		int slashIdx = plyFilename.find_last_of( "/" );
 		string sortedFilename = plyFilename;
 		if( slashIdx != plyFilename.npos )
@@ -123,7 +121,8 @@ namespace model
 			sortedFilename.insert( 0, "sorted_" );
 		}
 		
-		Json::Value octreeJson = sorter.sort( sortedFilename );
+		PointSorter< Morton, Point > sorter( plyFilename, sortedFilename, maxLvl );
+		Json::Value octreeJson = sorter.sort();
 		
 		buildFromSortedFile( octreeJson, runtime );
 	}

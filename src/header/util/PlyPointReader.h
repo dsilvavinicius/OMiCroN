@@ -12,6 +12,10 @@ using namespace model;
 
 namespace util
 {
+
+	template<class Point >
+	class PlyPointWritter;
+
 	/** Reader for a point .ply file. The file is opened at constructor and closed at destructor. */
 	// TODO: Specialize this class so the precision is infered automatically by template parameters.
 	template< typename Point >
@@ -25,6 +29,8 @@ namespace util
 			SINGLE = 0x1,
 			DOUBLE = 0x2
 		};
+		
+		friend PlyPointWritter< Point >;
 		
 		/** Checks if the file is valid, opens it, reads its header and discovers the number of points in it.
 		 * @throws runtime_error if the file or its header cannot be read.
@@ -105,45 +111,6 @@ namespace util
 			property = ply_get_next_property( vertexElement, property );
 		}
 		cout << endl;
-	}
-	
-	template< typename Point >
-	p_ply PlyPointReader< Point >::copyHeader( const string& outFilename )
-	{
-		p_ply out = ply_create( outFilename.c_str(), PLY_LITTLE_ENDIAN, NULL, 0, NULL );
-		if( !out )
-		{
-			throw runtime_error( outFilename + ": cannot open .ply file to write." );
-		}
-		p_ply_element element = NULL;
-		
-		/* iterate over all elements in input file */
-		while( ( element = ply_get_next_element( m_ply, element ) ) )
-		{
-			p_ply_property property = NULL;
-			long ninstances = 0;
-			const char *element_name;
-			ply_get_element_info( element, &element_name, &ninstances );
-			
-			/* add this element to output file */
-			if( !ply_add_element( out, element_name, ninstances ) )
-			{
-				throw runtime_error( "Cannot copy element to .ply header." );
-			}
-			
-			/* iterate over all properties of current element */
-			while( ( property = ply_get_next_property( element, property ) ) )
-			{
-				copyProperty( property, out );
-			}
-		}
-		
-		if( !ply_write_header( out ) )
-		{
-			throw runtime_error( "Cannot write .ply header." );
-		}
-		
-		return out;
 	}
 	
 	template< typename Point >
