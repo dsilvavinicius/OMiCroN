@@ -194,11 +194,11 @@ namespace model
 	{
 		PointVector points;
 		PlyPointReader *reader = new PlyPointReader( plyFileName );
-		reader->read( precision,
-					  [ & ]( const Point& point )
-						{
-							points.push_back( makeManaged< Point >( point ) );
-						}
+		reader->read(
+			[ & ]( const Point& point )
+			{
+				points.push_back( makeManaged< Point >( point ) );
+			}, precision
 		);
 		
 		cout << "After reading points" << endl << endl;

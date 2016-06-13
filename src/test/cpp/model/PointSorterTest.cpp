@@ -54,7 +54,7 @@ namespace model
 			out_sortedPoints = vector< Point >( reader.getNumPoints() );
 			auto iter = out_sortedPoints.begin();
 			
-			reader.read( PlyPointReader< P >::SINGLE,
+			reader.read(
 				[ & ]( const P& p )
 				{
 					*iter++ = p;

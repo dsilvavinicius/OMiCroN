@@ -25,6 +25,7 @@ add_executable (Tests
 	
 	${CPP_DIR}/${MODEL_DIR}/ArrayTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/PointSorterTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/OocPointSorterTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/TbbAllocatorTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/Ken12MemoryManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MemoryManagerTest.cpp

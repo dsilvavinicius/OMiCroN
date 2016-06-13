@@ -217,18 +217,18 @@ namespace model
 		
 		cout << "===== Starting first .ply file reading for octree boundaries calculation =====" << endl << endl;
 		
-		reader->read( precision,
-					  [ & ]( const Point& point )
-						{
-							const Vec3& pos = point.getPos();
-							
-							for( int i = 0; i < 3; ++i )
-							{
-								minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
-								maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
-							}
-						}
-				);
+		reader->read( 
+			[ & ]( const Point& point )
+			{
+				const Vec3& pos = point.getPos();
+				
+				for( int i = 0; i < 3; ++i )
+				{
+					minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
+					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+				}
+			}, precision
+		);
 		
 		// Save boundary info.
 		*ParentOctree::m_origin = minCoords;
@@ -241,11 +241,11 @@ namespace model
 		
 		cout << "===== Starting second .ply file reading for octree point insertion =====" << endl << endl;
 		
-		reader->read( precision,
+		reader->read(
 			[ & ]( const Point& point )
 			{
 				insertPointInLeaf( makeManaged< Point >( point ) );
-			}
+			}, precision
 		);
 		
 		// From now on the reader is not necessary. Delete it in order to save memory.

@@ -45,7 +45,7 @@ namespace util
 		/** Reads a .ply file. . 
 		 * @param precision specifies the desired precision for read points. It must agree with the template
 		 * parameters of this method. */
-		void read( Precision precision, const function< void( const Point& ) >& onPointDone );
+		void read( const function< void( const Point& ) >& onPointDone, Precision precision = SINGLE );
 	
 		long getNumPoints() { return m_numPoints; }
 	
@@ -114,7 +114,7 @@ namespace util
 	}
 	
 	template< typename Point >
-	void PlyPointReader< Point >::read( Precision precision, const function< void( const Point& ) >& onPointDone )
+	void PlyPointReader< Point >::read( const function< void( const Point& ) >& onPointDone, Precision precision )
 	{
 		m_onPointDone = onPointDone;
 		

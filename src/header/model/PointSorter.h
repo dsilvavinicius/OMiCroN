@@ -63,7 +63,7 @@ namespace model
 		auto start = Profiler::now();
 		
 		long i = 0;
-		m_reader.read( Reader::SINGLE,
+		m_reader.read(
 			[ & ]( const P& p )
 			{
 				m_points[ i++ ] = p;

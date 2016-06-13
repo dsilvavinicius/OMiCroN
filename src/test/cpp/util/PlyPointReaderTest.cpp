@@ -25,7 +25,7 @@ namespace util
 			
 			PointVector points;
 			SimplePointReader reader( "data/test_normals.ply" );
-			reader.read( SimplePointReader::SINGLE,
+			reader.read(
 				[ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); }
 			);
 			
@@ -52,7 +52,7 @@ namespace util
 			
 			PointVector points;
 			ExtendedPointReader reader( "data/test_extended_points.ply" );
-			reader.read( ExtendedPointReader::SINGLE,
+			reader.read( 
 				[ & ]( const Point& point ){ points.push_back( makeManaged< Point >( point ) ); }
 			);
 			

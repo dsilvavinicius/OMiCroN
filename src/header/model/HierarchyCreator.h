@@ -252,7 +252,7 @@ namespace model
 				
 				Morton currentParent;
 				Reader reader( m_plyFilename );
-				reader.read( Reader::SINGLE,
+				reader.read(
 					[ & ]( const Point& p )
 					{
 						Morton code = leafLvlDimCpy.calcMorton( p );
