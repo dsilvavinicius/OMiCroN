@@ -55,8 +55,8 @@ namespace model
 					  const ulong memoryQuota )
 	: m_plyGroupFile( plyGroupFile ),
 	m_plyOutputFolder( plyOutputFolder ),
-	m_chunksPerMerge( totalSize / memoryQuota ),
-	m_pointsPerChunk( ( memoryQuota / m_chunksPerMerge ) / sizeof( Point ) )
+	m_chunksPerMerge( ( float ) totalSize / ( float ) memoryQuota ),
+	m_pointsPerChunk( ( ( float ) memoryQuota / ( float ) m_chunksPerMerge ) / ( float ) sizeof( Point ) )
 	{
 		if( m_plyGroupFile.find( ".gp" ) == m_plyGroupFile.npos )
 		{

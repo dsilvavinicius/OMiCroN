@@ -97,20 +97,32 @@ namespace util
 		}
 		
 		// Verify the properties of the vertex element in the .ply file in order to set the normal flag.
-		p_ply_element vertexElement = ply_get_next_element( m_ply, NULL );
-		p_ply_property  property = ply_get_next_property( vertexElement, NULL );
+		p_ply_element element = ply_get_next_element( m_ply, NULL );
+		ply_get_element_info( element, NULL, &m_numPoints );
 		
-		ply_get_element_info( vertexElement, NULL, &m_numPoints );
-		cout << "Points in file: " << m_numPoints << endl;
+		cout << "Vertices in file: " << m_numPoints << endl << endl << "=== Elements in header ===" << endl << endl;
 		
-		while( property != NULL )
+		while( element != NULL )
 		{
-			char* name;
-			ply_get_property_info( property, const_cast< const char** >( &name ), NULL, NULL, NULL );
-			cout << "Prop name: " << name << endl;
-			property = ply_get_next_property( vertexElement, property );
+			p_ply_property  property = ply_get_next_property( element, NULL );
+			long numElements = 0;
+			const char* elementName;
+			ply_get_element_info( element, &elementName, &numElements );
+			
+			cout << elementName << ": " << numElements << " instances" << endl;
+			
+			while( property != NULL )
+			{
+				const char* name;
+				ply_get_property_info( property, &name, NULL, NULL, NULL );
+				cout << "Prop name: " << name << endl;
+				property = ply_get_next_property( element, property );
+			}
+			
+			cout << endl;
+			
+			element = ply_get_next_element( m_ply, element );
 		}
-		cout << endl;
 	}
 	
 	template< typename Point >
