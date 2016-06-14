@@ -89,7 +89,7 @@ namespace model
 					rowh = 0;
 				}
 				roww += g->bitmap.width + 1;
-				rowh = std::max( rowh, g->bitmap.rows );
+				rowh = std::max( rowh, ( unsigned int ) g->bitmap.rows );
 			}
 
 			w = std::max( w, roww );
@@ -144,7 +144,7 @@ namespace model
 				c[i].tx = ox / ( float ) w;
 				c[i].ty = oy / ( float ) h;
 
-				rowh = std::max( rowh, g->bitmap.rows );
+				rowh = std::max( rowh, ( unsigned int ) g->bitmap.rows );
 				ox += g->bitmap.width + 1;
 			}
 

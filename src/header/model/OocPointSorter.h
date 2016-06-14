@@ -41,35 +41,6 @@ namespace model
 		Json::Value sort();
 		
 	private:
-		// Min heap entry.
-		typedef struct MergeEntry
-		{
-			using Iter = typename PointVector::iterator;
-			
-			MergeEntry( PointVector* points, const Iter iter )
-			: m_points( points ),
-			m_iter( iter )
-			{}
-			
-			const PointVector* m_points;
-			const Iter m_iter;
-		} MergeEntry;
-		
-		// Min heap comparator.
-		typedef struct Comparator
-		{
-			Comparator( const OctreeDim& dim )
-			: m_dim( dim ) {}
-			
-			bool operator()( const MergeEntry& entry0, const MergeEntry& entry1 )
-			{
-				return m_dim( *entry1.m_iter, *entry0.m_iter );
-			}
-			
-			const OctreeDim& m_dim;
-		} Comparator;
-		
-		
 		OctreeDim m_comp;
 		string m_plyGroupFile;
 		string m_plyOutputFolder;
@@ -127,6 +98,37 @@ namespace model
 	Json::Value OocPointSorter< Morton,Point >::sort()
 	{
 		using PointVector = vector< Point, TbbAllocator< Point > >;
+		
+		// Min heap entry.
+		typedef struct MergeEntry
+		{
+			using Iter = typename PointVector::iterator;
+			
+			MergeEntry( PointVector* points, const Iter iter )
+			: m_points( points ),
+			m_iter( iter )
+			{}
+			
+			PointVector* m_points;
+			Iter m_iter;
+		} MergeEntry;
+		
+		// Min heap comparator.
+		typedef struct Comparator
+		{
+			Comparator( const OctreeDim& dim )
+			: m_dim( dim ) {}
+			
+			bool operator()( const MergeEntry& entry0, const MergeEntry& entry1 ) const
+			{
+				return m_dim( *entry1.m_iter, *entry0.m_iter );
+			}
+			
+			const OctreeDim& m_dim;
+		} Comparator;
+		
+		using HeapContainer = vector< MergeEntry, TbbAllocator< MergeEntry > >;
+		using MinHeap = priority_queue< MergeEntry, HeapContainer, Comparator >;
 		
 		string sortedFilename = m_plyOutputFolder + "/sorted.ply";
 		
@@ -202,8 +204,9 @@ namespace model
 				readPoints = 0;
 			}
 			
-			priority_queue< MergeEntry, vector< MergeEntry, TbbAllocator< MergeEntry > >, Comparator >
-				minHeap( Comparator( m_comp) );
+			Comparator comparator( m_comp );
+			HeapContainer heapContainer;
+			MinHeap minHeap( comparator, heapContainer );
 			
 			for( PointVector& points : chunkVectors )
 			{

@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include <iostream>
+#include "MortonCode.h"
 #include "OocPointSorter.h"
 
 using namespace std;
