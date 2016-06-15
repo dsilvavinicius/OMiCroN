@@ -20,8 +20,8 @@ namespace model
 		{
 			using Sorter = OocPointSorter< ShallowMortonCode, Point >;
 			
-			Sorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.gp",
-						   "/media/vinicius/Expansion Drive3/Datasets/David/test", 10, 72 * 1024 * 1024, 20 * 1024 * 1024 );
+			Sorter sorter( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/test/data/OocPointSorterTest.gp",
+						   "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/test/data", 10, 1554, 512 );
 			
 			sorter.sort();
 		}

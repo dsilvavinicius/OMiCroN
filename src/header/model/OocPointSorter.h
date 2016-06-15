@@ -100,7 +100,7 @@ namespace model
 		// Debug
 		{
 			ulong pointsPerQuota = ceil( float( memoryQuota ) / float( sizeof( Point ) ) );
-			cout << "Quota: " << memoryQuota << "Points per quota: " << pointsPerQuota << " Chunks: " << m_chunksPerMerge
+			cout << "Quota: " << memoryQuota << " Points per quota: " << pointsPerQuota << " Chunks: " << m_chunksPerMerge
 				 << " Points per chunk: " << m_pointsPerChunk << endl << endl;
 		}
 		
@@ -138,9 +138,14 @@ namespace model
 		}
 		
 		Vec3 octreeSize = maxCoords - origin;
-		float m_scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
+		m_scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
 		
 		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * m_scale, lvl );
+		
+		// Debug
+		{
+			cout << "Scale: " << m_scale << endl << "Octree dim: " << m_comp << endl;
+		}
 		
 		Profiler::elapsedTime( start, "Boundaries computation" );
 	}
@@ -169,14 +174,19 @@ namespace model
 				
 				Reader reader( plyFilename );
 				reader.read(
-					[ & ]( const Point& p )
+					[ & ]( const Point& inputP )
 					{
-						// Send to chunk.
-						chunkPoints[ readPoints ] = p;
-						
-						// Scale the point.
-						Vec3& pos = chunkPoints[ readPoints++ ].getPos();
+						// Scale and send point to chunk.
+						Point p = inputP;
+						Vec3& pos = p.getPos();
 						pos = ( pos - m_comp.m_origin ) * m_scale;
+						
+						chunkPoints[ readPoints++ ] = p;
+						
+						// Debug
+						{
+							cout << "Scaled: " << m_comp.calcMorton( p ).getPathToRoot( true ) << p << endl;
+						}
 						
 						if( readPoints == m_pointsPerChunk )
 						{
@@ -238,7 +248,14 @@ namespace model
 			
 			while( !minHeap.empty() )
 			{
-				const MergeEntry entry = minHeap.top();
+				MergeEntry entry = minHeap.top();
+				
+				// Debug
+				{
+					cout << "top: " << m_comp.calcMorton( *entry.m_iter ).getPathToRoot( true ) << *entry.m_iter << endl;
+				}
+				
+				minHeap.pop();
 				
 				resultWritter.write( *entry.m_iter );
 				
@@ -266,16 +283,16 @@ namespace model
 						}
 						
 						*entry.m_points = std::move( chunkPoints );
+						entry.m_iter = entry.m_points->begin();
 						
-						minHeap.push( MergeEntry( entry.m_points, entry.m_points->begin() ) );
+						minHeap.push( entry );
 					}
 				}
 				else
 				{
-					minHeap.push( MergeEntry ( entry.m_points, nextIter ) );
+					entry.m_iter = nextIter;
+					minHeap.push( entry );
 				}
-				
-				minHeap.pop();
 			}
 		}
 		
