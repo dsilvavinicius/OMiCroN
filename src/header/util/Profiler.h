@@ -25,7 +25,7 @@ namespace util
 			auto timestamp = now();
 			
 			std::time_t now = chrono::high_resolution_clock::to_time_t( timestamp );
-			log << taskName << " started at: " << ctime( &now ) << endl << endl;
+			log << taskName << " started at: " << ctime( &now ) << endl;
 			
 			return timestamp;
 		}

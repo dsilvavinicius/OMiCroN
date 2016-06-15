@@ -6,6 +6,7 @@
 #include <queue>
 #include "PlyPointReader.h"
 #include "PlyPointWritter.h"
+#include <Profiler.h>
 #include "OctreeDimensions.h"
 
 using namespace std;
@@ -41,62 +42,6 @@ namespace model
 		Json::Value sort();
 		
 	private:
-		OctreeDim m_comp;
-		string m_plyGroupFile;
-		string m_plyOutputFolder;
-		ulong m_pointsPerChunk;
-		int m_chunksPerMerge;
-		float m_scale;
-	};
-	
-	template< typename Morton, typename Point >
-	OocPointSorter< Morton,Point >
-	::OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, int lvl, const ulong totalSize,
-					  const ulong memoryQuota )
-	: m_plyGroupFile( plyGroupFile ),
-	m_plyOutputFolder( plyOutputFolder ),
-	m_chunksPerMerge( ( float ) totalSize / ( float ) memoryQuota ),
-	m_pointsPerChunk( ( ( float ) memoryQuota / ( float ) m_chunksPerMerge ) / ( float ) sizeof( Point ) )
-	{
-		if( m_plyGroupFile.find( ".gp" ) == m_plyGroupFile.npos )
-		{
-			throw runtime_error( "Expected a group file, found: " + m_plyGroupFile );
-		}
-		
-		Float negInf = -numeric_limits< Float >::max();
-		Float posInf = numeric_limits< Float >::max();
-		Vec3 origin = Vec3( posInf, posInf, posInf );
-		Vec3 maxCoords( negInf, negInf, negInf );
-		
-		ifstream groupFile( m_plyGroupFile );
-		
-		while( !groupFile.eof() )
-		{
-			string plyFilename;
-			getline( groupFile, plyFilename );
-			Reader reader( plyFilename );
-			reader.read(
-				[ & ]( const Point& p )
-				{
-					const Vec3& pos = p.getPos();
-					for( int i = 0; i < 3; ++i )
-					{
-						origin[ i ] = glm::min( origin[ i ], pos[ i ] );
-						maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
-					}
-				}
-			);
-		}
-		
-		Vec3 octreeSize = maxCoords - origin;
-		float m_scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
-		
-		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * m_scale, lvl );
-	}
-	
-	template< typename Morton, typename Point >
-	Json::Value OocPointSorter< Morton,Point >::sort()
-	{
 		using PointVector = vector< Point, TbbAllocator< Point > >;
 		
 		// Min heap entry.
@@ -130,7 +75,84 @@ namespace model
 		using HeapContainer = vector< MergeEntry, TbbAllocator< MergeEntry > >;
 		using MinHeap = priority_queue< MergeEntry, HeapContainer, Comparator >;
 		
+		void writeChunk( PointVector& chunk, ulong& readPoints, int& nChunks, const Reader& reader ) const;
+		
+		OctreeDim m_comp;
+		string m_plyGroupFile;
+		string m_plyOutputFolder;
+		ulong m_pointsPerChunk;
+		ulong m_totalPoints;
+		int m_chunksPerMerge;
+		float m_scale;
+	};
+	
+	template< typename Morton, typename Point >
+	OocPointSorter< Morton,Point >
+	::OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, int lvl, const ulong totalSize,
+					  const ulong memoryQuota )
+	: m_plyGroupFile( plyGroupFile ),
+	m_plyOutputFolder( plyOutputFolder ),
+	m_chunksPerMerge( ceil( float( totalSize ) / float( memoryQuota ) ) ),
+	m_totalPoints( 0ul )
+	{
+		m_pointsPerChunk = ceil( ( float( memoryQuota ) / m_chunksPerMerge ) / float( sizeof( Point ) ) );
+		
+		// Debug
+		{
+			ulong pointsPerQuota = ceil( float( memoryQuota ) / float( sizeof( Point ) ) );
+			cout << "Quota: " << memoryQuota << "Points per quota: " << pointsPerQuota << " Chunks: " << m_chunksPerMerge
+				 << " Points per chunk: " << m_pointsPerChunk << endl << endl;
+		}
+		
+		if( m_plyGroupFile.find( ".gp" ) == m_plyGroupFile.npos )
+		{
+			throw runtime_error( "Expected a group file, found: " + m_plyGroupFile );
+		}
+		
+		auto start = Profiler::now( "Boundaries computation" );
+		
+		Float negInf = -numeric_limits< Float >::max();
+		Float posInf = numeric_limits< Float >::max();
+		Vec3 origin = Vec3( posInf, posInf, posInf );
+		Vec3 maxCoords( negInf, negInf, negInf );
+		
+		ifstream groupFile( m_plyGroupFile );
+		
+		while( !groupFile.eof() )
+		{
+			string plyFilename;
+			getline( groupFile, plyFilename );
+			Reader reader( plyFilename );
+			reader.read(
+				[ & ]( const Point& p )
+				{
+					++m_totalPoints;
+					const Vec3& pos = p.getPos();
+					for( int i = 0; i < 3; ++i )
+					{
+						origin[ i ] = glm::min( origin[ i ], pos[ i ] );
+						maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+					}
+				}
+			);
+		}
+		
+		Vec3 octreeSize = maxCoords - origin;
+		float m_scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
+		
+		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * m_scale, lvl );
+		
+		Profiler::elapsedTime( start, "Boundaries computation" );
+	}
+	
+	template< typename Morton, typename Point >
+	Json::Value OocPointSorter< Morton,Point >::sort()
+	{
+		omp_set_num_threads( 8 );
+		
 		string sortedFilename = m_plyOutputFolder + "/sorted.ply";
+		
+		auto start = Profiler::now( "Chunk sorting" );
 		
 		int nChunks = 0;
 		{
@@ -144,6 +166,7 @@ namespace model
 			{
 				string plyFilename;
 				getline( groupFile, plyFilename );
+				
 				Reader reader( plyFilename );
 				reader.read(
 					[ & ]( const Point& p )
@@ -157,24 +180,22 @@ namespace model
 						
 						if( readPoints == m_pointsPerChunk )
 						{
-							// Sort chunk.
-							std::sort( chunkPoints.begin(), chunkPoints.end(), m_comp );
-							
-							// Write to temporary file.
-							stringstream ss; ss << m_plyOutputFolder << "/" << nChunks++ << ".ply";
-							Writter writter( reader, ss.str() );
-							
-							for( const Point& chunkPoint : chunkPoints )
-							{
-								writter.write( chunkPoint );
-							}
-							
-							readPoints = 0;
+							writeChunk( chunkPoints, readPoints, nChunks, reader );
 						}
 					}
 				);
 			}
+			
+			{
+				// Write leftovers in the last chunk.
+				stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk0.ply";
+				Reader reader( ss.str() );
+				writeChunk( chunkPoints, readPoints, nChunks, reader );
+			}
 		}
+		
+		Profiler::elapsedTime( start, "Chunk sorting" );
+		start = Profiler::now( "Chunk merging" );
 		
 		{
 			// K-way merge chunks
@@ -187,7 +208,7 @@ namespace model
 			{
 				ulong readPoints = 0;
 				chunkVectors[ readChunks ].reserve( m_pointsPerChunk );
-				stringstream ss; ss << m_plyOutputFolder << "/" << readChunks << ".ply";
+				stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << readChunks << ".ply";
 				Reader reader( ss.str() );
 				reader.read(
 					[ & ]( const Point& p )
@@ -213,7 +234,7 @@ namespace model
 				minHeap.push( MergeEntry( &points, points.end() ) );
 			}
 			
-			Writter resultWritter( Reader( m_plyOutputFolder + "/0.ply" ), sortedFilename );
+			Writter resultWritter( Reader( m_plyOutputFolder + "/sorted_chunk0.ply" ), sortedFilename, m_totalPoints );
 			
 			while( !minHeap.empty() )
 			{
@@ -230,7 +251,7 @@ namespace model
 					{
 						ulong readPoints = 0;
 						PointVector chunkPoints( m_pointsPerChunk );
-						stringstream ss; ss << m_plyOutputFolder << "/" << readChunks++ << ".ply";
+						stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << readChunks++ << ".ply";
 						Reader reader( ss.str() );
 						reader.read(
 							[ & ]( const Point& p )
@@ -258,6 +279,8 @@ namespace model
 			}
 		}
 		
+		Profiler::elapsedTime( start, "Chunk merging" );
+		
 		string dbFilename = sortedFilename.substr( 0, sortedFilename.find_last_of( '.' ) );
 		string octreeFilename = dbFilename;
 		dbFilename.append( ".db" );
@@ -275,6 +298,29 @@ namespace model
 		octreeFile << octreeJson << endl;
 		
 		return octreeJson;
+	}
+	
+	template< typename Morton, typename Point >
+	void OocPointSorter< Morton, Point >
+	::writeChunk( PointVector& chunk, ulong& readPoints, int& nChunks, const Reader& reader ) const 
+	{
+		// Sort chunk.
+		std::sort( chunk.begin(), chunk.end(), m_comp );
+		
+		// Write to temporary file.
+		stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << nChunks++ << ".ply";
+		
+		cout << "Writting chunk with size " << readPoints << " at " << ss.str() << endl << endl;
+		
+		Writter writter( reader, ss.str(), readPoints );
+		
+		auto chunkIter = chunk.begin();
+		for( int i = 0; i < readPoints; ++i )
+		{
+			writter.write( *chunkIter++ );
+		}
+		
+		readPoints = 0;
 	}
 }
 

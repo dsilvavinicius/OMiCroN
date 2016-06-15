@@ -47,7 +47,7 @@ namespace model
 	template< typename M, typename P >
 	PointSorter< M, P >::PointSorter( const string& input, const string& outFilename, uint leafLvl )
 	: m_reader( input ),
-	m_writter( m_reader, outFilename )
+	m_writter( m_reader, outFilename, m_reader.getNumPoints() )
 	{
 		cout << "Setup sorting of " << input << endl << endl;
 		

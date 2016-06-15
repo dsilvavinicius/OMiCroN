@@ -11,7 +11,7 @@ namespace util
 		using Reader = PlyPointReader< Point >;
 		
 	public:
-		PlyPointWritter( const Reader& reader, const string& filename );
+		PlyPointWritter( const Reader& reader, const string& filename, ulong nPoints );
 		~PlyPointWritter() { ply_close( m_ply ); }
 		void write( const Point& p );
 		const string& filename() { return m_filename; }
@@ -24,7 +24,7 @@ namespace util
 	};
 	
 	template< typename Point >
-	inline PlyPointWritter< Point >::PlyPointWritter( const Reader& reader, const string& filename )
+	inline PlyPointWritter< Point >::PlyPointWritter( const Reader& reader, const string& filename, ulong nPoints )
 	: m_filename( filename ),
 	m_ply( ply_create( m_filename.c_str(), PLY_LITTLE_ENDIAN, NULL, 0, NULL ) )
 	{
@@ -32,27 +32,21 @@ namespace util
 		{
 			throw runtime_error( m_filename + ": cannot open .ply file to write." );
 		}
-		p_ply_element element = NULL;
+		p_ply_element element = ply_get_next_element( reader.m_ply, NULL );
+		p_ply_property property = NULL;
+		const char *element_name;
+		ply_get_element_info( element, &element_name, NULL );
 		
-		/* iterate over all elements in input file */
-		while( ( element = ply_get_next_element( reader.m_ply, element ) ) )
+		/* add this element to output file */
+		if( !ply_add_element( m_ply, element_name, nPoints ) )
 		{
-			p_ply_property property = NULL;
-			long ninstances = 0;
-			const char *element_name;
-			ply_get_element_info( element, &element_name, &ninstances );
-			
-			/* add this element to output file */
-			if( !ply_add_element( m_ply, element_name, ninstances ) )
-			{
-				throw runtime_error( "Cannot copy element to .ply header." );
-			}
-			
-			/* iterate over all properties of current element */
-			while( ( property = ply_get_next_property( element, property ) ) )
-			{
-				copyProperty( property );
-			}
+			throw runtime_error( "Cannot copy element to .ply header." );
+		}
+		
+		/* iterate over all properties of current element */
+		while( ( property = ply_get_next_property( element, property ) ) )
+		{
+			copyProperty( property );
 		}
 		
 		if( !ply_write_header( m_ply ) )
