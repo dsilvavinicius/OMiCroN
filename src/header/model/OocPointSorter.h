@@ -41,8 +41,11 @@ namespace model
 		 @returns the json written to the resulting octree file. */
 		Json::Value sort();
 		
+		const OctreeDim& comp() { return m_comp; }
+		
 	private:
 		using PointVector = vector< Point, TbbAllocator< Point > >;
+		using ChunkVector = vector< PointVector, TbbAllocator< PointVector > >;
 		
 		// Min heap entry.
 		typedef struct MergeEntry
@@ -75,11 +78,15 @@ namespace model
 		using HeapContainer = vector< MergeEntry, TbbAllocator< MergeEntry > >;
 		using MinHeap = priority_queue< MergeEntry, HeapContainer, Comparator >;
 		
-		void writeChunk( PointVector& chunk, ulong& readPoints, int& nChunks, const Reader& reader ) const;
+		void writeChunk( PointVector& chunk, typename PointVector::iterator& currentIter, ulong& readPoints, int& nChunks,
+						 const Reader& reader ) const;
+
+		PointVector readChunk( const int chunkIdx ) const;
 		
 		OctreeDim m_comp;
 		string m_plyGroupFile;
 		string m_plyOutputFolder;
+		Vec3 m_origin;
 		ulong m_pointsPerChunk;
 		ulong m_totalPoints;
 		int m_chunksPerMerge;
@@ -113,7 +120,7 @@ namespace model
 		
 		Float negInf = -numeric_limits< Float >::max();
 		Float posInf = numeric_limits< Float >::max();
-		Vec3 origin = Vec3( posInf, posInf, posInf );
+		m_origin = Vec3( posInf, posInf, posInf );
 		Vec3 maxCoords( negInf, negInf, negInf );
 		
 		ifstream groupFile( m_plyGroupFile );
@@ -130,14 +137,14 @@ namespace model
 					const Vec3& pos = p.getPos();
 					for( int i = 0; i < 3; ++i )
 					{
-						origin[ i ] = glm::min( origin[ i ], pos[ i ] );
+						m_origin[ i ] = glm::min( m_origin[ i ], pos[ i ] );
 						maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
 					}
 				}
 			);
 		}
 		
-		Vec3 octreeSize = maxCoords - origin;
+		Vec3 octreeSize = maxCoords - m_origin;
 		m_scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
 		
 		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * m_scale, lvl );
@@ -165,6 +172,7 @@ namespace model
 			ifstream groupFile( m_plyGroupFile );
 			
 			PointVector chunkPoints( m_pointsPerChunk );
+			auto iter = chunkPoints.begin();
 			
 			// Read, scale and sort chunks.
 			while( !groupFile.eof() )
@@ -174,23 +182,17 @@ namespace model
 				
 				Reader reader( plyFilename );
 				reader.read(
-					[ & ]( const Point& inputP )
+					[ & ]( const Point& p )
 					{
-						// Scale and send point to chunk.
-						Point p = inputP;
-						Vec3& pos = p.getPos();
-						pos = ( pos - m_comp.m_origin ) * m_scale;
-						
-						chunkPoints[ readPoints++ ] = p;
-						
-						// Debug
-						{
-							cout << "Scaled: " << m_comp.calcMorton( p ).getPathToRoot( true ) << p << endl;
-						}
+						// Send to chunk and scale.
+						*iter = p;
+						Vec3& pos = iter++->getPos();
+						pos = ( pos - m_origin ) * m_scale;
+						++readPoints;
 						
 						if( readPoints == m_pointsPerChunk )
 						{
-							writeChunk( chunkPoints, readPoints, nChunks, reader );
+							writeChunk( chunkPoints, iter, readPoints, nChunks, reader );
 						}
 					}
 				);
@@ -200,7 +202,8 @@ namespace model
 				// Write leftovers in the last chunk.
 				stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk0.ply";
 				Reader reader( ss.str() );
-				writeChunk( chunkPoints, readPoints, nChunks, reader );
+				auto iter = chunkPoints.begin();
+				writeChunk( chunkPoints, iter, readPoints, nChunks, reader );
 			}
 		}
 		
@@ -209,39 +212,17 @@ namespace model
 		
 		{
 			// K-way merge chunks
-			vector< PointVector, TbbAllocator< PointVector > > chunkVectors( m_chunksPerMerge );
-			
+			ChunkVector chunkVector( m_chunksPerMerge );
 			int readChunks = 0;
-			
-			// Init the k chunks to start merging.
-			for( readChunks = 0; readChunks < m_chunksPerMerge; ++readChunks )
-			{
-				ulong readPoints = 0;
-				chunkVectors[ readChunks ].reserve( m_pointsPerChunk );
-				stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << readChunks << ".ply";
-				Reader reader( ss.str() );
-				reader.read(
-					[ & ]( const Point& p )
-					{
-						chunkVectors[ readChunks ][ readPoints++ ] = p;
-					}
-				);
-				
-				if( readPoints < m_pointsPerChunk )
-				{
-					chunkVectors[ readChunks ].resize( readPoints );
-				}
-				
-				readPoints = 0;
-			}
-			
 			Comparator comparator( m_comp );
 			HeapContainer heapContainer;
 			MinHeap minHeap( comparator, heapContainer );
 			
-			for( PointVector& points : chunkVectors )
+			// Init the k chunks to start merging.
+			for( PointVector& chunk : chunkVector )
 			{
-				minHeap.push( MergeEntry( &points, points.end() ) );
+				chunk = readChunk( readChunks++ );
+				minHeap.push( MergeEntry( &chunk, chunk.begin() ) );
 			}
 			
 			Writter resultWritter( Reader( m_plyOutputFolder + "/sorted_chunk0.ply" ), sortedFilename, m_totalPoints );
@@ -266,23 +247,7 @@ namespace model
 					// Get next available chunk.
 					if( readChunks < nChunks )
 					{
-						ulong readPoints = 0;
-						PointVector chunkPoints( m_pointsPerChunk );
-						stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << readChunks++ << ".ply";
-						Reader reader( ss.str() );
-						reader.read(
-							[ & ]( const Point& p )
-							{
-								chunkPoints[ readPoints++ ] = p;
-							}
-						);
-						
-						if( readPoints < m_pointsPerChunk )
-						{
-							chunkPoints.resize( readPoints );
-						}
-						
-						*entry.m_points = std::move( chunkPoints );
+						*entry.m_points = readChunk( readChunks++ );
 						entry.m_iter = entry.m_points->begin();
 						
 						minHeap.push( entry );
@@ -319,7 +284,8 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	void OocPointSorter< Morton, Point >
-	::writeChunk( PointVector& chunk, ulong& readPoints, int& nChunks, const Reader& reader ) const 
+	::writeChunk( PointVector& chunk, typename PointVector::iterator& currentIter, ulong& readPoints, int& nChunks,
+				  const Reader& reader ) const 
 	{
 		// Sort chunk.
 		std::sort( chunk.begin(), chunk.end(), m_comp );
@@ -337,7 +303,34 @@ namespace model
 			writter.write( *chunkIter++ );
 		}
 		
+		currentIter = chunk.begin();
 		readPoints = 0;
+	}
+	
+	template< typename Morton, typename Point >
+	typename OocPointSorter< Morton, Point >::PointVector OocPointSorter< Morton, Point >
+	::readChunk( const int chunkIdx ) const 
+	{
+		ulong readPoints = 0;
+		PointVector chunk( m_pointsPerChunk );
+		auto iter = chunk.begin();
+		
+		stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << chunkIdx << ".ply";
+		Reader reader( ss.str() );
+		reader.read(
+			[ & ]( const Point& p )
+			{
+				*iter++ = p;
+				++readPoints;
+			}
+		);
+		
+		if( readPoints < m_pointsPerChunk )
+		{
+			chunk.resize( readPoints );
+		}
+		
+		return chunk;
 	}
 }
 

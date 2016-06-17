@@ -94,7 +94,7 @@ namespace model
 		
 		// Debug
 		{
-			cout << "Octree dim: " <<  m_comp << endl;
+			cout << "Scale: " << scale << endl << "Octree dim: " <<  m_comp << endl;
 		}
 	}
 	
