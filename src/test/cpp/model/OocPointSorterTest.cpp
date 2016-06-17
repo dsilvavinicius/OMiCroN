@@ -33,8 +33,7 @@ namespace model
 			using Reader = PlyPointReader< P >;
 			using OctreeDim = typename Sorter::OctreeDim;
 			
-			Sorter sorter( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/test/data/OocPointSorterTest.gp",
-						   "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/test/data", 10, 1554, 512 );
+			Sorter sorter( "data/OocPointSorterTest.gp", "data", 10, 1554, 512 );
 			
 			sorter.sort();
 			

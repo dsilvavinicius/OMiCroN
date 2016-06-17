@@ -52,13 +52,15 @@ namespace model
 		{
 			using Iter = typename PointVector::iterator;
 			
-			MergeEntry( PointVector* points, const Iter iter )
+			MergeEntry( PointVector* points, const Iter iter, const int chunkIdx )
 			: m_points( points ),
-			m_iter( iter )
+			m_iter( iter ),
+			m_chunkIdx( chunkIdx )
 			{}
 			
 			PointVector* m_points;
 			Iter m_iter;
+			int m_chunkIdx;
 		} MergeEntry;
 		
 		// Min heap comparator.
@@ -102,15 +104,6 @@ namespace model
 	m_chunksPerMerge( ceil( float( totalSize ) / float( memoryQuota ) ) ),
 	m_totalPoints( 0ul )
 	{
-		m_pointsPerChunk = ceil( ( float( memoryQuota ) / m_chunksPerMerge ) / float( sizeof( Point ) ) );
-		
-		// Debug
-		{
-			ulong pointsPerQuota = ceil( float( memoryQuota ) / float( sizeof( Point ) ) );
-			cout << "Quota: " << memoryQuota << " Points per quota: " << pointsPerQuota << " Chunks: " << m_chunksPerMerge
-				 << " Points per chunk: " << m_pointsPerChunk << endl << endl;
-		}
-		
 		if( m_plyGroupFile.find( ".gp" ) == m_plyGroupFile.npos )
 		{
 			throw runtime_error( "Expected a group file, found: " + m_plyGroupFile );
@@ -142,6 +135,14 @@ namespace model
 					}
 				}
 			);
+		}
+		
+		m_pointsPerChunk = float( m_totalPoints ) / float( m_chunksPerMerge * m_chunksPerMerge );
+		
+		// Debug
+		{
+			cout << "Quota: " << memoryQuota << " Chunks: " << m_chunksPerMerge * m_chunksPerMerge
+				 << " Points per chunk: " << m_pointsPerChunk << endl << endl;
 		}
 		
 		Vec3 octreeSize = maxCoords - m_origin;
@@ -198,6 +199,7 @@ namespace model
 				);
 			}
 			
+			if( readPoints > 0 )
 			{
 				// Write leftovers in the last chunk.
 				stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk0.ply";
@@ -213,16 +215,17 @@ namespace model
 		{
 			// K-way merge chunks
 			ChunkVector chunkVector( m_chunksPerMerge );
-			int readChunks = 0;
 			Comparator comparator( m_comp );
 			HeapContainer heapContainer;
 			MinHeap minHeap( comparator, heapContainer );
+			int chunkGroupIdx = 0;
 			
 			// Init the k chunks to start merging.
 			for( PointVector& chunk : chunkVector )
 			{
-				chunk = readChunk( readChunks++ );
-				minHeap.push( MergeEntry( &chunk, chunk.begin() ) );
+				int chunkIdx = chunkGroupIdx++ * m_chunksPerMerge;
+				chunk = readChunk( chunkIdx );
+				minHeap.push( MergeEntry( &chunk, chunk.begin(), chunkIdx ) );
 			}
 			
 			Writter resultWritter( Reader( m_plyOutputFolder + "/sorted_chunk0.ply" ), sortedFilename, m_totalPoints );
@@ -245,11 +248,12 @@ namespace model
 				if( nextIter == entry.m_points->end() )
 				{
 					// Get next available chunk.
-					if( readChunks < nChunks )
+					int currentChunkGroupIdx = float( ++entry.m_chunkIdx ) / float( m_chunksPerMerge );
+					int nextChunkGroupIdx = float( entry.m_chunkIdx ) / float( m_chunksPerMerge );
+					if( currentChunkGroupIdx == nextChunkGroupIdx && entry.m_chunkIdx < nChunks )
 					{
-						*entry.m_points = readChunk( readChunks++ );
+						*entry.m_points = readChunk( entry.m_chunkIdx );
 						entry.m_iter = entry.m_points->begin();
-						
 						minHeap.push( entry );
 					}
 				}
