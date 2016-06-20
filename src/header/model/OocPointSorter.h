@@ -38,8 +38,13 @@ namespace model
 						const ulong memoryQuota );
 		
 		/** Sorts the points.
-		 @returns the json written to the resulting octree file. */
-		Json::Value sort();
+		 * @param eraseChunkFiles is true if the temporary chunk files are expected to be deleted after sorting, false
+		 * otherwise.
+		 * @returns the json written to the resulting octree file. */
+		Json::Value sort( bool eraseChunkFilesFlag = true );
+		
+		/** Erases the chunk files. */
+		void eraseChunkFiles();
 		
 		const OctreeDim& comp() { return m_comp; }
 		
@@ -80,8 +85,8 @@ namespace model
 		using HeapContainer = vector< MergeEntry, TbbAllocator< MergeEntry > >;
 		using MinHeap = priority_queue< MergeEntry, HeapContainer, Comparator >;
 		
-		void writeChunk( PointVector& chunk, typename PointVector::iterator& currentIter, ulong& readPoints, int& nChunks,
-						 const Reader& reader ) const;
+		void writeChunkGroup( PointVector& chunk, typename PointVector::iterator& currentIter, const ulong& readPoints,
+							  int& nChunks, const Reader& reader ) const;
 
 		PointVector readChunk( const int chunkIdx ) const;
 		
@@ -89,9 +94,13 @@ namespace model
 		string m_plyGroupFile;
 		string m_plyOutputFolder;
 		Vec3 m_origin;
-		ulong m_pointsPerChunk;
+		
 		ulong m_totalPoints;
-		int m_chunksPerMerge;
+		ulong m_pointsPerChunkGroup;
+		ulong m_pointsPerChunk;
+		int m_chunksPerGroup;
+		int m_groups;
+		
 		float m_scale;
 	};
 	
@@ -101,7 +110,6 @@ namespace model
 					  const ulong memoryQuota )
 	: m_plyGroupFile( plyGroupFile ),
 	m_plyOutputFolder( plyOutputFolder ),
-	m_chunksPerMerge( ceil( float( totalSize ) / float( memoryQuota ) ) ),
 	m_totalPoints( 0ul )
 	{
 		if( m_plyGroupFile.find( ".gp" ) == m_plyGroupFile.npos )
@@ -137,11 +145,14 @@ namespace model
 			);
 		}
 		
-		m_pointsPerChunk = float( m_totalPoints ) / float( m_chunksPerMerge * m_chunksPerMerge );
+		m_groups =  ceil( float( totalSize ) / float( memoryQuota ) );
+		m_pointsPerChunkGroup = ceil( float( m_totalPoints ) / float( m_groups ) );
+		m_pointsPerChunk = ceil( float( m_pointsPerChunkGroup ) / float( m_groups ) );
+		m_chunksPerGroup = ceil( float( m_pointsPerChunkGroup ) / float( m_pointsPerChunk ) );
 		
 		// Debug
 		{
-			cout << "Quota: " << memoryQuota << " Chunks: " << m_chunksPerMerge * m_chunksPerMerge
+			cout << "Quota: " << memoryQuota << " Groups: " << m_groups << " Chunks per group: " << m_chunksPerGroup
 				 << " Points per chunk: " << m_pointsPerChunk << endl << endl;
 		}
 		
@@ -159,11 +170,15 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	Json::Value OocPointSorter< Morton,Point >::sort()
+	Json::Value OocPointSorter< Morton,Point >::sort( bool eraseChunkFilesFlag )
 	{
 		omp_set_num_threads( 8 );
 		
-		string sortedFilename = m_plyOutputFolder + "/sorted.ply";
+		int nameBeginIdx = ( m_plyGroupFile.find_last_of( '/' ) == m_plyGroupFile.npos ) ? 0
+							: m_plyGroupFile.find_last_of( '/' ) + 1;
+		int nameEndIdx = m_plyGroupFile.find_last_of( '.' );
+		string datasetName = m_plyGroupFile.substr( nameBeginIdx, nameEndIdx - nameBeginIdx );
+		string sortedFilename = m_plyOutputFolder + "/" + datasetName + ".ply";
 		
 		auto start = Profiler::now( "Chunk sorting" );
 		
@@ -172,7 +187,7 @@ namespace model
 			ulong readPoints = 0;
 			ifstream groupFile( m_plyGroupFile );
 			
-			PointVector chunkPoints( m_pointsPerChunk );
+			PointVector chunkPoints( m_pointsPerChunkGroup );
 			auto iter = chunkPoints.begin();
 			
 			// Read, scale and sort chunks.
@@ -191,22 +206,24 @@ namespace model
 						pos = ( pos - m_origin ) * m_scale;
 						++readPoints;
 						
-						if( readPoints == m_pointsPerChunk )
+						ulong remainder = readPoints % m_pointsPerChunkGroup;
+						
+						if( remainder == 0 || readPoints == m_totalPoints )
 						{
-							writeChunk( chunkPoints, iter, readPoints, nChunks, reader );
+							if( remainder > 0 )
+							{
+								chunkPoints.resize( remainder );
+							}
+							writeChunkGroup( chunkPoints, iter, readPoints, nChunks, reader );
 						}
 					}
 				);
 			}
-			
-			if( readPoints > 0 )
-			{
-				// Write leftovers in the last chunk.
-				stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk0.ply";
-				Reader reader( ss.str() );
-				auto iter = chunkPoints.begin();
-				writeChunk( chunkPoints, iter, readPoints, nChunks, reader );
-			}
+		}
+		
+		// Debug
+		{
+			cout << "Total chunks: " << nChunks << endl << endl;
 		}
 		
 		Profiler::elapsedTime( start, "Chunk sorting" );
@@ -214,7 +231,7 @@ namespace model
 		
 		{
 			// K-way merge chunks
-			ChunkVector chunkVector( m_chunksPerMerge );
+			ChunkVector chunkVector( m_groups );
 			Comparator comparator( m_comp );
 			HeapContainer heapContainer;
 			MinHeap minHeap( comparator, heapContainer );
@@ -223,9 +240,13 @@ namespace model
 			// Init the k chunks to start merging.
 			for( PointVector& chunk : chunkVector )
 			{
-				int chunkIdx = chunkGroupIdx++ * m_chunksPerMerge;
-				chunk = readChunk( chunkIdx );
-				minHeap.push( MergeEntry( &chunk, chunk.begin(), chunkIdx ) );
+				int chunkIdx = chunkGroupIdx++ * m_chunksPerGroup;
+				
+				if( chunkIdx < nChunks )
+				{
+					chunk = readChunk( chunkIdx );
+					minHeap.push( MergeEntry( &chunk, chunk.begin(), chunkIdx ) );
+				}
 			}
 			
 			Writter resultWritter( Reader( m_plyOutputFolder + "/sorted_chunk0.ply" ), sortedFilename, m_totalPoints );
@@ -233,12 +254,6 @@ namespace model
 			while( !minHeap.empty() )
 			{
 				MergeEntry entry = minHeap.top();
-				
-				// Debug
-				{
-					cout << "top: " << m_comp.calcMorton( *entry.m_iter ).getPathToRoot( true ) << *entry.m_iter << endl;
-				}
-				
 				minHeap.pop();
 				
 				resultWritter.write( *entry.m_iter );
@@ -248,8 +263,9 @@ namespace model
 				if( nextIter == entry.m_points->end() )
 				{
 					// Get next available chunk.
-					int currentChunkGroupIdx = float( ++entry.m_chunkIdx ) / float( m_chunksPerMerge );
-					int nextChunkGroupIdx = float( entry.m_chunkIdx ) / float( m_chunksPerMerge );
+					int currentChunkGroupIdx = float( entry.m_chunkIdx++ ) / float( m_chunksPerGroup );
+					int nextChunkGroupIdx = float( entry.m_chunkIdx ) / float( m_chunksPerGroup );
+					
 					if( currentChunkGroupIdx == nextChunkGroupIdx && entry.m_chunkIdx < nChunks )
 					{
 						*entry.m_points = readChunk( entry.m_chunkIdx );
@@ -263,6 +279,11 @@ namespace model
 					minHeap.push( entry );
 				}
 			}
+		}
+		
+		if( eraseChunkFilesFlag )
+		{
+			eraseChunkFiles();
 		}
 		
 		Profiler::elapsedTime( start, "Chunk merging" );
@@ -287,32 +308,56 @@ namespace model
 	}
 	
 	template< typename Morton, typename Point >
-	void OocPointSorter< Morton, Point >
-	::writeChunk( PointVector& chunk, typename PointVector::iterator& currentIter, ulong& readPoints, int& nChunks,
-				  const Reader& reader ) const 
+	void OocPointSorter< Morton, Point >::eraseChunkFiles()
+	{
+		int nChunks = m_groups * m_chunksPerGroup;
+		
+		// Erase temporary chunk files.
+		for( int i = 0; i < nChunks; ++i )
+		{
+			stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << i << ".ply";
+			remove( ss.str().c_str() );
+		}
+	}
+	
+	template< typename Morton, typename Point >
+	inline void OocPointSorter< Morton, Point >
+	::writeChunkGroup( PointVector& chunk, typename PointVector::iterator& currentIter, const ulong& readPoints,
+					   int& nChunks, const Reader& reader ) const 
 	{
 		// Sort chunk.
 		std::sort( chunk.begin(), chunk.end(), m_comp );
 		
-		// Write to temporary file.
-		stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << nChunks++ << ".ply";
-		
-		cout << "Writting chunk with size " << readPoints << " at " << ss.str() << endl << endl;
-		
-		Writter writter( reader, ss.str(), readPoints );
-		
 		auto chunkIter = chunk.begin();
-		for( int i = 0; i < readPoints; ++i )
+		
+		ulong remainder = readPoints % m_pointsPerChunkGroup;
+		ulong pointsLeftInGroup = ( remainder == 0 ) ? m_pointsPerChunkGroup : remainder;
+		
+		cout << "Writting chunk group with size " << pointsLeftInGroup << endl << endl;
+		
+		// Write to chunk files.
+		while( pointsLeftInGroup > 0 )
 		{
-			writter.write( *chunkIter++ );
+			ulong chunkSize = ( pointsLeftInGroup < m_pointsPerChunk ) ? pointsLeftInGroup : m_pointsPerChunk;
+			pointsLeftInGroup -= chunkSize;
+			
+			stringstream ss; ss << m_plyOutputFolder << "/sorted_chunk" << nChunks++ << ".ply";
+			cout << "Writting chunk with size " << chunkSize << " at " << ss.str() << endl << endl;
+			Writter writter( reader, ss.str(), chunkSize );
+			
+			for( int i = 0; i < chunkSize; ++i )
+			{
+				writter.write( *chunkIter++ );
+			}
 		}
 		
+		assert( pointsLeftInGroup == 0 && "Not all points where wrote or memory was overrun." );
+		
 		currentIter = chunk.begin();
-		readPoints = 0;
 	}
 	
 	template< typename Morton, typename Point >
-	typename OocPointSorter< Morton, Point >::PointVector OocPointSorter< Morton, Point >
+	inline typename OocPointSorter< Morton, Point >::PointVector OocPointSorter< Morton, Point >
 	::readChunk( const int chunkIdx ) const 
 	{
 		ulong readPoints = 0;

@@ -35,9 +35,39 @@ namespace model
 			
 			Sorter sorter( "data/OocPointSorterTest.gp", "data", 10, 1554, 512 );
 			
-			sorter.sort();
+			sorter.sort( false );
 			
 			const OctreeDim& comp = sorter.comp();
+			
+			for( int chunkGroup = 0; chunkGroup < 3; ++chunkGroup )
+			{
+				vector< P > points;
+				for( int i = 0; i < 3; ++i )
+				{
+					int chunkIdx = chunkGroup * 3 + i;
+					if( chunkIdx < 11 )
+					{
+						stringstream ss; ss << "data/sorted_chunk" << chunkIdx << ".ply";
+						Reader reader( ss.str() );
+						reader.read(
+							[ & ]( const P& p )
+							{
+								points.push_back( p );
+							}
+						);
+					}
+				}
+				
+				P prev = *points.begin();
+				
+				for( auto it = next( points.begin() ); it != points.end(); it++ )
+				{
+					ASSERT_LT( comp.calcMorton( prev ), comp.calcMorton( *it ) );
+					prev = *it;
+				}
+			}
+			
+			sorter.eraseChunkFiles();
 			
 			vector< P > expectedPoints;
 			
@@ -55,7 +85,7 @@ namespace model
 			
 			ASSERT_EQ( 33, expectedPoints.size() );
 			
-			Reader reader( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/test/data/sorted.ply" );
+			Reader reader( "data/OocPointSorterTest.ply" );
 			vector< P > sortedPoints( reader.getNumPoints() );
 			auto iter = sortedPoints.begin();
 			
@@ -72,12 +102,6 @@ namespace model
 			{
 				M morton0 = comp.calcMorton( sortedPoints[ i ] );
 				M morton1 = comp.calcMorton( sortedPoints[ i + 1 ] );
-				
-				// Debug
-				{
-					cout << morton0.getPathToRoot( true ) << ": " << sortedPoints[ i ].getPos() << endl << "Expected: "
-						 << expectedPoints[ i ].getPos() << endl << endl;
-				}
 				
 				ASSERT_TRUE( morton0 < morton1 || morton0 == morton1 );
 				ASSERT_TRUE( expectedPoints[ i ].equal( sortedPoints[ i ], 1.e-6 ) );
