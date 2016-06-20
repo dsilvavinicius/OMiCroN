@@ -109,5 +109,86 @@ namespace model
 			
 			ASSERT_TRUE( expectedPoints[ expectedPoints.size() - 1 ].equal( sortedPoints[ sortedPoints.size() - 1 ], 1.e-6 ) );
 		}
+		
+		TEST_F( OocPointSorterTest, HeavierDataset )
+		{
+			using P = Point;
+			using M = ShallowMortonCode;
+			using Sorter = OocPointSorter< ShallowMortonCode, Point >;
+			using Reader = PlyPointReader< P >;
+			using OctreeDim = typename Sorter::OctreeDim;
+			
+			Sorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.gp",
+						   "/media/vinicius/Expansion Drive3/Datasets/David/test", 10, 73ul * 1024ul * 1024ul,
+				  20ul * 1024 * 1024 );
+			
+			sorter.sort( true );
+			
+			const OctreeDim& comp = sorter.comp();
+			
+			Reader reader( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.ply" );
+			vector< P > sortedPoints( reader.getNumPoints() );
+			auto iter = sortedPoints.begin();
+			
+			reader.read(
+				[ & ]( const P& p )
+				{
+					*iter++ = p;
+				}
+			);
+			
+			ASSERT_EQ( sortedPoints.size(), 1325568ul );
+			
+			for( int i = 0; i < sortedPoints.size() - 1; ++i )
+			{
+				M morton0 = comp.calcMorton( sortedPoints[ i ] );
+				M morton1 = comp.calcMorton( sortedPoints[ i + 1 ] );
+				
+				ASSERT_TRUE( morton0 < morton1 || morton0 == morton1 );
+			}
+		}
+		
+		TEST_F( OocPointSorterTest, David )
+		{
+			using P = Point;
+			using M = ShallowMortonCode;
+			using Sorter = OocPointSorter< ShallowMortonCode, Point >;
+			using Reader = PlyPointReader< P >;
+			using OctreeDim = typename Sorter::OctreeDim;
+			
+			Sorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesNormals/David.gp",
+						   "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls", 13,
+				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul );
+			
+			sorter.sort( true );
+			
+			const OctreeDim& comp = sorter.comp();
+			
+			Reader reader( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted/David.ply" );
+			
+			P prev;
+			
+			bool init = false;
+			
+			reader.read(
+				[ & ]( const P& p )
+				{
+					if( init )
+					{
+						M morton0 = comp.calcMorton( prev );
+						M morton1 = comp.calcMorton( p );
+						
+						ASSERT_TRUE( morton0 < morton1 || morton0 == morton1 );
+						
+						prev = p;
+					}
+					else
+					{
+						prev = p;
+						init = true;
+					}
+				}
+			);
+		}
 	}
 }
