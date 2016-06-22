@@ -10,7 +10,7 @@
 #include "Profiler.h"
 #include <StackTrace.h>
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -76,18 +76,18 @@ namespace model
 				m_morton = other.m_morton;
 				
 				#ifdef DEBUG
-				if( other.m_octreeNode == nullptr )
-				{
-					HierarchyCreationLog::flush();
-					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
-					throw logic_error( ss.str() );
-				}
-				if( other.m_morton.getBits() == 0x0 )
-				{
-					HierarchyCreationLog::flush();
-					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
-					throw logic_error( ss.str() );
-				}
+// 				if( other.m_octreeNode == nullptr )
+// 				{
+// 					HierarchyCreationLog::flush();
+// 					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
+// 					throw logic_error( ss.str() );
+// 				}
+// 				if( other.m_morton.getBits() == 0x0 )
+// 				{
+// 					HierarchyCreationLog::flush();
+// 					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
+// 					throw logic_error( ss.str() );
+// 				}
 				
 // 				stringstream ss; ss << this << endl;
 // 				HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -199,54 +199,54 @@ namespace model
 		void setupNodeRenderingNoFront( FrontListIter& iter, const Node& node, Renderer& renderer ) const;
 		
 		#ifdef DEBUG
-// 			void assertFrontIterator( const FrontListIter& iter )
-// 			{
-// 				if( iter != m_front.begin() )
-// 				{
-// 					Morton& currMorton = iter->m_morton;
-// 					Morton& prevMorton = prev( iter )->m_morton;
-// 					
-// 					uint currLvl = currMorton.getLevel();
-// 					uint prevLvl = prevMorton.getLevel();
-// 					
-// 					bool isPlaceholder = ( iter->m_octreeNode == &m_placeholder );
-// 					stringstream ss;
-// 					if( currLvl < prevLvl )
-// 					{
-// 						Morton prevAncestorMorton = prevMorton.getAncestorInLvl( currLvl );
-// 						if( currMorton <= prevAncestorMorton )
-// 						{
-// 							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
-// 								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
-// 								<< isPlaceholder << endl;
-// 							HierarchyCreationLog::logAndFail( ss.str() );
-// 						}
-// 					}
-// 					else if( currLvl > prevLvl )
-// 					{
-// 						Morton currAncestorMorton = currMorton.getAncestorInLvl( prevLvl );
-// 						if( currAncestorMorton <= prevMorton  )
-// 						{
-// 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-// 								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << " is placeholder? "
-// 								<< isPlaceholder << endl;
-// 							HierarchyCreationLog::logAndFail( ss.str() );
-// 						}
-// 					}
-// 					else
-// 					{
-// 						if( currMorton <= prevMorton )
-// 						{
-// 							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-// 								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
-// 								<< isPlaceholder << endl;
-// 							HierarchyCreationLog::logAndFail( ss.str() );
-// 						}
-// 					}
-// 				}
-// 				assertNode( *iter->m_octreeNode, iter->m_morton );
-// 			}
-// 		
+			void assertFrontIterator( const FrontListIter& iter )
+			{
+				if( iter != m_front.begin() )
+				{
+					Morton& currMorton = iter->m_morton;
+					Morton& prevMorton = prev( iter )->m_morton;
+					
+					uint currLvl = currMorton.getLevel();
+					uint prevLvl = prevMorton.getLevel();
+					
+					bool isPlaceholder = ( iter->m_octreeNode == &m_placeholder );
+					stringstream ss;
+					if( currLvl < prevLvl )
+					{
+						Morton prevAncestorMorton = prevMorton.getAncestorInLvl( currLvl );
+						if( currMorton <= prevAncestorMorton )
+						{
+							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
+								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
+								<< isPlaceholder << endl;
+							HierarchyCreationLog::logAndFail( ss.str() );
+						}
+					}
+					else if( currLvl > prevLvl )
+					{
+						Morton currAncestorMorton = currMorton.getAncestorInLvl( prevLvl );
+						if( currAncestorMorton <= prevMorton  )
+						{
+							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
+								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << " is placeholder? "
+								<< isPlaceholder << endl;
+							HierarchyCreationLog::logAndFail( ss.str() );
+						}
+					}
+					else
+					{
+						if( currMorton <= prevMorton )
+						{
+							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
+								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
+								<< isPlaceholder << endl;
+							HierarchyCreationLog::logAndFail( ss.str() );
+						}
+					}
+				}
+				assertNode( *iter->m_octreeNode, iter->m_morton );
+			}
+		
 			void assertNode( const Node& node, const Morton& morton )
 			{
 				uint nodeLvl = morton.getLevel();
@@ -397,7 +397,7 @@ namespace model
 // 			stringstream ss; ss << "Buffer end insertion: " << morton.getPathToRoot( true ) << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			
-			assertNode( node, morton );
+// 			assertNode( node, morton );
 		}
 		#endif
 		
@@ -449,19 +449,23 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
 	{
-		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
-		
 		#ifdef DEBUG
 		{
-// 			stringstream ss; ss << "Placeholder insertion: " << morton.getPathToRoot( true ) << endl;
-// 			if( !m_currentIterPlaceholders[ threadIdx ].empty()
-// 				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
-// 			{
-// 				ss << "Placeholder insertion compromises ordering" << endl << endl;
-// 				HierarchyCreationLog::logAndFail( ss.str() );
-// 			}
+			stringstream ss; ss << "Placeholder insertion t " << threadIdx << " ( thread id " << this_thread::get_id()
+			<< " ): " << morton.getPathToRoot( true ) << endl;
+			
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+			
+			if( !m_currentIterPlaceholders[ threadIdx ].empty()
+				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
+			{
+				ss << "Placeholder insertion compromises ordering" << endl << endl;
+				HierarchyCreationLog::logAndFail( ss.str() );
+			}
 		}
 		#endif
+		
+		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
 		
 		FrontList& list = m_currentIterPlaceholders[ threadIdx ];
 		list.push_back( FrontNode( m_placeholder, morton ) );

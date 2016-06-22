@@ -13,7 +13,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -263,6 +263,16 @@ namespace model
 							if( points.size() > 0 )
 							{
 								nodeList.push_back( Node( std::move( points ), true ) );
+								
+								#ifdef DEBUG
+// 								if( nodeList.size() > 1 )
+// 								{
+// 									assert( leafLvlDimCpy.calcMorton( nodeList.back() ) >
+// 											leafLvlDimCpy.calcMorton( prev( prev( nodeList.end() ) ) ) &&
+// 											"Node order compromised while reading." );
+// 								}
+								#endif
+								
 								points = PointVector();
 								
 								if( nodeList.size() == m_expectedLoadPerThread )
@@ -352,10 +362,10 @@ namespace model
 				while( workListSize > 0 && !increaseLvlFlag )
 				{
 					#ifdef DEBUG
-// 					{
-// 						stringstream ss; ss << "iter start" << endl << endl;
-// 						HierarchyCreationLog::logDebugMsg( ss.str() );
-// 					}
+					{
+						stringstream ss; ss << "iter start" << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
 					#endif
 					
 					// Multipass restriction: the level's last sibling group cannot be processed until the last pass,
@@ -428,11 +438,11 @@ namespace model
 							int nSiblings = 1;
 							
 							#ifdef DEBUG
-// 							{
-// 								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
-// 									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true );
-// 								HierarchyCreationLog::logDebugMsg( ss.str() );
-// 							}
+							{
+								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
+									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true ) << endl;
+								HierarchyCreationLog::logDebugMsg( ss.str() );
+							}
 							#endif
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -442,11 +452,12 @@ namespace model
 								input.pop_front();
 								
 								#ifdef DEBUG
-// 								{
-// 									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
-// 										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true );
-// 									HierarchyCreationLog::logDebugMsg( ss.str() );
-// 								}
+								{
+									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
+										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true )
+										<< endl;
+									HierarchyCreationLog::logDebugMsg( ss.str() );
+								}
 								#endif
 							}
 							
@@ -456,10 +467,16 @@ namespace model
 								&& isLastSiblingGroup )
 							{
 								#ifdef DEBUG
-// 								{
-// 									lock_guard< mutex > lock( m_logMutex );
-// 									m_log << "Pushing sib group back." << endl << endl;
-// 								}
+								{
+// 									stringstream ss;
+// 									ss << "Pushing sib group back." << endl;
+// 									for( int j = 0; j < nSiblings; ++j )
+// 									{
+// 										ss << m_octreeDim.calcMorton( siblings[ j ] ).getPathToRoot( true ) << endl;
+// 									}
+// 									HierarchyCreationLog::logDebugMsg( ss.str() );
+// 									HierarchyCreationLog::flush();
+								}
 								#endif
 								
 								// Send this last sibling group to the lvl WorkList again.
@@ -485,8 +502,9 @@ namespace model
 								{
 									// Debug
 // 									{
-// 										lock_guard< mutex > lock( m_logMutex );
-// 										cout << "T " << omp_get_thread_num() << " collapse." << endl << endl;
+// 										stringstream ss; ss << "T " << omp_get_thread_num() << " collapse." << endl << endl;
+// 										HierarchyCreationLog::logDebugMsg( ss.str() );
+// 										
 // 									}
 									
 									output.push_back(
@@ -498,8 +516,8 @@ namespace model
 								{
 									// Debug
 // 									{
-// 										lock_guard< mutex > lock( m_logMutex );
-// 										cout << "T " << omp_get_thread_num() << " LOD." << endl << endl;
+// 										stringstream ss; ss << "T " << omp_get_thread_num() << " LOD." << endl << endl;
+// 										HierarchyCreationLog::logDebugMsg( ss.str() );
 // 									}
 									
 									// LOD
@@ -1201,6 +1219,13 @@ namespace model
 		Morton childMorton = m_octreeDim.calcMorton( child );
 		if( childMorton.getLevel() == m_leafLvlDim.m_nodeLvl )
 		{
+			#ifdef DEBUG
+			{
+				stringstream ss; ss << "T " << threadIdx << " node from single" << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			m_front.insertPlaceholder( childMorton, threadIdx );
 		}
 		
@@ -1263,6 +1288,13 @@ namespace model
 				
 				if( frontPlaceholdersOn )
 				{
+					#ifdef DEBUG
+					{
+						stringstream ss; ss << "T " << threadIdx << " inner" << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
+					#endif
+					
 					m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
 				}
 				

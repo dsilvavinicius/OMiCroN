@@ -43,11 +43,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
-	//openMesh( "test/data/extended_point_octree.ply" );
-	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply").toStdString() );
-	//openMesh( "../../src/data/real/tempietto_all.ply" );
-	//openMesh( "../../src/data/real/filippini1-4.ply" );
-	//openMesh( "../../src/data/real/tempietto_sub_tot.ply" );
+// 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply").toStdString() );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
