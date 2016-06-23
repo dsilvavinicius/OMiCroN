@@ -14,7 +14,12 @@ namespace util
 	namespace test
 	{
         class PlyPointReaderTest : public ::testing::Test
-		{};
+		{
+			void SetUp()
+			{
+				setlocale( LC_NUMERIC, "C" );
+			}
+		};
 
 		TEST_F( PlyPointReaderTest, ReadNormals )
 		{

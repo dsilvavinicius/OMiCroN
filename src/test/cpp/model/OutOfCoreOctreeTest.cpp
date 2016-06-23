@@ -10,7 +10,12 @@ namespace model
 	{
         class OutOfCoreOctreeTest
         : public ::testing::Test
-		{};
+		{
+			void SetUp()
+			{
+				setlocale( LC_NUMERIC, "C" );
+			}
+		};
 		
 		// Checks if OutOfCoreOctree creation is correct.
 		template< typename OutOfCoreOctree >

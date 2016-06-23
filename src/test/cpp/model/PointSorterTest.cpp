@@ -14,7 +14,10 @@ namespace model
         class PointSorterTest : public ::testing::Test
 		{
 		protected:
-			void SetUp() {}
+			void SetUp()
+			{
+				setlocale( LC_NUMERIC, "C" );
+			}
 		};
 
 		void test( const string& inputFilename, const string& outputFilename, const int lvl,

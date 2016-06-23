@@ -22,6 +22,8 @@ int main(int argc, char **argv)
 	
 	return app.exec();*/
 	
+	setlocale( LC_NUMERIC, "C" );
+	
 	// Use this code to run with PointRendererWidget ( Legacy Qt and Tucano )
 	QApplication app( argc, argv );
 

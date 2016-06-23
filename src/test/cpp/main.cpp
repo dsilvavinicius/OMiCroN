@@ -12,6 +12,8 @@ FastParallelOctreeTestParam g_fastParallelStressParam;
 
 int main(int argc, char** argv)
 {
+	setlocale( LC_NUMERIC, "C" );
+	
 	string exeFilename = string( argv[ 0 ] );
 	QDir::setCurrent( exeFilename.substr( 0, exeFilename.find_last_of( "/" ) ).c_str() );
 	

@@ -131,21 +131,21 @@ namespace util
 		m_onPointDone = onPointDone;
 		
 		/* Save application locale */
-		const char *old_locale = setlocale( LC_NUMERIC, NULL );
+// 		const char *old_locale = setlocale( LC_NUMERIC, NULL );
 		/* Change to PLY standard */
-		setlocale( LC_NUMERIC, "C" );
+// 		setlocale( LC_NUMERIC, "C" );
 		
 		int resultCode = doRead( m_ply, precision );
 		
 		if( !resultCode )
 		{
 			ply_close( m_ply );
-			setlocale( LC_NUMERIC, old_locale );
+// 			setlocale( LC_NUMERIC, old_locale );
 			throw runtime_error( "Problem while reading points." );
 		}
 		
 		/* Restore application locale when done */
-		setlocale( LC_NUMERIC, old_locale );
+// 		setlocale( LC_NUMERIC, old_locale );
 	}
 	
 	template< typename Point >

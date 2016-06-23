@@ -13,7 +13,10 @@ namespace model
         class OocPointSorterTest : public ::testing::Test
 		{
 		protected:
-			void SetUp() {}
+			void SetUp()
+			{
+				setlocale( LC_NUMERIC, "C" );
+			}
 		};
 		
 		template< typename P >
@@ -148,7 +151,7 @@ namespace model
 			}
 		}
 		
-		TEST_F( OocPointSorterTest, David )
+		TEST_F( OocPointSorterTest, DISABLED_David )
 		{
 			using P = Point;
 			using M = ShallowMortonCode;

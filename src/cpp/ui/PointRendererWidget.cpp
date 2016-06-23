@@ -14,6 +14,8 @@ m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr )
 {
+	setlocale( LC_NUMERIC, "C" );
+	
 	camera->setSpeed( 0.005f );
 }
 
@@ -44,7 +46,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 // 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply").toStdString() );
-	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
+// 	openMesh( "/data/example/staypuff.oct" );
+ 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -258,6 +261,11 @@ void PointRendererWidget::openMesh( const string& filename )
 		ifstream file( filename );
 		Json::Value octreeJson;
 		file >> octreeJson;
+		
+		// Debug
+		{
+			cout << "Octree Json " << filename << endl << octreeJson << endl;
+		}
 		
 		m_octree = new Octree( octreeJson, runtime );
 	}
