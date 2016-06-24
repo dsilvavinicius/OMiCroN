@@ -68,14 +68,6 @@ namespace model
 			Vec3 minBoxVert = m_origin + ( nodeCoords.array() * levelNodeSize.array() ).matrix();
 			Vec3 maxBoxVert = minBoxVert + levelNodeSize;
 			
-			/*cout << "Boundaries for node 0x" << hex << code->getBits() << dec << endl
-				<< "level = " << level << endl
-				<< "node coordinates = " << glm::to_string(nodeCoords) << endl
-				<< "node size factor = " << nodeSizeFactor << endl
-				<< "level node size = " << glm::to_string(levelNodeSize) << endl
-				<< "min coords = " << glm::to_string(minBoxVert) << endl
-				<< "max coords = " << glm::to_string(maxBoxVert) << endl;*/
-			
 			return AlignedBox3f( minBoxVert, maxBoxVert );
 		}
 		

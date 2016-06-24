@@ -7,7 +7,6 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
-#include <glm/ext.hpp>
 #include <qsurfaceformat.h>
 
 #include "Stream.h"

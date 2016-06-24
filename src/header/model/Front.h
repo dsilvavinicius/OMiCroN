@@ -454,13 +454,15 @@ namespace model
 			stringstream ss; ss << "Placeholder insertion t " << threadIdx << " ( thread id " << this_thread::get_id()
 			<< " ): " << morton.getPathToRoot( true ) << endl;
 			
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-			
 			if( !m_currentIterPlaceholders[ threadIdx ].empty()
 				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
 			{
 				ss << "Placeholder insertion compromises ordering" << endl << endl;
 				HierarchyCreationLog::logAndFail( ss.str() );
+			}
+			else
+			{
+				HierarchyCreationLog::logDebugMsg( ss.str() );
 			}
 		}
 		#endif

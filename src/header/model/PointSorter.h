@@ -70,8 +70,8 @@ namespace model
 				Vec3 pos = p.getPos();
 				for( int i = 0; i < 3; ++i )
 				{
-					origin[ i ] = glm::min( origin[ i ], pos[ i ] );
-					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+					origin[ i ] = std::min( origin[ i ], pos[ i ] );
+					maxCoords[ i ] = std::max( maxCoords[ i ], pos[ i ] );
 				}
 			}
 		);

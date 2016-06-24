@@ -4,8 +4,6 @@
 #include <vector>
 #include <set>
 #include <iostream>
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include <QPoint>
 #include <QRect>
 #include <QSize>
@@ -14,7 +12,6 @@
 #include "ExtendedPoint.h"
 
 using namespace std;
-using namespace glm;
 using namespace Eigen;
 
 namespace model
@@ -85,11 +82,11 @@ namespace model
 		return out;
 	}
 	
-	template<>
-	ostream& operator<<( ostream& out, const vector< vec3 >& v );
-	
-	template<>
-	ostream& operator<<( ostream& out, const vector< vec4 >& v );
+// 	template<>
+// 	ostream& operator<<( ostream& out, const vector< vec3 >& v );
+// 	
+// 	template<>
+// 	ostream& operator<<( ostream& out, const vector< vec4 >& v );
 	
 	template<>
 	ostream& operator<<( ostream& out, const vector< PointPtr >& v );
@@ -102,10 +99,6 @@ namespace model
 	ostream& operator<<( ostream& out, const QPoint& point );
 	
 	ostream& operator<<( ostream& out, const QRect& rect );
-	
-	ostream& operator<<( ostream& out, const vec3& vec );
-	
-	ostream& operator<<( ostream& out, const vec4& vec );
 }
 
 #endif

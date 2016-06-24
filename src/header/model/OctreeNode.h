@@ -2,13 +2,11 @@
 #define OCTREE_NODE_H
 
 #include <vector>
-#include <glm/glm.hpp>
 #include "Serializer.h"
 #include "MemoryUtils.h"
 #include "NodeReleaser.h"
 
 using namespace std;
-using namespace glm;
 
 namespace model
 {

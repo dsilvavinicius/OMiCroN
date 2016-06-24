@@ -139,7 +139,7 @@ namespace model
 		
 		Vector2i diagonal1 = proj1 - proj0;
 		
-		Float maxDiagLength = glm::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
+		Float maxDiagLength = std::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
 		
 		return maxDiagLength < projThresh;
 	}

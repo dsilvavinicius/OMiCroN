@@ -59,7 +59,6 @@ set (UTIL_DIR "util")
 create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
 setup_package(OpenGL)
-setup_package(GLM)
 setup_package(GLEW)
 setup_package(Eigen3)
 setup_package(SQLite3)

@@ -2,49 +2,49 @@
 
 namespace model
 {
-	template<>
-	ostream& operator<< < vec3 >( ostream& out, const vector< vec3 >& v ) 
-	{
-		out << "{";
-		bool first = true;
-		for( vec3 element : v )
-		{
-			if( first )
-			{
-				out << element << endl;
-				first = false;
-			}
-			else
-			{
-				out << ", " << element << endl;
-			}
-		}
-		out << "}";
-		
-		return out;
-	}
-	
-	template<>
-	ostream& operator<< < vec4 >( ostream& out, const vector< vec4 >& v ) 
-	{
-		out << "{";
-		bool first = true;
-		for( vec4 element : v )
-		{
-			if( first )
-			{
-				out << element << endl;
-				first = false;
-			}
-			else
-			{
-				out << ", " << element << endl;
-			}
-		}
-		out << "}";
-		
-		return out;
-	}
+// 	template<>
+// 	ostream& operator<< < vec3 >( ostream& out, const vector< vec3 >& v ) 
+// 	{
+// 		out << "{";
+// 		bool first = true;
+// 		for( vec3 element : v )
+// 		{
+// 			if( first )
+// 			{
+// 				out << element << endl;
+// 				first = false;
+// 			}
+// 			else
+// 			{
+// 				out << ", " << element << endl;
+// 			}
+// 		}
+// 		out << "}";
+// 		
+// 		return out;
+// 	}
+// 	
+// 	template<>
+// 	ostream& operator<< < vec4 >( ostream& out, const vector< vec4 >& v ) 
+// 	{
+// 		out << "{";
+// 		bool first = true;
+// 		for( vec4 element : v )
+// 		{
+// 			if( first )
+// 			{
+// 				out << element << endl;
+// 				first = false;
+// 			}
+// 			else
+// 			{
+// 				out << ", " << element << endl;
+// 			}
+// 		}
+// 		out << "}";
+// 		
+// 		return out;
+// 	}
 	
 	template<>
 	ostream& operator<<( ostream& out, const vector< PointPtr >& v )
@@ -106,20 +106,6 @@ namespace model
 	{
 		out << "top left:" << rect.topLeft() << endl << "bottom right:" << rect.bottomRight()
 			<< endl << "size:" << rect.size() << endl;
-		return out;
-	}
-	
-	ostream& operator<<( ostream& out, const vec3& vec )
-	{
-		out << glm::to_string( vec );
-		
-		return out;
-	}
-	
-	ostream& operator<<( ostream& out, const vec4& vec )
-	{
-		out << glm::to_string( vec );
-		
 		return out;
 	}
 }

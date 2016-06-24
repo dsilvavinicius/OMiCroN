@@ -224,8 +224,8 @@ namespace model
 				
 				for( int i = 0; i < 3; ++i )
 				{
-					minCoords[ i ] = glm::min( minCoords[ i ], pos[ i ] );
-					maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+					minCoords[ i ] = std::min( minCoords[ i ], pos[ i ] );
+					maxCoords[ i ] = std::max( maxCoords[ i ], pos[ i ] );
 				}
 			}, precision
 		);

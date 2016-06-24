@@ -138,8 +138,8 @@ namespace model
 					const Vec3& pos = p.getPos();
 					for( int i = 0; i < 3; ++i )
 					{
-						m_origin[ i ] = glm::min( m_origin[ i ], pos[ i ] );
-						maxCoords[ i ] = glm::max( maxCoords[ i ], pos[ i ] );
+						m_origin[ i ] = std::min( m_origin[ i ], pos[ i ] );
+						maxCoords[ i ] = std::max( maxCoords[ i ], pos[ i ] );
 					}
 				}
 			);

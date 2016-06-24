@@ -37,7 +37,7 @@ namespace model
 		
 		QVector2D diagonal1 = proj1 - proj0;
 		
-		Float maxDiagLength = glm::max( diagonal0.lengthSquared(), diagonal1.lengthSquared() );
+		Float maxDiagLength = std::max( diagonal0.lengthSquared(), diagonal1.lengthSquared() );
 		
 		return maxDiagLength < projThresh;
 	}

@@ -36,28 +36,28 @@ namespace model
 			}
 		};
 
-		void generatePointsInInterval( const int& numPoints, const vec2& xInterval, const vec2& yInterval,
-									   const vec2& zInterval, PointVector& out_points )
+		void generatePointsInInterval( const int& numPoints, const Vec2& xInterval, const Vec2& yInterval,
+									   const Vec2& zInterval, PointVector& out_points )
 		{
 			for( int i = 0; i < numPoints; ++i )
 			{
-				float x = xInterval.x + float( rand() ) / ( float( RAND_MAX / ( xInterval.y - xInterval.x ) ) );
-				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
-				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
+				float x = xInterval.x() + float( rand() ) / ( float( RAND_MAX / ( xInterval.y() - xInterval.x() ) ) );
+				float y = yInterval.x() + float( rand() ) / ( float( RAND_MAX / ( yInterval.y() - yInterval.x() ) ) );
+				float z = zInterval.x() + float( rand() ) / ( float( RAND_MAX / ( zInterval.y() - zInterval.x() ) ) );
 					
 				PointPtr point = makeManaged< Point >( Vec3( 1.f, 1.f, 1.f ), Vec3( x, y, z ) );
 				out_points.push_back( point );
 			}
 		}
 		
-		void generatePointsInInterval( const int& numPoints, const vec2& xInterval, const vec2& yInterval,
-									   const vec2& zInterval, ExtendedPointVector& out_points )
+		void generatePointsInInterval( const int& numPoints, const Vec2& xInterval, const Vec2& yInterval,
+									   const Vec2& zInterval, ExtendedPointVector& out_points )
 		{
 			for( int i = 0; i < numPoints; ++i )
 			{
-				float x = xInterval.x + float( rand() ) / ( float( RAND_MAX / ( xInterval.y - xInterval.x ) ) );
-				float y = yInterval.x + float( rand() ) / ( float( RAND_MAX / ( yInterval.y - yInterval.x ) ) );
-				float z = zInterval.x + float( rand() ) / ( float( RAND_MAX / ( zInterval.y - zInterval.x ) ) );
+				float x = xInterval.x() + float( rand() ) / ( float( RAND_MAX / ( xInterval.y() - xInterval.x() ) ) );
+				float y = yInterval.x() + float( rand() ) / ( float( RAND_MAX / ( yInterval.y() - yInterval.x() ) ) );
+				float z = zInterval.x() + float( rand() ) / ( float( RAND_MAX / ( zInterval.y() - zInterval.x() ) ) );
 					
 				ExtendedPointPtr point = makeManaged< ExtendedPoint >( Vec3( 1.f, 1.f, 1.f ), Vec3( 1.f, 1.f, 1.f ),
 																	   Vec3( x, y, z ) );
@@ -85,14 +85,14 @@ namespace model
 			srand( 1 );
 			PointVector points;
 			int pointsPerOctant = 4;
-			generatePointsInInterval( pointsPerOctant, vec2( 0.f, 15.f ), vec2( 0.f, 15.f ), vec2( 0.f, 15.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 15.f, 30.f ), vec2( 0.f, 15.f ), vec2( 0.f, 15.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 0.f, 15.f ), vec2( 15.f, 30.f ), vec2( 0.f, 15.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 0.f, 15.f ), vec2( 0.f, 15.f ), vec2( 15.f, 30.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), vec2( 0.f, 15.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 15.f, 30.f ), vec2( 0.f, 15.f ), vec2( 15.f, 30.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 0.f, 15.f ), vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), points );
-			generatePointsInInterval( pointsPerOctant, vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), vec2( 15.f, 30.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 0.f, 15.f ), Vec2( 0.f, 15.f ), Vec2( 0.f, 15.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 15.f, 30.f ), Vec2( 0.f, 15.f ), Vec2( 0.f, 15.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 0.f, 15.f ), Vec2( 15.f, 30.f ), Vec2( 0.f, 15.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 0.f, 15.f ), Vec2( 0.f, 15.f ), Vec2( 15.f, 30.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 15.f, 30.f ), Vec2( 15.f, 30.f ), Vec2( 0.f, 15.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 15.f, 30.f ), Vec2( 0.f, 15.f ), Vec2( 15.f, 30.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 0.f, 15.f ), Vec2( 15.f, 30.f ), Vec2( 15.f, 30.f ), points );
+			generatePointsInInterval( pointsPerOctant, Vec2( 15.f, 30.f ), Vec2( 15.f, 30.f ), Vec2( 15.f, 30.f ), points );
 			
 			PointVector tmpPts = points;
 			

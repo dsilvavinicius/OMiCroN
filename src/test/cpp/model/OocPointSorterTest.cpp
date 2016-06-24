@@ -40,7 +40,13 @@ namespace model
 			
 			sorter.sort( false );
 			
-			const OctreeDim& comp = sorter.comp();
+			ifstream ifs( "data/OocPointSorterTest.oct" );
+			Json::Value octreeJson;
+			ifs >> octreeJson;
+			
+			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
+							 octreeJson[ "size" ][ "z" ].asFloat() );
+			OctreeDim comp( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
 			
 			for( int chunkGroup = 0; chunkGroup < 3; ++chunkGroup )
 			{
@@ -88,7 +94,7 @@ namespace model
 			
 			ASSERT_EQ( 33, expectedPoints.size() );
 			
-			Reader reader( "data/OocPointSorterTest.ply" );
+			Reader reader( octreeJson[ "points" ].asString() );
 			vector< P > sortedPoints( reader.getNumPoints() );
 			auto iter = sortedPoints.begin();
 			
@@ -127,9 +133,15 @@ namespace model
 			
 			sorter.sort( true );
 			
-			const OctreeDim& comp = sorter.comp();
+			ifstream ifs( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
+			Json::Value octreeJson;
+			ifs >> octreeJson;
 			
-			Reader reader( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.ply" );
+			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
+							 octreeJson[ "size" ][ "z" ].asFloat() );
+			OctreeDim comp( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
+			
+			Reader reader( octreeJson[ "points" ].asString() );
 			vector< P > sortedPoints( reader.getNumPoints() );
 			auto iter = sortedPoints.begin();
 			
@@ -151,7 +163,7 @@ namespace model
 			}
 		}
 		
-		TEST_F( OocPointSorterTest, DISABLED_David )
+		TEST_F( OocPointSorterTest, /*DISABLED_*/David )
 		{
 			using P = Point;
 			using M = ShallowMortonCode;
@@ -159,15 +171,21 @@ namespace model
 			using Reader = PlyPointReader< P >;
 			using OctreeDim = typename Sorter::OctreeDim;
 			
-			Sorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesNormals/David.gp",
-						   "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls", 13,
-				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul );
+// 			Sorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesNormals/David.gp",
+// 						   "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls", 13,
+// 				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul );
+// 			
+// 			sorter.sort( true );
 			
-			sorter.sort( true );
+			ifstream ifs( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
+			Json::Value octreeJson;
+			ifs >> octreeJson;
 			
-			const OctreeDim& comp = sorter.comp();
+			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
+							 octreeJson[ "size" ][ "z" ].asFloat() );
+			OctreeDim comp( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
 			
-			Reader reader( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted/David.ply" );
+			Reader reader( octreeJson[ "points" ].asString() );
 			
 			P prev;
 			

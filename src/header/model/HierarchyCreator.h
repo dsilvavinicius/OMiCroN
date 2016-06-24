@@ -250,6 +250,10 @@ namespace model
 				NodeList nodeList;
 				PointVector points;
 				
+				#ifdef DEBUG
+// 					Morton previous; previous.build( 0 );
+				#endif
+				
 				Morton currentParent;
 				Reader reader( m_plyFilename );
 				reader.read(
@@ -258,20 +262,26 @@ namespace model
 						Morton code = leafLvlDimCpy.calcMorton( p );
 						Morton parent = *code.traverseUp();
 						
+						#ifdef DEBUG
+// 						{
+// 							stringstream ss; ss << "Read: " << code.getPathToRoot( true ) 
+// 								<< "Prev: " << previous.getPathToRoot( true ) << endl;
+// 							
+// 							if( code < previous )
+// 							{
+// 								ss << "Reading order compromised." << endl << endl;
+// 								HierarchyCreationLog::logAndFail( ss.str() );
+// 							}
+// 							
+// 							previous = code;
+// 						}
+						#endif
+						
 						if( parent != currentParent )
 						{
 							if( points.size() > 0 )
 							{
 								nodeList.push_back( Node( std::move( points ), true ) );
-								
-								#ifdef DEBUG
-// 								if( nodeList.size() > 1 )
-// 								{
-// 									assert( leafLvlDimCpy.calcMorton( nodeList.back() ) >
-// 											leafLvlDimCpy.calcMorton( prev( prev( nodeList.end() ) ) ) &&
-// 											"Node order compromised while reading." );
-// 								}
-								#endif
 								
 								points = PointVector();
 								

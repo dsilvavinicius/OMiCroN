@@ -1,8 +1,6 @@
 #ifndef POINT_H
 #define POINT_H
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
 #include <memory>
 #include <vector>
 #include <iostream>
@@ -10,7 +8,6 @@
 #include "ManagedAllocator.h"
 
 using namespace std;
-using namespace glm;
 
 namespace model
 {
