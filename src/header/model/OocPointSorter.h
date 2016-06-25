@@ -37,6 +37,9 @@ namespace model
 		OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, int lvl, const ulong totalSize,
 						const ulong memoryQuota );
 		
+		OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, const OctreeDim& dim,
+						const ulong totalSize, const ulong memoryQuota );
+		
 		/** Sorts the points.
 		 * @param eraseChunkFiles is true if the temporary chunk files are expected to be deleted after sorting, false
 		 * otherwise.
@@ -84,6 +87,8 @@ namespace model
 		
 		using HeapContainer = vector< MergeEntry, TbbAllocator< MergeEntry > >;
 		using MinHeap = priority_queue< MergeEntry, HeapContainer, Comparator >;
+		
+		void initChunkData( const ulong totalSize, const ulong memoryQuota );
 		
 		void writeChunkGroup( PointVector& chunk, typename PointVector::iterator& currentIter, const ulong& readPoints,
 							  int& nChunks, const Reader& reader ) const;
@@ -145,16 +150,7 @@ namespace model
 			);
 		}
 		
-		m_groups =  ceil( float( totalSize ) / float( memoryQuota ) );
-		m_pointsPerChunkGroup = ceil( float( m_totalPoints ) / float( m_groups ) );
-		m_pointsPerChunk = ceil( float( m_pointsPerChunkGroup ) / float( m_groups ) );
-		m_chunksPerGroup = ceil( float( m_pointsPerChunkGroup ) / float( m_pointsPerChunk ) );
-		
-		// Debug
-		{
-			cout << "Quota: " << memoryQuota << " Groups: " << m_groups << " Chunks per group: " << m_chunksPerGroup
-				 << " Points per chunk: " << m_pointsPerChunk << endl << endl;
-		}
+		initChunkData( totalSize, memoryQuota );
 		
 		Vec3 octreeSize = maxCoords - m_origin;
 		m_scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
@@ -167,6 +163,26 @@ namespace model
 		}
 		
 		Profiler::elapsedTime( start, "Boundaries computation" );
+	}
+	
+	template< typename Morton, typename Point >
+	OocPointSorter< Morton,Point >
+	::OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, const OctreeDim& dim,
+					  const ulong totalSize, const ulong memoryQuota )
+	: m_plyGroupFile( plyGroupFile ),
+	m_plyOutputFolder( plyOutputFolder ),
+	m_comp( dim ),
+	m_origin( 0.f, 0.f, 0.f ),
+	m_scale( 1.f )
+	{
+		string plyFilename;
+		ifstream ifs( plyGroupFile );
+		getline( ifs, plyFilename );
+		
+		Reader reader( plyFilename );
+		m_totalPoints = reader.getNumPoints();
+		
+		initChunkData( totalSize, memoryQuota );
 	}
 	
 	template< typename Morton, typename Point >
@@ -205,6 +221,16 @@ namespace model
 						Vec3& pos = iter++->getPos();
 						pos = ( pos - m_origin ) * m_scale;
 						++readPoints;
+						
+						// Debug
+// 						{
+// 							Vec3 problematicPos( 0.085079036653041839599609375f, 0.1777949035167694091796875f,
+// 												 0.10157321393489837646484375f );
+// 							if( problematicPos.isApprox( pos, 1.e-15 ) )
+// 							{
+// 								cout << "Problematic node: " << m_comp.calcMorton( p ).toString() << endl << endl;
+// 							}
+// 						}
 						
 						ulong remainder = readPoints % m_pointsPerChunkGroup;
 						
@@ -305,6 +331,21 @@ namespace model
 		octreeFile << octreeJson << endl;
 		
 		return octreeJson;
+	}
+	
+	template< typename Morton, typename Point >
+	void OocPointSorter< Morton, Point >::initChunkData( const ulong totalSize, const ulong memoryQuota )
+	{
+		m_groups =  ceil( float( totalSize ) / float( memoryQuota ) );
+		m_pointsPerChunkGroup = ceil( float( m_totalPoints ) / float( m_groups ) );
+		m_pointsPerChunk = ceil( float( m_pointsPerChunkGroup ) / float( m_groups ) );
+		m_chunksPerGroup = ceil( float( m_pointsPerChunkGroup ) / float( m_pointsPerChunk ) );
+		
+		// Debug
+		{
+			cout << "Total points: " << m_totalPoints << " Quota: " << memoryQuota << " Groups: " << m_groups
+				 << " Chunks per group: " << m_chunksPerGroup << " Points per chunk: " << m_pointsPerChunk << endl << endl;
+		}
 	}
 	
 	template< typename Morton, typename Point >

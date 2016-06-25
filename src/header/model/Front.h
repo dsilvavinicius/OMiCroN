@@ -10,7 +10,7 @@
 #include "Profiler.h"
 #include <StackTrace.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -460,10 +460,10 @@ namespace model
 				ss << "Placeholder insertion compromises ordering" << endl << endl;
 				HierarchyCreationLog::logAndFail( ss.str() );
 			}
-			else
-			{
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
+// 			else
+// 			{
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			}
 		}
 		#endif
 		

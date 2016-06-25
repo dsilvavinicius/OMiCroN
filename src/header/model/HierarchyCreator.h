@@ -13,7 +13,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -264,14 +264,17 @@ namespace model
 						
 						#ifdef DEBUG
 // 						{
-// 							stringstream ss; ss << "Read: " << code.getPathToRoot( true ) 
-// 								<< "Prev: " << previous.getPathToRoot( true ) << endl;
-// 							
+// 							stringstream ss; ss << "Read: " << code.getPathToRoot( true ) << endl;
 // 							if( code < previous )
 // 							{
-// 								ss << "Reading order compromised." << endl << endl;
+// 								ss  << "Prev: " << previous.getPathToRoot( true ) << endl << "Reading order compromised."
+// 									<< endl << "Octree dim: " << leafLvlDimCpy << endl;
 // 								HierarchyCreationLog::logAndFail( ss.str() );
 // 							}
+// // 							else
+// // 							{
+// // 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// // 							}
 // 							
 // 							previous = code;
 // 						}
@@ -372,10 +375,10 @@ namespace model
 				while( workListSize > 0 && !increaseLvlFlag )
 				{
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "iter start" << endl << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "iter start" << endl << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					// Multipass restriction: the level's last sibling group cannot be processed until the last pass,
@@ -448,11 +451,11 @@ namespace model
 							int nSiblings = 1;
 							
 							#ifdef DEBUG
-							{
-								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
-									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true ) << endl;
-								HierarchyCreationLog::logDebugMsg( ss.str() );
-							}
+// 							{
+// 								stringstream ss; ss << "T " << omp_get_thread_num() << " sib[ 0 ]: "
+// 									<< m_octreeDim.calcMorton( siblings[ 0 ] ).getPathToRoot( true ) << endl;
+// 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// 							}
 							#endif
 							
 							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
@@ -462,12 +465,12 @@ namespace model
 								input.pop_front();
 								
 								#ifdef DEBUG
-								{
-									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
-										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true )
-										<< endl;
-									HierarchyCreationLog::logDebugMsg( ss.str() );
-								}
+// 								{
+// 									stringstream ss; ss << "T " << omp_get_thread_num() << " sibl[ " << nSiblings - 1
+// 										<< " ]: " << m_octreeDim.calcMorton( siblings[ nSiblings - 1 ] ).getPathToRoot( true )
+// 										<< endl;
+// 									HierarchyCreationLog::logDebugMsg( ss.str() );
+// 								}
 								#endif
 							}
 							
@@ -1230,10 +1233,10 @@ namespace model
 		if( childMorton.getLevel() == m_leafLvlDim.m_nodeLvl )
 		{
 			#ifdef DEBUG
-			{
-				stringstream ss; ss << "T " << threadIdx << " node from single" << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
+// 			{
+// 				stringstream ss; ss << "T " << threadIdx << " node from single" << endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			}
 			#endif
 			
 			m_front.insertPlaceholder( childMorton, threadIdx );
@@ -1299,10 +1302,10 @@ namespace model
 				if( frontPlaceholdersOn )
 				{
 					#ifdef DEBUG
-					{
-						stringstream ss; ss << "T " << threadIdx << " inner" << endl << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
+// 					{
+// 						stringstream ss; ss << "T " << threadIdx << " inner" << endl << endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+// 					}
 					#endif
 					
 					m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
