@@ -143,21 +143,21 @@ namespace model
 				  1325568ul );
 		}
 		
-		TEST_F( OocPointSorterTest, DISABLED_David )
+		TEST_F( OocPointSorterTest, David )
 		{
-			test( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesNormals/David.gp",
-				  "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls", 13,
+			test( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesFlippedNormals/David.gp",
+				  "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls", 11,
 				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul, 468640353ul );
 		}
 		
-		TEST_F( OocPointSorterTest, David10Lvls )
+		TEST_F( OocPointSorterTest, DavidResort )
 		{
 			using Sorter = OocPointSorter< MediumMortonCode, Point >;
 			using OctreeDim = typename Sorter::OctreeDim;
 			
-			string plyGroupFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_10Lvls/David.gp";
+			string plyGroupFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.gp";
 			string octreeFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct";
-			string outputFolder = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_10Lvls";
+			string outputFolder = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls";
 			ulong totalSize = ulong( 25.8 * 1024ul * 1024ul * 1024ul );
 			ulong memoryQuota = 10ul * 1024ul * 1024ul * 1024ul;
 			
@@ -167,7 +167,7 @@ namespace model
 			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
 							 octreeJson[ "size" ][ "z" ].asFloat() );
 			
-			OctreeDim dim( Vec3::Zero(), octreeSize, 10 );
+			OctreeDim dim( Vec3::Zero(), octreeSize, 11 );
 			
 			Sorter sorter( plyGroupFilename, outputFolder, dim, totalSize, memoryQuota );
 			test( sorter, octreeFilename, 468640353ul );
