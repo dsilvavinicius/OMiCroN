@@ -34,7 +34,11 @@ namespace model
 			using Reader = PlyPointReader< P >;
 			using OctreeDim = typename OocPointSorter< M, P >::OctreeDim;
 			
+			auto start = Profiler::now( "Sorting David, 13 lvls," );
+			
 			sorter.sort( true );
+			
+			Profiler::elapsedTime( start, "Sorting David, 13 lvls," );
 			
 			ifstream ifs( octreeFilename );
 			Json::Value octreeJson;
@@ -155,9 +159,9 @@ namespace model
 			using Sorter = OocPointSorter< MediumMortonCode, Point >;
 			using OctreeDim = typename Sorter::OctreeDim;
 			
-			string plyGroupFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.gp";
-			string octreeFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct";
-			string outputFolder = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls";
+			string plyGroupFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.gp";
+			string octreeFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct";
+			string outputFolder = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls";
 			ulong totalSize = ulong( 25.8 * 1024ul * 1024ul * 1024ul );
 			ulong memoryQuota = 10ul * 1024ul * 1024ul * 1024ul;
 			
