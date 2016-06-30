@@ -19,19 +19,53 @@ namespace Tucano
 		public:
 			MeshTestWidget( QWidget *parent = 0 )
 			: QtFlycameraWidget( parent )
+			{}
+			
+			void checkOglErrors()
 			{
-				PlyPointReader< ExtendedPoint > reader( "data/example/staypuff.ply" );
+				GLenum err = GL_NO_ERROR;
+				bool hasErrors = false;
+				stringstream ss;
+				while( ( err = glGetError() ) != GL_NO_ERROR )
+				{
+					hasErrors = true;
+					ss  << "OpenGL error 0x" << hex << err << ": " << gluErrorString( err ) << endl << endl;
+				}
+				
+				if( hasErrors )
+				{
+					throw runtime_error( ss.str() );
+				}
+			}
+			
+			void initialize()
+			{
+				QtFlycameraWidget::initialize();
+				
+				PlyPointReader< ExtendedPoint > reader( "../data/example/staypuff.ply" );
 				ulong nPoints = reader.getNumPoints();
 				
 				mesh.reset();
 				mesh.reserveVertices( 3, nPoints );
+				checkOglErrors();
+				
 				mesh.reserveNormals( nPoints );
+				checkOglErrors();
+				
 				mesh.reserveColors( 3, nPoints );
+				checkOglErrors();
+				
 				mesh.reserveIndices( nPoints );
+				checkOglErrors();
 				
 				float* vertPtr = mesh.mapVertices( 0, nPoints );
+				checkOglErrors();
+				
 				float* normalPtr = mesh.mapNormals( 0, nPoints );
+				checkOglErrors();
+				
 				float* colorPtr = mesh.mapColors( 0, nPoints );
+				checkOglErrors();
 				
 				ulong insertedPoints = 0;
 				reader.read(
@@ -53,6 +87,7 @@ namespace Tucano
 					}
 				);
 				
+				m_phong.setShadersDir( "../shaders/tucano/" );
 				m_phong.initialize();
 			}
 			
@@ -84,6 +119,7 @@ namespace Tucano
 			MeshTestWidget widget;
 			widget.resize( 640, 480 );
 			widget.show();
+			widget.initialize();
 
 			QApplication::exec();
 		}
