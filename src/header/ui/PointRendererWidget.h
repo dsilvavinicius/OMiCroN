@@ -51,7 +51,7 @@ public:
 	/**
 	* @brief Overload resize callback
 	*/
-	virtual void resizeGL( int width, int height );
+	virtual void resizeGL( int width, int height ) override;
 
 protected:
 	

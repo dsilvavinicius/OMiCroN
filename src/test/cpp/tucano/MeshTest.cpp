@@ -38,6 +38,8 @@ namespace Tucano
 				}
 			}
 			
+			
+			
 			void initialize()
 			{
 				QtFlycameraWidget::initialize();
@@ -58,34 +60,77 @@ namespace Tucano
 				mesh.reserveIndices( nPoints );
 				checkOglErrors();
 				
-				float* vertPtr = mesh.mapVertices( 0, nPoints );
+				float* vertsPtr = mesh.mapVertices( 0, nPoints );
 				checkOglErrors();
 				
-				float* normalPtr = mesh.mapNormals( 0, nPoints );
+				float* normalsPtr = mesh.mapNormals( 0, nPoints );
 				checkOglErrors();
 				
-				float* colorPtr = mesh.mapColors( 0, nPoints );
+				float* colorsPtr = mesh.mapColors( 0, nPoints );
+				checkOglErrors();
+				
+				uint* indicesPtr = mesh.mapIndices( 0, nPoints );
 				checkOglErrors();
 				
 				ulong insertedPoints = 0;
+				
+				Float negInf = -numeric_limits< Float >::max();
+				Float posInf = numeric_limits< Float >::max();
+				Vec3 origin = Vec3( posInf, posInf, posInf );
+				Vec3 maxCoords( negInf, negInf, negInf );
+				
 				reader.read(
 					[ & ]( const ExtendedPoint& p )
 					{
-						vertPtr[ insertedPoints * 3 ]		= p.getPos().x();
-						vertPtr[ insertedPoints * 3 + 1 ]	= p.getPos().y();
-						vertPtr[ insertedPoints * 3 + 2 ]	= p.getPos().z();
+						const Vec3& pos = p.getPos();
 						
-						normalPtr[ insertedPoints * 3 ]		= p.getNormal().x();
-						normalPtr[ insertedPoints * 3 + 1 ]	= p.getNormal().y();
-						normalPtr[ insertedPoints * 3 + 2 ]	= p.getNormal().z();
+						vertsPtr[ insertedPoints * 3 ]		= pos.x();
+						vertsPtr[ insertedPoints * 3 + 1 ]	= pos.y();
+						vertsPtr[ insertedPoints * 3 + 2 ]	= pos.z();
 						
-						colorPtr[ insertedPoints * 3 ]		= p.getColor().x();
-						colorPtr[ insertedPoints * 3 + 1 ]	= p.getColor().y();
-						colorPtr[ insertedPoints * 3 + 2 ]	= p.getColor().z();
+						normalsPtr[ insertedPoints * 3 ]		= p.getNormal().x();
+						normalsPtr[ insertedPoints * 3 + 1 ]	= p.getNormal().y();
+						normalsPtr[ insertedPoints * 3 + 2 ]	= p.getNormal().z();
+						
+						colorsPtr[ insertedPoints * 3 ]		= p.getColor().x();
+						colorsPtr[ insertedPoints * 3 + 1 ]	= p.getColor().y();
+						colorsPtr[ insertedPoints * 3 + 2 ]	= p.getColor().z();
+						
+						indicesPtr[ insertedPoints ] = insertedPoints;
+						
+						for( int i = 0; i < 3; ++i )
+						{
+							origin[ i ] = std::min( origin[ i ], pos[ i ] );
+							maxCoords[ i ] = std::max( maxCoords[ i ], pos[ i ] );
+						}
 						
 						++insertedPoints;
 					}
 				);
+				
+				Vec3 boxSize = maxCoords - origin;
+				float scale = 1.f / std::max( std::max( boxSize.x(), boxSize.y() ), boxSize.z() );
+				
+				for( int i = 0; i < insertedPoints; ++i )
+				{
+					vertsPtr[ insertedPoints * 3 ]		= ( vertsPtr[ insertedPoints * 3 ] - origin.x() ) * scale;
+					vertsPtr[ insertedPoints * 3 + 1 ]	= ( vertsPtr[ insertedPoints * 3 + 1 ] - origin.y() ) * scale;
+					vertsPtr[ insertedPoints * 3 + 2 ]	= ( vertsPtr[ insertedPoints * 3 + 2 ] - origin.z() ) * scale;
+				}
+				
+				mesh.unmapVertices();
+				checkOglErrors();
+				
+				mesh.unmapNormals();
+				checkOglErrors();
+				
+				mesh.unmapColors();
+				checkOglErrors();
+				
+				mesh.unmapIndices();
+				checkOglErrors();
+				
+				mesh.selectPrimitive( Mesh::POINT );
 				
 				m_phong.setShadersDir( "../shaders/tucano/" );
 				m_phong.initialize();
@@ -101,7 +146,15 @@ namespace Tucano
 		
 				glEnable( GL_DEPTH_TEST );
 				
+				checkOglErrors();
+				
 				m_phong.render( mesh, *camera, light_trackball );
+				
+				checkOglErrors();
+				
+				camera->renderAtCorner();
+				
+				checkOglErrors();
 			}
 		
 		private:
