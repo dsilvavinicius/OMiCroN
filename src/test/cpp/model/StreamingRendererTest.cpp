@@ -140,13 +140,13 @@ namespace model
 			int m_currentSegment;
 		};
 		
-        class MeshTest : public ::testing::Test
+        class StreamingRendererTest : public ::testing::Test
 		{
 		protected:
 			void SetUp() {}
 		};
 		
-		TEST_F( MeshTest, Loading )
+		TEST_F( StreamingRendererTest, All )
 		{
 			StreamingRendererTestWidget widget;
 			widget.resize( 640, 480 );
