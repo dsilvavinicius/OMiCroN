@@ -2,7 +2,7 @@
 #define STREAMING_RENDERER_H
 
 #include <mesh.hpp>
-#include "Array.h"
+#include "TucanoRenderingState.h"
 
 using namespace Tucano;
 
@@ -21,11 +21,11 @@ namespace model
 	 */
 	template< typename Point >
 	class StreamingRenderer
+	: public TucanoRenderingState
 	{
 	public:
 		using PointPtr = shared_ptr< Point >;
 		using PointArray = Array< PointPtr >;
-		using IndexVector = vector< uint, TbbAllocator< uint > >;
 		
 		/**
 		 * Ctor. Takes control of a Mesh, instancing the streaming buffers inside it. The initial mesh has just trash. The
@@ -34,7 +34,9 @@ namespace model
 		 * @param nSegments is the number of segments.
 		 * @mesh is a pointer to the mesh that will be controlled by the renderer.
 		 */
-		StreamingRenderer( const uint nPointsPerSegment, const int nSegments, Mesh* mesh );
+		StreamingRenderer( Camera* camera, Camera* lightCam , Mesh* mesh, const string& shaderPath,
+						   const uint nPointsPerSegment, const int nSegments, const int& jfpbrFrameskip = 1,
+					 const Effect& effect = PHONG );
 		
 		~StreamingRenderer() {}
 		
@@ -43,33 +45,19 @@ namespace model
 		
 		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
 		 * Default implementation does nothing. */
-		void setupRendering() {};
+		void setupRendering() override;
 		
 		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
 		 * been already handled.
 		 * @returns the number of rendered points. */
-		uint render();
-		
-		/** Checks if the axis-aligned box is culled by camera frustum.
-		 * @returns true if the box should be culled and false otherwise. */
-		bool isCullable( const AlignedBox3f& box ) const;
-		
-		/** Checks if the axis-aligned box is renderable with the current projection threshold.
-		 * @returns true if the box has a projection compatible with the current threshold and, thus, should be
-		 * rendered. False otherwise (indicating that the traversal should proceed deeper in the hierarchy). */
-		bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const;
+		uint render() override;
 		
 		/** Indicates that the node contents passed should be rendered. */
-		void handleNodeRendering( const PointArray& points );
+		virtual void handleNodeRendering( const PointArray& points ) override;
 	
 	private:
 		void initColors( const uint totalPoints );
 		void unmapColors();
-		
-		Mesh* m_mesh;
-		
-		/** Indices for rendering. */
-		IndexVector m_indices;
 		
 		/** Number of current points per segment. */
 		Array< uint > m_ptsPerSegment;
@@ -91,20 +79,25 @@ namespace model
 	};
 	
 	template< typename Point >
-	inline StreamingRenderer::StreamingRenderer( const uint nPointsPerSegment, const int nSegments, Mesh* mesh )
-	: m_mesh( mesh ),
-	m_indices( nPointsPerSegment * nSegments ),
+	inline StreamingRenderer< Point >
+	::StreamingRenderer( Camera* camera, Camera* lightCam , Mesh* mesh, const string& shaderPath,
+						 const uint nPointsPerSegment, const int nSegments, const int& jfpbrFrameskip,
+					  const Effect& effect )
+	: TucanoRenderingState( camera, lightCam, mesh, shaderPath, jfpbrFrameskip, effect ),
 	m_ptsPerSegment( nSegments ),
 	m_maxPtsPerSegment( nPointsPerSegment ),
-	m_indices( 0 ),
 	m_nTotalPoints( 0 ),
 	m_currentSegment( 0 )
 	{
 		uint totalPoints = m_maxPtsPerSegment * nSegments;
+		m_indices.resize( totalPoints );
+		
 		m_mesh->reset();
 		m_mesh->reserveVertices( 3, totalPoints );
 		m_mesh->reserveNormals( totalPoints );
 		initColors( totalPoints );
+		
+		mesh->selectPrimitive( Mesh::POINT );
 	}
 	
 	template<>
@@ -131,7 +124,7 @@ namespace model
 	}
 	
 	template< typename Point >
-	inline void StreamingRenderer::setupRendering()
+	inline void StreamingRenderer< Point >::setupRendering()
 	{
 		glClearColor(1.0, 1.0, 1.0, 0.0);
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -156,18 +149,18 @@ namespace model
 		float* vertPtr = m_vertexMap;
 		float* normalPtr = m_normalMap;
 		
-		for( const Point& p : points )
+		for( const PointPtr p : points )
 		{
-			const Vec3& pos = p.getPos();
-			const Vec3& normal = p.getColor();
+			const Vec3& pos = p->getPos();
+			const Vec3& normal = p->getColor();
 			
-			vertPtr++ = pos.x();
-			vertPtr++ = pos.y();
-			vertPtr++ = pos.z();
+			*( vertPtr++ ) = pos.x();
+			*( vertPtr++ ) = pos.y();
+			*( vertPtr++ ) = pos.z();
 			
-			normalPtr++ = normal.x();
-			normalPtr++ = normal.y();
-			normalPtr++ = normal.z();
+			*( normalPtr++ ) = normal.x();
+			*( normalPtr++ ) = normal.y();
+			*( normalPtr++ ) = normal.z();
 		}
 		
 		m_ptsPerSegment[ m_currentSegment ] += points.size();
@@ -180,30 +173,30 @@ namespace model
 		float* normalPtr = m_normalMap;
 		float* colorPtr = m_colorMap;
 		
-		for( const Point& p : points )
+		for( const ExtendedPointPtr p : points )
 		{
-			const Vec3& pos = p.getPos();
-			const Vec3& normal = p.getNormal();
-			const Vec3& color = p.getColor();
+			const Vec3& pos = p->getPos();
+			const Vec3& normal = p->getNormal();
+			const Vec3& color = p->getColor();
 			
-			vertPtr++ = pos.x();
-			vertPtr++ = pos.y();
-			vertPtr++ = pos.z();
+			*( vertPtr++ ) = pos.x();
+			*( vertPtr++ ) = pos.y();
+			*( vertPtr++ ) = pos.z();
 			
-			normalPtr++ = normal.x();
-			normalPtr++ = normal.y();
-			normalPtr++ = normal.z();
+			*( normalPtr )++ = normal.x();
+			*( normalPtr )++ = normal.y();
+			*( normalPtr )++ = normal.z();
 			
-			colorPtr++ = color.x();
-			colorPtr++ = color.y();
-			colorPtr++ = color.z();
+			*( colorPtr )++ = color.x();
+			*( colorPtr )++ = color.y();
+			*( colorPtr )++ = color.z();
 		}
 		
 		m_ptsPerSegment[ m_currentSegment ] += points.size();
 	}
 	
 	template< typename Point >
-	uint StreamingRenderer::render()
+	uint StreamingRenderer< Point >::render()
 	{
 		m_nTotalPoints += m_ptsPerSegment[ m_currentSegment ];
 		
@@ -227,25 +220,37 @@ namespace model
 		m_indices.resize( m_nTotalPoints );
 		m_mesh->loadIndices( m_indices );
 		
-		// Put effect here.
+		switch( m_effect )
+		{
+			case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightCamera ); break;
+			case JUMP_FLOODING:
+			{
+				bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
+				m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
+				
+				break;
+			}
+		}
+		
+		return m_nTotalPoints;
 	}
 	
 	template<>
-	inline StreamingRenderer< Point >::initColors( const uint totalPoints )
+	inline void StreamingRenderer< Point >::initColors( const uint totalPoints )
 	{}
 	
 	template<>
-	inline StreamingRenderer< ExtendedPoint >::initColors( const uint totalPoints )
+	inline void StreamingRenderer< ExtendedPoint >::initColors( const uint totalPoints )
 	{
 		m_mesh->reserveColors( 3, totalPoints );
 	}
 	
 	template<>
-	inline StreamingRenderer< Point >::unmapColors()
+	inline void StreamingRenderer< Point >::unmapColors()
 	{}
 	
 	template<>
-	inline StreamingRenderer< ExtendedPoint >::unmapColors()
+	inline void StreamingRenderer< ExtendedPoint >::unmapColors()
 	{
 		m_mesh->unmapColors();
 	}
