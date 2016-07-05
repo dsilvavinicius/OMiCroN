@@ -3,8 +3,12 @@
 
 #include <mesh.hpp>
 #include "TucanoRenderingState.h"
+#include "OglUtils.h"
+
+// #define DEBUG
 
 using namespace Tucano;
+using namespace util;
 
 namespace model
 {
@@ -146,21 +150,18 @@ namespace model
 	template<>
 	void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points )
 	{
-		float* vertPtr = m_vertexMap;
-		float* normalPtr = m_normalMap;
-		
 		for( const PointPtr p : points )
 		{
 			const Vec3& pos = p->getPos();
 			const Vec3& normal = p->getColor();
 			
-			*( vertPtr++ ) = pos.x();
-			*( vertPtr++ ) = pos.y();
-			*( vertPtr++ ) = pos.z();
+			*( m_vertexMap++ ) = pos.x();
+			*( m_vertexMap++ ) = pos.y();
+			*( m_vertexMap++ ) = pos.z();
 			
-			*( normalPtr++ ) = normal.x();
-			*( normalPtr++ ) = normal.y();
-			*( normalPtr++ ) = normal.z();
+			*( m_normalMap++ ) = normal.x();
+			*( m_normalMap++ ) = normal.y();
+			*( m_normalMap++ ) = normal.z();
 		}
 		
 		m_ptsPerSegment[ m_currentSegment ] += points.size();
@@ -169,27 +170,23 @@ namespace model
 	template<>
 	void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points )
 	{
-		float* vertPtr = m_vertexMap;
-		float* normalPtr = m_normalMap;
-		float* colorPtr = m_colorMap;
-		
 		for( const ExtendedPointPtr p : points )
 		{
 			const Vec3& pos = p->getPos();
 			const Vec3& normal = p->getNormal();
 			const Vec3& color = p->getColor();
 			
-			*( vertPtr++ ) = pos.x();
-			*( vertPtr++ ) = pos.y();
-			*( vertPtr++ ) = pos.z();
+			*( m_vertexMap++ ) = pos.x();
+			*( m_vertexMap++ ) = pos.y();
+			*( m_vertexMap++ ) = pos.z();
 			
-			*( normalPtr )++ = normal.x();
-			*( normalPtr )++ = normal.y();
-			*( normalPtr )++ = normal.z();
+			*( m_normalMap++ ) = normal.x();
+			*( m_normalMap++ ) = normal.y();
+			*( m_normalMap++ ) = normal.z();
 			
-			*( colorPtr )++ = color.x();
-			*( colorPtr )++ = color.y();
-			*( colorPtr )++ = color.z();
+			*( m_colorMap++ ) = color.x();
+			*( m_colorMap++ ) = color.y();
+			*( m_colorMap++ ) = color.z();
 		}
 		
 		m_ptsPerSegment[ m_currentSegment ] += points.size();
@@ -201,24 +198,54 @@ namespace model
 		m_nTotalPoints += m_ptsPerSegment[ m_currentSegment ];
 		
 		m_mesh->unmapVertices();
+		
+		#ifdef DEBUG
+			OglUtils::checkOglErrors();
+		#endif
+		
 		m_mesh->unmapNormals();
+		
+		#ifdef DEBUG
+			OglUtils::checkOglErrors();
+		#endif
+		
 		unmapColors();
+		
+		#ifdef DEBUG
+			OglUtils::checkOglErrors();
+		#endif
 		
 		uint prefix = 0u;
 		for( int i = 0; i < m_ptsPerSegment.size(); ++i )
 		{
 			uint nPoints = m_ptsPerSegment[ i ];
 			
+			#ifdef DEBUG
+			{
+				cout << "Segment " << i << " points: " << nPoints << endl << endl;
+			}
+			#endif
+			
 			#pragma omp parallel for
 			for( uint j = 0; j < nPoints; ++j )
 			{
-				m_indices[ prefix + j ] = i * m_maxPtsPerSegment;
+				m_indices[ prefix + j ] = i * m_maxPtsPerSegment + j;
 			}
 			prefix += nPoints ;
 		}
 		
+		#ifdef DEBUG
+		{
+			cout << "Total points: " << m_nTotalPoints << endl << endl;
+		}
+		#endif
+		
 		m_indices.resize( m_nTotalPoints );
 		m_mesh->loadIndices( m_indices );
+		
+		#ifdef DEBUG
+			OglUtils::checkOglErrors();
+		#endif
 		
 		switch( m_effect )
 		{
@@ -231,6 +258,10 @@ namespace model
 				break;
 			}
 		}
+		
+		#ifdef DEBUG
+			OglUtils::checkOglErrors();
+		#endif
 		
 		return m_nTotalPoints;
 	}
@@ -255,5 +286,7 @@ namespace model
 		m_mesh->unmapColors();
 	}
 }
+
+#undef DEBUG
 
 #endif

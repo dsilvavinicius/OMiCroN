@@ -3,6 +3,7 @@
 #include <QApplication>
 #include "PlyPointReader.h"
 #include "StreamingRenderer.h"
+#include "OglUtils.h"
 
 using namespace std;
 using namespace util;
@@ -25,23 +26,6 @@ namespace model
 			~StreamingRendererTestWidget()
 			{
 				delete m_renderer;
-			}
-			
-			void checkOglErrors()
-			{
-				GLenum err = GL_NO_ERROR;
-				bool hasErrors = false;
-				stringstream ss;
-				while( ( err = glGetError() ) != GL_NO_ERROR )
-				{
-					hasErrors = true;
-					ss  << "OpenGL error 0x" << hex << err << ": " << gluErrorString( err ) << endl << endl;
-				}
-				
-				if( hasErrors )
-				{
-					throw runtime_error( ss.str() );
-				}
 			}
 			
 			void initialize()
@@ -85,51 +69,49 @@ namespace model
 				m_currentSegment = 0;
 				m_renderer = new Renderer( camera, &light_trackball, &mesh, "../shaders/tucano/", m_segmentSize,
 										   m_nSegments );
-				checkOglErrors();
-				
-				loadSegment();
+				OglUtils::checkOglErrors();
 			}
 			
 			void paintGL() override
 			{
+				loadSegment();
+				
 				m_renderer->setupRendering();
 				
-				checkOglErrors();
+				OglUtils::checkOglErrors();
 				
 				m_renderer->render();
 				
-				checkOglErrors();
+				OglUtils::checkOglErrors();
 				
 				camera->renderAtCorner();
 			}
 		
 		protected:
-
 			virtual void keyPressEvent( QKeyEvent * event ) override
 			{
-				QtFlycameraWidget::keyPressEvent( event );
-				
-				if (event->key() == Qt::Key_N)
+				if( event->key() == Qt::Key_N )
 				{
-					loadSegment();
+					m_currentSegment = ( m_currentSegment + 1 ) % m_nSegments;
+				}
+				else
+				{
+					QtFlycameraWidget::keyPressEvent( event );
 				}
 			}
 		
 		private:
 			void loadSegment()
 			{
-				if( m_currentSegment < m_nSegments )
+				m_renderer->selectSegment( m_currentSegment );
+				OglUtils::checkOglErrors();
+				
+				uint prefix = m_currentSegment * m_segmentSize;
+				for( int i = 0; i < m_segmentSize && prefix + i < m_points.size(); ++i )
 				{
-					m_renderer->selectSegment( m_currentSegment );
-					checkOglErrors();
-					
-					uint prefix = m_currentSegment++ * m_segmentSize;
-					for( int i = 0; i < m_segmentSize && prefix + i < m_points.size(); ++i )
-					{
-						Array< ExtendedPointPtr > ptArray( 1 );
-						ptArray[ 0 ] = m_points[ i ];
-						m_renderer->handleNodeRendering( ptArray );
-					}
+					Array< ExtendedPointPtr > ptArray( 1 );
+					ptArray[ 0 ] = m_points[ prefix + i ];
+					m_renderer->handleNodeRendering( ptArray );
 				}
 			}
 			
