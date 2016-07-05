@@ -25,11 +25,16 @@ namespace model
 	 */
 	template< typename Point >
 	class StreamingRenderer
-	: public TucanoRenderingState
 	{
 	public:
 		using PointPtr = shared_ptr< Point >;
 		using PointArray = Array< PointPtr >;
+		
+		enum Effect
+		{
+			PHONG,
+			JUMP_FLOODING
+		};
 		
 		/**
 		 * Ctor. Takes control of a Mesh, instancing the streaming buffers inside it. The initial mesh has just trash. The
@@ -42,26 +47,74 @@ namespace model
 						   const uint nPointsPerSegment, const int nSegments, const int& jfpbrFrameskip = 1,
 					 const Effect& effect = PHONG );
 		
-		~StreamingRenderer() {}
+		~StreamingRenderer();
 		
 		/** Selects the segment to insert points and maps all pointer to its vertex attributes. */
 		void selectSegment( const int segment );
 		
 		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
 		 * Default implementation does nothing. */
-		void setupRendering() override;
+		void setupRendering();
 		
 		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
 		 * been already handled.
 		 * @returns the number of rendered points. */
-		uint render() override;
+		uint render();
 		
 		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const PointArray& points ) override;
+		void handleNodeRendering( const PointArray& points );
+		
+		/** Updates the frustum after changes on camera. */
+		void update();
+		
+		bool isCullable( const AlignedBox3f& box ) const;
+		
+		/** This implementation will compare the size of the maximum box diagonal in window coordinates with the projection
+		 *	threshold.
+		 *	@param projThresh is the threshold of the squared size of the maximum box diagonal in window coordinates. */
+		bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const;
+		
+		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
+		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
+		
+		/** Gets the phong effect. The caller is reponsable for the correct usage.*/
+		Phong& getPhong() { return *m_phong; }
+		
+		/** Changes the effect used to render the points. */
+		void selectEffect( const Effect& effect ) { m_effect = effect; }
+		
+		void setJfpbrFrameskip( const int& value ) { m_jfpbrFrameskip = value; }
 	
 	private:
 		void initColors( const uint totalPoints );
 		void unmapColors();
+		
+		/** Acquires current traball's view-projection matrix. */
+		void updateViewProjection();
+		
+		/** Projects the point in world coordinates to window coordinates. */
+		Vector2i projToWindowCoords( const Vector4f& point, const Matrix4f& viewProjection, const Vector2i& viewportSize )
+		const;
+		
+		Frustum* m_frustum;
+		Camera* m_camera;
+		Camera* m_lightCamera;
+		
+		Matrix4f m_viewProj;
+		
+		Mesh* m_mesh;
+		Phong* m_phong;
+		ImgSpacePBR *m_jfpbr;
+		
+		Effect m_effect;
+		
+		vector< uint > m_indices;
+		
+		/** Frameskip for the Jump Flooding effect. */
+		int m_jfpbrFrameskip;
+		
+		/** Frame counter. Used in order to skip frames properly. */
+		unsigned int m_nFrames;
 		
 		/** Number of current points per segment. */
 		Array< uint > m_ptsPerSegment;
@@ -87,7 +140,12 @@ namespace model
 	::StreamingRenderer( Camera* camera, Camera* lightCam , Mesh* mesh, const string& shaderPath,
 						 const uint nPointsPerSegment, const int nSegments, const int& jfpbrFrameskip,
 					  const Effect& effect )
-	: TucanoRenderingState( camera, lightCam, mesh, shaderPath, jfpbrFrameskip, effect ),
+	: m_camera( camera ),
+	m_lightCamera( lightCam ),
+	m_mesh( mesh ),
+	m_jfpbrFrameskip( jfpbrFrameskip ),
+	m_effect( effect ),
+	m_nFrames( 0 ),
 	m_ptsPerSegment( nSegments ),
 	m_maxPtsPerSegment( nPointsPerSegment ),
 	m_nTotalPoints( 0 ),
@@ -102,6 +160,36 @@ namespace model
 		initColors( totalPoints );
 		
 		mesh->selectPrimitive( Mesh::POINT );
+		
+		updateViewProjection();
+		m_frustum = new Frustum( m_viewProj );
+		
+		m_phong = new Phong();
+		m_phong->setShadersDir( shaderPath );
+		m_phong->initialize();
+		
+		// This color should be used when there is no color vertex attribute being used.
+		glVertexAttrib4f( 2, 0.7f, 0.7f, 0.7f, 1.f );
+		
+		Vector2i viewportSize = m_camera->getViewportSize();
+		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
+		m_jfpbr->setShadersDir( shaderPath );
+		m_jfpbr->initialize();
+	}
+	
+	template< typename Point >
+	inline StreamingRenderer< Point >::~StreamingRenderer()
+	{
+		delete m_jfpbr;
+		delete m_phong;
+		delete m_frustum;
+	}
+	
+	template< typename Point >
+	void StreamingRenderer< Point >::update()
+	{
+		updateViewProjection();
+		m_frustum->update( m_viewProj );
 	}
 	
 	template<>
@@ -136,15 +224,45 @@ namespace model
 		glCullFace( GL_BACK );
 		glEnable( GL_CULL_FACE );
 		
-		// Alpha is needed for text rendering
-		glEnable( GL_BLEND );
-		glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-		
 		glEnable( GL_DEPTH_TEST );
 		
 		glPointSize( 2 );
 		
 		update();
+	}
+	
+	template< typename Point >
+	inline bool StreamingRenderer< Point >::isCullable( const AlignedBox3f& box ) const
+	{
+		return m_frustum->isCullable( box );
+	}
+	
+	template< typename Point >
+	inline bool StreamingRenderer< Point >::isRenderable( const AlignedBox3f& box, const Float projThresh ) const
+	{
+		const Vec3& rawMin = box.min();
+		const Vec3& rawMax = box.max();
+		Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
+		Vector4f max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
+		
+		Vector2i viewportSize = m_camera->getViewportSize();
+		
+		Vector2i proj0 = projToWindowCoords( min, m_viewProj, viewportSize );
+		Vector2i proj1 = projToWindowCoords( max, m_viewProj, viewportSize );
+		
+		Vector2i diagonal0 = proj1 - proj0;
+		
+		Vec3 boxSize = rawMax - rawMin;
+		
+		proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), m_viewProj,
+									viewportSize );
+		proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), m_viewProj, viewportSize );
+		
+		Vector2i diagonal1 = proj1 - proj0;
+		
+		Float maxDiagLength = std::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
+		
+		return maxDiagLength < projThresh;
 	}
 	
 	template<>
@@ -264,6 +382,24 @@ namespace model
 		#endif
 		
 		return m_nTotalPoints;
+	}
+	
+	template< typename Point >
+	inline void StreamingRenderer< Point >::updateViewProjection()
+	{
+		Matrix4f view = m_camera->getViewMatrix().matrix();
+		Matrix4f proj = m_camera->getProjectionMatrix();
+		
+		m_viewProj = proj * view;
+	}
+	
+	template< typename Point >
+	inline Vector2i StreamingRenderer< Point >
+	::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
+	{
+		Vector4f proj = viewProj * point;
+		return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
+						 ( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
 	}
 	
 	template<>
