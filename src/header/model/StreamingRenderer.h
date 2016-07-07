@@ -333,6 +333,10 @@ namespace model
 	template< typename Point >
 	inline uint StreamingRenderer< Point >::render()
 	{
+		#ifdef DEBUG
+			cout << "Current segment: " << m_currentSegment << endl << endl;
+		#endif
+		
 		m_nTotalPoints += m_ptsPerSegment[ m_currentSegment ];
 		
 		m_mesh->unmapVertices();
@@ -351,64 +355,62 @@ namespace model
 		
 		#ifdef DEBUG
 			OglUtils::checkOglErrors();
-			
-			if( m_nTotalPoints <= 0 )
-			{
-				throw logic_error( "Cannot map an index buffer with size <= 0." );
-			}
-		#endif
-			
-		uint* indicesPtr = m_mesh->mapIndices( 0, m_nTotalPoints );
-		
-		#ifdef DEBUG
-			OglUtils::checkOglErrors();
 		#endif
 		
-		uint prefix = 0u;
-		for( int i = 0; i < m_ptsPerSegment.size(); ++i )
+		if( m_nTotalPoints > 0 )
 		{
-			uint nPoints = m_ptsPerSegment[ i ];
-			
+			uint* indicesPtr = m_mesh->mapIndices( 0, m_nTotalPoints );
+		
 			#ifdef DEBUG
-			{
-				cout << "Segment " << i << " points: " << nPoints << endl << endl;
-			}
+				OglUtils::checkOglErrors();
 			#endif
 			
-			#pragma omp parallel for
-			for( uint j = 0; j < nPoints; ++j )
+			uint prefix = 0u;
+			for( int i = 0; i < m_ptsPerSegment.size(); ++i )
 			{
-				indicesPtr[ prefix + j ] = i * m_maxPtsPerSegment + j;
+				uint nPoints = m_ptsPerSegment[ i ];
+				
+				#ifdef DEBUG
+				{
+					cout << "Segment " << i << " points: " << nPoints << endl << endl;
+				}
+				#endif
+				
+				#pragma omp parallel for
+				for( uint j = 0; j < nPoints; ++j )
+				{
+					indicesPtr[ prefix + j ] = i * m_maxPtsPerSegment + j;
+				}
+				prefix += nPoints ;
 			}
-			prefix += nPoints ;
+			
+			m_mesh->unmapIndices();
+			
+			#ifdef DEBUG
+				OglUtils::checkOglErrors();
+			#endif
+				
+			switch( m_effect )
+			{
+				case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightCamera ); break;
+				case JUMP_FLOODING:
+				{
+					bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
+					m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
+					
+					break;
+				}
+			}
+			
+			#ifdef DEBUG
+				OglUtils::checkOglErrors();
+			#endif
 		}
 		
 		#ifdef DEBUG
 		{
 			cout << "Total points: " << m_nTotalPoints << endl << endl;
 		}
-		#endif
-		
-		m_mesh->unmapIndices();
-		
-		#ifdef DEBUG
-			OglUtils::checkOglErrors();
-		#endif
-		
-		switch( m_effect )
-		{
-			case PHONG: m_phong->render( *m_mesh, *m_camera, *m_lightCamera ); break;
-			case JUMP_FLOODING:
-			{
-				bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
-				m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
-				
-				break;
-			}
-		}
-		
-		#ifdef DEBUG
-			OglUtils::checkOglErrors();
 		#endif
 		
 		return m_nTotalPoints;
