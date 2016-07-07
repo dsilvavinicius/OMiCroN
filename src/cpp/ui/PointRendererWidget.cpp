@@ -93,19 +93,18 @@ void PointRendererWidget::paintGL (void)
 	auto frameStart = Profiler::now();
 	makeCurrent();
 
-	adaptRenderingThresh();
+// 	adaptRenderingThresh();
 	
 	m_renderer->setupRendering();
 	
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
 	
-	//OctreeStats stats = m_octree->traverse( *m_renderer, m_projThresh );
 	FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
 	
 	int frontTrackingTime = Profiler::elapsedTime( frontTrackingStart );
 
-	m_renderer->afterRendering();
+	//m_renderer->afterRendering();
 	
 	m_renderTime = Profiler::elapsedTime( frameStart );
 	
@@ -291,7 +290,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new Renderer( /*m_octree->getPoints(),*/ camera, &light_trackball, &mesh, "shaders/tucano/" );
+	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 1000000, 20 );
 	
 	cout << "Renderer built." << endl;
 	

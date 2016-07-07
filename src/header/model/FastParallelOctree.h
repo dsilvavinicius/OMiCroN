@@ -22,7 +22,7 @@ namespace model
 		using NodeArray = typename HierarchyCreator::NodeArray;
 		using Dim = typename HierarchyCreator::OctreeDim;
 		using Front = model::Front< MortonCode, Point >;
-		using Renderer = RenderingState;
+		using Renderer = StreamingRenderer< Point >;
 		
 		typedef struct RuntimeSetup
 		{

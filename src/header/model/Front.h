@@ -7,6 +7,7 @@
 #include "OctreeDimensions.h"
 #include "OctreeStats.h"
 #include "RenderingState.h"
+#include "StreamingRenderer.h"
 #include "Profiler.h"
 #include <StackTrace.h>
 
@@ -43,7 +44,7 @@ namespace model
 		using NodeArray = Array< Node >;
 		using OctreeDim = OctreeDimensions< Morton, Point >;
 		using Sql = SQLiteManager< Point, Morton, Node >;
-		using Renderer = RenderingState;
+		using Renderer = StreamingRenderer< Point >;
 		
 		/** The node type that is used in front. */
 		typedef struct FrontNode
@@ -346,6 +347,12 @@ namespace model
 		/** Number of persisted nodes in the last front tracking operation. */
 		ulong m_persisted;
 		
+		/** Maximum nodes per front segment. */
+		uint m_nNodesPerSegment;
+		
+		/** Iterator from which the front tracking will start next frame. */
+		FrontListIter m_frontIter;
+		
 		/** true if the front has nodes to release yet, false otherwise. */
 		atomic_bool m_releaseFlag;
 		
@@ -368,13 +375,16 @@ namespace model
 	m_currentIterPlaceholders( nThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
+	m_nNodesPerSegment( 100000 ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
 		, m_nPlaceholders( 0ul ),
 		m_nSubstituted( 0ul )
 	#endif
-	{}
+	{
+		m_frontIter = m_front.end();
+	}
 
 	template< typename Morton, typename Point >
 	void Front< Morton, Point >::notifyLeafLvlLoaded()
@@ -451,15 +461,15 @@ namespace model
 	{
 		#ifdef DEBUG
 		{
-			stringstream ss; ss << "Placeholder insertion t " << threadIdx << " ( thread id " << this_thread::get_id()
-			<< " ): " << morton.getPathToRoot( true ) << endl;
-			
-			if( !m_currentIterPlaceholders[ threadIdx ].empty()
-				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
-			{
-				ss << "Placeholder insertion compromises ordering" << endl << endl;
-				HierarchyCreationLog::logAndFail( ss.str() );
-			}
+// 			stringstream ss; ss << "Placeholder insertion t " << threadIdx << " ( thread id " << this_thread::get_id()
+// 			<< " ): " << morton.getPathToRoot( true ) << endl;
+// 			
+// 			if( !m_currentIterPlaceholders[ threadIdx ].empty()
+// 				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
+// 			{
+// 				ss << "Placeholder insertion compromises ordering" << endl << endl;
+// 				HierarchyCreationLog::logAndFail( ss.str() );
+// 			}
 // 			else
 // 			{
 // 				HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -641,8 +651,7 @@ namespace model
 				m_sql.beginTransaction();
 				
 				#ifdef DEBUG
-// 					stringstream ss; ss << "Front size: " << m_front.size() << endl << endl;
-// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+					cout << "Release on" << endl << endl;
 				#endif
 			}
 			
@@ -652,8 +661,21 @@ namespace model
 // 				m_log << "===== Front tracking starts =====." << endl << endl;
 // 			}
 			
+			if( m_frontIter == m_front.end() )
+			{
+				m_frontIter = m_front.begin();
+			}
+			uint nodesProcessed = 0u;
+			renderer.mapAttribs();
+			
+			#ifdef DEBUG
+			{
+				OglUtils::checkOglErrors();
+			}
+			#endif
+			
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			for( FrontListIter frontIt = m_front.begin(); frontIt != m_front.end(); /**/ )
+			for( /** */; nodesProcessed < m_nNodesPerSegment && m_frontIter != m_front.end(); ++nodesProcessed )
 			{
 				#ifdef DEBUG
 				{
@@ -663,7 +685,13 @@ namespace model
 				}
 				#endif
 				
-				trackNode( frontIt, lastParent, substitutionLvl, renderer, projThresh );
+				trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
+				
+				#ifdef DEBUG
+				{
+					OglUtils::checkOglErrors();
+				}
+				#endif
 				
 				#ifdef DEBUG
 				{
@@ -672,9 +700,20 @@ namespace model
 				#endif
 			}
 			
+			#ifdef DEBUG
+			{
+				OglUtils::checkOglErrors();
+			}
+			#endif
+			
 			if( transactionNeeded )
 			{
 				m_sql.endTransaction();
+			}
+			
+			// Debug
+			{
+				cout << "Nodes processed: " << nodesProcessed << endl << endl;
 			}
 			
 			#ifdef DEBUG
@@ -709,6 +748,15 @@ namespace model
 		unsigned int numRenderedPoints = renderer.render();
 		
 		int renderingTime = Profiler::elapsedTime( start );
+		
+		if( m_frontIter == m_front.end() )
+		{
+			renderer.selectFirstSegment();
+		}
+		else
+		{
+			renderer.selectNextSegment();
+		}
 		
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_front.size() );
 	}

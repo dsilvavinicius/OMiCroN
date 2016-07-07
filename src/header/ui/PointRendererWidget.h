@@ -6,8 +6,8 @@
 //#include <imgSpacePBR.hpp>
 #include <utils/qtfreecamerawidget.hpp>
 #include <point_model.hpp>
-#include "TucanoRenderingState.h"
 #include "FastParallelOctree.h"
+#include "StreamingRenderer.h"
 //#include "FrontOctree.h"
 //#include "ParallelOctree.h"
 // #include "OutOfCoreDebugOctree.h"
@@ -35,7 +35,7 @@ class PointRendererWidget
 // 	using Octree = model::DefaultOutOfCoreDebugOctree< OctreeParams >;
 	
 	using Octree = FastParallelOctree< MortonCode, Point >;
-	using Renderer = model::TucanoRenderingState;
+	using Renderer = model::StreamingRenderer< Point >;
 	
 public:
 	explicit PointRendererWidget( QWidget *parent );

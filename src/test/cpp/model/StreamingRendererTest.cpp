@@ -66,7 +66,6 @@ namespace model
 				
 				m_segmentSize = 50000;
 				m_nSegments = ceil( float( reader.getNumPoints() ) / float( m_segmentSize ) );
-				m_currentSegment = 0;
 				m_renderer = new Renderer( camera, &light_trackball, &mesh, "../shaders/tucano/", m_segmentSize,
 										   m_nSegments );
 				OglUtils::checkOglErrors();
@@ -92,7 +91,7 @@ namespace model
 			{
 				if( event->key() == Qt::Key_N )
 				{
-					m_currentSegment = ( m_currentSegment + 1 ) % m_nSegments;
+					m_renderer->selectNextSegment();
 				}
 				else
 				{
@@ -103,10 +102,11 @@ namespace model
 		private:
 			void loadSegment()
 			{
-				m_renderer->selectSegment( m_currentSegment );
+				m_renderer->mapAttribs();
+				int segment = m_renderer->currentSegment();
 				OglUtils::checkOglErrors();
 				
-				uint prefix = m_currentSegment * m_segmentSize;
+				uint prefix = segment * m_segmentSize;
 				for( int i = 0; i < m_segmentSize && prefix + i < m_points.size(); ++i )
 				{
 					Array< ExtendedPointPtr > ptArray( 1 );
@@ -119,7 +119,6 @@ namespace model
 			PointVector m_points;
 			uint m_segmentSize;
 			int m_nSegments;
-			int m_currentSegment;
 		};
 		
         class StreamingRendererTest : public ::testing::Test

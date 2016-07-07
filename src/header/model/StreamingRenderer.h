@@ -5,7 +5,7 @@
 #include "TucanoRenderingState.h"
 #include "OglUtils.h"
 
-// #define DEBUG
+#define DEBUG
 
 using namespace Tucano;
 using namespace util;
@@ -17,10 +17,12 @@ namespace model
 	 * of it. The buffer rendering is controlled by an index buffer. The vertex attributes not referenced in the index
 	 * buffer have trash and accessing it can result in undefined behavior. Support for segmentated update is provided. The
 	 * workflow to follow is:
-	 * 1) Select a segment to update with selectSegment().
-	 * 2) Stream points to the segment with handleNodeRendering(). The points will be inserted sequentially. If more than
-	 * the maximum number of points allowed per segment is reached, the next points will be ignored.
-	 * 3) render().
+	 * 1) Select a segment to update with selectFirstSegment() or selectNextSegment.
+	 * 2) Maps the vertex attributes of the current segment with mapAttribs().
+	 * 2) Stream points to the segment with handleNodeRendering(). The points will be inserted sequentially, starting at
+	 * buffer beginning and, thus, overwriting any previous data. If more than the maximum number of points allowed per
+	 * segment is reached, the next points will be ignored.
+	 * 3) render(). This will unmap all vertex attributes.
 	 * The class also provides API for camera culling and box projection threshold evaluation.
 	 */
 	template< typename Point >
@@ -49,15 +51,26 @@ namespace model
 		
 		~StreamingRenderer();
 		
-		/** Selects the segment to insert points and maps all pointer to its vertex attributes. */
-		void selectSegment( const int segment );
+		/** Selects the first segment. To map all pointers to its vertex attributes, call mapAttribs afterwards. */
+		void selectFirstSegment();
+		
+		/** Increments the current segment index in a round-robin fashion. To map all pointers to its vertex
+		 * attributes, call mapAttribs afterwards. */
+		void selectNextSegment();
+		
+		/** @returns the index of the current segment. */
+		int currentSegment() { return m_currentSegment; }
+		
+		/** Maps all vertex attributes of the current segment. Future point rendering will overwrite this segment previous
+		 * data. */
+		void mapAttribs();
 		
 		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
 		 * Default implementation does nothing. */
 		void setupRendering();
 		
-		/** Renders the current state. Should be called at the end of the traversal, when all rendered nodes have
-		 * been already handled.
+		/** Renders the current state. Should be called after handling all nodes to be rendered. Unmaps all vertex
+		 * attributes.
 		 * @returns the number of rendered points. */
 		uint render();
 		
@@ -191,11 +204,21 @@ namespace model
 		updateViewProjection();
 		m_frustum->update( m_viewProj );
 	}
+	template< typename Point >
+	void StreamingRenderer< Point >::selectFirstSegment()
+	{
+		m_currentSegment = 0;
+	}
+	
+	template< typename Point >
+	void StreamingRenderer< Point >::selectNextSegment()
+	{
+		m_currentSegment = ( m_currentSegment + 1 ) % m_ptsPerSegment.size();
+	}
 	
 	template<>
-	inline void StreamingRenderer< Point >::selectSegment( const int segment )
+	inline void StreamingRenderer< Point >::mapAttribs()
 	{
-		m_currentSegment = segment;
 		m_nTotalPoints -= m_ptsPerSegment[ m_currentSegment ];
 		m_ptsPerSegment[ m_currentSegment ] = 0ul;
 		
@@ -204,9 +227,8 @@ namespace model
 	}
 	
 	template<>
-	inline void StreamingRenderer< ExtendedPoint >::selectSegment( const int segment )
+	inline void StreamingRenderer< ExtendedPoint >::mapAttribs()
 	{
-		m_currentSegment = segment;
 		m_nTotalPoints -= m_ptsPerSegment[ m_currentSegment ];
 		m_ptsPerSegment[ m_currentSegment ] = 0ul;
 		
@@ -266,7 +288,7 @@ namespace model
 	}
 	
 	template<>
-	void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points )
+	inline void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points )
 	{
 		for( const PointPtr p : points )
 		{
@@ -286,7 +308,7 @@ namespace model
 	}
 	
 	template<>
-	void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points )
+	inline void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points )
 	{
 		for( const ExtendedPointPtr p : points )
 		{
@@ -311,7 +333,7 @@ namespace model
 	}
 	
 	template< typename Point >
-	uint StreamingRenderer< Point >::render()
+	inline uint StreamingRenderer< Point >::render()
 	{
 		m_nTotalPoints += m_ptsPerSegment[ m_currentSegment ];
 		
