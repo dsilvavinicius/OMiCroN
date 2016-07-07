@@ -121,8 +121,6 @@ namespace model
 		
 		Effect m_effect;
 		
-		vector< uint > m_indices;
-		
 		/** Frameskip for the Jump Flooding effect. */
 		int m_jfpbrFrameskip;
 		
@@ -165,12 +163,12 @@ namespace model
 	m_currentSegment( 0 )
 	{
 		uint totalPoints = m_maxPtsPerSegment * nSegments;
-		m_indices.resize( totalPoints );
 		
 		m_mesh->reset();
 		m_mesh->reserveVertices( 3, totalPoints );
 		m_mesh->reserveNormals( totalPoints );
 		initColors( totalPoints );
+		m_mesh->reserveIndices( totalPoints );
 		
 		mesh->selectPrimitive( Mesh::POINT );
 		
@@ -353,6 +351,17 @@ namespace model
 		
 		#ifdef DEBUG
 			OglUtils::checkOglErrors();
+			
+			if( m_nTotalPoints <= 0 )
+			{
+				throw logic_error( "Cannot map an index buffer with size <= 0." );
+			}
+		#endif
+			
+		uint* indicesPtr = m_mesh->mapIndices( 0, m_nTotalPoints );
+		
+		#ifdef DEBUG
+			OglUtils::checkOglErrors();
 		#endif
 		
 		uint prefix = 0u;
@@ -369,7 +378,7 @@ namespace model
 			#pragma omp parallel for
 			for( uint j = 0; j < nPoints; ++j )
 			{
-				m_indices[ prefix + j ] = i * m_maxPtsPerSegment + j;
+				indicesPtr[ prefix + j ] = i * m_maxPtsPerSegment + j;
 			}
 			prefix += nPoints ;
 		}
@@ -380,8 +389,7 @@ namespace model
 		}
 		#endif
 		
-		m_indices.resize( m_nTotalPoints );
-		m_mesh->loadIndices( m_indices );
+		m_mesh->unmapIndices();
 		
 		#ifdef DEBUG
 			OglUtils::checkOglErrors();

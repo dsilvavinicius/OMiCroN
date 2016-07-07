@@ -602,6 +602,19 @@ namespace model
 			m_front.splice( m_front.end(), m_placeholders );
 		}
 		
+		if( m_frontIter == m_front.end() )
+		{
+			m_frontIter = m_front.begin();
+		}
+		uint nodesProcessed = 0u;
+		renderer.mapAttribs();
+		
+		#ifdef DEBUG
+		{
+			OglUtils::checkOglErrors();
+		}
+		#endif
+		
 		if( !m_front.empty() )
 		{
 			// The level from which the placeholders will be substituted is the one with max size, in order to maximize
@@ -660,19 +673,6 @@ namespace model
 // 				lock_guard< recursive_mutex > lock( m_logMutex );
 // 				m_log << "===== Front tracking starts =====." << endl << endl;
 // 			}
-			
-			if( m_frontIter == m_front.end() )
-			{
-				m_frontIter = m_front.begin();
-			}
-			uint nodesProcessed = 0u;
-			renderer.mapAttribs();
-			
-			#ifdef DEBUG
-			{
-				OglUtils::checkOglErrors();
-			}
-			#endif
 			
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 			for( /** */; nodesProcessed < m_nNodesPerSegment && m_frontIter != m_front.end(); ++nodesProcessed )
