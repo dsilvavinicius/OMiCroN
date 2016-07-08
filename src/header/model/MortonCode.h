@@ -72,6 +72,8 @@ namespace model
 		 * @returns the descendant of this MortonCode in the desired level. */
 		MortonCode getAncestorInLvl( uint lvl ) const;
 		
+		MortonCode getFirstDescendantInLvl( uint lvl ) const;
+		
 		/** @returns the first child of this morton code. The first child has the morton code of the father appended
 		 * with the bitmask 000. */
 		MortonCodePtr< T > getFirstChild() const;
@@ -240,13 +242,28 @@ namespace model
 	inline MortonCode< T > MortonCode< T >::getAncestorInLvl( uint lvl ) const
 	{
 		uint thisLvl = getLevel();
-		assert( lvl <= thisLvl && "An ancestor should be in above in the hierarchy." );
+		assert( lvl <= thisLvl && "An ancestor should be above in the hierarchy." );
 		
 		T ancestorBits = m_bits >> ( thisLvl - lvl ) * 3;
 		
 		MortonCode< T > ancestor;
 		ancestor.build( ancestorBits );
 		return ancestor;
+	}
+	
+	template <typename T>
+	inline MortonCode< T > MortonCode< T >::getFirstDescendantInLvl( const uint lvl ) const
+	{
+		assert( lvl <= maxLvl() && "The level should not be greater than the maximum level." );
+		
+		uint thisLvl = getLevel();
+		assert( lvl >= thisLvl && "An descendant should be bellow in the hierarchy." );
+		
+		T descendantBits = m_bits << ( lvl - thisLvl ) * 3;
+		
+		MortonCode< T > descendant;
+		descendant.build( descendantBits );
+		return descendant;
 	}
 	
 	template <typename T>

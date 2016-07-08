@@ -338,6 +338,9 @@ namespace model
 		/** All placeholders pending insertion. The list is sorted in hierarchy width order.  */
 		FrontList m_placeholders;
 		
+		/** Per-segment Morton code boundaries. m_segmentLimits[ i ] has the current boundary of segment i. */
+		Array< Morton > m_segmentBounds;
+		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
 		
@@ -375,16 +378,18 @@ namespace model
 	m_currentIterPlaceholders( nThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
-	m_nNodesPerSegment( 100000 ),
+// 	m_nNodesPerSegment( 100000 ),
+	m_front(),
+	m_segmentBounds( 2 ),
+	m_frontIter( m_front.end() ),
+	m_nNodesPerSegment( 250000 ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
 		, m_nPlaceholders( 0ul ),
 		m_nSubstituted( 0ul )
 	#endif
-	{
-		m_frontIter = m_front.end();
-	}
+	{}
 
 	template< typename Morton, typename Point >
 	void Front< Morton, Point >::notifyLeafLvlLoaded()
@@ -674,8 +679,16 @@ namespace model
 // 				m_log << "===== Front tracking starts =====." << endl << endl;
 // 			}
 			
+			int currentSegment = renderer.currentSegment();
+			Morton& segmentBound = m_segmentBounds[ currentSegment ];
+			Morton descendant;
+			
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			for( /** */; nodesProcessed < m_nNodesPerSegment && m_frontIter != m_front.end(); ++nodesProcessed )
+			for(
+				descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() );
+				nodesProcessed < m_nNodesPerSegment && m_frontIter != m_front.end();
+				++nodesProcessed, descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() )
+			)
 			{
 				#ifdef DEBUG
 				{
@@ -698,6 +711,20 @@ namespace model
 // 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
 				}
 				#endif
+			}
+			
+			m_segmentBounds[ currentSegment ] = descendant;
+			
+			if( nodesProcessed == m_nNodesPerSegment )
+			{
+				for(
+					descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() );
+					descendant < segmentBound && m_frontIter != m_front.end();
+					++nodesProcessed, descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() )
+				)
+				{
+					trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
+				}
 			}
 			
 			#ifdef DEBUG
