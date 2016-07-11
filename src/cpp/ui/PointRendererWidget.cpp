@@ -46,11 +46,11 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
 // 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply" ).toStdString() );
-	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
+// 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 //  openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_10Lvls/David.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct" );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
@@ -290,8 +290,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-// 	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 1000000, 20 );
-	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 1000000, 2 );
+	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 1000000, 30 );
 	
 	cout << "Renderer built." << endl;
 	

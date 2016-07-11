@@ -362,6 +362,8 @@ namespace model
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
 		
+		bool m_nextSegmentFlag;
+		
 		#ifdef DEBUG
 			ulong m_nPlaceholders;
 			ulong m_nSubstituted;
@@ -378,18 +380,21 @@ namespace model
 	m_currentIterPlaceholders( nThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
-// 	m_nNodesPerSegment( 100000 ),
+	m_nNodesPerSegment( 100000 ),
 	m_front(),
-	m_segmentBounds( 2 ),
+	m_segmentBounds( 30 ),
 	m_frontIter( m_front.end() ),
-	m_nNodesPerSegment( 250000 ),
 	m_releaseFlag( false ),
-	m_leafLvlLoadedFlag( false )
+	m_leafLvlLoadedFlag( false ),
+	m_nextSegmentFlag( false )
 	#ifdef DEBUG
 		, m_nPlaceholders( 0ul ),
 		m_nSubstituted( 0ul )
 	#endif
-	{}
+	{
+		// Setting the biggest morton code as last segment boundary in order to ensure total front processing.
+		m_segmentBounds[ m_segmentBounds.size() - 1 ] = Morton::getLvlLast( Morton::maxLvl() );
+	}
 
 	template< typename Morton, typename Point >
 	void Front< Morton, Point >::notifyLeafLvlLoaded()
@@ -607,10 +612,6 @@ namespace model
 			m_front.splice( m_front.end(), m_placeholders );
 		}
 		
-		if( m_frontIter == m_front.end() )
-		{
-			m_frontIter = m_front.begin();
-		}
 		uint nodesProcessed = 0u;
 		renderer.mapAttribs();
 		
@@ -669,7 +670,7 @@ namespace model
 				m_sql.beginTransaction();
 				
 				#ifdef DEBUG
-					cout << "Release on" << endl << endl;
+// 					cout << "Release on" << endl << endl;
 				#endif
 			}
 			
@@ -682,40 +683,49 @@ namespace model
 			int currentSegment = renderer.currentSegment();
 			Morton& segmentBound = m_segmentBounds[ currentSegment ];
 			Morton descendant;
-			
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			for(
-				descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() );
-				nodesProcessed < m_nNodesPerSegment && m_frontIter != m_front.end();
-				++nodesProcessed, descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() )
-			)
+			
+			// Debug
+// 			{
+// 				cout << currentSegment << " bound: " << segmentBound.toString() << endl;
+// 			}
+			
+			if( segmentBound.getBits() == 0x0 )
 			{
-				#ifdef DEBUG
+				for(
+					descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() );
+					nodesProcessed < m_nNodesPerSegment && m_frontIter != m_front.end();
+					++nodesProcessed, descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() )
+				)
 				{
-// 					HierarchyCreationLog::logDebugMsg( "track starts\n" );
-// 					assertFrontIterator( frontIt );
-// 					assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
+					#ifdef DEBUG
+					{
+	// 					stringstream ss; ss << m_frontIter->m_morton.toString() << " Desc: " <<
+	// 					descendant.getPathToRoot( true ) << endl;
+	// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
+					#endif
+					
+					trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
+					
+					#ifdef DEBUG
+					{
+						OglUtils::checkOglErrors();
+					}
+					#endif
+					
+					#ifdef DEBUG
+					{
+	// 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
+					}
+					#endif
 				}
-				#endif
-				
-				trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
-				
-				#ifdef DEBUG
+				if( nodesProcessed == m_nNodesPerSegment )
 				{
-					OglUtils::checkOglErrors();
+					m_segmentBounds[ currentSegment ] = descendant;
 				}
-				#endif
-				
-				#ifdef DEBUG
-				{
-// 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
-				}
-				#endif
 			}
-			
-			m_segmentBounds[ currentSegment ] = descendant;
-			
-			if( nodesProcessed == m_nNodesPerSegment )
+			else
 			{
 				for(
 					descendant = m_frontIter->m_morton.getFirstDescendantInLvl( Morton::maxLvl() );
@@ -739,9 +749,9 @@ namespace model
 			}
 			
 			// Debug
-			{
-				cout << "Nodes processed: " << nodesProcessed << endl << endl;
-			}
+// 			{
+// 				cout << "Nodes processed: " << nodesProcessed << endl << endl;
+// 			}
 			
 			#ifdef DEBUG
 // 			{
@@ -779,6 +789,7 @@ namespace model
 		if( m_frontIter == m_front.end() )
 		{
 			renderer.selectFirstSegment();
+			m_frontIter = m_front.begin();
 		}
 		else
 		{

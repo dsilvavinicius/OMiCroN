@@ -5,7 +5,7 @@
 #include "TucanoRenderingState.h"
 #include "OglUtils.h"
 
-#define DEBUG
+// #define DEBUG
 
 using namespace Tucano;
 using namespace util;
