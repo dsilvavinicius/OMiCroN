@@ -93,7 +93,7 @@ void PointRendererWidget::paintGL (void)
 	auto frameStart = Profiler::now();
 	makeCurrent();
 
-// 	adaptRenderingThresh();
+	adaptRenderingThresh();
 	
 	m_renderer->setupRendering();
 	
@@ -256,7 +256,7 @@ void PointRendererWidget::openMesh( const string& filename )
 		delete m_octree;
 	}
 	
-	Octree::RuntimeSetup runtime( 4, 1024, 1024ul * 1024ul * 1024ul * 7ul, true );
+	Octree::RuntimeSetup runtime( 4, 1024, 1024ul * 1024ul * 1024ul * 12ul, true );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{

@@ -13,7 +13,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -217,7 +217,18 @@ namespace model
 	template< typename Morton, typename Point >
 	future< typename HierarchyCreator< Morton, Point >::Node* > HierarchyCreator< Morton, Point >::createAsync()
 	{
-		packaged_task< Node*() > task( [ & ]{ return create(); } );
+		packaged_task< Node*() > task(
+			[ & ]
+			{
+				auto start = Profiler::now( "Hierarchy creation" );
+				
+				Node* root = create();
+				
+				Profiler::elapsedTime( start, "Hierarchy creation" );
+				
+				return root;
+			}
+		);
 		auto future = task.get_future();
 		thread t( std::move( task ) );
 		t.detach();
@@ -580,19 +591,11 @@ namespace model
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					
-					//m_front.notifyInsertionEnd( dispatchedThreads );
-					
-					// BEGIN LOAD BALANCE.
-					// Debug
+					#ifdef DEBUG
 // 					{
-// 						cout << "Before work merge:" << endl;
-// 						for( int i = 0; i < iterOutput.size(); ++i )
-// 						{
-// 							cout << "output " << i << endl
-// 									<< nodeListToString( iterOutput[ i ], nextLvlDim );
-// 						}
-// 						cout << endl;
+// 						HierarchyCreationLog::logDebugMsg( "After parallel processing.\n" );
 // 					}
+					#endif
 					
 					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
 					
@@ -605,14 +608,11 @@ namespace model
 							
 							#ifdef DEBUG
 // 							{
-// 								stringstream ss; ss << "Merging nextLvl back and output 0" << endl
-// 									<< "Next lvl back size: " << nextLvlBack.size() << "output size: "
-// 									<< iterOutput[ 0 ].size() << endl << endl;
-// 								HierarchyCreationLog::logDebugMsg( ss.str() );
+// 								HierarchyCreationLog::logDebugMsg( "merge next lvl back and out[ 0 ]\n" );
 // 							}
 							#endif
 							
-							mergeOrPushWork( nextLvlBack, 0, iterOutput[ 0 ], nextLvlDim );
+							mergeOrPushWork( nextLvlBack, -1, iterOutput[ 0 ], nextLvlDim );
 						}
 						else if( iterOutput[ 0 ].size() > 1 )
 						{
@@ -637,10 +637,10 @@ namespace model
 					for( int i = 0; i < lastThreadIdx; ++i )
 					{
 						#ifdef DEBUG
-// 						{
-// 							stringstream ss; ss << "Merging output " << i << " and " << i + 1 << endl << endl;
+						{
+// 							stringstream ss; ss << "merge out[ " << i << "] and out[ " << i + 1 << "]" << endl;
 // 							HierarchyCreationLog::logDebugMsg( ss.str() );
-// 						}
+						}
 						#endif
 						
 						mergeOrPushWork( iterOutput[ i ], i, iterOutput[ i + 1 ], nextLvlDim );
@@ -658,10 +658,12 @@ namespace model
 						if( !nextLvlWorkList.empty() )
 						{
 							#ifdef DEBUG
-// 							{
+							{
+// 								HierarchyCreationLog::logDebugMsg( "RemoveBoundDup -1\n" );
+								
 // 								stringstream ss; ss << "Removing duplicates of last thread back." << endl << endl;
 // 								HierarchyCreationLog::logDebugMsg( ss.str() );
-// 							}
+							}
 							#endif
 							
 							removeBoundaryDuplicate( nextLvlWorkList.back(), lastThreadIdx, iterOutput[ lastThreadIdx ],
@@ -933,13 +935,24 @@ namespace model
 	::removeBoundaryDuplicate( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
 							   const OctreeDim& nextLvlDim ) /*const*/
 	{
-		const int nextIdx = previousIdx + 1;
+		#ifdef DEBUG
+// 		{
+// 			HierarchyCreationLog::logDebugMsg( "removeBound begin\n" );
+// 		}
+		#endif
+		
 		if( !previousProcessed.empty() && !nextProcessed.empty() )
 		{
 			Node& prevLastNode = previousProcessed.back();
 			Node& nextFirstNode = nextProcessed.front();
 			NodeArray& prevLastNodeChild = prevLastNode.child();
 			NodeArray& nextFirstNodeChild = nextFirstNode.child();
+			
+			typename Front::FrontListIter it;
+			if( previousIdx == -1 )
+			{
+				it = m_front.getIteratorToBufferBegin( 0 );
+			}
 			
 			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
 			{
@@ -964,16 +977,22 @@ namespace model
 					
 					#ifdef DEBUG
 // 					{
-// 						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ i ] << " code: "
-// 							<< m_octreeDim.calcMorton( mergedChild[ i ] ).getPathToRoot( true ) << endl;
+// 						stringstream ss; ss << "Case: Duplication found. code: "
+// 							<< m_octreeDim.calcMorton( mergedChild[ i ] ).toString() << endl;
 // 						HierarchyCreationLog::logDebugMsg( ss.str() );
 // 					}
 					#endif
 					
-					setParent( child, previousIdx );
+					if( previousIdx == -1 )
+					{
+						setParent( child, 0, it );
+					}
+					else
+					{
+						setParent( child, previousIdx );
+					}
 				}
 				
-				//typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
 				for( int i = 0; i < nextFirstNodeChild.size(); ++i )
 				{
 					int idx = prevLastNodeChild.size() + i;
@@ -986,13 +1005,20 @@ namespace model
 					
 					#ifdef DEBUG
 // 					{
-// 						stringstream ss; ss << "Case: Duplication found. addr: " << &mergedChild[ idx ] << " code: "
-// 							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).getPathToRoot( true ) << endl;
+// 						stringstream ss; ss << "Case: Duplication found. code: "
+// 							  << m_octreeDim.calcMorton( mergedChild[ idx ] ).toString() << endl;
 // 						HierarchyCreationLog::logDebugMsg( ss.str() );
 // 					}
 					#endif
 					
-					setParent( child, previousIdx );
+					if( previousIdx == -1 )
+					{
+						setParent( child, 0, it );
+					}
+					else
+					{
+						setParent( child, previousIdx );
+					}
 				}
 				
 				Array< PointPtr > selectedPoints = samplePoints( prefixMap, nPoints );
@@ -1014,32 +1040,57 @@ namespace model
 			}
 			else
 			{
+				#ifdef DEBUG
+// 				{
+// 					HierarchyCreationLog::logDebugMsg( "Before prevLast setParent.\n" );
+// 				}
+				#endif
+				
 				// Setup parents for boundary nodes children.
 				for( Node& child : prevLastNodeChild )
 				{
 					#ifdef DEBUG
 // 					{
-// 						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
-// 							<< m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 						stringstream ss; ss << "Case: Duplication not found. code: "
+// 							<< m_octreeDim.calcMorton( child ).toString() << endl;
 // 						HierarchyCreationLog::logDebugMsg( ss.str() );
 // 					}
 					#endif
 					
-					setParent( child, previousIdx );
+					if( previousIdx == -1 )
+					{
+						setParent( child, 0, it );
+					}
+					else
+					{
+						setParent( child, previousIdx );
+					}
 				}
 				
-				//typename Front::FrontListIter iter = m_front.getIteratorToBufferBegin( nextIdx );
+				#ifdef DEBUG
+// 				{
+// 					HierarchyCreationLog::logDebugMsg( "Before nextFirst setParent.\n" );
+// 				}
+				#endif
+				
 				for( Node& child : nextFirstNodeChild )
 				{
 					#ifdef DEBUG
 // 					{
-// 						stringstream ss; ss << "Case: Duplication not found. addr: " << &child << " code: "
-// 							  << m_octreeDim.calcMorton( child ).getPathToRoot( true ) << endl;
+// 						stringstream ss; ss << "Case: Duplication not found. code: "
+// 							  << m_octreeDim.calcMorton( child ).toString() << endl;
 // 						HierarchyCreationLog::logDebugMsg( ss.str() );
 // 					}
 					#endif
 					
-					setParent( child, previousIdx );
+					if( previousIdx == -1 )
+					{
+						setParent( child, 0, it );
+					}
+					else
+					{
+						setParent( child, previousIdx );
+					}
 				}
 			}
 			
@@ -1052,6 +1103,12 @@ namespace model
 				nextFirstNode.turnLeaf();
 			}
 		}
+		
+		#ifdef DEBUG
+// 		{
+// 			HierarchyCreationLog::logDebugMsg( "removeBound end\n" );
+// 		}
+		#endif
 	}
 		
 	/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
@@ -1061,13 +1118,20 @@ namespace model
 	inline void HierarchyCreator< Morton, Point >
 	::mergeOrPushWork( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed, OctreeDim& nextLvlDim )
 	{
-		// Debug
-// 			{
-// 				cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim )
-// 					 << endl << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
-// 					 << "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim )
-// 					 << "nextLvlWorkList end" << endl << endl;
-// 			}
+		#ifdef DEBUG
+		{
+// 			cout << "mergeOrPushWork begin" << endl << "prev:" << endl << nodeListToString( previousProcessed, nextLvlDim )
+// 					<< endl << "next:" << endl << nodeListToString( nextProcessed, nextLvlDim ) << endl
+// 					<< "nextLvlWorkList:" << endl << workListToString( m_lvlWorkLists[ nextLvlDim.m_nodeLvl ], nextLvlDim )
+// 					<< "nextLvlWorkList end" << endl << endl;
+		}
+		#endif
+		
+		#ifdef DEBUG
+// 		{
+// 			HierarchyCreationLog::logDebugMsg( "RemoveBoundDup 0\n" );
+// 		}
+		#endif
 		
 		removeBoundaryDuplicate( previousProcessed, previousIdx, nextProcessed, nextLvlDim );
 	
@@ -1091,6 +1155,12 @@ namespace model
 			
 			if( !workList.empty() )
 			{
+				#ifdef DEBUG
+// 				{
+// 					HierarchyCreationLog::logDebugMsg( "RemoveBoundDup 1\n" );
+// 				}
+				#endif
+				
 				removeBoundaryDuplicate( workList.back(), previousIdx, previousProcessed, nextLvlDim );
 			}
 			

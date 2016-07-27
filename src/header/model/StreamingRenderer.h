@@ -288,46 +288,52 @@ namespace model
 	template<>
 	inline void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points )
 	{
-		for( const PointPtr p : points )
+		if( m_ptsPerSegment[ m_currentSegment ] + points.size() < m_maxPtsPerSegment )
 		{
-			const Vec3& pos = p->getPos();
-			const Vec3& normal = p->getColor();
+			for( const PointPtr p : points )
+			{
+				const Vec3& pos = p->getPos();
+				const Vec3& normal = p->getColor();
+				
+				*( m_vertexMap++ ) = pos.x();
+				*( m_vertexMap++ ) = pos.y();
+				*( m_vertexMap++ ) = pos.z();
+				
+				*( m_normalMap++ ) = normal.x();
+				*( m_normalMap++ ) = normal.y();
+				*( m_normalMap++ ) = normal.z();
+			}
 			
-			*( m_vertexMap++ ) = pos.x();
-			*( m_vertexMap++ ) = pos.y();
-			*( m_vertexMap++ ) = pos.z();
-			
-			*( m_normalMap++ ) = normal.x();
-			*( m_normalMap++ ) = normal.y();
-			*( m_normalMap++ ) = normal.z();
+			m_ptsPerSegment[ m_currentSegment ] += points.size();
 		}
-		
-		m_ptsPerSegment[ m_currentSegment ] += points.size();
 	}
 	
 	template<>
 	inline void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points )
 	{
-		for( const ExtendedPointPtr p : points )
+		if( m_ptsPerSegment[ m_currentSegment ] + points.size() < m_maxPtsPerSegment )
 		{
-			const Vec3& pos = p->getPos();
-			const Vec3& normal = p->getNormal();
-			const Vec3& color = p->getColor();
+			for( const ExtendedPointPtr p : points )
+			{
+				const Vec3& pos = p->getPos();
+				const Vec3& normal = p->getNormal();
+				const Vec3& color = p->getColor();
+				
+				*( m_vertexMap++ ) = pos.x();
+				*( m_vertexMap++ ) = pos.y();
+				*( m_vertexMap++ ) = pos.z();
+				
+				*( m_normalMap++ ) = normal.x();
+				*( m_normalMap++ ) = normal.y();
+				*( m_normalMap++ ) = normal.z();
+				
+				*( m_colorMap++ ) = color.x();
+				*( m_colorMap++ ) = color.y();
+				*( m_colorMap++ ) = color.z();
+			}
 			
-			*( m_vertexMap++ ) = pos.x();
-			*( m_vertexMap++ ) = pos.y();
-			*( m_vertexMap++ ) = pos.z();
-			
-			*( m_normalMap++ ) = normal.x();
-			*( m_normalMap++ ) = normal.y();
-			*( m_normalMap++ ) = normal.z();
-			
-			*( m_colorMap++ ) = color.x();
-			*( m_colorMap++ ) = color.y();
-			*( m_colorMap++ ) = color.z();
+			m_ptsPerSegment[ m_currentSegment ] += points.size();
 		}
-		
-		m_ptsPerSegment[ m_currentSegment ] += points.size();
 	}
 	
 	template< typename Point >

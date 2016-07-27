@@ -72,7 +72,7 @@ namespace model
 		 * @returns the descendant of this MortonCode in the desired level. */
 		MortonCode getAncestorInLvl( uint lvl ) const;
 		
-		MortonCode getFirstDescendantInLvl( uint lvl ) const;
+		MortonCode getFirstDescendantInLvl( uint lvl = maxLvl() ) const;
 		
 		/** @returns the first child of this morton code. The first child has the morton code of the father appended
 		 * with the bitmask 000. */
