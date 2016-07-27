@@ -11,7 +11,7 @@
 #include "Profiler.h"
 #include <StackTrace.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -367,7 +367,7 @@ namespace model
 		#ifdef DEBUG
 			ulong m_nPlaceholders;
 			ulong m_nSubstituted;
-			bool m_isSubstituting;
+// 			bool m_isSubstituting;
 		#endif
 	};
 	
@@ -390,8 +390,8 @@ namespace model
 	m_nextSegmentFlag( false )
 	#ifdef DEBUG
 		, m_nPlaceholders( 0ul ),
-		m_nSubstituted( 0ul ),
-		m_isSubstituting( false )
+		m_nSubstituted( 0ul )
+// 		, m_isSubstituting( false )
 	#endif
 	{
 		// Setting the biggest morton code as last segment boundary in order to ensure total front processing.
@@ -423,12 +423,12 @@ namespace model
 // 				HierarchyCreationLog::logDebugMsg( ss.str() );
 // 			}
 			
-			if( !list.empty() && morton < list.back().m_morton )
-			{
-				stringstream ss; ss << StackTrace::toString() << "Insertion order compromised ( insertIntoBufferEnd ): "
-					<< morton.toString() << " < " << list.back().m_morton.toString() << endl;
-				HierarchyCreationLog::logAndFail( ss.str() );
-			}
+// 			if( !list.empty() && morton < list.back().m_morton )
+// 			{
+// 				stringstream ss; ss << StackTrace::toString() << "Insertion order compromised ( insertIntoBufferEnd ): "
+// 					<< morton.toString() << " < " << list.back().m_morton.toString() << endl;
+// 				HierarchyCreationLog::logAndFail( ss.str() );
+// 			}
 			
 // 			stringstream ss; ss << "insertIntoBufferEnd: " << morton.toString() << endl << endl;
 // 			HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -449,22 +449,22 @@ namespace model
 														   int threadIdx )
 	{
 		#ifdef DEBUG
-		{
-			FrontList& list = m_currentIterInsertions[ threadIdx ];
-			if( iter != list.end() && iter->m_morton <= morton )
-			{
-				stringstream ss; ss << "Insertion buffer order compromised ( 0 ). " << iter->m_morton.toString() << " < "
-					<< morton.toString() << endl;
-				HierarchyCreationLog::logAndFail( ss.str() );
-			}
-			
-			if( iter != list.begin() && morton <= prev( iter )->m_morton )
-			{
-				stringstream ss; ss << "Insertion buffer order compromised ( 1 ). " << morton.toString() << " < "
-					<< prev( iter )->m_morton.toString() << endl;
-				HierarchyCreationLog::logAndFail( ss.str() );
-			}
-		}
+// 		{
+// 			FrontList& list = m_currentIterInsertions[ threadIdx ];
+// 			if( iter != list.end() && iter->m_morton <= morton )
+// 			{
+// 				stringstream ss; ss << "Insertion buffer order compromised ( 0 ). " << iter->m_morton.toString() << " < "
+// 					<< morton.toString() << endl;
+// 				HierarchyCreationLog::logAndFail( ss.str() );
+// 			}
+// 			
+// 			if( iter != list.begin() && morton <= prev( iter )->m_morton )
+// 			{
+// 				stringstream ss; ss << "Insertion buffer order compromised ( 1 ). " << morton.toString() << " < "
+// 					<< prev( iter )->m_morton.toString() << endl;
+// 				HierarchyCreationLog::logAndFail( ss.str() );
+// 			}
+// 		}
 		#endif
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
@@ -527,13 +527,13 @@ namespace model
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
 				#ifdef DEBUG
-					ulong totalInsertionSize = 0ul;
+// 					ulong totalInsertionSize = 0ul;
 				#endif
 				
 				for( FrontList& list : m_currentIterInsertions )
 				{
 					#ifdef DEBUG
-						totalInsertionSize += list.size();
+// 						totalInsertionSize += list.size();
 					#endif
 					
 					FrontList& lvlInsertions = m_perLvlInsertions[ lvl ];
@@ -542,25 +542,25 @@ namespace model
 				}
 				
 				#ifdef DEBUG
-				{
-					auto iter = m_perLvlInsertions[ lvl ].rbegin();
-					for( ulong i = 0; i < totalInsertionSize; ++i, iter++ )
-					{
-						auto previous = next( iter );
-						if( previous != m_perLvlInsertions[ lvl ].rend() )
-						{
-							Morton& prevMorton = previous->m_morton;
-							Morton& currentMorton = iter->m_morton;
-							
-							if( currentMorton <= prevMorton )
-							{
-								stringstream ss; ss << "Insertions order compromised. Prev: " << prevMorton.toString()
-									<< ". Current: " << currentMorton.toString() << endl;
-								HierarchyCreationLog::logAndFail( ss.str() );
-							}
-						}
-					}
-				}
+// 				{
+// 					auto iter = m_perLvlInsertions[ lvl ].rbegin();
+// 					for( ulong i = 0; i < totalInsertionSize; ++i, iter++ )
+// 					{
+// 						auto previous = next( iter );
+// 						if( previous != m_perLvlInsertions[ lvl ].rend() )
+// 						{
+// 							Morton& prevMorton = previous->m_morton;
+// 							Morton& currentMorton = iter->m_morton;
+// 							
+// 							if( currentMorton <= prevMorton )
+// 							{
+// 								stringstream ss; ss << "Insertions order compromised. Prev: " << prevMorton.toString()
+// 									<< ". Current: " << currentMorton.toString() << endl;
+// 								HierarchyCreationLog::logAndFail( ss.str() );
+// 							}
+// 						}
+// 					}
+// 				}
 				#endif
 			}
 			
@@ -797,27 +797,27 @@ namespace model
 // 			}
 			
 			#ifdef DEBUG
-			{
-				size_t left;
-				Morton subCand;
-				{
-					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-					left = m_perLvlInsertions[ substitutionLvl ].size();
-					subCand = m_perLvlInsertions[ substitutionLvl ].front().m_morton;
-				}
-				
-				Morton subCandBound = subCand.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-				
-// 				stringstream ss; ss << "Track end. Nodes proc: " << nodesProcessed << ". Sub lvl: " << substitutionLvl
-// 					<< ". Sub cand: " << subCand.toString() << ". Sub cand bound: " << subCandBound.toString()
-// 					<< ". Last descendant: " << descendant.toString() << ". Left: " << left << endl << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-				
-				if( subCandBound < descendant )
-				{
-					HierarchyCreationLog::logAndFail( "Substitution invariant violated." );
-				}
-			}
+// 			{
+// 				size_t left;
+// 				Morton subCand;
+// 				{
+// 					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
+// 					left = m_perLvlInsertions[ substitutionLvl ].size();
+// 					subCand = m_perLvlInsertions[ substitutionLvl ].front().m_morton;
+// 				}
+// 				
+// 				Morton subCandBound = subCand.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
+// 				
+// 				if( subCandBound < descendant )
+// 				{
+// 					stringstream ss; ss << "Substitution invariant violated. Nodes proc: " << nodesProcessed
+// 					<< ". Sub lvl: " << substitutionLvl << ". Sub cand: " << subCand.toString() << ". Sub cand bound: "
+// 					<< subCandBound.toString() << ". Last descendant: " << descendant.toString() << ". Left: " << left
+// 					<< endl << endl;
+// 					
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
+// 			}
 			#endif
 		}
 		
@@ -1047,7 +1047,7 @@ namespace model
 					#ifdef DEBUG
 					{
 	// 					++m_nSubstituted;
-						m_isSubstituting = true;
+// 						m_isSubstituting = true;
 					}
 					#endif
 					
@@ -1056,18 +1056,16 @@ namespace model
 				else 
 				{
 					#ifdef DEBUG
-					{
-// 						HierarchyCreationLog::logDebugMsg( ". fail\n" );
-						
-						Morton candBound = substituteCandidate.m_morton.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-						if( m_isSubstituting && candBound < node.m_morton )
-						{
-							stringstream ss; ss << "Sub failed: " << node.m_morton.toString() << ". Cand: "
-								<< substituteCandidate.m_morton.toString() << ". Bound: " << candBound.toString() << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-						m_isSubstituting = false;
-					}
+// 					{
+// 						Morton candBound = substituteCandidate.m_morton.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
+// 						if( m_isSubstituting && candBound < node.m_morton )
+// 						{
+// 							stringstream ss; ss << "Sub failed: " << node.m_morton.toString() << ". Cand: "
+// 								<< substituteCandidate.m_morton.toString() << ". Bound: " << candBound.toString() << endl;
+// 							HierarchyCreationLog::logAndFail( ss.str() );
+// 						}
+// 						m_isSubstituting = false;
+// 					}
 					#endif
 					
 					return false;
@@ -1083,7 +1081,7 @@ namespace model
 // 					<< endl;
 // 				HierarchyCreationLog::logDebugMsg( ss.str() );
 // 			}
-			m_isSubstituting = false;
+// 			m_isSubstituting = false;
 		}
 		#endif
 		

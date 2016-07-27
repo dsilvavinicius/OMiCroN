@@ -13,7 +13,7 @@
 #include "SQLiteManager.h"
 
 // #define HIERARCHY_STATS
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
