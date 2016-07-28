@@ -195,12 +195,26 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 
 void PointRendererWidget::keyPressEvent( QKeyEvent * event )
 {
+	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = true;
 }
 
 void PointRendererWidget::keyReleaseEvent( QKeyEvent * event )
 {
+	m_renderer->selectEffect( Renderer::JUMP_FLOODING );
 	m_keys[ event->key() ] = false;
+}
+
+void PointRendererWidget::mousePressEvent( QMouseEvent * event )
+{
+	m_renderer->selectEffect( Renderer::PHONG );
+	QtFreecameraWidget::mousePressEvent( event );
+}
+
+void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
+{
+	m_renderer->selectEffect( Renderer::JUMP_FLOODING );
+	QtFreecameraWidget::mouseReleaseEvent( event );
 }
 
 void PointRendererWidget::updateFromKeyInput()
