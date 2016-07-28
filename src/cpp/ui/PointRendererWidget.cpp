@@ -53,7 +53,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct" );
 	
 	m_timer = new QTimer( this );
-	connect( m_timer, SIGNAL( timeout() ), this, SLOT( update() ) );
+	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
 	m_timer->start( 16.666f ); // Update 60 fps.
 }
 
@@ -89,6 +89,8 @@ void PointRendererWidget::adaptRenderingThresh()
 void PointRendererWidget::paintGL (void)
 {
 	//cout << "=== Painting starts ===" << endl << endl;
+	
+	updateFromKeyInput();
 	
 	auto frameStart = Profiler::now();
 	makeCurrent();
@@ -189,6 +191,44 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 	
 	Phong &phong = m_renderer->getPhong();
 	phong.render( mesh, tempCamera, light_trackball );
+}
+
+void PointRendererWidget::keyPressEvent( QKeyEvent * event )
+{
+	m_keys[ event->key() ] = true;
+}
+
+void PointRendererWidget::keyReleaseEvent( QKeyEvent * event )
+{
+	m_keys[ event->key() ] = false;
+}
+
+void PointRendererWidget::updateFromKeyInput()
+{
+	if( m_keys[ Qt::Key_O ] )
+	{
+		QString filename = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Mesh Files (*.obj *.ply)"));
+		if (!filename.isEmpty())
+		{
+			openMesh (filename.toStdString());
+		}
+	}
+	if( m_keys[ Qt::Key_R ] )
+		camera->reset();
+	if( m_keys[ Qt::Key_A ] )
+		camera->strideLeft();
+	if( m_keys[ Qt::Key_D ] )
+		camera->strideRight();
+	if( m_keys[ Qt::Key_S ] )
+		camera->moveBack();
+	if( m_keys[ Qt::Key_W ] )
+		camera->moveForward();
+	if( m_keys[ Qt::Key_C ] )
+		camera->moveDown();
+	if( m_keys[ Qt::Key_E ] )
+		camera->moveUp();	
+
+	camera->updateViewMatrix();
 }
 
 void PointRendererWidget::toggleWriteFrames()

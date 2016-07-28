@@ -55,6 +55,13 @@ public:
 
 protected:
 	
+	virtual void keyPressEvent (QKeyEvent * event) override;
+	
+	virtual void keyReleaseEvent (QKeyEvent * event) override;
+	
+	/** Updates the camera using the key flags.  */
+	void updateFromKeyInput();
+	
 signals:
 public slots:
 	/** @brief Toggle write output to image */
@@ -120,6 +127,9 @@ private:
 	Octree* m_octree;
 	
 	QTimer *m_timer;
+	
+	/** Key press booleans. */
+	QMap< int, bool > m_keys;
 	
 	/** Current normalized distance threshold used to control octree node rendering. */
 	float m_projThresh;
