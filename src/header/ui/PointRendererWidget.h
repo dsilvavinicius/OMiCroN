@@ -61,6 +61,8 @@ protected:
 	
 	virtual void mousePressEvent( QMouseEvent * event ) override;
 	
+	virtual void mouseMoveEvent( QMouseEvent * event ) override;
+	
 	virtual void mouseReleaseEvent( QMouseEvent * event ) override;
 	
 	/** Updates the camera using the key flags.  */
@@ -146,6 +148,9 @@ private:
 	
 	/** Rendering time tolerance used to verify if projection threshold adaptation is needed. In ms. */
 	float m_renderingTimeTolerance;
+	
+	/** Time when the last user keyboard or mouse input occurred. */
+	chrono::system_clock::time_point m_inputEndTime;
 	
 	/** Time when a frame is finished. Used to measure performance only. In ms. */
 	chrono::system_clock::time_point m_endOfFrameTime;

@@ -49,8 +49,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 //  openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_10Lvls/David.oct" );
-	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct" );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
+// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
@@ -91,6 +91,11 @@ void PointRendererWidget::paintGL (void)
 	//cout << "=== Painting starts ===" << endl << endl;
 	
 	updateFromKeyInput();
+	
+	if( Profiler::elapsedTime( m_inputEndTime ) > 1000 )
+	{
+		m_renderer->selectEffect( Renderer::JUMP_FLOODING );
+	}
 	
 	auto frameStart = Profiler::now();
 	makeCurrent();
@@ -195,25 +200,36 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 
 void PointRendererWidget::keyPressEvent( QKeyEvent * event )
 {
+	m_inputEndTime = Profiler::now();
 	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = true;
 }
 
 void PointRendererWidget::keyReleaseEvent( QKeyEvent * event )
 {
-	m_renderer->selectEffect( Renderer::JUMP_FLOODING );
+	m_inputEndTime = Profiler::now();
+	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = false;
 }
 
 void PointRendererWidget::mousePressEvent( QMouseEvent * event )
 {
+	m_inputEndTime = Profiler::now();
 	m_renderer->selectEffect( Renderer::PHONG );
 	QtFreecameraWidget::mousePressEvent( event );
 }
 
+void PointRendererWidget::mouseMoveEvent( QMouseEvent * event )
+{
+	m_inputEndTime = Profiler::now();
+	m_renderer->selectEffect( Renderer::PHONG );
+	QtFreecameraWidget::mouseMoveEvent( event );
+}
+
 void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
 {
-	m_renderer->selectEffect( Renderer::JUMP_FLOODING );
+	m_inputEndTime = Profiler::now();
+	m_renderer->selectEffect( Renderer::PHONG );
 	QtFreecameraWidget::mouseReleaseEvent( event );
 }
 

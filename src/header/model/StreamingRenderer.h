@@ -186,6 +186,7 @@ namespace model
 		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
 		m_jfpbr->setShadersDir( shaderPath );
 		m_jfpbr->initialize();
+		m_jfpbr->setFirstMaxDistance( 0.002f );
 	}
 	
 	template< typename Point >
