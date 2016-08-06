@@ -15,13 +15,14 @@ namespace model
 	/**
 	 * Renderer which defines a mesh at initalization time and streams points into it as needed in order to update parts
 	 * of it. The buffer rendering is controlled by an index buffer. The vertex attributes not referenced in the index
-	 * buffer have trash and accessing it can result in undefined behavior. Support for segmentated update is provided. The
-	 * workflow to follow is:
-	 * 1) Select a segment to update with selectFirstSegment() or selectNextSegment.
-	 * 2) Maps the vertex attributes of the current segment with mapAttribs().
+	 * buffer have trash and accessing them can result in undefined behavior. Support for segmentated parallel update is
+	 * provided. The workflow to follow is:
+	 * 1) Select a segments range to update with selectSegments().
+	 * 2) Maps the vertex attributes of the current segment range with mapAttribs().
 	 * 2) Stream points to the segment with handleNodeRendering(). The points will be inserted sequentially, starting at
-	 * buffer beginning and, thus, overwriting any previous data. If more than the maximum number of points allowed per
-	 * segment is reached, the next points will be ignored.
+	 * segment beginning and, thus, overwriting any previous data. If more than the maximum number of points allowed per
+	 * segment is reached, the next points will be ignored. The segments in the mapped range can be updated in parallel,
+	 * given that each thread updates a single unique segment.
 	 * 3) render(). This will unmap all vertex attributes.
 	 * The class also provides API for camera culling and box projection threshold evaluation.
 	 */
@@ -51,18 +52,19 @@ namespace model
 		
 		~StreamingRenderer();
 		
-		/** Selects the first segment. To map all pointers to its vertex attributes, call mapAttribs afterwards. */
-		void selectFirstSegment();
+		/** Select a range of segments for future mapping and update.*/
+		void selectSegments( const uint segmentIdx, const uint nSegments );
 		
-		/** Increments the current segment index in a round-robin fashion. To map all pointers to its vertex
-		 * attributes, call mapAttribs afterwards. */
-		void selectNextSegment();
+		/** @returns the index of the starting segment index of the selected segment range. */
+		uint segSelectionIdx() { return m_segSelectionIdx; }
 		
-		/** @returns the index of the current segment. */
-		int currentSegment() { return m_currentSegment; }
+		/** @returns the size of the selected segment range, in number of segments. */
+		uint segSelectionSize() { return m_segSelectionSize; }
 		
-		/** Maps all vertex attributes of the current segment. Future point rendering will overwrite this segment previous
-		 * data. */
+		/** Maps all vertex attributes for the continuous segment set defined by selectSegments. Future point rendering
+		 * will overwrite this range previous data.
+		 * @param segmentIdx is the starting segment of the mapping.
+		 * @param nSegments is the size of the mapping (in number of segments)*/
 		void mapAttribs();
 		
 		/** Event ocurring to setup rendering. Must be called before handling any node in a rendering loop.
@@ -74,8 +76,10 @@ namespace model
 		 * @returns the number of rendered points. */
 		uint render();
 		
-		/** Indicates that the node contents passed should be rendered. */
-		void handleNodeRendering( const PointArray& points );
+		/** Indicates that the node contents passed should be rendered.
+		 * @param points is the array of points to be rendered.
+		 * @param segmentIdx is the segment where the points will be written to. */
+		void handleNodeRendering( const PointArray& points, const uint segmentIdx );
 		
 		/** Updates the frustum after changes on camera. */
 		void update();
@@ -143,7 +147,9 @@ namespace model
 		/** Number of all current points. In other words, the sum of the number of points in all segments. */
 		uint m_nTotalPoints;
 		
-		int m_currentSegment;
+		uint m_segSelectionIdx;
+		
+		uint m_segSelectionSize;
 	};
 	
 	template< typename Point >
@@ -160,7 +166,8 @@ namespace model
 	m_ptsPerSegment( nSegments ),
 	m_maxPtsPerSegment( nPointsPerSegment ),
 	m_nTotalPoints( 0 ),
-	m_currentSegment( 0 )
+	m_segSelectionIdx( 0 ),
+	m_segSelectionSize( 1 )
 	{
 		uint totalPoints = m_maxPtsPerSegment * nSegments;
 		
@@ -203,37 +210,47 @@ namespace model
 		updateViewProjection();
 		m_frustum->update( m_viewProj );
 	}
-	template< typename Point >
-	void StreamingRenderer< Point >::selectFirstSegment()
-	{
-		m_currentSegment = 0;
-	}
 	
 	template< typename Point >
-	void StreamingRenderer< Point >::selectNextSegment()
+	void StreamingRenderer< Point >::selectSegments( const uint segmentIdx, const uint nSegments )
 	{
-		m_currentSegment = ( m_currentSegment + 1 ) % m_ptsPerSegment.size();
+		assert( segmentIdx < m_ptsPerSegment.size() && "Selected index is out of bounds." );
+		assert( segmentIdx + nSegments < m_ptsPerSegment.size() && "Segment size is out of bounds." );
+		
+		m_segSelectionIdx = segmentIdx;
+		m_segSelectionSize = nSegments;
 	}
 	
 	template<>
 	inline void StreamingRenderer< Point >::mapAttribs()
 	{
-		m_nTotalPoints -= m_ptsPerSegment[ m_currentSegment ];
-		m_ptsPerSegment[ m_currentSegment ] = 0ul;
+		for( int i = 0; i < m_segSelectionSize; ++i )
+		{
+			m_nTotalPoints -= m_ptsPerSegment[ m_segSelectionIdx + i ];
+			m_ptsPerSegment[ m_segSelectionIdx + i ] = 0ul;
+		}
 		
-		m_vertexMap = m_mesh->mapVertices( m_currentSegment * m_maxPtsPerSegment, m_maxPtsPerSegment );
-		m_normalMap = m_mesh->mapNormals( m_currentSegment * m_maxPtsPerSegment, m_maxPtsPerSegment );
+		m_vertexMap = m_mesh->mapVertices( m_segSelectionIdx * m_maxPtsPerSegment,
+										   m_segSelectionSize * m_maxPtsPerSegment );
+		m_normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
+										  m_segSelectionSize * m_maxPtsPerSegment );
 	}
 	
 	template<>
 	inline void StreamingRenderer< ExtendedPoint >::mapAttribs()
 	{
-		m_nTotalPoints -= m_ptsPerSegment[ m_currentSegment ];
-		m_ptsPerSegment[ m_currentSegment ] = 0ul;
+		for( int i = 0; i < m_segSelectionSize; ++i )
+		{
+			m_nTotalPoints -= m_ptsPerSegment[ m_segSelectionIdx + i ];
+			m_ptsPerSegment[ m_segSelectionIdx + i ] = 0ul;
+		}
 		
-		m_vertexMap = m_mesh->mapVertices( m_currentSegment * m_maxPtsPerSegment, m_maxPtsPerSegment );
-		m_normalMap = m_mesh->mapNormals( m_currentSegment * m_maxPtsPerSegment, m_maxPtsPerSegment );
-		m_colorMap = m_mesh->mapColors( m_currentSegment * m_maxPtsPerSegment, m_maxPtsPerSegment );
+		m_vertexMap = m_mesh->mapVertices( m_segSelectionIdx * m_maxPtsPerSegment,
+										   m_segSelectionSize * m_maxPtsPerSegment );
+		m_normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
+										  m_segSelectionSize * m_maxPtsPerSegment );
+		m_colorMap = m_mesh->mapColors( m_segSelectionIdx * m_maxPtsPerSegment,
+										m_segSelectionSize * m_maxPtsPerSegment );
 	}
 	
 	template< typename Point >
@@ -287,9 +304,9 @@ namespace model
 	}
 	
 	template<>
-	inline void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points )
+	inline void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points, const uint segmentIdx )
 	{
-		if( m_ptsPerSegment[ m_currentSegment ] + points.size() < m_maxPtsPerSegment )
+		if( m_ptsPerSegment[ segmentIdx ] + points.size() < m_maxPtsPerSegment )
 		{
 			for( const PointPtr p : points )
 			{
@@ -305,14 +322,14 @@ namespace model
 				*( m_normalMap++ ) = normal.z();
 			}
 			
-			m_ptsPerSegment[ m_currentSegment ] += points.size();
+			m_ptsPerSegment[ segmentIdx ] += points.size();
 		}
 	}
 	
 	template<>
-	inline void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points )
+	inline void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points, const uint segmentIdx )
 	{
-		if( m_ptsPerSegment[ m_currentSegment ] + points.size() < m_maxPtsPerSegment )
+		if( m_ptsPerSegment[ segmentIdx ] + points.size() < m_maxPtsPerSegment )
 		{
 			for( const ExtendedPointPtr p : points )
 			{
@@ -333,7 +350,7 @@ namespace model
 				*( m_colorMap++ ) = color.z();
 			}
 			
-			m_ptsPerSegment[ m_currentSegment ] += points.size();
+			m_ptsPerSegment[ segmentIdx ] += points.size();
 		}
 	}
 	
@@ -344,7 +361,10 @@ namespace model
 			cout << "Current segment: " << m_currentSegment << endl << endl;
 		#endif
 		
-		m_nTotalPoints += m_ptsPerSegment[ m_currentSegment ];
+		for( int i = 0; i < m_segSelectionSize; ++i )
+		{
+			m_nTotalPoints += m_ptsPerSegment[ m_segSelectionIdx + i ];
+		}
 		
 		m_mesh->unmapVertices();
 		

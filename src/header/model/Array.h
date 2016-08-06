@@ -37,6 +37,16 @@ namespace model
 			}
 		}
 		
+		/** Ctor that allocates a new array with the given size and populates it with the given initialization value. */
+		Array( uint size, const T& initValue )
+		: Array( size )
+		{
+			for( T& element : *this )
+			{
+				element = initValue;
+			}
+		}
+		
 		/** Ctor that takes resposibility of a given array with the given size. */
 		Array( uint size, T* array )
 		: m_size( size ),

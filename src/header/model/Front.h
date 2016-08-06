@@ -129,7 +129,8 @@ namespace model
 		/** Ctor.
 		 * @param dbFilename is the path to a database file which will be used to store nodes in an out-of-core approach.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
-		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads, const ulong memoryLimit );
+		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nHierarchyCreationThreads,
+			   const ulong memoryLimit );
 		
 		/** Inserts a node into thread's buffer end so it can be push to the front later on. After this, the tracking
 		 * method will ensure that the placeholder related with this node, if any, will be substituted by it.
@@ -198,6 +199,11 @@ namespace model
 		void setupNodeRendering( FrontListIter& iter, const FrontNode& frontNode, Renderer& renderer );
 		
 		void setupNodeRenderingNoFront( FrontListIter& iter, const Node& node, Renderer& renderer ) const;
+		
+		bool isSubstIdxInRange( const uint rangeStartIdx, const uint rangeSize ) const
+		{
+			return m_substitutionSegIdx >= rangeStartIdx && m_substitutionSegIdx < rangeStartIdx + rangeSize;
+		}
 		
 		#ifdef DEBUG
 			void assertFrontIterator( const FrontListIter& iter )
@@ -317,13 +323,6 @@ namespace model
 		/** Mutexes to synchronize m_perLvlInsertions operations. */
 		vector< mutex > m_perLvlMtx;
 		
-		/** Mutex to sincronize prunning operations with other ones that should have mutual exclusion with
-		 * it. */
-// 		mutex m_prunningMtx;
-		
-		/** FrontLists that need to be inserted into front. */
-		//InsertionVector m_insertionLists;
-		
 		/** Nodes pending insertion in the current insertion iteration. m_currentIterInsertions[ t ] have the insertions
 		 * of thread t. This lists are moved to m_perLvlInsertions whenever notifyInsertionEnd() is called. */
 		InsertionVector m_currentIterInsertions;
@@ -338,8 +337,36 @@ namespace model
 		/** All placeholders pending insertion. The list is sorted in hierarchy width order.  */
 		FrontList m_placeholders;
 		
-		/** Per-segment Morton code boundaries. m_segmentLimits[ i ] has the current boundary of segment i. */
-		Array< Morton > m_segmentBounds;
+		/** Front segment. Each segment contains:
+		 * an iterator that points to its beginning in the front,
+		 * a morton code in the deepest hierarchy level that indicates its morton code boundary,
+		 * a flag that indicates if it is substituting placeholders,
+		 * a flag that indicates if it is rendering points, i.e., updating the GPU point buffer segment. */
+		typedef struct Segment
+		{
+			Segment()
+			: m_isSubstituting( false ),
+			m_isRendering( false )
+			{}
+			
+			Segment( const FrontList& front )
+			: m_frontIter( front.end() ),
+			m_isSubstituting( false ),
+			m_isRendering( false )
+			{}
+			
+			FrontListIter m_frontIter;
+			Morton m_segmentBound;
+			bool m_isSubstituting;
+			bool m_isRendering;
+		} Segment;
+		
+		/** Front segment array. */
+		Array< Segment > m_segments;
+		
+		/** Contains segment indices used to map threads in segments. m_threadSegmentMap[ t ] contains the segment mapped
+		 * to thread t. */
+		Array< uint > m_threadSegmentMap;
 		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
@@ -353,16 +380,17 @@ namespace model
 		/** Maximum nodes per front segment. */
 		uint m_nNodesPerSegment;
 		
-		/** Iterator from which the front tracking will start next frame. */
-		FrontListIter m_frontIter;
+		/** Segment where the placeholder substitution will occur. */
+		uint m_substitutionSegIdx;
+		
+		/** Number of threads used for front tracking. */
+		uint m_nFrontThreads;
 		
 		/** true if the front has nodes to release yet, false otherwise. */
 		atomic_bool m_releaseFlag;
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
-		
-		bool m_nextSegmentFlag;
 		
 		#ifdef DEBUG
 			ulong m_nPlaceholders;
@@ -372,22 +400,23 @@ namespace model
 	};
 	
 	template< typename Morton, typename Point >
-	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nThreads,
-										  const ulong memoryLimit )
+	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
+										  const int nHierarchyCreationThreads, const ulong memoryLimit )
 	: m_sql( dbFilename ),
 	m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
-	m_currentIterInsertions( nThreads ),
-	m_currentIterPlaceholders( nThreads ),
+	m_currentIterInsertions( nHierarchyCreationThreads ),
+	m_currentIterPlaceholders( nHierarchyCreationThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_nNodesPerSegment( 100000 ),
 	m_front(),
-	m_segmentBounds( 30 ),
-	m_frontIter( m_front.end() ),
+	m_segments( 30, Segment( m_front ) ),
+	m_substitutionSegIdx( 0 ),
+	m_nFrontThreads( 4 ),
+	m_threadSegmentMap( m_nFrontThreads, 0 ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false ),
-	m_nextSegmentFlag( false )
 	#ifdef DEBUG
 		, m_nPlaceholders( 0ul ),
 		m_nSubstituted( 0ul )
@@ -395,7 +424,7 @@ namespace model
 	#endif
 	{
 		// Setting the biggest morton code as last segment boundary in order to ensure total front processing.
-		m_segmentBounds[ m_segmentBounds.size() - 1 ] = Morton::getLvlLast( Morton::maxLvl() );
+		m_segments[ m_segments.size() - 1 ].m_segmentBound = Morton::getLvlLast( Morton::maxLvl() );
 	}
 
 	template< typename Morton, typename Point >
@@ -644,9 +673,9 @@ namespace model
 		
 		if( !m_front.empty() )
 		{
-			if( m_frontIter == m_front.end() )
+			if( m_segments[ 0 ].m_frontIter == m_front.end() )
 			{
-				m_frontIter = m_front.begin();
+				m_segments[ 0 ].m_frontIter = m_front.begin();
 			}
 			
 			// The level from which the placeholders will be substituted is the one with max size, in order to maximize
@@ -727,6 +756,16 @@ namespace model
 			Morton& segmentBound = m_segmentBounds[ currentSegment ];
 			Morton descendant;
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
+			
+			uint dispatchedThreads = isSubstIdxInRange( renderer.segSelectionIdx(), renderer.segSelectionSize() )
+									 ? renderer.segSelectionSize() : renderer.segSelectionSize() + 1;
+			
+			#pragma omp parallel for
+			for( int i = 0; i < dispatchedThreads; ++i )
+			{
+				uint segmentIdx = m_threadSegmentMap[ i ];
+				FrontListIter iter = m_segments[ segmentIdx ];
+			}
 			
 			// Debug
 // 			{
@@ -841,13 +880,44 @@ namespace model
 		
 		int renderingTime = Profiler::elapsedTime( start );
 		
-		if( m_frontIter == m_front.end() )
+		// Select next frame's placeholder substitution segment.
+		m_substitutionSegIdx = ( m_substitutionSegIdx + 1 ) % m_segments.size();
+		
+		if( m_segments[ m_substitutionSegIdx ].m_frontIter == m_front.end() )
 		{
-			renderer.selectFirstSegment();
+			m_substitutionSegIdx = 0;
 		}
-		else
+		
+		// Select next frame's point update segment range.
+		uint nextFrameFirstSeg = renderer.segSelectionIdx() + renderer.segSelectionSize();
+		
+		uint segSelectionStart = ( nextFrameFirstSeg == m_segments.size() ||
+								   m_segments[ nextFrameFirstSeg ].m_frontIter == m_front.end() )
+								 ? 0 : nextFrameFirstSeg;
+		
+		bool substIdxInRangeFlag = isSubstIdxInRange( segSelectionStart, m_nFrontThreads );
+		uint expectedSelectionSize = ( substIdxInRangeFlag ) ? m_nFrontThreads : m_nFrontThreads - 1;
+		
+		uint segSelectionSize = ( nextFrameFirstSeg + expectedSelectionSize <= m_segments.size() )
+								? expectedSelectionSize : m_segments.size() - nextFrameFirstSeg;
+		
+		renderer.selectSegments( segSelectionStart, segSelectionSize );
+		
+		for( int i = 0; i < segSelectionSize; ++i )
 		{
-			renderer.selectNextSegment();
+			m_threadSegmentMap[ i ] = segSelectionStart + i;
+			Segment& segment = m_segments[ segSelectionStart + i ];
+			segment.m_isSubstituting = false;
+			segment.m_isRendering = true;
+		}
+		
+		Segment& substSegment = m_segments[ m_substitutionSegIdx ];
+		substSegment.m_isSubstituting = true;
+		
+		if( !substIdxInRangeFlag )
+		{
+			m_threadSegmentMap[ segSelectionSize ] = m_substitutionSegIdx;
+			substSegment.m_isRendering = false;
 		}
 		
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_front.size() );
