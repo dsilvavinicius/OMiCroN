@@ -91,7 +91,7 @@ namespace model
 			{
 				if( event->key() == Qt::Key_N )
 				{
-					m_renderer->selectNextSegment();
+					m_renderer->selectSegments( ( m_renderer->segSelectionIdx() + 1 ) % m_nSegments, 1 );
 				}
 				else
 				{
@@ -103,7 +103,7 @@ namespace model
 			void loadSegment()
 			{
 				m_renderer->mapAttribs();
-				int segment = m_renderer->currentSegment();
+				int segment = m_renderer->segSelectionIdx();
 				OglUtils::checkOglErrors();
 				
 				uint prefix = segment * m_segmentSize;
@@ -111,7 +111,7 @@ namespace model
 				{
 					Array< ExtendedPointPtr > ptArray( 1 );
 					ptArray[ 0 ] = m_points[ prefix + i ];
-					m_renderer->handleNodeRendering( ptArray );
+					m_renderer->handleNodeRendering( ptArray, segment );
 				}
 			}
 			
