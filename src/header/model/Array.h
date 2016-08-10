@@ -38,17 +38,22 @@ namespace model
 		}
 		
 		/** Ctor that allocates a new array with the given size and populates it with the given initialization value. */
-		Array( uint size, const T& initValue )
-		: Array( size )
+		explicit Array( uint size, const T& initValue )
+		: m_size( size )
 		{
-			for( T& element : *this )
+			if( m_size )
 			{
-				element = initValue;
+				m_array = A().allocate( size );
+				initArray( initValue );
+			}
+			else
+			{
+				m_array = nullptr;
 			}
 		}
 		
 		/** Ctor that takes resposibility of a given array with the given size. */
-		Array( uint size, T* array )
+		explicit Array( uint size, T* array )
 		: m_size( size ),
 		m_array( array )
 		{}
@@ -78,9 +83,10 @@ namespace model
 				m_array = A().allocate( m_size );
 				initArray();
 				
-				for( int i = 0; i < m_size; ++i )
+				auto otherIt = other.begin();
+				for( auto it = begin(); it != end(); it++, otherIt++ )
 				{
-					m_array[ i ] = other[ i ];
+					*it = *otherIt;
 				}
 			}
 		}
@@ -95,9 +101,10 @@ namespace model
 				m_array = A().allocate( m_size );
 				initArray();
 				
-				for( int i = 0; i < m_size; ++i )
+				auto otherIt = other.begin();
+				for( auto it = begin(); it != end(); it++, otherIt++ )
 				{
-					m_array[ i ] = other.m_array[ i ];
+					*it = *otherIt;
 				}
 			}
 			
@@ -113,6 +120,8 @@ namespace model
 		
 		Array& operator=( Array&& other )
 		{
+			this->~Array();
+			
 			m_array = other.m_array;
 			m_size = other.m_size;
 			
@@ -217,9 +226,18 @@ namespace model
 		/** Inits the internal array. */
 		void initArray()
 		{
-			for( int i = 0; i < m_size; ++i )
+			for(  auto iter = begin(); iter != end(); iter++ )
 			{
-				A().construct( m_array + i );
+				A().construct( iter );
+			}
+		}
+		
+		/** Inits the internal array. */
+		void initArray( const T& initValue )
+		{
+			for( auto iter = begin(); iter != end(); iter++ )
+			{
+				A().construct( iter, initValue );
 			}
 		}
 		

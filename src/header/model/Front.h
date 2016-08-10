@@ -11,7 +11,7 @@
 #include "Profiler.h"
 #include <StackTrace.h>
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -228,9 +228,9 @@ namespace model
 		}
 		
 		#ifdef DEBUG
-			void assertFrontIterator( const FrontListIter& iter )
+			void assertFrontIterator( const FrontListIter& iter, const FrontList& front )
 			{
-				if( iter != m_front.begin() )
+				if( iter != front.begin() )
 				{
 					Morton& currMorton = iter->m_morton;
 					Morton& prevMorton = prev( iter )->m_morton;
@@ -412,7 +412,7 @@ namespace model
 	m_substitutionSegIdx( 0 ),
 	m_appendSegIdx( 0 ),
 	m_nFrontThreads( 4 ),
-	m_threadSegmentMap( m_nFrontThreads, uint( 0 ) ),
+	m_threadSegmentMap( 4, uint( 0 ) ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
@@ -426,6 +426,9 @@ namespace model
 		{
 			segment.m_index = i++;
 		}
+		
+		m_segments[ 0 ].m_isSubstituting = true;
+		m_segments[ 0 ].m_isRendering = true;
 		
 		// Setting the biggest morton code as last segment boundary in order to ensure total front processing.
 		m_segments[ m_segments.size() - 1 ].m_boundary = Morton::getLvlLast( Morton::maxLvl() );
@@ -668,8 +671,23 @@ namespace model
 			appendSeg.m_front.splice( appendSeg.m_front.end(), m_placeholders );
 		}
 		
+		#ifdef DEBUG
+		{
+			stringstream ss; ss << "Append seg: " << m_appendSegIdx << " Size: " << appendSeg.m_front.size() << endl
+								<< endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		if( appendSeg.m_front.size() > m_nNodesPerSegment )
 		{
+			#ifdef DEBUG
+			{
+				stringstream ss; ss << "New append seg at size: " << appendSeg.m_front.size() << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			appendSeg.m_boundary = *appendSeg.m_front.back().m_morton.getNext();
 			++m_appendSegIdx;
 			
@@ -769,13 +787,35 @@ namespace model
 									 ? renderer.segSelectionSize() : renderer.segSelectionSize() + 1;
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 			
+			#ifdef DEBUG
+			{
+				stringstream ss; ss << "Segment range: ( " << renderer.segSelectionIdx() << ", " << renderer.segSelectionSize()
+									<< " ) SubIdx: " << m_substitutionSegIdx << " Segment map: ( ";
+				for( uint idx : m_threadSegmentMap )
+				{
+					ss << idx << " "; 
+				}
+				ss << ") Dispatched: " << dispatchedThreads << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			#pragma omp parallel for
 			for( int i = 0; i < dispatchedThreads; ++i )
 			{
 				uint segmentIdx = m_threadSegmentMap[ i ];
+				
 				Segment& segment = m_segments[ segmentIdx ];
 				FrontList& front = segment.m_front;
 				const Morton& segmentBound = segment.m_boundary;
+				
+				#ifdef DEBUG
+				{
+					stringstream ss; ss << "t: " << i << " seg: " << segmentIdx << " subst: " << segment.m_isSubstituting
+										<< " render: " << segment.m_isRendering << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+				#endif
 				
 				if( segmentBound.getBits() == 0x0 )
 				{
@@ -974,13 +1014,22 @@ namespace model
 		uint segSelectionStart = ( nextFrameFirstSeg == m_segments.size() ||
 								   m_segments[ nextFrameFirstSeg ].m_front.empty() )
 								 ? 0 : nextFrameFirstSeg;
-		
+								 
 		bool substIdxInRangeFlag = isSubstIdxInRange( segSelectionStart, m_nFrontThreads );
 		uint expectedSelectionSize = ( substIdxInRangeFlag ) ? m_nFrontThreads : m_nFrontThreads - 1;
 		
-		uint segSelectionSize = ( nextFrameFirstSeg + expectedSelectionSize <= m_segments.size() )
-								? expectedSelectionSize : m_segments.size() - nextFrameFirstSeg;
+		uint segSelectionSize = ( segSelectionStart + expectedSelectionSize <= m_appendSegIdx + 1 )
+								? expectedSelectionSize : m_appendSegIdx + 1 - segSelectionStart;
 		
+		#ifdef DEBUG
+		{
+			stringstream ss; ss << "Subst idx: " << m_substitutionSegIdx << " Subst in range " << substIdxInRangeFlag
+								<< " Next frame sel idx: " << nextFrameFirstSeg << " Sel start: " << segSelectionStart
+								<< " Sel size: " << segSelectionSize << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+
 		renderer.selectSegments( segSelectionStart, segSelectionSize );
 		
 		for( int i = 0; i < segSelectionSize; ++i )
@@ -1004,6 +1053,13 @@ namespace model
 		// Not optimized. Probably it doesn't need to, anyway.
 		for( Segment& segment : m_segments )
 		{
+			#ifdef DEBUG
+			{
+				stringstream ss; ss << "Segment " << segment.m_index << " size: " << segment.m_front.size() << endl
+									<< endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
 			nNodes += segment.m_front.size();
 		}
 		

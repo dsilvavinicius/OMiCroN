@@ -68,12 +68,13 @@ namespace model
 				m_nSegments = ceil( float( reader.getNumPoints() ) / float( m_segmentSize ) );
 				m_renderer = new Renderer( camera, &light_trackball, &mesh, "../shaders/tucano/", m_segmentSize,
 										   m_nSegments );
+				m_renderer->selectSegments( 0, 2 );
 				OglUtils::checkOglErrors();
 			}
 			
 			void paintGL() override
 			{
-				loadSegment();
+				loadSegments();
 				
 				m_renderer->setupRendering();
 				
@@ -91,7 +92,29 @@ namespace model
 			{
 				if( event->key() == Qt::Key_N )
 				{
-					m_renderer->selectSegments( ( m_renderer->segSelectionIdx() + 1 ) % m_nSegments, 1 );
+					uint segSelectionIdx;
+					uint segSelectionSize;
+					
+					if( m_renderer->segSelectionIdx() + 2 >= m_nSegments )
+					{
+						if( m_renderer->segSelectionIdx() + 1 < m_nSegments )
+						{
+							segSelectionIdx = m_renderer->segSelectionIdx() + 1;
+							segSelectionSize = 1;
+						}
+						else
+						{
+							segSelectionIdx = 0;
+							segSelectionSize = 2;
+						}
+					}
+					else
+					{
+						segSelectionIdx = m_renderer->segSelectionIdx() + 2;
+						segSelectionSize = 2;
+					}
+					
+					m_renderer->selectSegments( segSelectionIdx, segSelectionSize );
 				}
 				else
 				{
@@ -100,18 +123,22 @@ namespace model
 			}
 		
 		private:
-			void loadSegment()
+			void loadSegments()
 			{
 				m_renderer->mapAttribs();
-				int segment = m_renderer->segSelectionIdx();
+				uint segSelectionIdx = m_renderer->segSelectionIdx();
+				uint segSelectionSize = m_renderer->segSelectionSize();
 				OglUtils::checkOglErrors();
 				
-				uint prefix = segment * m_segmentSize;
-				for( int i = 0; i < m_segmentSize && prefix + i < m_points.size(); ++i )
+				for( uint i = segSelectionIdx; i < segSelectionIdx + segSelectionSize; ++i )
 				{
-					Array< ExtendedPointPtr > ptArray( 1 );
-					ptArray[ 0 ] = m_points[ prefix + i ];
-					m_renderer->handleNodeRendering( ptArray, segment );
+					uint prefix = i * m_segmentSize;
+					for( uint j = 0; j < m_segmentSize && prefix + j < m_points.size(); ++j )
+					{
+						Array< ExtendedPointPtr > ptArray( 1 );
+						ptArray[ 0 ] = m_points[ prefix + j ];
+						m_renderer->handleNodeRendering( ptArray, i );
+					}
 				}
 			}
 			

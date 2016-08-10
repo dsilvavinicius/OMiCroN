@@ -5,7 +5,7 @@
 #include "TucanoRenderingState.h"
 #include "OglUtils.h"
 
-// #define DEBUG
+#define DEBUG
 
 using namespace Tucano;
 using namespace util;
@@ -131,15 +131,23 @@ namespace model
 		/** Frame counter. Used in order to skip frames properly. */
 		unsigned int m_nFrames;
 		
-		/** Number of current points per segment. */
-		Array< uint > m_ptsPerSegment;
+		typedef struct Segment
+		{
+			Segment()
+			: m_vertexMap( nullptr ),
+			m_normalMap( nullptr ),
+			m_colorMap( nullptr ),
+			m_nPoints( 0u )
+			{}
+			
+			float* m_vertexMap;
+			float* m_normalMap;
+			float* m_colorMap;
+			uint m_nPoints;
+		} Segment;
 		
-		/** Current segment vertex map. */
-		float* m_vertexMap;
-		/** Current segment normal map. */
-		float* m_normalMap;
-		/** Current segment color map. */
-		float* m_colorMap;
+		/** Number of current points per segment. */
+		Array< Segment > m_segments;
 		
 		/** Maximum number of points allowed in a segment. */
 		uint m_maxPtsPerSegment;
@@ -163,7 +171,7 @@ namespace model
 	m_jfpbrFrameskip( jfpbrFrameskip ),
 	m_effect( effect ),
 	m_nFrames( 0 ),
-	m_ptsPerSegment( nSegments ),
+	m_segments( nSegments ),
 	m_maxPtsPerSegment( nPointsPerSegment ),
 	m_nTotalPoints( 0 ),
 	m_segSelectionIdx( 0 ),
@@ -224,33 +232,46 @@ namespace model
 	template<>
 	inline void StreamingRenderer< Point >::mapAttribs()
 	{
-		for( int i = 0; i < m_segSelectionSize; ++i )
-		{
-			m_nTotalPoints -= m_ptsPerSegment[ m_segSelectionIdx + i ];
-			m_ptsPerSegment[ m_segSelectionIdx + i ] = 0ul;
-		}
+		float* vertexMap = m_mesh->mapVertices( m_segSelectionIdx * m_maxPtsPerSegment,
+												m_segSelectionSize * m_maxPtsPerSegment );
+		float* normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
+											   m_segSelectionSize * m_maxPtsPerSegment );
 		
-		m_vertexMap = m_mesh->mapVertices( m_segSelectionIdx * m_maxPtsPerSegment,
-										   m_segSelectionSize * m_maxPtsPerSegment );
-		m_normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
-										  m_segSelectionSize * m_maxPtsPerSegment );
+		for( int i = m_segSelectionIdx; i < m_segSelectionIdx + m_segSelectionSize; ++i )
+		{
+			Segment& segment = m_segments[ i ];
+			m_nTotalPoints -= segment.m_nPoints;
+			segment.m_nPoints = 0ul;
+			segment.m_vertexMap = vertexMap + 3 * i * m_maxPtsPerSegment;
+			segment.m_normalMap = normalMap + 3 * i * m_maxPtsPerSegment;
+		}
 	}
 	
 	template<>
 	inline void StreamingRenderer< ExtendedPoint >::mapAttribs()
 	{
-		for( int i = 0; i < m_segSelectionSize; ++i )
+		float* vertexMap = m_mesh->mapVertices( m_segSelectionIdx * m_maxPtsPerSegment,
+												m_segSelectionSize * m_maxPtsPerSegment );
+		float* normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
+											   m_segSelectionSize * m_maxPtsPerSegment );
+		float* colorMap = m_mesh->mapColors( m_segSelectionIdx * m_maxPtsPerSegment,
+											 m_segSelectionSize * m_maxPtsPerSegment );
+		
+		for( int i = m_segSelectionIdx; i < m_segSelectionIdx + m_segSelectionSize; ++i )
 		{
-			m_nTotalPoints -= m_ptsPerSegment[ m_segSelectionIdx + i ];
-			m_ptsPerSegment[ m_segSelectionIdx + i ] = 0ul;
+			Segment& segment = m_segments[ i ];
+			m_nTotalPoints -= segment.m_nPoints;
+			segment.m_nPoints = 0ul;
+			segment.m_vertexMap = vertexMap + 3 * i * m_maxPtsPerSegment;
+			segment.m_normalMap = normalMap + 3 * i * m_maxPtsPerSegment;
+			segment.m_colorMap = colorMap + 3 * i * m_maxPtsPerSegment;
 		}
 		
-		m_vertexMap = m_mesh->mapVertices( m_segSelectionIdx * m_maxPtsPerSegment,
-										   m_segSelectionSize * m_maxPtsPerSegment );
-		m_normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
-										  m_segSelectionSize * m_maxPtsPerSegment );
-		m_colorMap = m_mesh->mapColors( m_segSelectionIdx * m_maxPtsPerSegment,
-										m_segSelectionSize * m_maxPtsPerSegment );
+		#ifdef DEBUG
+		{
+			cout << "Total points after map: " <<  m_nTotalPoints << endl << endl;
+		}
+		#endif
 	}
 	
 	template< typename Point >
@@ -306,30 +327,34 @@ namespace model
 	template<>
 	inline void StreamingRenderer< Point >::handleNodeRendering( const PointArray& points, const uint segmentIdx )
 	{
-		if( m_ptsPerSegment[ segmentIdx ] + points.size() < m_maxPtsPerSegment )
+		Segment& segment = m_segments[ segmentIdx ];
+		
+		if( segment.m_nPoints + points.size() <= m_maxPtsPerSegment )
 		{
 			for( const PointPtr p : points )
 			{
 				const Vec3& pos = p->getPos();
 				const Vec3& normal = p->getColor();
 				
-				*( m_vertexMap++ ) = pos.x();
-				*( m_vertexMap++ ) = pos.y();
-				*( m_vertexMap++ ) = pos.z();
+				*( segment.m_vertexMap++ ) = pos.x();
+				*( segment.m_vertexMap++ ) = pos.y();
+				*( segment.m_vertexMap++ ) = pos.z();
 				
-				*( m_normalMap++ ) = normal.x();
-				*( m_normalMap++ ) = normal.y();
-				*( m_normalMap++ ) = normal.z();
+				*( segment.m_normalMap++ ) = normal.x();
+				*( segment.m_normalMap++ ) = normal.y();
+				*( segment.m_normalMap++ ) = normal.z();
 			}
 			
-			m_ptsPerSegment[ segmentIdx ] += points.size();
+			segment.m_nPoints += points.size();
 		}
 	}
 	
 	template<>
 	inline void StreamingRenderer< ExtendedPoint >::handleNodeRendering( const PointArray& points, const uint segmentIdx )
 	{
-		if( m_ptsPerSegment[ segmentIdx ] + points.size() < m_maxPtsPerSegment )
+		Segment& segment = m_segments[ segmentIdx ];
+		
+		if( segment.m_nPoints + points.size() <= m_maxPtsPerSegment )
 		{
 			for( const ExtendedPointPtr p : points )
 			{
@@ -337,33 +362,29 @@ namespace model
 				const Vec3& normal = p->getNormal();
 				const Vec3& color = p->getColor();
 				
-				*( m_vertexMap++ ) = pos.x();
-				*( m_vertexMap++ ) = pos.y();
-				*( m_vertexMap++ ) = pos.z();
+				*( segment.m_vertexMap++ ) = pos.x();
+				*( segment.m_vertexMap++ ) = pos.y();
+				*( segment.m_vertexMap++ ) = pos.z();
 				
-				*( m_normalMap++ ) = normal.x();
-				*( m_normalMap++ ) = normal.y();
-				*( m_normalMap++ ) = normal.z();
+				*( segment.m_normalMap++ ) = normal.x();
+				*( segment.m_normalMap++ ) = normal.y();
+				*( segment.m_normalMap++ ) = normal.z();
 				
-				*( m_colorMap++ ) = color.x();
-				*( m_colorMap++ ) = color.y();
-				*( m_colorMap++ ) = color.z();
+				*( segment.m_colorMap++ ) = color.x();
+				*( segment.m_colorMap++ ) = color.y();
+				*( segment.m_colorMap++ ) = color.z();
 			}
 			
-			m_ptsPerSegment[ segmentIdx ] += points.size();
+			segment.m_nPoints += points.size();
 		}
 	}
 	
 	template< typename Point >
 	inline uint StreamingRenderer< Point >::render()
 	{
-		#ifdef DEBUG
-			cout << "Current segment: " << m_currentSegment << endl << endl;
-		#endif
-		
-		for( int i = 0; i < m_segSelectionSize; ++i )
+		for( int i = m_segSelectionIdx; i < m_segSelectionIdx + m_segSelectionSize; ++i )
 		{
-			m_nTotalPoints += m_ptsPerSegment[ m_segSelectionIdx + i ];
+			m_nTotalPoints += m_segments[ m_segSelectionIdx + i ].m_nPoints;
 		}
 		
 		m_mesh->unmapVertices();
@@ -393,9 +414,9 @@ namespace model
 			#endif
 			
 			uint prefix = 0u;
-			for( int i = 0; i < m_ptsPerSegment.size(); ++i )
+			for( int i = 0; i < m_segments.size(); ++i )
 			{
-				uint nPoints = m_ptsPerSegment[ i ];
+				uint nPoints = m_segments[ i ].m_nPoints;
 				
 				#ifdef DEBUG
 				{
