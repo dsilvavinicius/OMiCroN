@@ -4,6 +4,8 @@
 #include <QDebug>
 #include <QTimer>
 
+#define ADAPTIVE_PROJ
+
 PointRendererWidget::PointRendererWidget( QWidget *parent )
 : Tucano::QtFreecameraWidget( parent ),
 m_projThresh( 1.f ),
@@ -100,7 +102,9 @@ void PointRendererWidget::paintGL (void)
 	auto frameStart = Profiler::now();
 	makeCurrent();
 
-	adaptRenderingThresh();
+	#ifdef ADAPTIVE_PROJ
+		adaptRenderingThresh();
+	#endif
 	
 	m_renderer->setupRendering();
 	
@@ -360,7 +364,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 10000000, 30 );
+	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 2500000, 120 );
 	
 	cout << "Renderer built." << endl;
 	

@@ -12,6 +12,8 @@
 #include <StackTrace.h>
 
 // #define DEBUG
+// #define PERSISTENCE
+#define N_THREADS 6
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -331,8 +333,10 @@ namespace model
 			}
 		#endif
 		
-		/** Database connection used to persist nodes. */
-		Sql m_sql;
+		#ifdef PERSISTENCE
+			/** Database connection used to persist nodes. */
+			Sql m_sql;
+		#endif
 		
 		/** Node used as a placeholder in the front. It is used whenever it is known that a node should occupy a given
 		 * position, but the node itself is not defined yet because the hierarchy creation algorithm have not reached
@@ -400,19 +404,23 @@ namespace model
 	template< typename Morton, typename Point >
 	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
 										  const int nHierarchyCreationThreads, const ulong memoryLimit )
-	: m_sql( dbFilename ),
+	:
+	#ifdef PERSISTENCE
+		m_sql( dbFilename ),
+	#endif
+	
 	m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nHierarchyCreationThreads ),
 	m_currentIterPlaceholders( nHierarchyCreationThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
-	m_nNodesPerSegment( 100000 ),
-	m_segments( 30 ),
+	m_nNodesPerSegment( 30000 ),
+	m_segments( 120 ),
 	m_substitutionSegIdx( 0 ),
 	m_appendSegIdx( 0 ),
-	m_nFrontThreads( 4 ),
-	m_threadSegmentMap( 4, uint( 0 ) ),
+	m_nFrontThreads( N_THREADS ),
+	m_threadSegmentMap( N_THREADS, uint( 0 ) ),
 	m_releaseFlag( false ),
 	m_leafLvlLoadedFlag( false )
 	#ifdef DEBUG
@@ -765,17 +773,20 @@ namespace model
 			}
 			#endif
 			
-			bool transactionNeeded = AllocStatistics::totalAllocated() > m_memoryLimit;
-			m_releaseFlag = transactionNeeded;
+			m_releaseFlag = AllocStatistics::totalAllocated() > m_memoryLimit;
 			
-			if( transactionNeeded )
-			{
-				m_sql.beginTransaction();
+			#ifdef PERSISTENCE
+				bool transactionNeeded = m_releaseFlag;
 				
-				#ifdef DEBUG
-// 					cout << "Release on" << endl << endl;
-				#endif
-			}
+				if( transactionNeeded )
+				{
+					m_sql.beginTransaction();
+					
+					#ifdef DEBUG
+	// 					cout << "Release on" << endl << endl;
+					#endif
+				}
+			#endif
 			
 			// Debug
 // 			{
@@ -800,7 +811,7 @@ namespace model
 			}
 			#endif
 			
-			#pragma omp parallel for
+			#pragma omp parallel for num_threads(N_THREADS)
 			for( int i = 0; i < dispatchedThreads; ++i )
 			{
 				uint segmentIdx = m_threadSegmentMap[ i ];
@@ -868,10 +879,12 @@ namespace model
 			}
 			#endif
 			
-			if( transactionNeeded )
-			{
-				m_sql.endTransaction();
-			}
+			#ifdef PERSISTENCE
+				if( transactionNeeded )
+				{
+					m_sql.endTransaction();
+				}
+			#endif
 			
 			// Segment boundaries can have problems with prunning or branching operations. They are fixed bellow.
 // 			for( const uint segIdx : m_threadSegmentMap )
@@ -1537,7 +1550,9 @@ namespace model
 			#endif
 			
 			// Persisting node
-// 			m_sql.insertNode( siblingMorton, sibling );
+			#ifdef PERSISTENCE
+				m_sql.insertNode( siblingMorton, sibling );
+			#endif
 		}
 		
 		m_persisted += siblings.size();
