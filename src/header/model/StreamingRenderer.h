@@ -5,7 +5,7 @@
 #include "TucanoRenderingState.h"
 #include "OglUtils.h"
 
-#define DEBUG
+// #define DEBUG
 
 using namespace Tucano;
 using namespace util;
@@ -222,8 +222,8 @@ namespace model
 	template< typename Point >
 	void StreamingRenderer< Point >::selectSegments( const uint segmentIdx, const uint nSegments )
 	{
-		assert( segmentIdx < m_ptsPerSegment.size() && "Selected index is out of bounds." );
-		assert( segmentIdx + nSegments < m_ptsPerSegment.size() && "Segment size is out of bounds." );
+		assert( segmentIdx < m_segments.size() && "Selected index is out of bounds." );
+		assert( segmentIdx + nSegments <= m_segments.size() && "Segment size is out of bounds." );
 		
 		m_segSelectionIdx = segmentIdx;
 		m_segSelectionSize = nSegments;
@@ -237,9 +237,9 @@ namespace model
 		float* normalMap = m_mesh->mapNormals( m_segSelectionIdx * m_maxPtsPerSegment,
 											   m_segSelectionSize * m_maxPtsPerSegment );
 		
-		for( int i = m_segSelectionIdx; i < m_segSelectionIdx + m_segSelectionSize; ++i )
+		for( int i = 0; i < m_segSelectionSize; ++i )
 		{
-			Segment& segment = m_segments[ i ];
+			Segment& segment = m_segments[ i + m_segSelectionIdx ];
 			m_nTotalPoints -= segment.m_nPoints;
 			segment.m_nPoints = 0ul;
 			segment.m_vertexMap = vertexMap + 3 * i * m_maxPtsPerSegment;
@@ -257,9 +257,9 @@ namespace model
 		float* colorMap = m_mesh->mapColors( m_segSelectionIdx * m_maxPtsPerSegment,
 											 m_segSelectionSize * m_maxPtsPerSegment );
 		
-		for( int i = m_segSelectionIdx; i < m_segSelectionIdx + m_segSelectionSize; ++i )
+		for( int i = 0; i < m_segSelectionSize; ++i )
 		{
-			Segment& segment = m_segments[ i ];
+			Segment& segment = m_segments[ i + m_segSelectionIdx ];
 			m_nTotalPoints -= segment.m_nPoints;
 			segment.m_nPoints = 0ul;
 			segment.m_vertexMap = vertexMap + 3 * i * m_maxPtsPerSegment;
@@ -384,7 +384,7 @@ namespace model
 	{
 		for( int i = m_segSelectionIdx; i < m_segSelectionIdx + m_segSelectionSize; ++i )
 		{
-			m_nTotalPoints += m_segments[ m_segSelectionIdx + i ].m_nPoints;
+			m_nTotalPoints += m_segments[ i ].m_nPoints;
 		}
 		
 		m_mesh->unmapVertices();

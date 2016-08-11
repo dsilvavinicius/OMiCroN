@@ -80,6 +80,7 @@ namespace model
 				
 				OglUtils::checkOglErrors();
 				
+				cout << "Rendering" << endl << endl;
 				m_renderer->render();
 				
 				OglUtils::checkOglErrors();
@@ -92,26 +93,19 @@ namespace model
 			{
 				if( event->key() == Qt::Key_N )
 				{
-					uint segSelectionIdx;
+					cout << "Selecting segments" << endl << endl;
+					
+					uint segSelectionIdx = m_renderer->segSelectionIdx() + m_renderer->segSelectionSize();
 					uint segSelectionSize;
 					
-					if( m_renderer->segSelectionIdx() + 2 >= m_nSegments )
+					if( segSelectionIdx >= m_nSegments )
 					{
-						if( m_renderer->segSelectionIdx() + 1 < m_nSegments )
-						{
-							segSelectionIdx = m_renderer->segSelectionIdx() + 1;
-							segSelectionSize = 1;
-						}
-						else
-						{
-							segSelectionIdx = 0;
-							segSelectionSize = 2;
-						}
+						segSelectionIdx = 0;
+						segSelectionSize = 2;
 					}
 					else
 					{
-						segSelectionIdx = m_renderer->segSelectionIdx() + 2;
-						segSelectionSize = 2;
+						segSelectionSize = ( segSelectionIdx + 2 <= m_nSegments ) ? 2 : 1;
 					}
 					
 					m_renderer->selectSegments( segSelectionIdx, segSelectionSize );
@@ -132,11 +126,12 @@ namespace model
 				
 				for( uint i = segSelectionIdx; i < segSelectionIdx + segSelectionSize; ++i )
 				{
-					uint prefix = i * m_segmentSize;
-					for( uint j = 0; j < m_segmentSize && prefix + j < m_points.size(); ++j )
+					cout << "Loading segment " << i << endl << endl;
+					
+					for( uint j = i * m_segmentSize; j < ( i + 1 ) * m_segmentSize && j < m_points.size(); ++j )
 					{
 						Array< ExtendedPointPtr > ptArray( 1 );
-						ptArray[ 0 ] = m_points[ prefix + j ];
+						ptArray[ 0 ] = m_points[ j ];
 						m_renderer->handleNodeRendering( ptArray, i );
 					}
 				}

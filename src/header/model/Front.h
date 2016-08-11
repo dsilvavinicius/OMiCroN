@@ -11,7 +11,7 @@
 #include "Profiler.h"
 #include <StackTrace.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
