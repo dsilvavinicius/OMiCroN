@@ -13,7 +13,7 @@
 
 // #define DEBUG
 // #define PERSISTENCE
-#define N_THREADS 6
+#define N_THREADS 4
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -192,7 +192,6 @@ namespace model
 			{}
 			
 			FrontList m_front;
-			Morton m_boundary;
 			uint m_index;
 			bool m_isSubstituting;
 			bool m_isRendering;
@@ -437,9 +436,6 @@ namespace model
 		
 		m_segments[ 0 ].m_isSubstituting = true;
 		m_segments[ 0 ].m_isRendering = true;
-		
-		// Setting the biggest morton code as last segment boundary in order to ensure total front processing.
-		m_segments[ m_segments.size() - 1 ].m_boundary = Morton::getLvlLast( Morton::maxLvl() );
 	}
 
 	template< typename Morton, typename Point >
@@ -696,7 +692,6 @@ namespace model
 			}
 			#endif
 			
-			appendSeg.m_boundary = *appendSeg.m_front.back().m_morton.getNext();
 			++m_appendSegIdx;
 			
 			#ifdef DEBUG
@@ -818,7 +813,6 @@ namespace model
 				
 				Segment& segment = m_segments[ segmentIdx ];
 				FrontList& front = segment.m_front;
-				const Morton& segmentBound = segment.m_boundary;
 				
 				#ifdef DEBUG
 				{
@@ -828,43 +822,29 @@ namespace model
 				}
 				#endif
 				
-				if( segmentBound.getBits() == 0x0 )
+				for( FrontListIter iter = front.begin(); iter != front.end(); /**/ )
 				{
-					for( FrontListIter iter = front.begin(); iter != front.end(); /**/ )
+					#ifdef DEBUG
 					{
-						#ifdef DEBUG
-						{
-	// 						stringstream ss; ss << m_frontIter->m_morton.toString() << " Desc: " << descendant.toString()
-	// 							<< endl;
-	// 						HierarchyCreationLog::logDebugMsg( ss.str() );
-						}
-						#endif
-						
-						trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
-						
-						#ifdef DEBUG
-						{
-	// 						OglUtils::checkOglErrors();
-						}
-						#endif
-						
-						#ifdef DEBUG
-						{
-		// 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
-						}
-						#endif
+// 						stringstream ss; ss << m_frontIter->m_morton.toString() << " Desc: " << descendant.toString()
+// 							<< endl;
+// 						HierarchyCreationLog::logDebugMsg( ss.str() );
 					}
-				}
-				else
-				{
-					FrontListIter iter = front.begin();
-					for( Morton descendant = iter->m_morton.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-						descendant < segmentBound && iter != front.end();
-						descendant = iter->m_morton.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl )
-					)
+					#endif
+					
+					trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
+					
+					#ifdef DEBUG
 					{
-						trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
+// 						OglUtils::checkOglErrors();
 					}
+					#endif
+					
+					#ifdef DEBUG
+					{
+	// 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
+					}
+					#endif
 				}
 			}
 			
