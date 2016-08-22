@@ -156,6 +156,7 @@ namespace model
 	inline void GpuLoader< Point, Alloc >::unload( Node& node )
 	{
 		m_availableGpuMem += 7 * sizeof( float ) * node.getContents.size();
+		node.isLoaded = false;
 		node.mesh.reset();
 	}
 	
@@ -163,6 +164,7 @@ namespace model
 	inline void GpuLoader< ExtendedPoint, Alloc >::unload( Node& node )
 	{
 		m_availableGpuMem += 11 * sizeof( float ) * node.getContents.size();
+		node.isLoaded = false;
 		node.mesh.reset();
 	}
 }

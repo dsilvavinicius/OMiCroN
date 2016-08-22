@@ -196,23 +196,26 @@ namespace model
 	template< typename Point >
 	inline void StreamingRenderer< Point >::handleNodeRendering( const Node& node )
 	{
-		Mesh& mesh = node.mesh();
-		if( mesh.getNumberOfVertices() > 0 )
+		if( node.isLoaded() )
 		{
-			m_nRenderedPoints += mesh.getNumberOfVertices();
-			m_phong->render( mesh, *m_camera, *m_lightCamera );
-			
-// 			switch( m_effect )
-// 			{
-// 				case PHONG: m_phong->render( mesh, *m_camera, *m_lightCamera ); break;
-// 				case JUMP_FLOODING:
-// 				{
-// 					bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
-// 					m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
-// 					
-// 					break;
-// 				}
-// 			}
+			Mesh& mesh = node.mesh();
+			if( mesh.getNumberOfVertices() > 0 )
+			{
+				m_nRenderedPoints += mesh.getNumberOfVertices();
+				m_phong->render( mesh, *m_camera, *m_lightCamera );
+				
+	// 			switch( m_effect )
+	// 			{
+	// 				case PHONG: m_phong->render( mesh, *m_camera, *m_lightCamera ); break;
+	// 				case JUMP_FLOODING:
+	// 				{
+	// 					bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
+	// 					m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
+	// 					
+	// 					break;
+	// 				}
+	// 			}
+			}
 		}
 	}
 	
