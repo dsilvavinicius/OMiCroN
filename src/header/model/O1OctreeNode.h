@@ -2,9 +2,11 @@
 #define O1_OCTREE_NODE_H
 
 #include <memory>
+#include "tucano.hpp"
 #include "Array.h"
 
 using namespace std;
+using namespace Tucano;
 
 namespace model
 {
@@ -26,30 +28,34 @@ namespace model
 		: m_contents(),
 		m_isLeaf( false ),
 		m_parent( nullptr ),
-		m_children()
+		m_children(),
+		m_isLoaded( false )
 		{}
 		
 		O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
 		: m_contents( contents ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
-		m_children()
+		m_children(),
+		m_isLoaded( false )
 		{}
 		
 		O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
 		: m_contents( std::move( contents ) ),
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
-		m_children()
+		m_children(),
+		m_isLoaded( false )
 		{}
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
-		 * resources. */
+		 * resources.  The same occurs for GPU mesh data. */
 		O1OctreeNode( const O1OctreeNode& other )
 		: m_contents( other.m_contents ),
 		m_children( other.m_children ),
 		m_parent( other.m_parent ),
-		m_isLeaf( other.m_isLeaf )
+		m_isLeaf( other.m_isLeaf ),
+		m_isLoaded( false )
 		{}
 		
 		~O1OctreeNode()
@@ -58,32 +64,37 @@ namespace model
 		}
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
-		 * resources. */
+		 * resources. The same occurs for GPU mesh data. */
 		O1OctreeNode& operator=( const O1OctreeNode& other )
 		{
 			m_contents = other.m_contents;
 			m_children = other.m_children;
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
+			m_isLoaded = false;
 			
 			return *this;
 		}
 		
+		/** IMPORTANT: GPU mesh data is not moved. It is destroyed later on other's destructor. */
 		O1OctreeNode( O1OctreeNode&& other )
 		: m_contents( std::move( other.m_contents ) ),
 		m_children( std::move( other.m_children ) ),
 		m_parent( other.m_parent ),
-		m_isLeaf( other.m_isLeaf )
+		m_isLeaf( other.m_isLeaf ),
+		m_isLoaded( false )
 		{
 			other.m_parent = nullptr;
 		}
 		
+		/** IMPORTANT: GPU mesh data is not moved. It is destroyed later on other's destructor. */
 		O1OctreeNode& operator=( O1OctreeNode&& other )
 		{
 			m_contents = std::move( other.m_contents );
 			m_children = std::move( other.m_children );
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
+			m_isLoaded = false;
 			
 			other.m_parent = nullptr;
 			
@@ -141,6 +152,14 @@ namespace model
 			m_children.clear();
 		}
 		
+		const Mesh& mesh() const { return m_mesh; }
+		
+		Mesh& mesh() { return m_mesh; }
+		
+		bool isLoaded() const { return m_isLoaded; }
+		
+		void setLoaded( bool value ) { m_isLoaded = value; } 
+		
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
 		
@@ -149,6 +168,8 @@ namespace model
 		static O1OctreeNode deserialize( byte* serialization );
 		
 	private:
+		Mesh m_mesh;
+		
 		ContentsArray m_contents;
 		
 		// CACHE INVARIANT. Parent pointer. Is always corrent after octree bottom-up creation, since octree cache release
@@ -159,10 +180,7 @@ namespace model
 		// children can be released from octree cache.
 		NodeArray m_children;
 		
-		// Debug
-		static ofstream m_log;
-		static mutex m_logMutex;
-		//
+		atomic_bool m_isLoaded;
 		
 		// CACHE INVARIANT. Indicates if the node is leaf.
 		bool m_isLeaf;

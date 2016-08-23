@@ -58,6 +58,7 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void GpuLoader< Point, Alloc >::unload( Node& node, const uint threadIdx )
 	{
+		node.setLoaded( false );
 		m_iterUnload[ threadIdx ].push_back( &node );
 	}
 	
@@ -115,9 +116,10 @@ namespace model
 				normals.push_back( point->getColor() );
 			}
 			
-			node.mesh.loadVertices( positions );
-			node.mesh.loadNormals( normals );
-			node.isLoaded = true;
+			Mesh& mesh = node.mesh();
+			mesh.loadVertices( positions );
+			mesh.loadNormals( normals );
+			node.setLoaded( true );
 			
 			m_availableGpuMem -= neededGpuMem;
 		}
@@ -143,10 +145,11 @@ namespace model
 				colors.push_back( point->getColor() );
 			}
 			
-			node.mesh.loadVertices( positions );
-			node.mesh.loadNormals( normals );
-			node.mesh.loadColors( colors );
-			node.isLoaded = true;
+			Mesh& mesh = node.mesh();
+			mesh.loadVertices( positions );
+			mesh.loadNormals( normals );
+			mesh.loadColors( colors );
+			node.setLoaded( true );
 			
 			m_availableGpuMem -= neededGpuMem;
 		}
@@ -156,16 +159,14 @@ namespace model
 	inline void GpuLoader< Point, Alloc >::unload( Node& node )
 	{
 		m_availableGpuMem += 7 * sizeof( float ) * node.getContents.size();
-		node.isLoaded = false;
-		node.mesh.reset();
+		node.mesh().reset();
 	}
 	
 	template< typename Alloc >
 	inline void GpuLoader< ExtendedPoint, Alloc >::unload( Node& node )
 	{
 		m_availableGpuMem += 11 * sizeof( float ) * node.getContents.size();
-		node.isLoaded = false;
-		node.mesh.reset();
+		node.mesh().reset();
 	}
 }
 
