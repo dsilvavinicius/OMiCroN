@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "Front.h"
+#include "MortonCode.h"
 
 using namespace std;
 

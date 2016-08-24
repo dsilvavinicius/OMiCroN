@@ -66,8 +66,7 @@ namespace model
 				
 				m_segmentSize = 50000;
 				m_nSegments = ceil( float( reader.getNumPoints() ) / float( m_segmentSize ) );
-				m_renderer = new Renderer( camera, &light_trackball, &mesh, "../shaders/tucano/", m_segmentSize,
-										   m_nSegments );
+				m_renderer = new Renderer( camera, &light_trackball, "../shaders/tucano/" );
 				m_renderer->selectSegments( 0, 2 );
 				OglUtils::checkOglErrors();
 			}

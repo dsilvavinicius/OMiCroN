@@ -4,7 +4,7 @@
 #include "MortonCode.h"
 #include "ExtendedPoint.h"
 #include "OctreeNode.h"
-#include "O1OctreeNode.h"
+// #include "O1OctreeNode.h"
 
 namespace model
 {

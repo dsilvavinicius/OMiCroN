@@ -364,7 +364,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new Renderer( camera, &light_trackball, &mesh, "shaders/tucano/", 2500000, 120 );
+	m_renderer = new Renderer( camera, &light_trackball, "shaders/tucano/" );
 	
 	cout << "Renderer built." << endl;
 	

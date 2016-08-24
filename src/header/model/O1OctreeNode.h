@@ -187,12 +187,6 @@ namespace model
 	};
 	
 	template< typename Contents, typename ContentsAlloc >
-	ofstream O1OctreeNode< Contents, ContentsAlloc >::m_log( "O1Octree.log" );
-	
-	template< typename Contents, typename ContentsAlloc >
-	mutex O1OctreeNode< Contents, ContentsAlloc >::m_logMutex;
-	
-	template< typename Contents, typename ContentsAlloc >
 	inline void* O1OctreeNode< Contents, ContentsAlloc >::operator new( size_t size )
 	{
 		return NodeAlloc().allocate( 1 );
