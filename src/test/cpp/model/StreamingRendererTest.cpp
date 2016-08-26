@@ -3,6 +3,7 @@
 #include <QApplication>
 #include "PlyPointReader.h"
 #include "StreamingRenderer.h"
+#include "GpuLoader.h"
 #include "OglUtils.h"
 
 using namespace std;
@@ -16,11 +17,14 @@ namespace model
 		: public QtFlycameraWidget
 		{
 		public:
-			using PointVector = vector< ExtendedPointPtr >;
+			using PointArray = Array< ExtendedPointPtr >;
 			using Renderer = StreamingRenderer< ExtendedPoint >;
+			using Node = O1OctreeNode< ExtendedPointPtr >;
+			using GpuLoader = model::GpuLoader< ExtendedPoint >;
 			
 			StreamingRendererTestWidget( QWidget *parent = 0 )
-			: QtFlycameraWidget( parent )
+			: QtFlycameraWidget( parent ),
+			m_loader( 1, 900ul * 1024ul * 1024ul )
 			{}
 			
 			~StreamingRendererTestWidget()
@@ -33,17 +37,18 @@ namespace model
 				QtFlycameraWidget::initialize();
 				
 				PlyPointReader< ExtendedPoint > reader( "../data/example/staypuff.ply" );
-				ulong nPoints = reader.getNumPoints();
+				PointArray points( reader.getNumPoints() );
 				
 				Float negInf = -numeric_limits< Float >::max();
 				Float posInf = numeric_limits< Float >::max();
 				Vec3 origin = Vec3( posInf, posInf, posInf );
 				Vec3 maxCoords( negInf, negInf, negInf );
 				
+				auto iter = points.begin();
 				reader.read(
 					[ & ]( const ExtendedPoint& p )
 					{
-						m_points.push_back( make_shared< ExtendedPoint >( p ) );
+						*iter++ = make_shared< ExtendedPoint >( p );
 						
 						const Vec3& pos = p.getPos();
 						
@@ -58,88 +63,46 @@ namespace model
 				Vec3 boxSize = maxCoords - origin;
 				float scale = 1.f / std::max( std::max( boxSize.x(), boxSize.y() ), boxSize.z() );
 				
-				for( ExtendedPointPtr p : m_points )
+				for( ExtendedPointPtr p : points )
 				{
 					Vec3& pos = p->getPos();
 					pos = ( pos - origin ) * scale;
 				}
 				
-				m_segmentSize = 50000;
-				m_nSegments = ceil( float( reader.getNumPoints() ) / float( m_segmentSize ) );
 				m_renderer = new Renderer( camera, &light_trackball, "../shaders/tucano/" );
-				m_renderer->selectSegments( 0, 2 );
+				OglUtils::checkOglErrors();
+				
+				m_node = Node( points, true );
 				OglUtils::checkOglErrors();
 			}
 			
 			void paintGL() override
 			{
-				loadSegments();
+				if( !m_node.isLoaded() )
+				{
+					m_loader.asyncLoad( m_node );
+					OglUtils::checkOglErrors();
+				}
+				
+				m_loader.onIterationEnd();
+				OglUtils::checkOglErrors();
 				
 				m_renderer->setupRendering();
 				
 				OglUtils::checkOglErrors();
 				
-				cout << "Rendering" << endl << endl;
-				m_renderer->render();
+				m_renderer->handleNodeRendering( m_node );
+				m_renderer->afterRendering();
 				
 				OglUtils::checkOglErrors();
 				
 				camera->renderAtCorner();
 			}
-		
-		protected:
-			virtual void keyPressEvent( QKeyEvent * event ) override
-			{
-				if( event->key() == Qt::Key_N )
-				{
-					cout << "Selecting segments" << endl << endl;
-					
-					uint segSelectionIdx = m_renderer->segSelectionIdx() + m_renderer->segSelectionSize();
-					uint segSelectionSize;
-					
-					if( segSelectionIdx >= m_nSegments )
-					{
-						segSelectionIdx = 0;
-						segSelectionSize = 2;
-					}
-					else
-					{
-						segSelectionSize = ( segSelectionIdx + 2 <= m_nSegments ) ? 2 : 1;
-					}
-					
-					m_renderer->selectSegments( segSelectionIdx, segSelectionSize );
-				}
-				else
-				{
-					QtFlycameraWidget::keyPressEvent( event );
-				}
-			}
-		
-		private:
-			void loadSegments()
-			{
-				m_renderer->mapAttribs();
-				uint segSelectionIdx = m_renderer->segSelectionIdx();
-				uint segSelectionSize = m_renderer->segSelectionSize();
-				OglUtils::checkOglErrors();
-				
-				for( uint i = segSelectionIdx; i < segSelectionIdx + segSelectionSize; ++i )
-				{
-					cout << "Loading segment " << i << endl << endl;
-					
-					for( uint j = i * m_segmentSize; j < ( i + 1 ) * m_segmentSize && j < m_points.size(); ++j )
-					{
-						Array< ExtendedPointPtr > ptArray( 1 );
-						ptArray[ 0 ] = m_points[ j ];
-						m_renderer->handleNodeRendering( ptArray, i );
-					}
-				}
-			}
 			
+		private:
 			Renderer* m_renderer;
-			PointVector m_points;
-			uint m_segmentSize;
-			int m_nSegments;
+			GpuLoader m_loader;
+			Node m_node;
 		};
 		
         class StreamingRendererTest : public ::testing::Test

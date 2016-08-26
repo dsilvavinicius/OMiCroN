@@ -1185,7 +1185,7 @@ namespace model
 					
 					node = substituteCandidate;
 					
-					m_gpuLoader.load( node.m_octreeNode, omp_get_thread_num() );
+					m_gpuLoader.asyncLoad( *node.m_octreeNode );
 					
 					#ifdef DEBUG
 					{
@@ -1349,7 +1349,7 @@ namespace model
 		
 		if( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
-			m_gpuLoader.release( std::move( parentNode->child() ), omp_get_thread_num() );
+			m_gpuLoader.asyncRelease( std::move( parentNode->child() ) );
 		}
 		else
 		{
@@ -1357,7 +1357,7 @@ namespace model
 			{
 				for( Node& node : parentNode->child() )
 				{
-					m_gpuLoader.unload( &node, omp_get_thread_num() );
+					m_gpuLoader.asyncUnload( node );
 				}
 			}
 		}
@@ -1406,7 +1406,7 @@ namespace model
 			{
 				for( Node& child : children )
 				{
-					m_gpuLoader.load( &child, omp_get_thread_num() );
+					m_gpuLoader.asyncLoad( child );
 				}
 			}
 		}
