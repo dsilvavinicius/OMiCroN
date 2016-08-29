@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "FastParallelOctree.h"
+#include <GLHiddenWidget.h>
 #include "FastParallelOctreeTestParam.h"
 
 extern "C" FastParallelOctreeTestParam g_fastParallelStressParam;
@@ -25,7 +26,11 @@ namespace model
 				m_log << "Params: " << param << endl;
 				auto start = Profiler::now( "Octree construction", m_log );
 				
-				Octree octree( param.m_plyFilename, param.m_hierarchyLvl,
+				GLHiddenWidget hiddenWidget;
+				NodeLoaderThread loaderThread( &hiddenWidget, 900ul * 1024ul * 1024ul );
+				NodeLoader< Point > loader( &loaderThread, 1 );
+				
+				Octree octree( param.m_plyFilename, param.m_hierarchyLvl, loader,
 							   Octree::RuntimeSetup( param.m_nThreads, param.m_workItemSize, param.m_memoryQuota ) );
 				
 				Profiler::elapsedTime( start, "Octree construction", m_log );

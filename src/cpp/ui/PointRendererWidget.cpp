@@ -6,15 +6,16 @@
 
 #define ADAPTIVE_PROJ
 
-PointRendererWidget::PointRendererWidget( QWidget *parent )
-: Tucano::QtFreecameraWidget( parent ),
+PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
+: Tucano::QtFreecameraWidget( parent, loader.widget() ),
 m_projThresh( 1.f ),
 m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
 m_octree( nullptr ),
-m_renderer( nullptr )
+m_renderer( nullptr ),
+m_loader( loader )
 {
 	setlocale( LC_NUMERIC, "C" );
 	
@@ -343,11 +344,11 @@ void PointRendererWidget::openMesh( const string& filename )
 			cout << "Octree Json " << filename << endl << octreeJson << endl;
 		}
 		
-		m_octree = new Octree( octreeJson, runtime );
+		m_octree = new Octree( octreeJson, m_loader, runtime );
 	}
 	else if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".ply" ) )
 	{
-		m_octree = new Octree( filename, 12, runtime );
+		m_octree = new Octree( filename, 12, m_loader, runtime );
 	}
 	else
 	{

@@ -7,12 +7,12 @@
 #include "OctreeStats.h"
 #include "RenderingState.h"
 #include "StreamingRenderer.h"
-#include "GpuLoader.h"
+#include "NodeLoader.h"
 #include "Profiler.h"
 #include "StackTrace.h"
 
 // #define DEBUG
-#define N_THREADS 4
+#define N_THREADS 1
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -44,6 +44,7 @@ namespace model
 		using NodeArray = Array< Node >;
 		using OctreeDim = OctreeDimensions< Morton, Point >;
 		using Renderer = StreamingRenderer< Point >;
+		using NodeLoader = model::NodeLoader< Point >;
 		
 		/** The node type that is used in front. */
 		typedef struct FrontNode
@@ -129,7 +130,7 @@ namespace model
 		 * @param dbFilename is the path to a database file which will be used to store nodes in an out-of-core approach.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
 		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nHierarchyCreationThreads,
-			   const ulong memoryLimit );
+			   NodeLoader& loader, const ulong memoryLimit );
 		
 		/** Inserts a node into thread's buffer end so it can be push to the front later on. After this, the tracking
 		 * method will ensure that the placeholder related with this node, if any, will be substituted by it.
@@ -351,7 +352,7 @@ namespace model
 		 * to thread t. */
 		Array< uint > m_threadSegmentMap;
 		
-		GpuLoader< Point > m_gpuLoader;
+		NodeLoader& m_nodeLoader;
 		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
@@ -392,7 +393,8 @@ namespace model
 	
 	template< typename Morton, typename Point >
 	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
-										  const int nHierarchyCreationThreads, const ulong memoryLimit )
+										  const int nHierarchyCreationThreads, NodeLoader& loader,
+									   const ulong memoryLimit )
 	: m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nHierarchyCreationThreads ),
@@ -408,7 +410,7 @@ namespace model
 	m_nFrontThreads( N_THREADS ),
 	m_threadSegmentMap( N_THREADS, uint( 0 ) ),
 	m_leafLvlLoadedFlag( false ),
-	m_gpuLoader( N_THREADS, 900ul * 1024ul * 1024ul )
+	m_nodeLoader( loader )
 	#ifdef DEBUG
 		, m_nPlaceholders( 0ul ),
 		m_nSubstituted( 0ul )
@@ -433,7 +435,7 @@ namespace model
 	template< typename Morton, typename Point >
 	inline bool Front< Morton, Point >::isReleasing()
 	{
-		return m_gpuLoader.isReleasing();
+		return m_nodeLoader.isReleasing();
 	}
 	
 	template< typename Morton, typename Point >
@@ -775,7 +777,7 @@ namespace model
 			}
 			#endif
 			
-			#pragma omp parallel for num_threads(N_THREADS)
+// 			#pragma omp parallel for num_threads(N_THREADS)
 			for( int i = 0; i < dispatchedThreads; ++i )
 			{
 				uint segmentIdx = m_threadSegmentMap[ i ];
@@ -1185,7 +1187,7 @@ namespace model
 					
 					node = substituteCandidate;
 					
-					m_gpuLoader.asyncLoad( *node.m_octreeNode );
+					m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
 					
 					#ifdef DEBUG
 					{
@@ -1349,15 +1351,15 @@ namespace model
 		
 		if( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
-			m_gpuLoader.asyncRelease( std::move( parentNode->child() ) );
+			m_nodeLoader.asyncRelease( std::move( parentNode->child() ), omp_get_thread_num() );
 		}
 		else
 		{
-			if( m_gpuLoader.reachedQuota() )
+			if( m_nodeLoader.reachedGpuMemQuota() )
 			{
 				for( Node& node : parentNode->child() )
 				{
-					m_gpuLoader.asyncUnload( node );
+					m_nodeLoader.asyncUnload( node, omp_get_thread_num() );
 				}
 			}
 		}
@@ -1406,7 +1408,7 @@ namespace model
 			{
 				for( Node& child : children )
 				{
-					m_gpuLoader.asyncLoad( child );
+					m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
 				}
 			}
 		}

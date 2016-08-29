@@ -3,8 +3,9 @@
 #include <QApplication>
 #include "PlyPointReader.h"
 #include "StreamingRenderer.h"
-#include "GpuLoader.h"
+#include "NodeLoader.h"
 #include "OglUtils.h"
+#include <GLHiddenWidget.h>
 
 using namespace std;
 using namespace util;
@@ -17,14 +18,16 @@ namespace model
 		: public QtFlycameraWidget
 		{
 		public:
-			using PointArray = Array< ExtendedPointPtr >;
-			using Renderer = StreamingRenderer< ExtendedPoint >;
-			using Node = O1OctreeNode< ExtendedPointPtr >;
-			using GpuLoader = model::GpuLoader< ExtendedPoint >;
+			using Point = model::Point;
+			using PointPtr = model::PointPtr;
+			using PointArray = Array< PointPtr >;
+			using Renderer = StreamingRenderer< Point >;
+			using Node = O1OctreeNode< PointPtr >;
+			using NodeLoader = model::NodeLoader< Point >;
 			
-			StreamingRendererTestWidget( QWidget *parent = 0 )
-			: QtFlycameraWidget( parent ),
-			m_loader( 1, 900ul * 1024ul * 1024ul )
+			StreamingRendererTestWidget( NodeLoader& loader, QWidget *parent = 0 )
+			: QtFlycameraWidget( parent, loader.widget() ),
+			m_loader( loader )
 			{}
 			
 			~StreamingRendererTestWidget()
@@ -36,7 +39,7 @@ namespace model
 			{
 				QtFlycameraWidget::initialize();
 				
-				PlyPointReader< ExtendedPoint > reader( "../data/example/staypuff.ply" );
+				PlyPointReader< Point > reader( "../data/example/staypuff.ply" );
 				PointArray points( reader.getNumPoints() );
 				
 				Float negInf = -numeric_limits< Float >::max();
@@ -46,9 +49,9 @@ namespace model
 				
 				auto iter = points.begin();
 				reader.read(
-					[ & ]( const ExtendedPoint& p )
+					[ & ]( const Point& p )
 					{
-						*iter++ = make_shared< ExtendedPoint >( p );
+						*iter++ = make_shared< Point >( p );
 						
 						const Vec3& pos = p.getPos();
 						
@@ -63,7 +66,7 @@ namespace model
 				Vec3 boxSize = maxCoords - origin;
 				float scale = 1.f / std::max( std::max( boxSize.x(), boxSize.y() ), boxSize.z() );
 				
-				for( ExtendedPointPtr p : points )
+				for( PointPtr p : points )
 				{
 					Vec3& pos = p->getPos();
 					pos = ( pos - origin ) * scale;
@@ -80,7 +83,7 @@ namespace model
 			{
 				if( !m_node.isLoaded() )
 				{
-					m_loader.asyncLoad( m_node );
+					m_loader.asyncLoad( m_node, 0 );
 					OglUtils::checkOglErrors();
 				}
 				
@@ -101,7 +104,7 @@ namespace model
 			
 		private:
 			Renderer* m_renderer;
-			GpuLoader m_loader;
+			NodeLoader& m_loader;
 			Node m_node;
 		};
 		
@@ -113,7 +116,11 @@ namespace model
 		
 		TEST_F( StreamingRendererTest, All )
 		{
-			StreamingRendererTestWidget widget;
+			GLHiddenWidget hiddenWidget;
+			NodeLoaderThread loaderThread( &hiddenWidget, 900ul * 1024ul * 1024ul);
+			typename StreamingRendererTestWidget::NodeLoader loader( &loaderThread, 1 );
+			
+			StreamingRendererTestWidget widget( loader );
 			widget.resize( 640, 480 );
 			widget.show();
 			widget.initialize();

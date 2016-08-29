@@ -104,6 +104,7 @@ QT5_WRAP_UI( UI_HDRS
 
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
+	${HEADER_DIR}/${UI_DIR}/GLHiddenWidget.h		${CPP_DIR}/${UI_DIR}/GLHiddenWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/MainWindow.h			${CPP_DIR}/${UI_DIR}/MainWindow.cpp
@@ -127,6 +128,8 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/TransientRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/TucanoRenderingState.cpp
+	${HEADER_DIR}/${MODEL_DIR}/PointNodeLoaderThread.h
+	${HEADER_DIR}/${MODEL_DIR}/ExtendedPointNodeLoaderThread.h
 	
 	# Tucano related code ( ugly hacks to use qmake in these files ).
 	include/tucano/src/utils/qtflycamerawidget.hpp

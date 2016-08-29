@@ -5,7 +5,7 @@
 #include <future>
 #include "Array.h"
 #include "O1OctreeNode.h"
-#include "GpuLoaderThread.h"
+#include "NodeLoaderThread.h"
 #include "mesh.hpp"
 
 using namespace std;
@@ -17,28 +17,28 @@ namespace model
 	 * operations. After all requests are issued, onIterationEnd() must be called in order to flush them to internal
 	 * datastructures. */
 	template< typename Point, typename Alloc = TbbAllocator< Point > >
-	class GpuLoader
+	class NodeLoader
 	{
 	public:
-		using GpuLoaderThread = model::GpuLoaderThread< Point, Alloc >;
-		using Node = typename GpuLoaderThread::Node;
+		using Node = typename NodeLoaderThread::Node;
 		
-		using NodePtrList = typename GpuLoaderThread::NodePtrList;
-		using NodePtrListArray = typename GpuLoaderThread::NodePtrListArray;
+		using NodePtrList = typename NodeLoaderThread::NodePtrList;
+		using NodePtrListArray = typename NodeLoaderThread::NodePtrListArray;
 		
-		using SiblingsList = typename GpuLoaderThread::SiblingList;
-		using SiblingsListArray = typename GpuLoaderThread::SiblingsListArray;
+		using Siblings = typename NodeLoaderThread::Siblings;
+		using SiblingsList = typename NodeLoaderThread::SiblingsList;
+		using SiblingsListArray = typename NodeLoaderThread::SiblingsListArray;
 		
-		GpuLoader( GpuLoaderThread* loaderThread, const uint nUserThreads );
+		NodeLoader( NodeLoaderThread* loaderThread, const uint nUserThreads );
 		
 		/** Makes a request for loading a node into GPU memory. THREAD SAFE. */
-		void asyncLoad( Node& node );
+		void asyncLoad( Node& node, const uint threadIdx );
 		
 		/** Makes a request for unloading a node in GPU memory. THREAD SAFE. */
-		void asyncUnload( Node& node );
+		void asyncUnload( Node& node, const uint threadIdx );
 		
 		/** Makes a request for releasing a sibling group in main memory. THREAD SAFE. */
-		void asyncRelease( Siblings&& siblings );
+		void asyncRelease( Siblings&& siblings, const uint threadIdx );
 		
 		/** Notifies that all requests for the current iteration are done. */
 		void onIterationEnd();
@@ -49,19 +49,21 @@ namespace model
 		/** Indicates if there are sibling groups to release yet. THREAD SAFE. */
 		bool isReleasing();
 		
+		const QGLWidget* widget();
+		
 	private:
 		NodePtrListArray m_iterLoad;
 		NodePtrListArray m_iterUnload;
 		SiblingsListArray m_iterRelease;
 		
-		GpuLoaderThread* m_loaderThread;
+		NodeLoaderThread* m_loaderThread;
 		
 		/** true if the front has nodes to release yet, false otherwise. */
 		atomic_bool m_releaseFlag;
 	};
 	
 	template< typename Point, typename Alloc >
-	GpuLoader< Point, Alloc >::GpuLoader( GpuLoaderThread* loaderThread, const uint nUserThreads )
+	NodeLoader< Point, Alloc >::NodeLoader( NodeLoaderThread* loaderThread, const uint nUserThreads )
 	: m_iterLoad( nUserThreads ),
 	m_iterUnload( nUserThreads ),
 	m_iterRelease( nUserThreads ),
@@ -70,26 +72,26 @@ namespace model
 	{}
 	
 	template< typename Point, typename Alloc >
-	inline void GpuLoader< Point, Alloc >::asyncLoad( Node& node, const uint threadIdx )
+	inline void NodeLoader< Point, Alloc >::asyncLoad( Node& node, const uint threadIdx )
 	{
-		m_iterLoad[ threadIdx ].push_back( node );
+		m_iterLoad[ threadIdx ].push_back( &node );
 	}
 	
 	template< typename Point, typename Alloc >
-	inline void GpuLoader< Point, Alloc >::asyncUnload( Node& node, const uint threadIdx )
+	inline void NodeLoader< Point, Alloc >::asyncUnload( Node& node, const uint threadIdx )
 	{
 		node.setLoaded( false );
-		m_iterUnload[ threadIdx ].push_back( node );
+		m_iterUnload[ threadIdx ].push_back( &node );
 	}
 	
 	template< typename Point, typename Alloc >
-	inline void GpuLoader< Point, Alloc >::asyncRelease( Siblings&& siblings, const uint threadIdx )
+	inline void NodeLoader< Point, Alloc >::asyncRelease( Siblings&& siblings, const uint threadIdx )
 	{
 		m_iterRelease[ threadIdx ].push_back( siblings );
 	}
 	
 	template< typename Point, typename Alloc >
-	inline void GpuLoader< Point, Alloc >::onIterationEnd()
+	inline void NodeLoader< Point, Alloc >::onIterationEnd()
 	{
 		NodePtrList load;
 		for( NodePtrList& list : m_iterLoad )
@@ -113,15 +115,21 @@ namespace model
 	}
 	
 	template< typename Point, typename Alloc >
-	inline bool GpuLoader< Point, Alloc >::reachedGpuMemQuota()
+	inline bool NodeLoader< Point, Alloc >::reachedGpuMemQuota()
 	{
 		return m_loaderThread->reachedGpuMemQuota();
 	}
 	
 	template< typename Point, typename Alloc >
-	inline bool GpuLoader< Point, Alloc >::isReleasing()
+	inline bool NodeLoader< Point, Alloc >::isReleasing()
 	{
 		return m_releaseFlag;
+	}
+	
+	template< typename Point, typename Alloc >
+	inline const QGLWidget* NodeLoader< Point, Alloc >::widget()
+	{
+		return m_loaderThread->widget();
 	}
 }
 

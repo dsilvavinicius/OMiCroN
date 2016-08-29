@@ -23,7 +23,8 @@ public slots:
 	
 private:
     Ui::MainWindow *ui;
-
+	PointRendererWidget* m_pointRenderWidget;
+	
 protected:
     void keyPressEvent( QKeyEvent *ke );
 };

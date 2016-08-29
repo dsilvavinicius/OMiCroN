@@ -20,7 +20,8 @@ class PointRendererWidget
 : public Tucano::QtFreecameraWidget
 {
 	Q_OBJECT
-	
+
+public:
 	using MortonCode = MediumMortonCode;
 	
 	using Point = model::Point;
@@ -35,10 +36,10 @@ class PointRendererWidget
 // 	using Octree = model::DefaultOutOfCoreDebugOctree< OctreeParams >;
 	
 	using Octree = FastParallelOctree< MortonCode, Point >;
+	using NodeLoader = typename Octree::NodeLoader;
 	using Renderer = model::StreamingRenderer< Point >;
-	
-public:
-	explicit PointRendererWidget( QWidget *parent );
+
+	explicit PointRendererWidget( NodeLoader& loader, QWidget *parent );
 	~PointRendererWidget();
 	
 	void initialize( const unsigned int& frameRate, const int& renderingTimeTolerance );
@@ -130,6 +131,7 @@ private:
 	
 	PointModel mesh;
 	Renderer* m_renderer;
+	NodeLoader& m_loader;
 	Octree* m_octree;
 	
 	QTimer *m_timer;
