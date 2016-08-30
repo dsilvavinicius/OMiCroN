@@ -46,6 +46,8 @@ namespace model
 		/** Indicates if the gpu memory quota is reached. THREAD SAFE. */
 		bool reachedGpuMemQuota();
 		
+		ulong memoryUsage();
+		
 		/** Indicates if there are sibling groups to release yet. THREAD SAFE. */
 		bool isReleasing();
 		
@@ -57,9 +59,6 @@ namespace model
 		SiblingsListArray m_iterRelease;
 		
 		NodeLoaderThread* m_loaderThread;
-		
-		/** true if the front has nodes to release yet, false otherwise. */
-		atomic_bool m_releaseFlag;
 	};
 	
 	template< typename Point, typename Alloc >
@@ -67,8 +66,7 @@ namespace model
 	: m_iterLoad( nUserThreads ),
 	m_iterUnload( nUserThreads ),
 	m_iterRelease( nUserThreads ),
-	m_loaderThread( loaderThread ),
-	m_releaseFlag( false )
+	m_loaderThread( loaderThread )
 	{}
 	
 	template< typename Point, typename Alloc >
@@ -128,9 +126,15 @@ namespace model
 	}
 	
 	template< typename Point, typename Alloc >
+	inline ulong NodeLoader< Point, Alloc >::memoryUsage()
+	{
+		return m_loaderThread->memoryUsage();
+	}
+	
+	template< typename Point, typename Alloc >
 	inline bool NodeLoader< Point, Alloc >::isReleasing()
 	{
-		return m_releaseFlag;
+		return m_loaderThread->isReleasing();
 	}
 	
 	template< typename Point, typename Alloc >

@@ -25,9 +25,9 @@ namespace model
 		
 		enum LoadState
 		{
-			LOADED = 0x1,
-			UNLOADED = 0x2,
-			PENDING = 0x3,
+			LOADED = 0x0,
+			UNLOADED = 0x1,
+			PENDING = 0x2,
 		};
 		
 		/** Initializes and empty unusable node. */

@@ -23,11 +23,13 @@ namespace model
 			using PointArray = Array< PointPtr >;
 			using Renderer = StreamingRenderer< Point >;
 			using Node = O1OctreeNode< PointPtr >;
+			using Siblings = Array< Node >;
 			using NodeLoader = model::NodeLoader< Point >;
 			
 			StreamingRendererTestWidget( NodeLoader& loader, QWidget *parent = 0 )
 			: QtFlycameraWidget( parent, loader.widget() ),
-			m_loader( loader )
+			m_loader( loader ),
+			m_siblings( 1 )
 			{}
 			
 			~StreamingRendererTestWidget()
@@ -40,14 +42,14 @@ namespace model
 				QtFlycameraWidget::initialize();
 				
 				PlyPointReader< Point > reader( "../data/example/staypuff.ply" );
-				PointArray points( reader.getNumPoints() );
+				m_points = PointArray( reader.getNumPoints() );
 				
 				Float negInf = -numeric_limits< Float >::max();
 				Float posInf = numeric_limits< Float >::max();
 				Vec3 origin = Vec3( posInf, posInf, posInf );
 				Vec3 maxCoords( negInf, negInf, negInf );
 				
-				auto iter = points.begin();
+				auto iter = m_points.begin();
 				reader.read(
 					[ & ]( const Point& p )
 					{
@@ -66,7 +68,7 @@ namespace model
 				Vec3 boxSize = maxCoords - origin;
 				float scale = 1.f / std::max( std::max( boxSize.x(), boxSize.y() ), boxSize.z() );
 				
-				for( PointPtr p : points )
+				for( PointPtr p : m_points )
 				{
 					Vec3& pos = p->getPos();
 					pos = ( pos - origin ) * scale;
@@ -75,37 +77,80 @@ namespace model
 				m_renderer = new Renderer( camera, &light_trackball, "../shaders/tucano/" );
 				OglUtils::checkOglErrors();
 				
-				m_node = Node( points, true );
+				m_siblings[ 0 ] = Node( m_points, true );
 				OglUtils::checkOglErrors();
+				
+				m_loader.asyncLoad( m_siblings[ 0 ], 0 );
+				m_loader.onIterationEnd();
 			}
 			
 			void paintGL() override
 			{
-				if( m_node.loadState() == Node::UNLOADED )
+				m_renderer->setupRendering();
+				OglUtils::checkOglErrors();
+				
+				if( !m_siblings.empty() )
 				{
-					m_loader.asyncLoad( m_node, 0 );
-					OglUtils::checkOglErrors();
+					Node& node = m_siblings[ 0 ];
+					
+					if( node.loadState() == Node::LOADED )
+					{
+						m_renderer->handleNodeRendering( node );
+						m_renderer->afterRendering();
+						OglUtils::checkOglErrors();
+					}
+				}
+				
+				m_loader.onIterationEnd();
+				camera->renderAtCorner();
+			}
+			
+			void keyPressEvent( QKeyEvent * event ) override
+			{
+				QtFlycameraWidget::keyPressEvent( event );
+				
+				switch( event->key() )
+				{
+					case Qt::Key_F1 :
+					{
+						if( !m_siblings.empty() )
+						{
+							m_loader.asyncLoad( m_siblings[ 0 ], 0 );
+						}
+						break;
+					}
+					case Qt::Key_F2 :
+					{
+						if( !m_siblings.empty() )
+						{
+							m_loader.asyncUnload( m_siblings[ 0 ], 0 );
+						}
+						break;
+					}
+					case Qt::Key_F3 :
+					{
+						m_siblings = Siblings( 1 );
+						m_siblings[ 0 ] = Node( m_points, true );
+						m_loader.asyncLoad( m_siblings[ 0 ], 0 );
+						break;
+					}
+					case Qt::Key_F4 :
+					{
+						m_loader.asyncRelease( std::move( m_siblings ), 0 );
+						break;
+					}
 					
 					m_loader.onIterationEnd();
 					OglUtils::checkOglErrors();
 				}
 				
-				m_renderer->setupRendering();
-				
-				OglUtils::checkOglErrors();
-				
-				m_renderer->handleNodeRendering( m_node );
-				m_renderer->afterRendering();
-				
-				OglUtils::checkOglErrors();
-				
-				camera->renderAtCorner();
 			}
 			
 		private:
 			Renderer* m_renderer;
 			NodeLoader& m_loader;
-			Node m_node;
+			Siblings m_siblings;
+			PointArray m_points;
 		};
 		
         class StreamingRendererTest : public ::testing::Test
@@ -116,16 +161,23 @@ namespace model
 		
 		TEST_F( StreamingRendererTest, All )
 		{
-			GLHiddenWidget hiddenWidget;
-			NodeLoaderThread loaderThread( &hiddenWidget, 900ul * 1024ul * 1024ul);
-			typename StreamingRendererTestWidget::NodeLoader loader( &loaderThread, 1 );
-			
-			StreamingRendererTestWidget widget( loader );
-			widget.resize( 640, 480 );
-			widget.show();
-			widget.initialize();
+			{
+				GLHiddenWidget hiddenWidget;
+				NodeLoaderThread loaderThread( &hiddenWidget, 900ul * 1024ul * 1024ul);
+				typename StreamingRendererTestWidget::NodeLoader loader( &loaderThread, 1 );
+				
+				{
+					StreamingRendererTestWidget widget( loader );
+					widget.resize( 640, 480 );
+					widget.show();
+					widget.initialize();
 
-			QApplication::exec();
+					QApplication::exec();
+				}
+				
+				ASSERT_EQ( 0, loader.memoryUsage() );
+			}
+			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}
 	}
 }

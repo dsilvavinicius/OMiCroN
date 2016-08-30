@@ -32,6 +32,10 @@ namespace model
 		
 		bool reachedGpuMemQuota();
 		
+		ulong memoryUsage();
+		
+		bool isReleasing();
+		
 		const QGLWidget* widget();
 		
 	protected:
@@ -48,6 +52,9 @@ namespace model
 		
 		mutex m_mutex;
 		
+		/** true if the front has nodes to release yet, false otherwise. */
+		atomic_bool m_releaseFlag;
+		
 		atomic_ulong m_availableGpuMem;
 		ulong m_totalGpuMem;
 		
@@ -58,7 +65,8 @@ namespace model
 	: QThread( widget ),
 	m_widget( widget ),
 	m_availableGpuMem( gpuMemQuota ),
-	m_totalGpuMem( gpuMemQuota )
+	m_totalGpuMem( gpuMemQuota ),
+	m_releaseFlag( false )
 	{
 		m_widget->doneCurrent();
 		m_widget->context()->moveToThread( this );
@@ -77,6 +85,16 @@ namespace model
 	inline bool ExtendedPointNodeLoaderThread::reachedGpuMemQuota()
 	{
 		return float( m_availableGpuMem ) < 0.05f * float( m_totalGpuMem );
+	}
+	
+	inline ulong ExtendedPointNodeLoaderThread::memoryUsage()
+	{
+		return m_totalGpuMem - m_availableGpuMem;
+	}
+	
+	inline bool ExtendedPointNodeLoaderThread::isReleasing()
+	{
+		return m_releaseFlag;
 	}
 	
 	inline const QGLWidget* ExtendedPointNodeLoaderThread::widget()
@@ -105,6 +123,8 @@ namespace model
 		{
 			unload( *node );
 		}
+		
+		m_releaseFlag = ( releaseList.empty() ) ? false : true;
 		
 		for( Siblings& siblings : releaseList )
 		{
@@ -148,11 +168,11 @@ namespace model
 	
 	inline void ExtendedPointNodeLoaderThread::unload( Node& node )
 	{
-		for( Node& node : node.child() )
+		for( Node& child : node.child() )
 		{
-			if( node.loadState() == Node::LOADED )
+			if( child.loadState() == Node::LOADED )
 			{
-				unload( node ); 
+				unload( child ); 
 			}
 		}
 		
