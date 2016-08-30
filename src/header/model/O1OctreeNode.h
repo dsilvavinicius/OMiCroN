@@ -23,13 +23,20 @@ namespace model
 		using NodeAlloc = typename ContentsAlloc:: template rebind< O1OctreeNode >::other;
 		using NodeArray = Array< O1OctreeNode, NodeAlloc >;
 		
+		enum LoadState
+		{
+			LOADED = 0x1,
+			UNLOADED = 0x2,
+			PENDING = 0x3,
+		};
+		
 		/** Initializes and empty unusable node. */
 		O1OctreeNode()
 		: m_contents(),
 		m_isLeaf( false ),
 		m_parent( nullptr ),
 		m_children(),
-		m_isLoaded( false )
+		m_loadState( UNLOADED )
 		{}
 		
 		O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
@@ -37,7 +44,7 @@ namespace model
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children(),
-		m_isLoaded( false )
+		m_loadState( UNLOADED )
 		{}
 		
 		O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
@@ -45,7 +52,7 @@ namespace model
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children(),
-		m_isLoaded( false )
+		m_loadState( UNLOADED )
 		{}
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
@@ -55,7 +62,7 @@ namespace model
 		m_children( other.m_children ),
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf ),
-		m_isLoaded( false )
+		m_loadState( UNLOADED )
 		{}
 		
 		~O1OctreeNode()
@@ -71,7 +78,7 @@ namespace model
 			m_children = other.m_children;
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
-			m_isLoaded = false;
+			m_loadState = UNLOADED;
 			
 			return *this;
 		}
@@ -82,7 +89,7 @@ namespace model
 		m_children( std::move( other.m_children ) ),
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf ),
-		m_isLoaded( false )
+		m_loadState( UNLOADED )
 		{
 			other.m_parent = nullptr;
 		}
@@ -94,7 +101,7 @@ namespace model
 			m_children = std::move( other.m_children );
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
-			m_isLoaded = false;
+			m_loadState = UNLOADED;
 			
 			other.m_parent = nullptr;
 			
@@ -156,9 +163,9 @@ namespace model
 		
 		Mesh& mesh() { return m_mesh; }
 		
-		bool isLoaded() const { return m_isLoaded; }
+		LoadState loadState() const { return LoadState( m_loadState.load() ); }
 		
-		void setLoaded( bool value ) { m_isLoaded = value; } 
+		void setLoadState( const LoadState loadState ) { m_loadState = loadState; } 
 		
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
@@ -172,7 +179,7 @@ namespace model
 		
 		ContentsArray m_contents;
 		
-		// CACHE INVARIANT. Parent pointer. Is always corrent after octree bottom-up creation, since octree cache release
+		// CACHE INVARIANT. Parent pointer. Is always current after octree bottom-up creation, since octree cache release
 		// is bottom-up.
 		O1OctreeNode* m_parent; 
 		
@@ -180,7 +187,7 @@ namespace model
 		// children can be released from octree cache.
 		NodeArray m_children;
 		
-		atomic_bool m_isLoaded;
+		atomic_char m_loadState;
 		
 		// CACHE INVARIANT. Indicates if the node is leaf.
 		bool m_isLeaf;

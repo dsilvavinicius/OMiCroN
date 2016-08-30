@@ -66,10 +66,12 @@ namespace model
 	
 	inline void PointNodeLoaderThread::pushRequests( NodePtrList& load, NodePtrList& unload, SiblingsList& release )
 	{
-		lock_guard< mutex > lock( m_mutex );
-		m_load.splice( m_load.end(), load );
-		m_unload.splice( m_unload.end(), unload );
-		m_release.splice( m_release.end(), release );
+		{
+			lock_guard< mutex > lock( m_mutex );
+			m_load.splice( m_load.end(), load );
+			m_unload.splice( m_unload.end(), unload );
+			m_release.splice( m_release.end(), release );
+		}
 		
 		start();
 	}
@@ -86,6 +88,8 @@ namespace model
 	
 	inline void PointNodeLoaderThread::run()
 	{
+		m_widget->makeCurrent();
+		
 		NodePtrList loadList;
 		NodePtrList unloadList;
 		SiblingsList releaseList;
@@ -135,7 +139,7 @@ namespace model
 			mesh.selectPrimitive( Mesh::POINT );
 			mesh.loadVertices( positions );
 			mesh.loadNormals( normals );
-			node.setLoaded( true );
+			node.setLoadState( Node::LOADED );
 			
 			m_availableGpuMem -= neededGpuMem;
 		}
@@ -145,7 +149,7 @@ namespace model
 	{
 		for( Node& node : node.child() )
 		{
-			if( node.isLoaded() )
+			if( node.loadState() == Node::LOADED )
 			{
 				unload( node ); 
 			}
@@ -153,6 +157,7 @@ namespace model
 		
 		m_availableGpuMem += 7 * sizeof( float ) * node.getContents().size();
 		node.mesh().reset();
+		node.setLoadState( Node::UNLOADED );
 	}
 	
 	inline void PointNodeLoaderThread::release( Siblings& siblings )

@@ -196,7 +196,7 @@ namespace model
 	template< typename Point >
 	inline void StreamingRenderer< Point >::handleNodeRendering( Node& node )
 	{
-		if( node.isLoaded() )
+		if( node.loadState() == Node::LOADED )
 		{
 			Mesh& mesh = node.mesh();
 			if( mesh.getNumberOfVertices() > 0 )

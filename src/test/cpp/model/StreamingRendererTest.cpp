@@ -81,14 +81,14 @@ namespace model
 			
 			void paintGL() override
 			{
-				if( !m_node.isLoaded() )
+				if( m_node.loadState() == Node::UNLOADED )
 				{
 					m_loader.asyncLoad( m_node, 0 );
 					OglUtils::checkOglErrors();
+					
+					m_loader.onIterationEnd();
+					OglUtils::checkOglErrors();
 				}
-				
-				m_loader.onIterationEnd();
-				OglUtils::checkOglErrors();
 				
 				m_renderer->setupRendering();
 				

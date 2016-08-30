@@ -74,14 +74,21 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncLoad( Node& node, const uint threadIdx )
 	{
-		m_iterLoad[ threadIdx ].push_back( &node );
+		if( node.loadState() == Node::UNLOADED )
+		{
+			node.setLoadState( Node::PENDING );
+			m_iterLoad[ threadIdx ].push_back( &node );
+		}
 	}
 	
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncUnload( Node& node, const uint threadIdx )
 	{
-		node.setLoaded( false );
-		m_iterUnload[ threadIdx ].push_back( &node );
+		if( node.loadState() == Node::LOADED )
+		{
+			node.setLoadState( Node::PENDING );
+			m_iterUnload[ threadIdx ].push_back( &node );
+		}
 	}
 	
 	template< typename Point, typename Alloc >

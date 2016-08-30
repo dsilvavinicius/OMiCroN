@@ -140,7 +140,7 @@ namespace model
 			mesh.loadVertices( positions );
 			mesh.loadNormals( normals );
 			mesh.loadColors( colors );
-			node.setLoaded( true );
+			node.setLoadState( Node::LOADED );
 			
 			m_availableGpuMem -= neededGpuMem;
 		}
@@ -150,7 +150,7 @@ namespace model
 	{
 		for( Node& node : node.child() )
 		{
-			if( node.isLoaded() )
+			if( node.loadState() == Node::LOADED )
 			{
 				unload( node ); 
 			}

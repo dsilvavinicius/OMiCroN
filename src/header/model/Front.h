@@ -1400,7 +1400,7 @@ namespace model
 		if( !node.isLeaf() && !node.child().empty() )
 		{
 			NodeArray& children = node.child();
-			if( children[ 0 ].isLoaded() )
+			if( children[ 0 ].loadState() == Node::LOADED )
 			{
 				return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
 			}
