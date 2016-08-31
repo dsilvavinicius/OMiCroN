@@ -31,6 +31,8 @@ namespace model
 		
 		NodeLoader( NodeLoaderThread* loaderThread, const uint nUserThreads );
 		
+		~NodeLoader();
+		
 		/** Makes a request for loading a node into GPU memory. THREAD SAFE. */
 		void asyncLoad( Node& node, const uint threadIdx );
 		
@@ -70,6 +72,12 @@ namespace model
 	{}
 	
 	template< typename Point, typename Alloc >
+	NodeLoader< Point, Alloc >::~NodeLoader()
+	{
+		m_loaderThread->wait();
+	}
+	
+	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncLoad( Node& node, const uint threadIdx )
 	{
 		if( node.loadState() == Node::UNLOADED )
@@ -92,7 +100,7 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncRelease( Siblings&& siblings, const uint threadIdx )
 	{
-		m_iterRelease[ threadIdx ].push_back( siblings );
+		m_iterRelease[ threadIdx ].push_back( std::move( siblings ) );
 	}
 	
 	template< typename Point, typename Alloc >

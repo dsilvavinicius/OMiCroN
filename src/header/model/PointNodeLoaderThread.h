@@ -6,6 +6,7 @@
 #include "TbbAllocator.h"
 #include "Point.h"
 #include "O1OctreeNode.h"
+#include "GpuAllocStatistics.h"
 
 namespace model
 {
@@ -55,7 +56,6 @@ namespace model
 		/** true if the front has nodes to release yet, false otherwise. */
 		atomic_bool m_releaseFlag;
 		
-		atomic_ulong m_availableGpuMem;
 		ulong m_totalGpuMem;
 		
 		QGLWidget* m_widget;
@@ -64,7 +64,6 @@ namespace model
 	inline PointNodeLoaderThread::PointNodeLoaderThread( QGLWidget* widget, const ulong gpuMemQuota )
 	: QThread( widget ),
 	m_widget( widget ),
-	m_availableGpuMem( gpuMemQuota ),
 	m_totalGpuMem( gpuMemQuota ),
 	m_releaseFlag( false )
 	{
@@ -86,12 +85,12 @@ namespace model
 	
 	inline bool PointNodeLoaderThread::reachedGpuMemQuota()
 	{
-		return float( m_availableGpuMem ) < 0.05f * float( m_totalGpuMem );
+		return float( memoryUsage() ) > 0.95f * float( m_totalGpuMem );
 	}
 	
 	inline ulong PointNodeLoaderThread::memoryUsage()
 	{
-		return m_totalGpuMem - m_availableGpuMem;
+		return GpuAllocStatistics::totalAllocated();
 	}
 	
 	inline bool PointNodeLoaderThread::isReleasing()
@@ -140,9 +139,9 @@ namespace model
 	{
 		Array< PointPtr > points = node.getContents();
 		
-		ulong neededGpuMem = 7 * sizeof( float ) * points.size(); // 4 floats for positions and 3 for normals.
+		ulong neededGpuMem = GpuAllocStatistics::pointSize() * points.size();
 		
-		if( neededGpuMem <= m_availableGpuMem )
+		if( memoryUsage() + neededGpuMem < m_totalGpuMem )
 		{
 			vector< Eigen::Vector4f > positions;
 			vector< Eigen::Vector3f > normals;
@@ -161,7 +160,7 @@ namespace model
 			mesh.loadNormals( normals );
 			node.setLoadState( Node::LOADED );
 			
-			m_availableGpuMem -= neededGpuMem;
+			GpuAllocStatistics::notifyAlloc( neededGpuMem );
 		}
 	}
 	
@@ -175,7 +174,7 @@ namespace model
 			}
 		}
 		
-		m_availableGpuMem += 7 * sizeof( float ) * node.getContents().size();
+		GpuAllocStatistics::notifyDealloc( GpuAllocStatistics::pointSize() * node.getContents().size() );
 		node.mesh().reset();
 		node.setLoadState( Node::UNLOADED );
 	}

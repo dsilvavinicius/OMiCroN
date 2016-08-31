@@ -819,6 +819,8 @@ namespace model
 				}
 			}
 			
+			m_nodeLoader.onIterationEnd();
+			
 			// Debug
 // 			{
 // 				cout << currentSegment << " bound: " << segmentBound.toString() << endl;

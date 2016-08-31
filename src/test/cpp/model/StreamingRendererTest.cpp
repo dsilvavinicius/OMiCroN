@@ -129,9 +129,12 @@ namespace model
 					}
 					case Qt::Key_F3 :
 					{
-						m_siblings = Siblings( 1 );
-						m_siblings[ 0 ] = Node( m_points, true );
-						m_loader.asyncLoad( m_siblings[ 0 ], 0 );
+						if( m_siblings.empty() )
+						{
+							m_siblings = Siblings( 1 );
+							m_siblings[ 0 ] = Node( m_points, true );
+							m_loader.asyncLoad( m_siblings[ 0 ], 0 );
+						}
 						break;
 					}
 					case Qt::Key_F4 :

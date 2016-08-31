@@ -4,6 +4,7 @@
 #include <memory>
 #include "tucano.hpp"
 #include "Array.h"
+#include "GpuAllocStatistics.h"
 
 using namespace std;
 using namespace Tucano;
@@ -56,7 +57,7 @@ namespace model
 		{}
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
-		 * resources.  The same occurs for GPU mesh data. */
+		 * resources. Mesh GPU data is not copied. */
 		O1OctreeNode( const O1OctreeNode& other )
 		: m_contents( other.m_contents ),
 		m_children( other.m_children ),
@@ -65,13 +66,10 @@ namespace model
 		m_loadState( UNLOADED )
 		{}
 		
-		~O1OctreeNode()
-		{
-			m_parent = nullptr;
-		}
+		~O1OctreeNode();
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
-		 * resources. The same occurs for GPU mesh data. */
+		 * resources. Mesh GPU data is not copied. */
 		O1OctreeNode& operator=( const O1OctreeNode& other )
 		{
 			m_contents = other.m_contents;
@@ -83,25 +81,27 @@ namespace model
 			return *this;
 		}
 		
-		/** IMPORTANT: GPU mesh data is not moved. It is destroyed later on other's destructor. */
+		/** Move ctor. */
 		O1OctreeNode( O1OctreeNode&& other )
 		: m_contents( std::move( other.m_contents ) ),
 		m_children( std::move( other.m_children ) ),
+		m_mesh( std::move( other.m_mesh ) ),
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf ),
-		m_loadState( UNLOADED )
+		m_loadState( other.m_loadState.load() )
 		{
 			other.m_parent = nullptr;
 		}
 		
-		/** IMPORTANT: GPU mesh data is not moved. It is destroyed later on other's destructor. */
+		/** Move assignment. */
 		O1OctreeNode& operator=( O1OctreeNode&& other )
 		{
 			m_contents = std::move( other.m_contents );
 			m_children = std::move( other.m_children );
+			m_mesh = std::move( other.m_mesh );
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
-			m_loadState = UNLOADED;
+			m_loadState = other.m_loadState.load();
 			
 			other.m_parent = nullptr;
 			
@@ -192,6 +192,30 @@ namespace model
 		// CACHE INVARIANT. Indicates if the node is leaf.
 		bool m_isLeaf;
 	};
+	
+	template<>
+	inline O1OctreeNode< PointPtr, TbbAllocator< PointPtr > >::~O1OctreeNode()
+	{
+		m_parent = nullptr;
+		
+		if( m_loadState == LOADED )
+		{
+			ulong pointSize = GpuAllocStatistics::pointSize();
+			GpuAllocStatistics::notifyDealloc( pointSize * m_contents.size() );
+		}
+	}
+
+	template<>
+	inline O1OctreeNode< ExtendedPointPtr, TbbAllocator< ExtendedPointPtr > >::~O1OctreeNode()
+	{
+		m_parent = nullptr;
+		
+		if( m_loadState == LOADED )
+		{
+			ulong pointSize = GpuAllocStatistics::extendedPointSize();
+			GpuAllocStatistics::notifyDealloc( pointSize * m_contents.size() );
+		}
+	}
 	
 	template< typename Contents, typename ContentsAlloc >
 	inline void* O1OctreeNode< Contents, ContentsAlloc >::operator new( size_t size )

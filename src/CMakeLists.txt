@@ -130,6 +130,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/TucanoRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/PointNodeLoaderThread.h
 	${HEADER_DIR}/${MODEL_DIR}/ExtendedPointNodeLoaderThread.h
+	${HEADER_DIR}/${MODEL_DIR}/GpuAllocStatistics.h			${CPP_DIR}/${MODEL_DIR}/GpuAllocStatistics.cpp
 	
 	# Tucano related code ( ugly hacks to use qmake in these files ).
 	include/tucano/src/utils/qtflycamerawidget.hpp
