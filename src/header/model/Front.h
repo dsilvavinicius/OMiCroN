@@ -11,7 +11,7 @@
 #include "Profiler.h"
 #include "StackTrace.h"
 
-// #define DEBUG
+#define DEBUG
 #define N_THREADS 1
 
 #ifdef DEBUG
@@ -52,51 +52,15 @@ namespace model
 			FrontNode( Node& node, const Morton& morton )
 			: m_octreeNode( &node ),
 			m_morton( morton )
-			{
-				#ifdef DEBUG
-// 				{
-// 					stringstream ss; ss << "Ctor: " << this << endl << StackTrace::toString();
-// 					HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				}
-				#endif
-			}
+			{}
 			
 			~FrontNode()
-			{
-				#ifdef DEBUG
-// 				{
-// 					stringstream ss; ss << "Dtor: " << this << endl << StackTrace::toString();
-// 					HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				}
-				#endif
-			}
+			{}
 			
 			FrontNode& operator=( const FrontNode& other )
 			{
 				m_octreeNode = other.m_octreeNode;
 				m_morton = other.m_morton;
-				
-				#ifdef DEBUG
-// 				if( other.m_octreeNode == nullptr )
-// 				{
-// 					HierarchyCreationLog::flush();
-// 					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
-// 					throw logic_error( ss.str() );
-// 				}
-// 				if( other.m_morton.getBits() == 0x0 )
-// 				{
-// 					HierarchyCreationLog::flush();
-// 					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
-// 					throw logic_error( ss.str() );
-// 				}
-				
-// 				stringstream ss; ss << this << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				StackTrace::log();
-				
-				//other.assertNode();
-				//assertNode();
-				#endif
 				
 				return *this;
 			}
@@ -360,9 +324,6 @@ namespace model
 		/** Memory usage limit. Used to turn on/off node release. */
 		ulong m_memoryLimit;
 		
-		/** Number of persisted nodes in the last front tracking operation. */
-		ulong m_persisted;
-		
 		/** Maximum nodes per front segment. */
 		uint m_nNodesPerSegment;
 		
@@ -383,12 +344,6 @@ namespace model
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
-		
-		#ifdef DEBUG
-			ulong m_nPlaceholders;
-			ulong m_nSubstituted;
-// 			bool m_isSubstituting;
-		#endif
 	};
 	
 	template< typename Morton, typename Point >
@@ -401,8 +356,8 @@ namespace model
 	m_currentIterPlaceholders( nHierarchyCreationThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
-	m_nNodesPerSegment( 30000 ),
-	m_segments( 120 ),
+	m_nNodesPerSegment( 9999999 ),
+	m_segments( 1 ),
 	m_substitutionSegIdx( 0 ),
 	m_appendSegIdx( 0 ),
 	m_segSelectionIdx( 0 ),
@@ -411,11 +366,6 @@ namespace model
 	m_threadSegmentMap( N_THREADS, uint( 0 ) ),
 	m_leafLvlLoadedFlag( false ),
 	m_nodeLoader( loader )
-	#ifdef DEBUG
-		, m_nPlaceholders( 0ul ),
-		m_nSubstituted( 0ul )
-// 		, m_isSubstituting( false )
-	#endif
 	{
 		uint i = 0;
 		for( Segment& segment : m_segments )
@@ -444,25 +394,6 @@ namespace model
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
-		#ifdef DEBUG
-		{
-// 			{
-// 				stringstream ss; ss << "Inserting: " << morton.toString() << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
-			
-// 			if( !list.empty() && morton < list.back().m_morton )
-// 			{
-// 				stringstream ss; ss << StackTrace::toString() << "Insertion order compromised ( insertIntoBufferEnd ): "
-// 					<< morton.toString() << " < " << list.back().m_morton.toString() << endl;
-// 				HierarchyCreationLog::logAndFail( ss.str() );
-// 			}
-			
-// 			stringstream ss; ss << "insertIntoBufferEnd: " << morton.toString() << endl << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
-		
 		list.push_back( frontNode );
 	}
 	
@@ -476,32 +407,13 @@ namespace model
 	inline void Front< Morton, Point > ::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
 														   int threadIdx )
 	{
-		#ifdef DEBUG
-// 		{
-// 			FrontList& list = m_currentIterInsertions[ threadIdx ];
-// 			if( iter != list.end() && iter->m_morton <= morton )
-// 			{
-// 				stringstream ss; ss << "Insertion buffer order compromised ( 0 ). " << iter->m_morton.toString() << " < "
-// 					<< morton.toString() << endl;
-// 				HierarchyCreationLog::logAndFail( ss.str() );
-// 			}
-// 			
-// 			if( iter != list.begin() && morton <= prev( iter )->m_morton )
-// 			{
-// 				stringstream ss; ss << "Insertion buffer order compromised ( 1 ). " << morton.toString() << " < "
-// 					<< prev( iter )->m_morton.toString() << endl;
-// 				HierarchyCreationLog::logAndFail( ss.str() );
-// 			}
-// 		}
-		#endif
-		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
 		#ifdef DEBUG
 		{
-// 			stringstream ss; ss << "insertIntoBuffer: " << morton.toString() << endl << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			stringstream ss; ss << "Inserting node: " << morton.getPathToRoot( true ) << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
 		
@@ -511,25 +423,14 @@ namespace model
 	template< typename Morton, typename Point >
 	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
 	{
+		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
+		
 		#ifdef DEBUG
 		{
-// 			stringstream ss; ss << "Placeholder insertion t " << threadIdx << " ( thread id " << this_thread::get_id()
-// 			<< " ): " << morton.getPathToRoot( true ) << endl;
-// 			
-// 			if( !m_currentIterPlaceholders[ threadIdx ].empty()
-// 				&& morton <= m_currentIterPlaceholders[ threadIdx ].back().m_morton )
-// 			{
-// 				ss << "Placeholder insertion compromises ordering" << endl << endl;
-// 				HierarchyCreationLog::logAndFail( ss.str() );
-// 			}
-// 			else
-// 			{
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
+			stringstream ss; ss << "Inserting placeholder: " << morton.getPathToRoot( true ) << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
-		
-		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
 		
 		FrontList& list = m_currentIterPlaceholders[ threadIdx ];
 		list.push_back( FrontNode( m_placeholder, morton ) );
@@ -554,42 +455,12 @@ namespace model
 			{
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
-				#ifdef DEBUG
-// 					ulong totalInsertionSize = 0ul;
-				#endif
-				
 				for( FrontList& list : m_currentIterInsertions )
 				{
-					#ifdef DEBUG
-// 						totalInsertionSize += list.size();
-					#endif
-					
 					FrontList& lvlInsertions = m_perLvlInsertions[ lvl ];
 					// Move nodes to the per-level sorted buffer.
 					lvlInsertions.splice( lvlInsertions.end(), list );
 				}
-				
-				#ifdef DEBUG
-// 				{
-// 					auto iter = m_perLvlInsertions[ lvl ].rbegin();
-// 					for( ulong i = 0; i < totalInsertionSize; ++i, iter++ )
-// 					{
-// 						auto previous = next( iter );
-// 						if( previous != m_perLvlInsertions[ lvl ].rend() )
-// 						{
-// 							Morton& prevMorton = previous->m_morton;
-// 							Morton& currentMorton = iter->m_morton;
-// 							
-// 							if( currentMorton <= prevMorton )
-// 							{
-// 								stringstream ss; ss << "Insertions order compromised. Prev: " << prevMorton.toString()
-// 									<< ". Current: " << currentMorton.toString() << endl;
-// 								HierarchyCreationLog::logAndFail( ss.str() );
-// 							}
-// 						}
-// 					}
-// 				}
-				#endif
 			}
 			
 			{
@@ -598,34 +469,9 @@ namespace model
 				// Move placeholders to the sorted buffer.
 				for( FrontList& list : m_currentIterPlaceholders )
 				{
-					#ifdef DEBUG
-// 					{
-// // 						nPlaceholders += list.size();
-// 						if( !m_placeholders.empty() && !list.empty() )
-// 						{
-// 							Morton& prev = m_placeholders.back().m_morton;
-// 							Morton& next = list.front().m_morton;
-// 							
-// 							if( next <= prev )
-// 							{
-// 								stringstream ss; ss << "Placeholder ordering compromised when moving thread insertions. Prev:"
-// 									<< prev.getPathToRoot( true ) << "Next: " << next.getPathToRoot( true );
-// 								HierarchyCreationLog::logAndFail( ss.str() );
-// 							}
-// 						}
-// 					}
-					#endif
-					
 					m_placeholders.splice( m_placeholders.end(), list );
 				}
 			}
-			
-			#ifdef DEBUG
-// 			{
-// 				ss << " Placeholders: " << nPlaceholders << endl << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
-			#endif
 		}
 	}
 	
@@ -633,21 +479,6 @@ namespace model
 	inline FrontOctreeStats Front< Morton, Point >
 	::trackFront( Renderer& renderer, const Float projThresh )
 	{
-		// Debug
-// 		if( m_persisted )
-// 		{
-// 			lock_guard< mutex > lock( m_logMutex );
-// 			m_log << "==== TRACKING FRONT ====" << endl << endl;
-// 		}
-		
-		m_persisted = 0ul;
-		
-		#ifdef DEBUG
-// 			m_nPlaceholders = 0ul;
-// 			m_nSubstituted = 0ul;
-// 			ulong insertedPlaceholders = 0ul;
-		#endif
-		
 		auto start = Profiler::now();
 		
 		Segment& appendSeg = m_segments[ m_appendSegIdx ];
@@ -655,46 +486,14 @@ namespace model
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			
-			#ifdef DEBUG
-// 				insertedPlaceholders += m_placeholders.size();
-			#endif
-			
 			// Insert all leaf level placeholders.
 			appendSeg.m_front.splice( appendSeg.m_front.end(), m_placeholders );
 		}
 		
-		#ifdef DEBUG
-		{
-			stringstream ss; ss << "Append seg: " << m_appendSegIdx << " Size: " << appendSeg.m_front.size() << endl
-								<< endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
-		
 		if( appendSeg.m_front.size() > m_nNodesPerSegment )
 		{
-			#ifdef DEBUG
-			{
-				stringstream ss; ss << "New append seg at size: " << appendSeg.m_front.size() << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
-			#endif
-			
 			++m_appendSegIdx;
-			
-			#ifdef DEBUG
-			if( m_appendSegIdx >= m_segments.size() )
-			{
-				HierarchyCreationLog::logAndFail( "The model needs more segments than expected." );
-			}
-			#endif
 		}
-		
-		#ifdef DEBUG
-		{
-// 			OglUtils::checkOglErrors();
-		}
-		#endif
 		
 		if( !m_segments[ 0 ].m_front.empty() )
 		{
@@ -713,69 +512,10 @@ namespace model
 					substitutionLvl = i;
 				}
 			}
-			
-			// Debug
-			#ifdef DEBUG
-// 			{
-// 				Morton subCand;
-// 				{
-// 					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-// 					subCand = m_perLvlInsertions[ substitutionLvl ].front().m_morton;
-// 				}
-// 				Morton subCandBound = subCand.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-// 				
-// 				stringstream ss; ss << "Seg " << renderer.currentSegment() << ". Sub lvl " << substitutionLvl
-// 					<< ". Insertions: " << maxSize << ". Sub cand: " << subCand.toString() << ". Sub cand bound: "
-// 					<< subCandBound.toString() << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
-			#endif
-			
-			#ifdef DEBUG
-			{
-// 				lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-// 				stringstream ss; ss << "subs lvl: " << substitutionLvl << " candidate: "
-// 					<< &m_perLvlInsertions[ substitutionLvl ].front() << endl << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-			
-// 				long expectedToSubstitute;
-// 				{
-// 					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-// 					expectedToSubstitute = m_perLvlInsertions[ substitutionLvl ].size();
-// 				}
-				
-// 				{
-// 					stringstream ss; ss << "==== FRONT TRACKING START ====" << endl << "Front size: " << m_front.size()
-// 										<< " Inserted placeholders: " << insertedPlaceholders << " Substitution lvl: "
-// 										<< substitutionLvl << " Expected to substitute: " << expectedToSubstitute << endl
-// 										<< endl;
-// 					HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				}
-			}
-			#endif
-			
-			// Debug
-// 			{
-// 				lock_guard< recursive_mutex > lock( m_logMutex );
-// 				m_log << "===== Front tracking starts =====." << endl << endl;
-// 			}
 
 			uint dispatchedThreads = isSubstIdxInRange( m_segSelectionIdx, m_segSelectionSize )
 									 ? m_segSelectionSize : m_segSelectionSize + 1;
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			
-			#ifdef DEBUG
-			{
-				stringstream ss; ss << "Segment range: ( " << renderer.segSelectionIdx() << ", " << renderer.segSelectionSize()
-									<< " ) SubIdx: " << m_substitutionSegIdx << " Segment map: ( ";
-				for( uint idx : m_threadSegmentMap )
-				{
-					ss << idx << " "; 
-				}
-				ss << ") Dispatched: " << dispatchedThreads << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
-			#endif
 			
 // 			#pragma omp parallel for num_threads(N_THREADS)
 			for( int i = 0; i < dispatchedThreads; ++i )
@@ -787,8 +527,7 @@ namespace model
 				
 				#ifdef DEBUG
 				{
-					stringstream ss; ss << "t: " << i << " seg: " << segmentIdx << " subst: " << segment.m_isSubstituting
-										<< " render: " << segment.m_isRendering << endl << endl;
+					stringstream ss; ss << "=== Track starting Subst lvl: " << substitutionLvl << " ===" << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 				#endif
@@ -797,146 +536,22 @@ namespace model
 				{
 					#ifdef DEBUG
 					{
-// 						stringstream ss; ss << m_frontIter->m_morton.toString() << " Desc: " << descendant.toString()
-// 							<< endl;
-// 						HierarchyCreationLog::logDebugMsg( ss.str() );
+						stringstream ss; ss << iter->m_morton.getPathToRoot( true ) << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
 					}
 					#endif
 					
 					trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
-					
-					#ifdef DEBUG
-					{
-// 						OglUtils::checkOglErrors();
-					}
-					#endif
-					
-					#ifdef DEBUG
-					{
-	// 					HierarchyCreationLog::logDebugMsg( "track ends\n" );
-					}
-					#endif
 				}
+				
+				#ifdef DEBUG
+				{
+					HierarchyCreationLog::logDebugMsg( "=== Track ending ===\n\n" );
+				}
+				#endif
 			}
 			
 			m_nodeLoader.onIterationEnd();
-			
-			// Debug
-// 			{
-// 				cout << currentSegment << " bound: " << segmentBound.toString() << endl;
-// 			}
-			
-			#ifdef DEBUG
-			{
-// 				OglUtils::checkOglErrors();
-			}
-			#endif
-			
-			// Segment boundaries can have problems with prunning or branching operations. They are fixed bellow.
-// 			for( const uint segIdx : m_threadSegmentMap )
-// 			{
-// 				Segment& currentSeg = m_segments[ segIdx ];
-// 				FrontList& currentFront = currentSeg.m_front;
-// 
-// 				if( segIdx > 0 )
-// 				{
-// 					Segment& prevSeg = m_segments[ segIdx - 1 ];
-// 					FrontList& prevFront = prevSeg.m_front;
-// 					
-// 					if( currentFront.begin()->m_octreeNode < prevSeg.m_boundary )
-// 					{
-// 						// Branching compromised segment boundary.
-// 						auto currentIter = currentFront.begin();
-// 						auto prevIter = prevFront.rbegin();
-// 						
-// 						Node* parent = currentIter->m_octreeNode->parent();
-// 						
-// 						int nSiblings = 0;
-// 						while( currentIter.m_octreeNode->parent() == parent )
-// 						{
-// 							++nSiblings;
-// 							currentIter++;
-// 						}
-// 						
-// 						if( parent->child.size() == nSiblings )
-// 						{
-// 							prevFront.splice( prevFront.end(), currentFront, currentFront.begin(), currentIter );
-// 						}
-// 					}
-// 					else
-// 					{
-// 						
-// 					}
-// 					
-// 					
-// 					
-// 					
-// 					
-// 					
-// 					
-// 					
-// 					if( currentParent != nullptr && prevIter->m_octreeNode->parent() == currentParent )
-// 					{
-// 						if( prevFront.size() > currentFront.size() )
-// 						{
-// 							while( prevIter.m_octreeNode->parent() == currentParent )
-// 							{
-// 								prevIter++;
-// 							}
-// 							currentFront.splice( currentFront.begin(), prevFront, prevIter.base(), prevFront.end() );
-// 						}
-// 						else
-// 						{
-// 							while( currentIter.m_octreeNode->parent() == currentParent )
-// 							{
-// 								currentIter++;
-// 							}
-// 							prevFront.splice( prevFront.end(), currentFront, currentFront.begin(), currentIter );
-// 						}
-// 					}
-// 					
-// 					if( beginIter->m_morton < prevSeg.m_boundary )
-// 					{
-// 						// Branching the current segment resulted in boundary compromise. Send the faulty sibling group
-// 						// to the previous segment.
-// 						
-// 					}
-// 				}
-				
-// 				if( segIdx < m_segments.size() - 1 )
-// 				{
-// 					Segment& nextSeg = m_segments[ segIdx + 1 ];
-// 				}
-// 			}
-			
-			// Debug
-// 			{
-// 				cout << "Nodes processed: " << nodesProcessed << endl << endl;
-// 			}
-			
-			#ifdef DEBUG
-// 			{
-// 				size_t left;
-// 				Morton subCand;
-// 				{
-// 					lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-// 					left = m_perLvlInsertions[ substitutionLvl ].size();
-// 					subCand = m_perLvlInsertions[ substitutionLvl ].front().m_morton;
-// 				}
-// 				
-// 				Morton subCandBound = subCand.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-// 				
-// 				if( subCandBound < descendant )
-// 				{
-// 					stringstream ss; ss << "Substitution invariant violated. Nodes proc: " << nodesProcessed
-// 					<< ". Sub lvl: " << substitutionLvl << ". Sub cand: " << subCand.toString() << ". Sub cand bound: "
-// 					<< subCandBound.toString() << ". Last descendant: " << descendant.toString() << ". Left: " << left
-// 					<< endl << endl;
-// 					
-// 					HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				}
-// 			}
-			#endif
 		}
 		
 		int traversalTime = Profiler::elapsedTime( start );
@@ -944,8 +559,6 @@ namespace model
 		start = Profiler::now();
 		
 		unsigned int numRenderedPoints = renderer.afterRendering();
-		
-		int renderingTime = Profiler::elapsedTime( start );
 		
 		// Select next frame's placeholder substitution segment.
 		m_substitutionSegIdx = ( m_substitutionSegIdx + 1 ) % m_segments.size();
@@ -967,15 +580,6 @@ namespace model
 		
 		uint segSelectionSize = ( segSelectionStart + expectedSelectionSize <= m_appendSegIdx + 1 )
 								? expectedSelectionSize : m_appendSegIdx + 1 - segSelectionStart;
-		
-		#ifdef DEBUG
-		{
-			stringstream ss; ss << "Subst idx: " << m_substitutionSegIdx << " Subst in range " << substIdxInRangeFlag
-								<< " Next frame sel idx: " << nextFrameFirstSeg << " Sel start: " << segSelectionStart
-								<< " Sel size: " << segSelectionSize << endl << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
 
 		m_segSelectionIdx = segSelectionStart;
 		m_segSelectionSize = segSelectionSize;
@@ -999,15 +603,10 @@ namespace model
 		// Not optimized. Probably it doesn't need to, anyway.
 		for( Segment& segment : m_segments )
 		{
-			#ifdef DEBUG
-			{
-				stringstream ss; ss << "Segment " << segment.m_index << " size: " << segment.m_front.size() << endl
-									<< endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
-			#endif
 			nNodes += segment.m_front.size();
 		}
+		
+		int renderingTime = Profiler::elapsedTime( start );
 		
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, nNodes );
 	}
@@ -1019,65 +618,27 @@ namespace model
 	{
 		FrontNode& frontNode = *frontIt;
 		
-		#ifdef DEBUG
-// 		{
-// 			stringstream ss; ss << "Track: " << frontNode.m_morton.getPathToRoot( true ) << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
-// 		}
-		#endif
-		
-		#ifdef DEBUG
-// 		{
-// 			auto nextIt = next( frontIt );
-// 			if( nextIt != m_front.end() ) 
-// 			{
-// 				stringstream ss; ss << "Nxt: " << nextIt->m_morton.toString() << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
-// 		}
-		#endif
-		
 		if( segment.m_isSubstituting && frontNode.m_octreeNode == &m_placeholder )
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
+				frontIt++;
+				
 				#ifdef DEBUG
-// 					++m_nPlaceholders;
+				{
+					HierarchyCreationLog::logDebugMsg( "Substitution failed.\n\n" );
+				}
 				#endif
 				
-				frontIt++;
 				return;
 			}
-			#ifdef DEBUG
-// 			else
-// 			{
-// 				assertFrontIterator( frontIt );
-// 			}
-			#endif
 		}
-		
-		#ifdef DEBUG
-// 		if( frontNode.m_octreeNode == nullptr )
-// 		{
-// 			cout << frontNode.m_morton.toString() << endl << endl;
-// 			cout.flush();
-// // 			stringstream ss; ss << "Null node: " << frontNode.m_morton.getPathToRoot( true ) << endl;
-// // 			HierarchyCreationLog::logAndFail( ss.str() );
-// 		}
-		#endif
 		
 		Node& node = *frontNode.m_octreeNode;
 		Morton& morton = frontNode.m_morton;
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
 		
 		Node* parentNode = node.parent();
-		
-		#ifdef DEBUG
-		{
-// 			stringstream ss; ss << "Tracking: " << morton.toString() << endl << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
 		
 		// If parentNode == lastParent, prunning was not sucessful for a sibling of the current node, so the prunning
 		// check can be skipped.
@@ -1086,31 +647,17 @@ namespace model
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 			
-			#ifdef DEBUG
-			{
-// 				assertNode( node, morton );
-			}
-			#endif
-			
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, segment, substitutionLvl, renderer,
 							projThresh ) )
 			{
 				#ifdef DEBUG
-// 				{
-// 					HierarchyCreationLog::logDebugMsg( "Prunning\n" );
-// 				}
+				{
+					HierarchyCreationLog::logDebugMsg( "Pruning\n\n" );
+				}
 				#endif
 				
 				prune( frontIt, segment, parentNode, renderer );
 				lastParent = parentNode;
-				
-				#ifdef DEBUG
-				{
-// 					auto tempIt = prev( frontIt );
-// 					assertNode( *tempIt->m_octreeNode, tempIt->m_morton );
-// 					HierarchyCreationLog::logDebugMsg( "a prune\n" );
-				}
-				#endif
 				
 				return;
 			}
@@ -1122,9 +669,9 @@ namespace model
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
 			#ifdef DEBUG
-// 			{
-// 				HierarchyCreationLog::logDebugMsg( "Branching\n" );
-// 			}
+			{
+				HierarchyCreationLog::logDebugMsg( "Branching\n\n" );
+			}
 			#endif
 			
 			branch( frontIt, segment, node, nodeLvlDim, renderer );
@@ -1134,9 +681,9 @@ namespace model
 		if( !isCullable )
 		{
 			#ifdef DEBUG
-// 			{
-// 				HierarchyCreationLog::logDebugMsg( "Rendering\n" );
-// 			}
+			{
+				HierarchyCreationLog::logDebugMsg( "Staying - Rendering\n\n" );
+			}
 			#endif
 			
 			// No prunning or branching done. Just send the current front node for rendering.
@@ -1145,9 +692,9 @@ namespace model
 		}
 		
 		#ifdef DEBUG
-// 		{
-// 			HierarchyCreationLog::logDebugMsg( "Nothing\n" );
-// 		}
+		{
+			HierarchyCreationLog::logDebugMsg( "Staying - Culling\n\n" );
+		}
 		#endif
 		
 		frontIt++;
@@ -1168,83 +715,22 @@ namespace model
 			{
 				FrontNode& substituteCandidate = substitutionLvlList.front();
 				
-				#ifdef DEBUG
-// 				{
-// 					Morton candBound = substituteCandidate.m_morton.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-// 					
-// 					stringstream ss; ss << "Sub test: " << node.m_morton.getPathToRoot( true ) << ". Cand: "
-// 							<< substituteCandidate.m_morton.toString();
-// 						HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				}
-				#endif
-				
 				if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
 				{
-					#ifdef DEBUG
-// 					{
-// 						HierarchyCreationLog::logDebugMsg( ". ok\n" );
-// 	// 					assertNode( *substituteCandidate.m_octreeNode, substituteCandidate.m_morton );
-// 					}
-					#endif
-					
 					node = substituteCandidate;
 					
 					m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
 					
-					#ifdef DEBUG
-					{
-	// 					assertNode( *node.m_octreeNode, node.m_morton );
-					}
-					#endif
-					
 					substitutionLvlList.erase( substitutionLvlList.begin() );
-					
-					#ifdef DEBUG
-					{
-	// 					assertNode( *node.m_octreeNode, node.m_morton );
-					}
-					#endif
-					
-					#ifdef DEBUG
-					{
-	// 					++m_nSubstituted;
-// 						m_isSubstituting = true;
-					}
-					#endif
 					
 					return true;
 				}
 				else 
 				{
-					#ifdef DEBUG
-// 					{
-// 						Morton candBound = substituteCandidate.m_morton.getFirstDescendantInLvl( m_leafLvlDim.m_nodeLvl );
-// 						if( m_isSubstituting && candBound < node.m_morton )
-// 						{
-// 							stringstream ss; ss << "Sub failed: " << node.m_morton.toString() << ". Cand: "
-// 								<< substituteCandidate.m_morton.toString() << ". Bound: " << candBound.toString() << endl;
-// 							HierarchyCreationLog::logAndFail( ss.str() );
-// 						}
-// 						m_isSubstituting = false;
-// 					}
-					#endif
-					
 					return false;
 				}
 			}
 		}
-		
-		#ifdef DEBUG
-		{
-// 			if( m_isSubstituting )
-// 			{
-// 				stringstream ss; ss << "Substitution failed: " << node.m_morton.toString() << ". Lvl is empty!"
-// 					<< endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
-// 			m_isSubstituting = false;
-		}
-		#endif
 		
 		return false;
 	}
@@ -1276,32 +762,11 @@ namespace model
 			FrontListIter siblingIter = frontIt;
 			while( siblingIter != segment.m_front.end() )
 			{
-				#ifdef DEBUG
-// 					bool wasPlaceholder = siblingIter->m_octreeNode == &m_placeholder;
-// 					bool wasSubstituted = false;
-				#endif
-				
 				if( segment.m_isSubstituting && siblingIter->m_octreeNode == &m_placeholder )
 				{
-					#ifdef DEBUG
-// 					{
-// 						HierarchyCreationLog::logDebugMsg( "prune\n" );
-// 					}
-// 						wasSubstituted =
-					#endif
 					substitutePlaceholder( *siblingIter, substitutionLvl );
 				}
 				
-				#ifdef DEBUG
-// 					if( siblingIter->m_octreeNode == nullptr )
-// 					{
-// 						stringstream ss; ss << siblingIter->m_morton.getPathToRoot( true ) << "Iter with null node pointer."
-// 							<< "Was placeholder: " << wasPlaceholder << " Was substituted: " << wasSubstituted << endl << endl;
-// 						HierarchyCreationLog::logAndFail( ss.str() );
-// 					}
-					//
-				#endif
-					
 				if( siblingIter++->m_octreeNode->parent() != parentNode )
 				{
 					break;
@@ -1328,26 +793,8 @@ namespace model
 	{
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
 		
-		#ifdef DEBUG
-// 			int toRelease = parentNode->child().size();
-// 			ulong processedBefore = m_processedNodes;
-// 			bool released = false;
-			
-// 			assertNode( *frontIt->m_octreeNode, frontIt->m_morton );
-			
-// 			stringstream ss; ss << "Prunning group of " << frontIt->m_morton.toString() << endl << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
-		#endif
-		
 		while( frontIt != segment.m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
 		{
-			#ifdef DEBUG
-// 			{
-// 				stringstream ss; ss << "Releasing " << frontIt->m_morton.getPathToRoot( true ) << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
-			#endif
-			
 			frontIt = segment.m_front.erase( frontIt );
 		}
 		
@@ -1366,28 +813,7 @@ namespace model
 			}
 		}
 		
-		#ifdef DEBUG
-// 		{
-// 			if( released && toRelease != m_processedNodes - processedBefore )
-// 			{
-// 				stringstream ss; ss << m_front.front().m_morton.getPathToRoot( true ) << " expected parent: "
-// 									<< parentNode << " found: " << m_front.front().m_octreeNode->parent() << endl
-// 									<< "All persisted nodes should also be released." << endl << endl;
-// 				HierarchyCreationLog::logAndFail( ss.str() );
-// 			}
-// 		}
-		#endif
-		
 		FrontNode frontNode( *parentNode, parentMorton );
-		
-		#ifdef DEBUG
-		{
-// 			stringstream ss; ss << "prune: " << &frontNode << endl << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			assertNode( *frontNode.m_octreeNode, frontNode.m_morton );
-		}
-		#endif
-		
 		setupNodeRendering( frontIt, frontNode, segment, renderer );
 	}
 	

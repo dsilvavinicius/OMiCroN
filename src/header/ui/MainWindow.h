@@ -22,8 +22,11 @@ public slots:
 	void on_bt_open_cloud_clicked();
 	
 private:
-    Ui::MainWindow *ui;
+	using NodeLoader = model::NodeLoader< typename PointRendererWidget::Point >;
+	
+	Ui::MainWindow *ui;
 	PointRendererWidget* m_pointRenderWidget;
+	NodeLoader* m_loader;
 	
 protected:
     void keyPressEvent( QKeyEvent *ke );

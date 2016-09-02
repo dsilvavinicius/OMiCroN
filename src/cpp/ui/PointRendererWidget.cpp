@@ -52,12 +52,13 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 //  openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
+// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/6Lvls/David.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls/David.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
-	m_timer->start( 16.666f ); // Update 60 fps.
+	m_timer->start( 0 ); // Update 60 fps.
 }
 
 void PointRendererWidget::resizeGL( int width, int height )
@@ -348,7 +349,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	else if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".ply" ) )
 	{
-		m_octree = new Octree( filename, 5, m_loader, runtime );
+		m_octree = new Octree( filename, 1, m_loader, runtime );
 	}
 	else
 	{
