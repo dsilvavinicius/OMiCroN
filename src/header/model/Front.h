@@ -11,7 +11,7 @@
 #include "Profiler.h"
 #include "StackTrace.h"
 
-#define DEBUG
+// #define DEBUG
 #define N_THREADS 1
 
 #ifdef DEBUG
@@ -161,7 +161,7 @@ namespace model
 						Renderer& renderer, const Float projThresh );
 		
 		/** Substitute a placeholder with the first node of the given substitution level. */
-		bool substitutePlaceholder( FrontNode& node, uint substitutionLvl );
+		bool substitutePlaceholder( FrontNode& node, int substitutionLvl );
 		
 		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
 						 FrontListIter& frontIt, Segment& segment, int substituionLvl, Renderer& renderer,
@@ -410,13 +410,6 @@ namespace model
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
-		#ifdef DEBUG
-		{
-			stringstream ss; ss << "Inserting node: " << morton.getPathToRoot( true ) << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
-		
 		list.insert( iter, frontNode );
 	}
 	
@@ -424,13 +417,6 @@ namespace model
 	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
 	{
 		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
-		
-		#ifdef DEBUG
-		{
-			stringstream ss; ss << "Inserting placeholder: " << morton.getPathToRoot( true ) << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
 		
 		FrontList& list = m_currentIterPlaceholders[ threadIdx ];
 		list.push_back( FrontNode( m_placeholder, morton ) );
@@ -441,7 +427,7 @@ namespace model
 	{
 		if( dispatchedThreads > 0 )
 		{
-			uint lvl = 0;
+			int lvl = -1;
 			for( FrontList& list : m_currentIterInsertions )
 			{
 				if( !list.empty() )
@@ -451,7 +437,7 @@ namespace model
 				}
 			}
 			
-			if( lvl )
+			if( lvl != -1 )
 			{
 				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
 			
@@ -500,8 +486,8 @@ namespace model
 			// The level from which the placeholders will be substituted is the one with max size, in order to maximize
 			// placeholder substitution.
 			size_t maxSize = 1;
-			int substitutionLvl = 0;
-			for( int i = 1; i < m_perLvlInsertions.size(); ++i )
+			int substitutionLvl = -1;
+			for( int i = 0; i < m_perLvlInsertions.size(); ++i )
 			{
 				lock_guard< mutex > lock( m_perLvlMtx[ i ] );
 				size_t lvlSize = m_perLvlInsertions[ i ].size();
@@ -525,30 +511,10 @@ namespace model
 				Segment& segment = m_segments[ segmentIdx ];
 				FrontList& front = segment.m_front;
 				
-				#ifdef DEBUG
-				{
-					stringstream ss; ss << "=== Track starting Subst lvl: " << substitutionLvl << " ===" << endl << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
-				#endif
-				
 				for( FrontListIter iter = front.begin(); iter != front.end(); /**/ )
 				{
-					#ifdef DEBUG
-					{
-						stringstream ss; ss << iter->m_morton.getPathToRoot( true ) << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
-					#endif
-					
 					trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
 				}
-				
-				#ifdef DEBUG
-				{
-					HierarchyCreationLog::logDebugMsg( "=== Track ending ===\n\n" );
-				}
-				#endif
 			}
 			
 			m_nodeLoader.onIterationEnd();
@@ -623,13 +589,6 @@ namespace model
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
 				frontIt++;
-				
-				#ifdef DEBUG
-				{
-					HierarchyCreationLog::logDebugMsg( "Substitution failed.\n\n" );
-				}
-				#endif
-				
 				return;
 			}
 		}
@@ -650,12 +609,6 @@ namespace model
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, segment, substitutionLvl, renderer,
 							projThresh ) )
 			{
-				#ifdef DEBUG
-				{
-					HierarchyCreationLog::logDebugMsg( "Pruning\n\n" );
-				}
-				#endif
-				
 				prune( frontIt, segment, parentNode, renderer );
 				lastParent = parentNode;
 				
@@ -668,44 +621,26 @@ namespace model
 		
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
-			#ifdef DEBUG
-			{
-				HierarchyCreationLog::logDebugMsg( "Branching\n\n" );
-			}
-			#endif
-			
 			branch( frontIt, segment, node, nodeLvlDim, renderer );
 			return;
 		}
 		
 		if( !isCullable )
 		{
-			#ifdef DEBUG
-			{
-				HierarchyCreationLog::logDebugMsg( "Staying - Rendering\n\n" );
-			}
-			#endif
-			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
 			return;
 		}
 		
-		#ifdef DEBUG
-		{
-			HierarchyCreationLog::logDebugMsg( "Staying - Culling\n\n" );
-		}
-		#endif
-		
 		frontIt++;
 	}
 	
 	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >::substitutePlaceholder( FrontNode& node, uint substitutionLvl )
+	inline bool Front< Morton, Point >::substitutePlaceholder( FrontNode& node, int substitutionLvl )
 	{
 		assert( node.m_octreeNode == &m_placeholder && "Substitution paramenter should be a placeholder node" );
 		
-		if( substitutionLvl != 0 )
+		if( substitutionLvl != -1 )
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
 			

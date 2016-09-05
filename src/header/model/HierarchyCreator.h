@@ -12,7 +12,6 @@
 #include "Front.h"
 #include "SQLiteManager.h"
 
-// #define HIERARCHY_STATS
 // #define DEBUG
 
 #ifdef DEBUG
@@ -371,11 +370,6 @@ namespace model
 						NodeList& output = iterOutput[ threadIdx ];
 						bool isBoundarySiblingGroup = true;
 						
-// 						if( isReleasing )
-// 						{
-// 							m_dbs[ threadIdx ].beginTransaction();
-// 						}
-						
 						while( !input.empty() )
 						{
 							Node& node = input.front();
@@ -408,10 +402,6 @@ namespace model
 							}
 							else
 							{
-								#ifdef HIERARCHY_STATS
-									m_processedNodes += nSiblings;
-								#endif
-								
 								if( isLastSiblingGroup )
 								{
 									isBoundarySiblingGroup = true;
@@ -542,6 +532,12 @@ namespace model
 		// END MULTIPASS CONSTRUCTION LOOP.
 		
 		Node* root = new Node( std::move( m_lvlWorkLists[ 0 ].front().front() ) );
+		
+		for( Node& child : root->child() )
+		{
+			setParent( child, 0 );
+		}
+		m_front.notifyInsertionEnd( 1 );
 		
 		setParent( *root, 0 );
 		m_front.notifyInsertionEnd( 1 );
