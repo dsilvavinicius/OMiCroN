@@ -852,7 +852,7 @@ namespace model
 		
 		const Array< PointPtr >& childPoints = child.getContents();
 		
-		int numSamplePoints = std::max( 1., childPoints.size() * 0.125 );
+		int numSamplePoints = std::max( 1., childPoints.size() * 0.03125 );
 		Array< PointPtr > selectedPoints( numSamplePoints );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
@@ -930,7 +930,7 @@ namespace model
 	::samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const
 	{
 		// LoD has 1/8 of children points.
-		int numSamplePoints = std::max( 1., nPoints * 0.125 );
+		int numSamplePoints = std::max( 1., nPoints * 0.03125 );
 		Array< PointPtr > selectedPoints( numSamplePoints );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
