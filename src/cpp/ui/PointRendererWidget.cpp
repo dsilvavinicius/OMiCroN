@@ -330,7 +330,7 @@ void PointRendererWidget::openMesh( const string& filename )
 		delete m_octree;
 	}
 	
-	Octree::RuntimeSetup runtime( 4, 32, 1024ul * 1024ul * 1024ul * 12ul, true );
+	Octree::RuntimeSetup runtime( 4, 4/*32*/, 1024ul * 1024ul * 1024ul * 12ul, true );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{
