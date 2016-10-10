@@ -47,7 +47,7 @@ namespace model
 		// 5) 	Merge clusters if the normal deviation is less than threshold
 		//
 		// 6) For each cluster
-		// 7) 	Create a representative point which is a sized-weighted average of all points in the cluster
+		// 7) 	Create a representative point which is a size-weighted average of all points in the cluster
 		//
 		// Notes: K should be wisely choosen. The normal threshold must be relaxed if the number of clusters is greater
 		// than the expected final size.
