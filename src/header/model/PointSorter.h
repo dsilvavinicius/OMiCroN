@@ -15,15 +15,14 @@ using namespace util;
 namespace model
 {
 	/** Sorts a point .ply file in z order.
-	 * @param M is the MortonCode type.
-	 * @param P is the Point type. */
-	template< typename M, typename P >
+	 * @param M is the MortonCode type. */
+	template< typename M >
 	class PointSorter
 	{
 	public:
-		using Reader = PlyPointReader< P >;
-		using Writter = PlyPointWritter< P >;
-		using OctreeDim = model::OctreeDimensions< M, P >;
+		using Reader = PlyPointReader;
+		using Writter = PlyPointWritter;
+		using OctreeDim = model::OctreeDimensions< M >;
 		
 		PointSorter( const string& input, const string& outFilename, uint leafLvl );
 		~PointSorter();
@@ -31,28 +30,27 @@ namespace model
 		OctreeDim& comp() { return m_comp; }
 		
 	private:
-		M calcMorton( const P& point );
+		M calcMorton( const Point& point );
 		void write( const Point& p );
-		void write( const ExtendedPoint& p );
 		
 		Reader m_reader;
 		Writter m_writter;
 		
-		P* m_points;
+		Point* m_points;
 		long m_nPoints;
 		
 		OctreeDim m_comp;
 	};
 	
-	template< typename M, typename P >
-	PointSorter< M, P >::PointSorter( const string& input, const string& outFilename, uint leafLvl )
+	template< typename M >
+	PointSorter< M >::PointSorter( const string& input, const string& outFilename, uint leafLvl )
 	: m_reader( input ),
 	m_writter( m_reader, outFilename, m_reader.getNumPoints() )
 	{
 		cout << "Setup sorting of " << input << endl << endl;
 		
 		m_nPoints = m_reader.getNumPoints();
-		m_points = ( P* ) malloc( sizeof( P ) * m_nPoints );
+		m_points = ( Point* ) malloc( sizeof( Point ) * m_nPoints );
 		
 		Float negInf = -numeric_limits< Float >::max();
 		Float posInf = numeric_limits< Float >::max();
@@ -64,7 +62,7 @@ namespace model
 		
 		long i = 0;
 		m_reader.read(
-			[ & ]( const P& p )
+			[ & ]( const Point& p )
 			{
 				m_points[ i++ ] = p;
 				Vec3 pos = p.getPos();
@@ -98,14 +96,14 @@ namespace model
 		}
 	}
 	
-	template< typename M, typename P >
-	PointSorter< M, P >::~ PointSorter()
+	template< typename M >
+	PointSorter< M >::~ PointSorter()
 	{
 		free( m_points );
 	}
 	
-	template< typename M, typename P >
-	Json::Value PointSorter< M, P >::sort()
+	template< typename M >
+	Json::Value PointSorter< M >::sort()
 	{
 		const string& outFilename = m_writter.filename();
 		cout << "Start sorting to " << outFilename << endl << endl;

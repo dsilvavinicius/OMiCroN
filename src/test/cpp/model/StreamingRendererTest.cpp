@@ -41,7 +41,7 @@ namespace model
 			{
 				QtFlycameraWidget::initialize();
 				
-				PlyPointReader< Point > reader( "../data/example/staypuff.ply" );
+				PlyPointReader reader( "../data/example/staypuff.ply" );
 				m_points = PointArray( reader.getNumPoints() );
 				
 				Float negInf = -numeric_limits< Float >::max();

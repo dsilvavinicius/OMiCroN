@@ -2,7 +2,6 @@
 #define IDNODE_H
 
 #include <utility>
-#include "OctreeNode.h"
 #include "MortonCode.h"
 
 using namespace std;

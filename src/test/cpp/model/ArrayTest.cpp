@@ -45,7 +45,7 @@ namespace model
 			}
 		}
 		
-		typedef Types< Point, ExtendedPoint > PointTypes;
+		typedef Types< Point > PointTypes;
 		
 		TYPED_TEST_CASE( ArrayTest, PointTypes );
 		

@@ -1,5 +1,4 @@
 #include "Point.h"
-#include <MemoryManager.h>
 #include <Serializer.h>
 
 namespace model

@@ -4,7 +4,6 @@
 #include <sqlite3.h>
 #include <functional>
 #include "IdNode.h"
-#include "OctreeNode.h"
 #include "MortonCode.h"
 
 using namespace std;

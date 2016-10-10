@@ -4,7 +4,7 @@
 #include <locale.h>
 #include <string>
 #include <rply.h>
-#include "ExtendedPoint.h"
+#include "Point.h"
 #include "RenderingState.h"
 
 using namespace std;
@@ -12,17 +12,11 @@ using namespace model;
 
 namespace util
 {
-
-	template<class Point >
 	class PlyPointWritter;
 
 	/** Reader for a point .ply file. The file is opened at constructor and closed at destructor. */
-	// TODO: Specialize this class so the precision is infered automatically by template parameters.
-	template< typename Point >
 	class PlyPointReader 
 	{
-		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 	public:
 		enum Precision
 		{
@@ -30,7 +24,7 @@ namespace util
 			DOUBLE = 0x2
 		};
 		
-		friend PlyPointWritter< Point >;
+		friend PlyPointWritter;
 		
 		/** Checks if the file is valid, opens it, reads its header and discovers the number of points in it.
 		 * @throws runtime_error if the file or its header cannot be read.
@@ -76,8 +70,7 @@ namespace util
 		string m_filename;
 	};
 	
-	template< typename Point >
-	PlyPointReader< Point >::PlyPointReader( const string& fileName )
+	inline PlyPointReader::PlyPointReader( const string& fileName )
 	: m_filename( fileName )
 	{
 		cout << "Setup read of " << m_filename << endl << endl;
@@ -125,8 +118,7 @@ namespace util
 		}
 	}
 	
-	template< typename Point >
-	void PlyPointReader< Point >::read( const function< void( const Point& ) >& onPointDone, Precision precision )
+	inline void PlyPointReader::read( const function< void( const Point& ) >& onPointDone, Precision precision )
 	{
 		m_onPointDone = onPointDone;
 		
@@ -148,8 +140,7 @@ namespace util
 // 		setlocale( LC_NUMERIC, old_locale );
 	}
 	
-	template< typename Point >
-	int PlyPointReader< Point >::doRead( p_ply& ply, const Precision& precision )
+	inline int PlyPointReader::doRead( p_ply& ply, const Precision& precision )
 	{
 		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
 		Point tempPoint;
@@ -163,24 +154,17 @@ namespace util
 		ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
 		ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
 		
-		setupAdditionalCallbacks( ply, precision, cbNeededData );
-		
 		return ply_read( ply );
 	}
 	
-	template< typename Point >
-	inline unsigned int PlyPointReader< Point >::getPropFlag( const unsigned int& propIndex, const Precision& precision )
+	inline unsigned int PlyPointReader::getPropFlag( const unsigned int& propIndex, const Precision& precision )
 	{
 		return propIndex | ( precision << 4 );
 	}
 	
 	/** Struct to handle callback data. Agnostic to point type. */
-	template< typename Point >
 	struct CBDataHandler
 	{
-		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-		
 		void operator()( const unsigned int& index, const float& value,
 						 pair< Point*, function< void( const Point& ) >* >* readingData )
 		{
@@ -223,56 +207,8 @@ namespace util
 		}
 	};
 	
-	/** Struct to handle callback data. Specialization for points with both colors and normals. */
-	template<>
-	struct CBDataHandler< ExtendedPoint >
+	inline int PlyPointReader::vertexCB( p_ply_argument argument )
 	{
-		using Point = ExtendedPoint;
-		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-		
-		void operator()( const unsigned int& index, const float& value,
-						 pair< Point*, function< void( const Point& ) >* >* readingData )
-		{
-			Point* tempPoint = readingData->first;
-			
-			switch( index )
-			{
-				case 0: case 1: case 2:
-				{
-					tempPoint->getPos()[ index ] = value;
-					break;
-				}
-				case 3: case 4: case 5:
-				{
-					// Normal case.
-					tempPoint->getNormal()[ index % 3 ] = value;
-					break;
-				}
-				case 6: case 7:
-				{
-					// Flat color case.
-					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
-					break;
-				}
-				case 8:
-				{
-					// Last point component. Send complete point to vector.
-					// Flat color case.
-					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
-					( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getNormal(), tempPoint->getPos() ) );
-					break;
-				}
-			}
-		}
-	};
-	
-	template< typename Point >
-	int PlyPointReader< Point >::vertexCB( p_ply_argument argument )
-	{
-		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-		
 		long propFlag;
 		void *rawReadingData;
 		ply_get_argument_user_data( argument, &rawReadingData, &propFlag );
@@ -283,19 +219,11 @@ namespace util
 		
 		unsigned int index = propFlag & 0xF;
 		
-		CBDataHandler< Point > dataHandler;
+		CBDataHandler dataHandler;
 		dataHandler( index, value, readingData );
 		
 		return 1;
 	}
-	
-	// ====================== Type Sugar ================================ /
-	
-	/** Reader for points with position and color or normal. */
-	using SimplePointReader = PlyPointReader< Point >;
-	
-	/** Reader for points with position, color and normal. */
-	using ExtendedPointReader = PlyPointReader< ExtendedPoint >;
 }
 
 #endif

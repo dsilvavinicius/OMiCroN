@@ -17,13 +17,13 @@ namespace model
 	/** Out-of-core point sorter. Uses a simple k-way merge as the external sorting algorithm, dividin the data in k chunks,
 	 * applying a first pass where a parallel quicksort sorts each chunk and a second pass where the chunks are k-way merged
 	 * as the final result.*/
-	template< typename Morton, typename Point >
+	template< typename Morton >
 	class OocPointSorter
 	{
 	public:
-		using Reader = PlyPointReader< Point >;
-		using Writter = PlyPointWritter< Point >;
-		using OctreeDim = OctreeDimensions< Morton, Point >;
+		using Reader = PlyPointReader;
+		using Writter = PlyPointWritter;
+		using OctreeDim = OctreeDimensions< Morton >;
 		
 		/** Ctor. 
 		 @param plyGroupFile is a simple formatted .gp group with all .ply files to be sorted. The format is an absolute
@@ -109,8 +109,8 @@ namespace model
 		float m_scale;
 	};
 	
-	template< typename Morton, typename Point >
-	OocPointSorter< Morton,Point >
+	template< typename Morton >
+	OocPointSorter< Morton >
 	::OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, int lvl, const ulong totalSize,
 					  const ulong memoryQuota )
 	: m_plyGroupFile( plyGroupFile ),
@@ -165,8 +165,8 @@ namespace model
 		Profiler::elapsedTime( start, "Boundaries computation" );
 	}
 	
-	template< typename Morton, typename Point >
-	OocPointSorter< Morton,Point >
+	template< typename Morton >
+	OocPointSorter< Morton >
 	::OocPointSorter( const string& plyGroupFile, const string& plyOutputFolder, const OctreeDim& dim,
 					  const ulong totalSize, const ulong memoryQuota )
 	: m_plyGroupFile( plyGroupFile ),
@@ -185,8 +185,8 @@ namespace model
 		initChunkData( totalSize, memoryQuota );
 	}
 	
-	template< typename Morton, typename Point >
-	Json::Value OocPointSorter< Morton,Point >::sort( bool eraseChunkFilesFlag )
+	template< typename Morton >
+	Json::Value OocPointSorter< Morton >::sort( bool eraseChunkFilesFlag )
 	{
 		omp_set_num_threads( 8 );
 		
@@ -333,8 +333,8 @@ namespace model
 		return octreeJson;
 	}
 	
-	template< typename Morton, typename Point >
-	void OocPointSorter< Morton, Point >::initChunkData( const ulong totalSize, const ulong memoryQuota )
+	template< typename Morton >
+	void OocPointSorter< Morton >::initChunkData( const ulong totalSize, const ulong memoryQuota )
 	{
 		m_groups =  ceil( float( totalSize ) / float( memoryQuota ) );
 		m_pointsPerChunkGroup = ceil( float( m_totalPoints ) / float( m_groups ) );
@@ -348,8 +348,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	void OocPointSorter< Morton, Point >::eraseChunkFiles()
+	template< typename Morton >
+	void OocPointSorter< Morton >::eraseChunkFiles()
 	{
 		int nChunks = m_groups * m_chunksPerGroup;
 		
@@ -361,8 +361,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline void OocPointSorter< Morton, Point >
+	template< typename Morton >
+	inline void OocPointSorter< Morton >
 	::writeChunkGroup( PointVector& chunk, typename PointVector::iterator& currentIter, const ulong& readPoints,
 					   int& nChunks, const Reader& reader ) const 
 	{
@@ -397,8 +397,8 @@ namespace model
 		currentIter = chunk.begin();
 	}
 	
-	template< typename Morton, typename Point >
-	inline typename OocPointSorter< Morton, Point >::PointVector OocPointSorter< Morton, Point >
+	template< typename Morton >
+	inline typename OocPointSorter< Morton >::PointVector OocPointSorter< Morton >
 	::readChunk( const int chunkIdx ) const 
 	{
 		ulong readPoints = 0;

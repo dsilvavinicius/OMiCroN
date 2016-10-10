@@ -2,12 +2,13 @@
 #define OCTREE_DIMENSIONS_H
 
 #include "BasicTypes.h"
+#include "Point.h"
 
 namespace model
 {
 	/** Contains dimensional info of an octree and utilities for Point and MortonCode octree-dimension-dependent info
 	 * acquisition and comparison. */
-	template< typename M, typename P >
+	template< typename M >
 	class OctreeDimensions
 	{
 	public:
@@ -37,7 +38,7 @@ namespace model
 			m_nodeLvl = nodeLvl;
 		}
 		
-		M calcMorton( const P& point ) const
+		M calcMorton( const Point& point ) const
 		{
 			const Vec3& pos = point.getPos();
 			Vec3 index = ( pos - m_origin ).array() / m_nodeSize.array();
@@ -78,7 +79,7 @@ namespace model
 			return getMortonBoundaries( calcMorton( node ) );
 		}
 		
-		bool operator()( const P& p0, const P& p1 ) const
+		bool operator()( const Point& p0, const Point& p1 ) const
 		{
 			// Debug
 // 			{

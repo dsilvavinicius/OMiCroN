@@ -33,19 +33,7 @@ namespace model
 			}
 		}
 		
-		void initPoints( Array< ExtendedPointPtr >& points, int offset )
-		{
-			for( int i = 0; i < points.size(); i++ )
-			{
-				float value = offset + i;
-				Vec3 vec( value, value, value );
-				
-				ExtendedPoint point( vec, vec, vec );
-				points[ i ] = makeManaged< ExtendedPoint >( point );
-			}
-		}
-		
-		typedef Types< Point, ExtendedPoint > PointTypes;
+		typedef Types< Point > PointTypes;
 		
 		TYPED_TEST_CASE( O1OctreeNodeTest, PointTypes );
 		

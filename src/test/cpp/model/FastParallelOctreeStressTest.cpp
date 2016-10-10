@@ -12,7 +12,7 @@ namespace model
 		TEST( FastParallelOctreeStressTest, Stress )
 		{
 			using Morton = MediumMortonCode;
-			using Octree = FastParallelOctree< Morton, Point >;
+			using Octree = FastParallelOctree< Morton >;
 			using OctreeDim = Octree::Dim;
 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
 			using NodeArray = typename Sql::NodeArray;

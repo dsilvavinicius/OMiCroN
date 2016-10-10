@@ -2,7 +2,7 @@
 #define POINT_APPENDER_H
 
 #include "OctreeNode.h"
-#include "ExtendedPoint.h"
+#include "Point.h"
 
 namespace model
 {

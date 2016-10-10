@@ -1,9 +1,6 @@
 #include <QtGui/QGuiApplication>
 #include <QApplication>
 #include "MainWindow.h"
-#include "PointRendererWindow.h"
-
-using namespace ui;
 
 int main(int argc, char **argv)
 {

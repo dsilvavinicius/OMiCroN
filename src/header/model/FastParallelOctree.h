@@ -10,18 +10,16 @@
 namespace model
 {
 	/** Out-of-core fast parallel octree. Provides visualization while async constructing the hierarchy bottom-up. */
-	template< typename MortonCode, typename P >
+	template< typename MortonCode >
 	class FastParallelOctree
 	{
 	public:
 		using Morton = MortonCode;
-		using Point = P;
-		using PointPtr = shared_ptr< Point >;
-		using HierarchyCreator = model::HierarchyCreator< Morton, Point >;
+		using HierarchyCreator = model::HierarchyCreator< Morton >;
 		using Node = typename HierarchyCreator::Node;
 		using NodeArray = typename HierarchyCreator::NodeArray;
 		using Dim = typename HierarchyCreator::OctreeDim;
-		using Front = model::Front< MortonCode, Point >;
+		using Front = model::Front< MortonCode >;
 		using NodeLoader = typename Front::NodeLoader;
 		using Renderer = StreamingRenderer< Point >;
 		
@@ -74,8 +72,8 @@ namespace model
 			atomic_ulong m_processedNodes;
 		#endif
 		
-		template< typename M, typename Pt >
-		friend ostream& operator<<( ostream& out, const FastParallelOctree< M, Pt >& octree );
+		template< typename M >
+		friend ostream& operator<<( ostream& out, const FastParallelOctree< M >& octree );
 		
 	private:
 		/** Builds from a octree file json. */
@@ -102,8 +100,8 @@ namespace model
 		Node* m_root;
 	};
 	
-	template< typename Morton, typename Point >
-	FastParallelOctree< Morton, Point >
+	template< typename Morton >
+	FastParallelOctree< Morton >
 	::FastParallelOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
@@ -124,14 +122,14 @@ namespace model
 			sortedFilename.insert( 0, "sorted_" );
 		}
 		
-		PointSorter< Morton, Point > sorter( plyFilename, sortedFilename, maxLvl );
+		PointSorter< Morton > sorter( plyFilename, sortedFilename, maxLvl );
 		Json::Value octreeJson = sorter.sort();
 		
 		buildFromSortedFile( octreeJson, loader, runtime );
 	}
 	
-	template< typename Morton, typename Point >
-	FastParallelOctree< Morton, Point >
+	template< typename Morton >
+	FastParallelOctree< Morton >
 	::FastParallelOctree( const Json::Value& octreeJson, NodeLoader& loader, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
@@ -140,8 +138,8 @@ namespace model
 		buildFromSortedFile( octreeJson, loader, runtime );
 	}
 	
-	template< typename Morton, typename Point >
-	FastParallelOctree< Morton, Point >::~FastParallelOctree()
+	template< typename Morton >
+	FastParallelOctree< Morton >::~FastParallelOctree()
 	{
 		waitCreation();
 			
@@ -155,8 +153,8 @@ namespace model
 		m_front = nullptr;
 	}
 	
-	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >
+	template< typename Morton >
+	void FastParallelOctree< Morton >
 	::buildFromSortedFile( const Json::Value& octreeJson, NodeLoader& loader, const RuntimeSetup& runtime )
 	{
 		#ifdef HIERARCHY_STATS
@@ -197,15 +195,15 @@ namespace model
 		m_creationFuture = m_hierarchyCreator->createAsync();
 	}
 	
-	template< typename Morton, typename Point >
-	FrontOctreeStats FastParallelOctree< Morton, Point >
+	template< typename Morton >
+	FrontOctreeStats FastParallelOctree< Morton >
 	::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		return m_front->trackFront( renderer, projThresh );
 	}
 	
-	template< typename Morton, typename Point >
-	bool FastParallelOctree< Morton, Point >::isCreationFinished()
+	template< typename Morton >
+	bool FastParallelOctree< Morton >::isCreationFinished()
 	{
 		if( m_creationFuture.wait_for( chrono::seconds( 0 ) ) == future_status::ready )
 		{
@@ -218,8 +216,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	void FastParallelOctree< Morton, Point >::waitCreation()
+	template< typename Morton >
+	void FastParallelOctree< Morton >::waitCreation()
 	{
 		if( m_creationFuture.valid() )
 		{
@@ -236,8 +234,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	string FastParallelOctree< Morton, Point >::toString( const Node& node, const Dim& nodeLvlDim ) const
+	template< typename Morton >
+	string FastParallelOctree< Morton >::toString( const Node& node, const Dim& nodeLvlDim ) const
 	{
 		stringstream ss;
 		for( int i = 0; i < int( nodeLvlDim.m_nodeLvl ) - 1; ++i )
@@ -257,17 +255,17 @@ namespace model
 		return ss.str();
 	}
 	
-	template< typename M, typename P >
-	ostream& operator<<( ostream& out, const FastParallelOctree< M, P >& octree )
+	template< typename M >
+	ostream& operator<<( ostream& out, const FastParallelOctree< M >& octree )
 	{
-		typename FastParallelOctree< M, P >::Node* root;
+		typename FastParallelOctree< M >::Node* root;
 		{
 			lock_guard< mutex > lock( mutex() );
 			root = octree.m_root;
 		}
 		if( root )
 		{
-			using Dim = typename FastParallelOctree< M, P >::Dim;
+			using Dim = typename FastParallelOctree< M >::Dim;
 			out << octree.toString( *root, Dim( octree.dim(), 0 ) );
 			return out;
 		}

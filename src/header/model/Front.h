@@ -35,14 +35,13 @@ namespace model
 	 * Front also provides API for front tracking, operation which prunes or branches front nodes in order to enforce a
 	 * rendering performance budget, specified by a box projection threshold. This operation also manages memory stress
 	 * by persisting and releasing prunned sibling groups. */
-	template< typename Morton, typename Point >
+	template< typename Morton >
 	class Front
 	{
 	public:
-		using PointPtr = shared_ptr< Point >;
 		using Node = O1OctreeNode< PointPtr >;
 		using NodeArray = Array< Node >;
-		using OctreeDim = OctreeDimensions< Morton, Point >;
+		using OctreeDim = OctreeDimensions< Morton >;
 		using Renderer = StreamingRenderer< Point >;
 		using NodeLoader = model::NodeLoader< Point >;
 		
@@ -346,10 +345,9 @@ namespace model
 		atomic_bool m_leafLvlLoadedFlag;
 	};
 	
-	template< typename Morton, typename Point >
-	inline Front< Morton, Point >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
-										  const int nHierarchyCreationThreads, NodeLoader& loader,
-									   const ulong memoryLimit )
+	template< typename Morton >
+	inline Front< Morton >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
+								   const int nHierarchyCreationThreads, NodeLoader& loader, const ulong memoryLimit )
 	: m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nHierarchyCreationThreads ),
@@ -376,20 +374,20 @@ namespace model
 		m_segments[ 0 ].m_isSubstituting = true;
 	}
 
-	template< typename Morton, typename Point >
-	void Front< Morton, Point >::notifyLeafLvlLoaded()
+	template< typename Morton >
+	void Front< Morton >::notifyLeafLvlLoaded()
 	{
 		m_leafLvlLoadedFlag = true;
 	}
 	
-	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >::isReleasing()
+	template< typename Morton >
+	inline bool Front< Morton >::isReleasing()
 	{
 		return m_nodeLoader.isReleasing();
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx )
+	template< typename Morton >
+	inline void Front< Morton >::insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx )
 	{
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
@@ -397,15 +395,15 @@ namespace model
 		list.push_back( frontNode );
 	}
 	
-	template< typename Morton, typename Point >
-	inline typename Front< Morton, Point >::FrontListIter Front< Morton, Point >::getIteratorToBufferBegin( int threadIdx )
+	template< typename Morton >
+	inline typename Front< Morton >::FrontListIter Front< Morton >::getIteratorToBufferBegin( int threadIdx )
 	{
 		return m_currentIterInsertions[ threadIdx ].begin();
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point > ::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
-														   int threadIdx )
+	template< typename Morton >
+	inline void Front< Morton > ::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
+													int threadIdx )
 	{
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
@@ -413,8 +411,8 @@ namespace model
 		list.insert( iter, frontNode );
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::insertPlaceholder( const Morton& morton, int threadIdx )
+	template< typename Morton >
+	inline void Front< Morton >::insertPlaceholder( const Morton& morton, int threadIdx )
 	{
 		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
 		
@@ -422,8 +420,8 @@ namespace model
 		list.push_back( FrontNode( m_placeholder, morton ) );
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::notifyInsertionEnd( uint dispatchedThreads )
+	template< typename Morton >
+	inline void Front< Morton >::notifyInsertionEnd( uint dispatchedThreads )
 	{
 		if( dispatchedThreads > 0 )
 		{
@@ -461,9 +459,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline FrontOctreeStats Front< Morton, Point >
-	::trackFront( Renderer& renderer, const Float projThresh )
+	template< typename Morton >
+	inline FrontOctreeStats Front< Morton >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		auto start = Profiler::now();
 		
@@ -577,8 +574,8 @@ namespace model
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, nNodes );
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >
+	template< typename Morton >
+	inline void Front< Morton >
 	::trackNode( FrontListIter& frontIt, Segment& segment, Node*& lastParent, int substitutionLvl, Renderer& renderer,
 				 const Float projThresh )
 	{
@@ -635,8 +632,8 @@ namespace model
 		frontIt++;
 	}
 	
-	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >::substitutePlaceholder( FrontNode& node, int substitutionLvl )
+	template< typename Morton >
+	inline bool Front< Morton >::substitutePlaceholder( FrontNode& node, int substitutionLvl )
 	{
 		assert( node.m_octreeNode == &m_placeholder && "Substitution paramenter should be a placeholder node" );
 		
@@ -670,8 +667,8 @@ namespace model
 		return false;
 	}
 	
-	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >
+	template< typename Morton >
+	inline bool Front< Morton >
 	::checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
 				  FrontListIter& frontIt, Segment& segment, int substitutionLvl, Renderer& renderer,
 			   const Float projThresh )
@@ -722,8 +719,8 @@ namespace model
 		return pruneFlag;
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::prune( FrontListIter& frontIt, Segment& segment, Node* parentNode,
+	template< typename Morton >
+	inline void Front< Morton >::prune( FrontListIter& frontIt, Segment& segment, Node* parentNode,
 											   Renderer& renderer )
 	{
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
@@ -752,8 +749,8 @@ namespace model
 		setupNodeRendering( frontIt, frontNode, segment, renderer );
 	}
 	
-	template< typename Morton, typename Point >
-	inline bool Front< Morton, Point >
+	template< typename Morton >
+	inline bool Front< Morton >
 	::checkBranch( const OctreeDim& nodeLvlDim, Node& node, const Morton& morton, Renderer& renderer,
 				   const Float projThresh, bool& out_isCullable )
 	{
@@ -779,9 +776,9 @@ namespace model
 		return false;
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::branch( FrontListIter& frontIt,  Segment& segment, Node& node,
-												const OctreeDim& nodeLvlDim, Renderer& renderer )
+	template< typename Morton >
+	inline void Front< Morton >::branch( FrontListIter& frontIt,  Segment& segment, Node& node,
+										 const OctreeDim& nodeLvlDim, Renderer& renderer )
 	{
 		frontIt = segment.m_front.erase( frontIt );
 		
@@ -807,17 +804,17 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::setupNodeRendering( FrontListIter& frontIt, const FrontNode& frontNode,
-															Segment& segment, Renderer& renderer )
+	template< typename Morton >
+	inline void Front< Morton >::setupNodeRendering( FrontListIter& frontIt, const FrontNode& frontNode,
+													 Segment& segment, Renderer& renderer )
 	{
 		segment.m_front.insert( frontIt, frontNode );
 		renderer.handleNodeRendering( *frontNode.m_octreeNode );
 	}
 	
-	template< typename Morton, typename Point >
-	inline void Front< Morton, Point >::setupNodeRenderingNoFront( FrontListIter& frontIt, Node& node,
-																   Renderer& renderer ) const
+	template< typename Morton >
+	inline void Front< Morton >::setupNodeRenderingNoFront( FrontListIter& frontIt, Node& node,
+															Renderer& renderer ) const
 	{
 		frontIt++;
 		renderer.handleNodeRendering( node );

@@ -3,7 +3,6 @@
 
 #include <gtest/gtest.h>
 #include "MortonCode.h"
-#include "OctreeMapTypes.h"
 
 /**
  * Methods to test hierarchies generated using points in test/data/simple_point_octree.ply or

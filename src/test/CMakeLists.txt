@@ -27,20 +27,14 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/PointSorterTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/OocPointSorterTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/TbbAllocatorTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/Ken12MemoryManagerTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/MemoryManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrustumTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/PointTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/MortonIntervalTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/OctreeNodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/O1OctreeNodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/OctreeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/RandomSampleOctreeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/OutOfCoreOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeStressTest.cpp

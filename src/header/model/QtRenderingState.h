@@ -3,7 +3,6 @@
 
 #include "RenderingState.h"
 #include "MortonCode.h"
-#include "OctreeNode.h"
 #include <QGLPainter>
 
 namespace model

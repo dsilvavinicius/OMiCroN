@@ -105,7 +105,6 @@ QT5_WRAP_UI( UI_HDRS
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UI_DIR}/GLHiddenWidget.h		${CPP_DIR}/${UI_DIR}/GLHiddenWidget.cpp
-	${HEADER_DIR}/${UI_DIR}/PointRendererWindow.h	${CPP_DIR}/${UI_DIR}/PointRendererWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/MainWindow.h			${CPP_DIR}/${UI_DIR}/MainWindow.cpp
 	${HEADER_DIR}/${UI_DIR}/mainwindow.ui
@@ -113,13 +112,11 @@ add_library (Point_Based_Renderer_Lib
 	${UI_HDRS}
 	
 	${HEADER_DIR}/${UTIL_DIR}/Stream.h						${CPP_DIR}/${UTIL_DIR}/Stream.cpp
-	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h				${CPP_DIR}/${UTIL_DIR}/PlyPointReader.cpp
-	${HEADER_DIR}/${UTIL_DIR}/PlyPointWritter.h				${CPP_DIR}/${UTIL_DIR}/PlyPointWritter.cpp
+	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h
+	${HEADER_DIR}/${UTIL_DIR}/PlyPointWritter.h
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h					${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Point.h						${CPP_DIR}/${MODEL_DIR}/Point.cpp
-	${HEADER_DIR}/${MODEL_DIR}/ExtendedPoint.h				${CPP_DIR}/${MODEL_DIR}/ExtendedPoint.cpp
 	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h					${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
-	${HEADER_DIR}/${MODEL_DIR}/IMemoryManager.h				${CPP_DIR}/${MODEL_DIR}/IMemoryManager.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h				${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h						${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h						${CPP_DIR}/${MODEL_DIR}/Camera.cpp
@@ -128,8 +125,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/TransientRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/TucanoRenderingState.cpp
-	${HEADER_DIR}/${MODEL_DIR}/PointNodeLoaderThread.h
-	${HEADER_DIR}/${MODEL_DIR}/ExtendedPointNodeLoaderThread.h
+	${HEADER_DIR}/${MODEL_DIR}/NodeLoaderThread.h
 	${HEADER_DIR}/${MODEL_DIR}/GpuAllocStatistics.h			${CPP_DIR}/${MODEL_DIR}/GpuAllocStatistics.cpp
 	
 	# Tucano related code ( ugly hacks to use qmake in these files ).

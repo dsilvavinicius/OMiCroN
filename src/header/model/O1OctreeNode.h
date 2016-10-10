@@ -204,18 +204,6 @@ namespace model
 			GpuAllocStatistics::notifyDealloc( pointSize * m_contents.size() );
 		}
 	}
-
-	template<>
-	inline O1OctreeNode< ExtendedPointPtr, TbbAllocator< ExtendedPointPtr > >::~O1OctreeNode()
-	{
-		m_parent = nullptr;
-		
-		if( m_loadState == LOADED )
-		{
-			ulong pointSize = GpuAllocStatistics::extendedPointSize();
-			GpuAllocStatistics::notifyDealloc( pointSize * m_contents.size() );
-		}
-	}
 	
 	template< typename Contents, typename ContentsAlloc >
 	inline void* O1OctreeNode< Contents, ContentsAlloc >::operator new( size_t size )

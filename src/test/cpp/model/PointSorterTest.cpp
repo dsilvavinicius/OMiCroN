@@ -25,7 +25,7 @@ namespace model
 		{
 			using M = MediumMortonCode;
 			using P = Point;
-			using PointSorter = model::PointSorter< M, P >;
+			using PointSorter = model::PointSorter< M >;
 			using OctreeDim = typename PointSorter::OctreeDim;
 			
 			Json::Value octreeJson;
@@ -53,7 +53,7 @@ namespace model
 			
 			cout << "Validating result." << endl << endl;
 			
-			PlyPointReader< P > reader( outputFilename );
+			PlyPointReader reader( outputFilename );
 			out_sortedPoints = vector< Point >( reader.getNumPoints() );
 			auto iter = out_sortedPoints.begin();
 			

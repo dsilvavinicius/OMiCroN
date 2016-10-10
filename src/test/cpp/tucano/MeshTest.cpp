@@ -44,7 +44,7 @@ namespace Tucano
 			{
 				QtFlycameraWidget::initialize();
 				
-				PlyPointReader< ExtendedPoint > reader( "../data/example/staypuff.ply" );
+				PlyPointReader reader( "../data/example/staypuff.ply" );
 				ulong nPoints = reader.getNumPoints();
 				
 				mesh.reset();
@@ -54,9 +54,6 @@ namespace Tucano
 				mesh.reserveNormals( nPoints );
 				checkOglErrors();
 				
-				mesh.reserveColors( 3, nPoints );
-				checkOglErrors();
-				
 				mesh.reserveIndices( nPoints );
 				checkOglErrors();
 				
@@ -64,9 +61,6 @@ namespace Tucano
 				checkOglErrors();
 				
 				float* normalsPtr = mesh.mapNormals( 0, nPoints );
-				checkOglErrors();
-				
-				float* colorsPtr = mesh.mapColors( 0, nPoints );
 				checkOglErrors();
 				
 				uint* indicesPtr = mesh.mapIndices( 0, nPoints );
@@ -80,7 +74,7 @@ namespace Tucano
 				Vec3 maxCoords( negInf, negInf, negInf );
 				
 				reader.read(
-					[ & ]( const ExtendedPoint& p )
+					[ & ]( const Point& p )
 					{
 						const Vec3& pos = p.getPos();
 						
@@ -88,13 +82,9 @@ namespace Tucano
 						vertsPtr[ insertedPoints * 3 + 1 ]	= pos.y();
 						vertsPtr[ insertedPoints * 3 + 2 ]	= pos.z();
 						
-						normalsPtr[ insertedPoints * 3 ]		= p.getNormal().x();
-						normalsPtr[ insertedPoints * 3 + 1 ]	= p.getNormal().y();
-						normalsPtr[ insertedPoints * 3 + 2 ]	= p.getNormal().z();
-						
-						colorsPtr[ insertedPoints * 3 ]		= p.getNormal().x();
-						colorsPtr[ insertedPoints * 3 + 1 ]	= p.getNormal().y();
-						colorsPtr[ insertedPoints * 3 + 2 ]	= p.getNormal().z();
+						normalsPtr[ insertedPoints * 3 ]	= p.getNormal().x();
+						normalsPtr[ insertedPoints * 3 + 1 ]= p.getNormal().y();
+						normalsPtr[ insertedPoints * 3 + 2 ]= p.getNormal().z();
 						
 						indicesPtr[ insertedPoints ] = insertedPoints;
 						

@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 #include <vector>
-#include "ExtendedPoint.h"
+#include "Point.h"
 #include "Stream.h"
 #include "Array.h"
 
@@ -56,19 +56,7 @@ namespace model
 		virtual void handleNodeRendering( const PointVector& points );
 		
 		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const ExtendedPointPtr& point );
-		
-		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const ExtendedPointVector& points );
-		
-		/** Indicates that the node contents passed should be rendered. */
 		virtual void handleNodeRendering( const Array< PointPtr >& points );
-		
-		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const Array< ExtendedPointPtr >& points );
-		
-		/** Indicates that the node contents passed should be rendered. */
-		virtual void handleNodeRendering( const IndexVector& points );
 		
 		vector< Vec3 >& getPositions() { return m_positions; }
 		vector< Vec3 >& getColors() { return m_colors; }
@@ -107,37 +95,6 @@ namespace model
 		for( PointPtr point : points )
 		{
 			handleNodeRendering( point );
-		}
-	}
-	
-	inline void RenderingState::handleNodeRendering( const ExtendedPointPtr& point )
-	{
-		m_positions.push_back( point->getPos() );
-		m_colors.push_back( point->getNormal() );
-		m_normals.push_back( point->getNormal() );
-	}
-	
-	inline void RenderingState::handleNodeRendering( const ExtendedPointVector& points )
-	{
-		for( ExtendedPointPtr point : points )
-		{
-			handleNodeRendering( point );
-		}
-	}
-	
-	inline void RenderingState::handleNodeRendering( const Array< ExtendedPointPtr >& points )
-	{
-		for( ExtendedPointPtr point : points )
-		{
-			handleNodeRendering( point );
-		}
-	}
-	
-	inline void RenderingState::handleNodeRendering( const IndexVector& points )
-	{
-		for( unsigned int index : points )
-		{
-			m_indices.push_back( index );
 		}
 	}
 }

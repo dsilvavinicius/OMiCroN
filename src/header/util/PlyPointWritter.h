@@ -5,10 +5,9 @@
 
 namespace util
 {
-	template< typename Point >
 	class PlyPointWritter
 	{
-		using Reader = PlyPointReader< Point >;
+		using Reader = PlyPointReader;
 		
 	public:
 		PlyPointWritter( const Reader& reader, const string& filename, ulong nPoints );
@@ -23,8 +22,7 @@ namespace util
 		p_ply m_ply;
 	};
 	
-	template< typename Point >
-	inline PlyPointWritter< Point >::PlyPointWritter( const Reader& reader, const string& filename, ulong nPoints )
+	inline PlyPointWritter::PlyPointWritter( const Reader& reader, const string& filename, ulong nPoints )
 	: m_filename( filename ),
 	m_ply( ply_create( m_filename.c_str(), PLY_LITTLE_ENDIAN, NULL, 0, NULL ) )
 	{
@@ -52,6 +50,36 @@ namespace util
 		if( !ply_write_header( m_ply ) )
 		{
 			throw runtime_error( "Cannot write .ply header." );
+		}
+	}
+	
+	inline void PlyPointWritter::write( const Point& p )
+	{
+		const Vec3& pos = p.getPos();
+		ply_write( m_ply, pos.x() );
+		ply_write( m_ply, pos.y() );
+		ply_write( m_ply, pos.z() );
+		
+		const Vec3& normal = p.getNormal();
+		ply_write( m_ply, normal.x() );
+		ply_write( m_ply, normal.y() );
+		ply_write( m_ply, normal.z() );
+	}
+	
+	inline void PlyPointWritter::copyProperty( p_ply_property property )
+	{
+		const char *property_name;
+		e_ply_type type, length_type, value_type;
+		ply_get_property_info( property, &property_name, &type, &length_type, &value_type );
+		
+		if( !strcmp( property_name, "x" ) || !strcmp( property_name, "y" ) || !strcmp( property_name, "z" ) ||
+			!strcmp( property_name, "nx" ) || !strcmp( property_name, "ny" ) || !strcmp( property_name, "nz" ) )
+		{
+			/* add this property to output file */
+			if( !ply_add_property( m_ply, property_name, type, length_type, value_type ) )
+			{
+				throw runtime_error( "Cannot copy property to .ply header." );
+			}
 		}
 	}
 }

@@ -28,11 +28,11 @@ namespace model
 			}
 		}
 		
-		template< typename P, typename M >
-		void test( OocPointSorter< M, P >& sorter, const string& octreeFilename, ulong expectedNumNodes )
+		template< typename M >
+		void test( OocPointSorter< M >& sorter, const string& octreeFilename, ulong expectedNumNodes )
 		{
-			using Reader = PlyPointReader< P >;
-			using OctreeDim = typename OocPointSorter< M, P >::OctreeDim;
+			using Reader = PlyPointReader;
+			using OctreeDim = typename OocPointSorter< M >::OctreeDim;
 			
 			auto start = Profiler::now( "Sorting David, 13 lvls," );
 			
@@ -58,12 +58,12 @@ namespace model
 			
 			ASSERT_EQ( expectedNumNodes, reader.getNumPoints() );
 			
-			P prev;
+			Point prev;
 			
 			bool init = false;
 			
 			reader.read(
-				[ & ]( const P& p )
+				[ & ]( const Point& p )
 				{
 					if( init )
 					{
@@ -88,8 +88,8 @@ namespace model
 		void test( const string& groupFilename, const string& outputFolder, int lvls, ulong totalSizeInBytes,
 				   ulong memoryQuota, ulong expectedNumNodes )
 		{
-			OocPointSorter< MediumMortonCode, Point > sorter( groupFilename, outputFolder, lvls, totalSizeInBytes,
-															  memoryQuota );
+			OocPointSorter< MediumMortonCode > sorter( groupFilename, outputFolder, lvls, totalSizeInBytes,
+													   memoryQuota );
 			
 			int nameBeginIdx = ( groupFilename.find_last_of( '/' ) == groupFilename.npos ) ? 0
 							: groupFilename.find_last_of( '/' ) + 1;
@@ -102,7 +102,7 @@ namespace model
 		TEST_F( OocPointSorterTest, Sort )
 		{
 			using P = Point;
-			using Reader = PlyPointReader< P >;
+			using Reader = PlyPointReader;
 			
 			test( "data/OocPointSorterTest.gp", "data", 10, 1554, 512, 33 );
 			
@@ -156,7 +156,7 @@ namespace model
 		
 		TEST_F( OocPointSorterTest, DavidResort )
 		{
-			using Sorter = OocPointSorter< MediumMortonCode, Point >;
+			using Sorter = OocPointSorter< MediumMortonCode >;
 			using OctreeDim = typename Sorter::OctreeDim;
 			
 			string plyGroupFilename = "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_13Lvls/David.gp";

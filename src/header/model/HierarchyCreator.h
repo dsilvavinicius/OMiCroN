@@ -24,19 +24,17 @@ namespace model
 {
 	// TODO: If this algorithm is the best one, change MortonCode API to get rid of shared_ptr.
 	/** Multithreaded massive octree hierarchy creator. */
-	template< typename Morton, typename Point >
+	template< typename Morton >
 	class HierarchyCreator
 	{
 	public:
-		using PointPtr = shared_ptr< Point >;
-		using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
 		using PointArray = Array< PointPtr >;
 		using Node = O1OctreeNode< PointPtr >;
 		using NodeArray = Array< Node >;
 		
-		using OctreeDim = OctreeDimensions< Morton, Point >;
-		using Front = model::Front< Morton, Point >;
-		using Reader = PlyPointReader< Point >;
+		using OctreeDim = OctreeDimensions< Morton >;
+		using Front = model::Front< Morton >;
+		using Reader = PlyPointReader;
 		//using Sql = SQLiteManager< Point, Morton, Node >;
 		
 		/** List of nodes that can be processed parallel by one thread. */
@@ -173,8 +171,8 @@ namespace model
 		int m_nThreads;
 	};
 	
-	template< typename Morton, typename Point >
-	HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	HierarchyCreator< Morton >
 	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, Front& front, ulong expectedLoadPerThread,
 						const ulong memoryLimit, int nThreads )
 	: m_plyFilename( sortedPlyFilename ), 
@@ -194,8 +192,8 @@ namespace model
 		omp_set_num_threads( m_nThreads );
 	}
 	
-	template< typename Morton, typename Point >
-	future< typename HierarchyCreator< Morton, Point >::Node* > HierarchyCreator< Morton, Point >::createAsync()
+	template< typename Morton >
+	future< typename HierarchyCreator< Morton >::Node* > HierarchyCreator< Morton >::createAsync()
 	{
 		packaged_task< Node*() > task(
 			[ & ]
@@ -216,8 +214,8 @@ namespace model
 		return future;
 	}
 	
-	template< typename Morton, typename Point >
-	typename HierarchyCreator< Morton, Point >::Node* HierarchyCreator< Morton, Point >::create()
+	template< typename Morton >
+	typename HierarchyCreator< Morton >::Node* HierarchyCreator< Morton >::create()
 	{
 		cout << "MEMORY BEFORE CREATING: " << AllocStatistics::totalAllocated() << endl << endl;
 		
@@ -552,16 +550,16 @@ namespace model
 		return root;
 	}
 	
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::pushWork( NodeList&& workItem )
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >::pushWork( NodeList&& workItem )
 	{
 		lock_guard< mutex > lock( m_listMutex );
 		
 		m_lvlWorkLists[ m_leafLvlDim.m_nodeLvl ].push_back( std::move( workItem ) );
 	}
 	
-	template< typename Morton, typename Point >
-	inline typename HierarchyCreator< Morton, Point >::NodeList HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline typename HierarchyCreator< Morton >::NodeList HierarchyCreator< Morton >
 	::popWork( const int lvl )
 	{
 		if( lvl == m_leafLvlDim.m_nodeLvl )
@@ -579,8 +577,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline size_t HierarchyCreator< Morton, Point >::updatedWorkListSize( int lvl )
+	template< typename Morton >
+	inline size_t HierarchyCreator< Morton >::updatedWorkListSize( int lvl )
 	{
 		if( lvl == m_leafLvlDim.m_nodeLvl )
 		{
@@ -595,8 +593,8 @@ namespace model
 	}
 		
 	/** Sets the parent pointer for all children of a given node. */
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx ) /*const*/
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >::setParent( Node& node, const int threadIdx ) /*const*/
 	{
 		// Parents are expected to be set once.
 		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
@@ -615,9 +613,9 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	void HierarchyCreator< Morton, Point >::setParent( Node& node, const int threadIdx,
-													   typename Front::FrontListIter& frontIter )
+	template< typename Morton >
+	void HierarchyCreator< Morton >::setParent( Node& node, const int threadIdx,
+												typename Front::FrontListIter& frontIter )
 	{
 		// Parents are expected to be set once.
 		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
@@ -636,8 +634,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::collapse( Node& node ) const
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >::collapse( Node& node ) const
 	{
 		NodeArray& children = node.child();
 		
@@ -648,8 +646,8 @@ namespace model
 	}
 	
 	/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::collapseBoundaries( NodeList& list )
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >::collapseBoundaries( NodeList& list )
 	const
 	{
 		if( !list.empty() )
@@ -661,8 +659,8 @@ namespace model
 
 	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 	 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >
 	::removeBoundaryDuplicate( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
 							   const OctreeDim& nextLvlDim ) /*const*/
 	{
@@ -773,8 +771,8 @@ namespace model
 	/** Merge previousProcessed into nextProcessed if there is not enough work yet to form a WorkList or push it to
 		* the next level WorkList otherwise. Repetitions are checked while linking lists, since it can occur when the
 		* lists have nodes from the same sibling group. */
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >
 	::mergeOrPushWork( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed, OctreeDim& nextLvlDim )
 	{
 		removeBoundaryDuplicate( previousProcessed, previousIdx, nextProcessed, nextLvlDim );
@@ -796,8 +794,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline bool HierarchyCreator< Morton, Point >::checkAllWorkFinished()
+	template< typename Morton >
+	inline bool HierarchyCreator< Morton >::checkAllWorkFinished()
 	{
 		lock_guard< mutex > lock( m_listMutex );
 		
@@ -812,8 +810,8 @@ namespace model
 		return true;
 	}
 	
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >::turnReleaseOn( mutex& releaseMutex, bool& isReleasing )
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >::turnReleaseOn( mutex& releaseMutex, bool& isReleasing )
 	{
 		{
 			lock_guard< mutex > lock( releaseMutex );
@@ -821,8 +819,8 @@ namespace model
 		}
 	}
 		
-	template< typename Morton, typename Point >
-	inline void HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline void HierarchyCreator< Morton >
 	::turnReleaseOff( mutex& releaseMutex, bool& isReleasing, condition_variable& releaseFlag, mutex& diskThreadMutex,
 						bool& isDiskThreadStopped )
 	{
@@ -839,8 +837,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline typename HierarchyCreator< Morton >::Node HierarchyCreator< Morton >
 	::createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
 		// Setup a placeholder in front if the node is in the leaf level.
@@ -878,8 +876,8 @@ namespace model
 		return node;
 	}
 	
-	template< typename Morton, typename Point >
-	inline typename HierarchyCreator< Morton, Point >::Node HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline typename HierarchyCreator< Morton >::Node HierarchyCreator< Morton >
 	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
 		if( nChildren == 1 )
@@ -925,8 +923,8 @@ namespace model
 		}
 	}
 	
-	template< typename Morton, typename Point >
-	inline typename HierarchyCreator< Morton, Point >::PointArray HierarchyCreator< Morton, Point >
+	template< typename Morton >
+	inline typename HierarchyCreator< Morton >::PointArray HierarchyCreator< Morton >
 	::samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const
 	{
 		// LoD has 1/8 of children points.
@@ -943,8 +941,8 @@ namespace model
 		return selectedPoints;
 	}
 	
-	template< typename Morton, typename Point >
-	inline string HierarchyCreator< Morton, Point >::nodeListToString( const NodeList& list, const OctreeDim& lvlDim )
+	template< typename Morton >
+	inline string HierarchyCreator< Morton >::nodeListToString( const NodeList& list, const OctreeDim& lvlDim )
 	{
 		stringstream ss;
 		ss << "list size: " << list.size() <<endl;
@@ -956,8 +954,8 @@ namespace model
 		return ss.str();
 	}
 	
-	template< typename Morton, typename Point >
-	inline string HierarchyCreator< Morton, Point >::workListToString( const WorkList& list, const OctreeDim& lvlDim )
+	template< typename Morton >
+	inline string HierarchyCreator< Morton >::workListToString( const WorkList& list, const OctreeDim& lvlDim )
 	{
 		stringstream ss; ss << "Size: " << list.size() << endl;
 		

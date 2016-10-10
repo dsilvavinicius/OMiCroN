@@ -11,7 +11,6 @@ using namespace std;
 
 namespace model
 {
-	// TODO: Change m_color member to m_attrib, since it can also represent the normal.
 	/** Point representation. */
 	class Point
 	{

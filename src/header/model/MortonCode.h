@@ -10,7 +10,6 @@
 #include <qsurfaceformat.h>
 
 #include "Stream.h"
-#include "IMemoryManager.h"
 #include "MemoryUtils.h"
 
 using namespace std;

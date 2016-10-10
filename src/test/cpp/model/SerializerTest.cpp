@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 #include "Serializer.h"
-#include <OctreeNode.h>
-#include <MemoryManagerTypes.h>
 
 namespace model
 {
@@ -16,8 +14,6 @@ namespace model
 		
 		TEST_F( SerializerTest, PointVector )
 		{
-			SPV_DefaultManager::initInstance( 1000000 );
-			
 			Point p0( Vec3( 11.321565f, 4.658535f, 7.163479f ), Vec3( 7.163479f, 4.658535f, 11.321565f ) );
 			Point p1( Vec3( 11.201763f, 5.635769f, 6.996898f ), Vec3( 6.996898f, 5.635769f, 11.201763f ) );
 			Point p2( Vec3( 11.198129f, 4.750132f, 7.202037f ), Vec3( 7.202037f, 4.750132f, 11.198129f ) );
@@ -30,148 +26,6 @@ namespace model
 			
 			PointVector deserializedPoints;
 			Serializer::deserialize( bytes, deserializedPoints );
-			
-			float epsilon = 1.e-15;
-			for( int i = 0; i < points.size(); ++i )
-			{
-				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
-			}
-			
-			Serializer::dispose( bytes );
-		}
-		
-		TEST_F( SerializerTest, ExtendedPointVector )
-		{
-			using Point = ExtendedPoint;
-			using PointPtr = ExtendedPointPtr;
-			using PointVector = ExtendedPointVector;
-			
-			SEV_DefaultManager::initInstance( 1000000 );
-			
-			PointPtr p0 = makeManaged< Point >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 1.f, 15.f ,2.f ) );
-			PointPtr p1 = makeManaged< Point >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
-			PointPtr p2 = makeManaged< Point >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
-			
-			PointPtr pointArray[3] = { p0, p1, p2 };
-			PointVector points( pointArray, pointArray + 3 );
-			
-			byte* bytes;
-			Serializer::serialize( points, &bytes );
-			
-			PointVector deserializedPoints;
-			Serializer::deserialize( bytes, deserializedPoints );
-			
-			float epsilon = 1.e-15;
-			for( int i = 0; i < points.size(); ++i )
-			{
-				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
-			}
-			Serializer::dispose( bytes );
-		}
-		
-		TEST_F( SerializerTest, LeafIndexNode )
-		{
-			using Contents = IndexVector;
-			using Node = OctreeNode< Contents >;
-			using NodePtr = shared_ptr< Node >;
-			
-			SPI_DefaultManager::initInstance( 1000000 );
-			
-			Node node( true );
-			uint array[ 3 ] = { 1, 2, 3 };
-			Contents contents( array, array + 3 );
-			node.setContents( contents );
-			
-			byte* bytes;
-			
-			node.serialize( &bytes );
-			auto nodePtr = Node::deserialize( bytes );
-			Contents resultContents = nodePtr.getContents();
-			
-			ASSERT_EQ( resultContents, contents );
-			Serializer::dispose( bytes );
-		}
-		
-		TEST_F( SerializerTest, InnerIndexNode )
-		{
-			using Contents = IndexVector;
-			using Node = OctreeNode< Contents >;
-			using NodePtr = shared_ptr< Node >;
-			
-			SPI_DefaultManager::initInstance( 1000000 );
-			
-			Node node( false );
-			uint array[ 3 ] = { 1, 2, 3 };
-			Contents contents( array, array + 3 );
-			node.setContents( contents );
-			
-			byte* bytes;
-			
-			node.serialize( &bytes );
-			auto nodePtr = Node::deserialize( bytes );
-			Contents resultContents = nodePtr.getContents();
-			
-			ASSERT_EQ( resultContents, contents );
-			Serializer::dispose( bytes );
-		}
-		
-		TEST_F( SerializerTest, PointNode )
-		{
-			using Node = OctreeNode< PointVector >;
-			using NodePtr = shared_ptr< Node >;
-			
-			SPV_DefaultManager::initInstance( 1000000 );
-			
-			Point p0( Vec3( 11.321565f, 4.658535f, 7.163479f ), Vec3( 7.163479f, 4.658535f, 11.321565f ) );
-			Point p1( Vec3( 11.201763f, 5.635769f, 6.996898f ), Vec3( 6.996898f, 5.635769f, 11.201763f ) );
-			Point p2( Vec3( 11.198129f, 4.750132f, 7.202037f ), Vec3( 7.202037f, 4.750132f, 11.198129f ) );
-			
-			PointPtr pointArray[3] = { makeManaged< Point >( p0 ), makeManaged< Point >( p1 ), makeManaged< Point >( p2 ) };
-			PointVector points( pointArray, pointArray + 3 );
-			
-			auto node = makeManaged< Node >( true );
-			node->setContents( points );
-			
-			byte* bytes;
-			node->serialize( &bytes );
-			
-			auto deserializedNode = Node::deserialize( bytes );
-			PointVector deserializedPoints = deserializedNode.getContents();
-			
-			float epsilon = 1.e-15;
-			for( int i = 0; i < points.size(); ++i )
-			{
-				ASSERT_TRUE( points[ i ]->equal( *deserializedPoints[ i ], epsilon ) );
-			}
-			
-			Serializer::dispose( bytes );
-			cout << "Before node deletion" << endl;
-		}
-		
-		TEST_F( SerializerTest, ExtendedPointNode )
-		{
-			using Point = ExtendedPoint;
-			using PointPtr = ExtendedPointPtr;
-			using PointVector = ExtendedPointVector;
-			using Node = OctreeNode< PointVector >;
-			using NodePtr = shared_ptr< Node >;
-			
-			SEV_DefaultManager::initInstance( 1000000 );
-			
-			PointPtr p0 = makeManaged< Point >( Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 0.01f, 0.02f, 0.03f ), Vec3( 1.f, 15.f ,2.f ) );
-			PointPtr p1 = makeManaged< Point >( Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 0.04f, 0.05f, 0.06f ), Vec3( 3.f, -31.f ,4.f ) );
-			PointPtr p2 = makeManaged< Point >( Vec3( 0.07f, 0.08f, 0.09f ), Vec3( 0.07f, 0.08f, 0.09f ), Vec3( -14.f, 5.f ,6.f ) );
-			PointPtr pointArray[3] = { p0, p1, p2 };
-			PointVector points( pointArray, pointArray + 3 );
-			
-			auto node = makeManaged< Node >( true );
-			node->setContents( points );
-			
-			byte* bytes;
-			node->serialize( &bytes );
-			
-			auto deserializedNode = Node::deserialize( bytes );
-			PointVector deserializedPoints = deserializedNode.getContents();
 			
 			float epsilon = 1.e-15;
 			for( int i = 0; i < points.size(); ++i )

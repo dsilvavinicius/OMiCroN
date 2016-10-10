@@ -9,7 +9,6 @@
 #include <QSize>
 #include <Eigen/Geometry>
 #include "Point.h"
-#include "ExtendedPoint.h"
 
 using namespace std;
 using namespace Eigen;
@@ -90,9 +89,6 @@ namespace model
 	
 	template<>
 	ostream& operator<<( ostream& out, const vector< PointPtr >& v );
-	
-	template<>
-	ostream& operator<<( ostream& out, const vector< ExtendedPointPtr >& v );
 	
 	ostream& operator<<( ostream& out, const QSize& size );
 	

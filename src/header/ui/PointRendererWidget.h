@@ -35,7 +35,7 @@ public:
 // 	using OctreeParams = model::OctreeParams< MortonCode, Point, OctreeNode, Hierarchy >;
 // 	using Octree = model::DefaultOutOfCoreDebugOctree< OctreeParams >;
 	
-	using Octree = FastParallelOctree< MortonCode, Point >;
+	using Octree = FastParallelOctree< MortonCode >;
 	using NodeLoader = typename Octree::NodeLoader;
 	using Renderer = model::StreamingRenderer< Point >;
 
