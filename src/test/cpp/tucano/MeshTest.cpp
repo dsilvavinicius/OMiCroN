@@ -92,9 +92,9 @@ namespace Tucano
 						normalsPtr[ insertedPoints * 3 + 1 ]	= p.getNormal().y();
 						normalsPtr[ insertedPoints * 3 + 2 ]	= p.getNormal().z();
 						
-						colorsPtr[ insertedPoints * 3 ]		= p.getColor().x();
-						colorsPtr[ insertedPoints * 3 + 1 ]	= p.getColor().y();
-						colorsPtr[ insertedPoints * 3 + 2 ]	= p.getColor().z();
+						colorsPtr[ insertedPoints * 3 ]		= p.getNormal().x();
+						colorsPtr[ insertedPoints * 3 + 1 ]	= p.getNormal().y();
+						colorsPtr[ insertedPoints * 3 + 2 ]	= p.getNormal().z();
 						
 						indicesPtr[ insertedPoints ] = insertedPoints;
 						

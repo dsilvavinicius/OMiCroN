@@ -110,12 +110,12 @@ namespace model
 				
 				if( hasColors )
 				{
-					const Vec3& color = point->getColor();
+					const Vec3& color = point->getNormal();
 					colors[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
 				}
 				else
 				{
-					const Vec3& normal = point->getColor();
+					const Vec3& normal = point->getNormal();
 					normals[ i ] = Vector3f( normal.x, normal.y, normal.z );
 				}
 			}
@@ -176,7 +176,7 @@ namespace model
 				
 				if( hasColors )
 				{
-					const Vec3& color = point->getColor();
+					const Vec3& color = point->getNormal();
 					colors[ i ] = Vector4f( color.x, color.y, color.z, 1.f );
 				}
 				if( hasNormals )

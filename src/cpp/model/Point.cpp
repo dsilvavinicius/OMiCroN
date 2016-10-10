@@ -5,30 +5,30 @@
 namespace model
 {
 	Point::Point()
-	: m_color( 0, 0, 0 ),
+	: m_normal( 0, 0, 0 ),
 	m_pos( 0, 0, 0 )
 	{}
 	
 	Point::Point( const Point& other )
-	: Point( other.m_color, other.m_pos )
+	: Point( other.m_normal, other.m_pos )
 	{}
 	
 	Point& Point::operator=( const Point& other )
 	{
 		m_pos = other.m_pos;
-		m_color = other.m_color;
+		m_normal = other.m_normal;
 		
 		return *this;
 	}
 	
 	Point::Point( const Vec3& color, const Vec3& pos )
-	: m_color( color ),
+	: m_normal( color ),
 	m_pos( pos )
 	{}
 	
 	Point::Point( Point&& other )
 	{
-		m_color = other.m_color;
+		m_normal = other.m_normal;
 		m_pos = other.m_pos;
 	}
 	
@@ -36,7 +36,7 @@ namespace model
 	{
 		if( this != &other )
 		{
-			m_color = other.m_color;
+			m_normal = other.m_normal;
 			m_pos = other.m_pos;
 		}
 		
@@ -46,7 +46,7 @@ namespace model
 	Point::Point( byte* serialization )
 	{
 		size_t sizeOfVec3 = sizeof( Vec3 );
-		memcpy( &m_color, serialization, sizeOfVec3 );
+		memcpy( &m_normal, serialization, sizeOfVec3 );
 		memcpy( &m_pos, serialization + sizeOfVec3, sizeOfVec3 );
 	}
 	
@@ -80,9 +80,9 @@ namespace model
 		);
 	}
 	
-	Vec3& Point::getColor() { return m_color; }
+	Vec3& Point::getNormal() { return m_normal; }
 	
-	const Vec3& Point::getColor() const { return m_color; }
+	const Vec3& Point::getNormal() const { return m_normal; }
 	
 	Vec3& Point::getPos() { return m_pos; }
 	
@@ -90,38 +90,38 @@ namespace model
 	
 	bool Point::equal( const Point& other, const Float& epsilon ) const
 	{
-		return m_color.isApprox( other.m_color, epsilon ) && m_pos.isApprox( other.m_pos, epsilon );
+		return m_normal.isApprox( other.m_normal, epsilon ) && m_pos.isApprox( other.m_pos, epsilon );
 	}
 	
 	Point Point::multiply( const Float& multiplier ) const
 	{
-		return Point( m_color * multiplier, m_pos * multiplier );
+		return Point( m_normal * multiplier, m_pos * multiplier );
 	}
 	
 	Point operator+( const Point& left, const Point& right )
 	{
-		return Point( left.m_color + right.m_color, left.m_pos + right.m_pos );
+		return Point( left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	Point operator+( Point&& left , const Point& right )
 	{
-		return Point( left.m_color + right.m_color, left.m_pos + right.m_pos );
+		return Point( left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	Point operator+( const Point& left, Point&& right )
 	{
-		return Point( left.m_color + right.m_color, left.m_pos + right.m_pos );
+		return Point( left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	Point operator+( Point&& left, Point&& right )
 	{
-		return Point( left.m_color + right.m_color, left.m_pos + right.m_pos );
+		return Point( left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	ostream& operator<< ( ostream &out, const Point &point )
 	{
 		out << "Point:" << endl
-			<< "color = " << point.m_color << endl
+			<< "color = " << point.m_normal << endl
 			<< "pos = " << point.m_pos << endl;
 			
 		return out;
@@ -133,7 +133,7 @@ namespace model
 		size_t sizeOfPoint = 2 * sizeOfVec3;
 		
 		*serialization = Serializer::newByteArray( sizeOfPoint );
-		memcpy( *serialization, &m_color ,sizeOfVec3 );
+		memcpy( *serialization, &m_normal ,sizeOfVec3 );
 		memcpy( *serialization + sizeOfVec3, &m_pos, sizeOfVec3 );
 		
 		return sizeOfPoint;

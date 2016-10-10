@@ -10,7 +10,7 @@ namespace util
 		ply_write( m_ply, pos.y() );
 		ply_write( m_ply, pos.z() );
 		
-		const Vec3& normal = p.getColor();
+		const Vec3& normal = p.getNormal();
 		ply_write( m_ply, normal.x() );
 		ply_write( m_ply, normal.y() );
 		ply_write( m_ply, normal.z() );
@@ -29,7 +29,7 @@ namespace util
 		ply_write( m_ply, normal.y() );
 		ply_write( m_ply, normal.z() );
 		
-		const Vec3& color = p.getColor();
+		const Vec3& color = p.getNormal();
 		ply_write( m_ply, color.x() );
 		ply_write( m_ply, color.y() );
 		ply_write( m_ply, color.z() );

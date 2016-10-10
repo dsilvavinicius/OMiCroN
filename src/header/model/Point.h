@@ -37,10 +37,10 @@ namespace model
 		void operator delete( void* p );
 		void operator delete[]( void* p );
 		
-		Vec3& getColor();
+		Vec3& getNormal();
 		Vec3& getPos();
 		
-		const Vec3& getColor() const;
+		const Vec3& getNormal() const;
 		const Vec3& getPos() const;
 		
 		// Comparison operators.
@@ -65,7 +65,7 @@ namespace model
 		size_t serialize( byte** serialization ) const;
 		
 	protected:
-		Vec3 m_color;
+		Vec3 m_normal;
 		Vec3 m_pos;
 	};
 	

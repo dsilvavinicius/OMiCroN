@@ -150,7 +150,7 @@ namespace model
 				
 				normals.push_back( point->getNormal() );
 				
-				const Vec3& color = point->getColor();
+				const Vec3& color = point->getNormal();
 				colors.push_back( Vector4f( color.x(), color.y(), color.z(), 1.f ) );
 			}
 			

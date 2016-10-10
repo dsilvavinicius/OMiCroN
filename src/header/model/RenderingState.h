@@ -91,7 +91,7 @@ namespace model
 	inline void RenderingState::handleNodeRendering( const PointPtr& point )
 	{
 		m_positions.push_back( point->getPos() );
-		m_normals.push_back( point->getColor() );
+		m_normals.push_back( point->getNormal() );
 	}
 	
 	inline void RenderingState::handleNodeRendering( const PointVector& points )
@@ -113,7 +113,7 @@ namespace model
 	inline void RenderingState::handleNodeRendering( const ExtendedPointPtr& point )
 	{
 		m_positions.push_back( point->getPos() );
-		m_colors.push_back( point->getColor() );
+		m_colors.push_back( point->getNormal() );
 		m_normals.push_back( point->getNormal() );
 	}
 	

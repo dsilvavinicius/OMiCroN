@@ -196,27 +196,27 @@ namespace util
 				case 3: case 4:
 				{
 					// Normal case.
-					tempPoint->getColor()[ index % 3 ] = value;
+					tempPoint->getNormal()[ index % 3 ] = value;
 					break;
 				}
 				case 5:
 				{
 					// Last point component. Send complete point to vector.
-					tempPoint->getColor()[ index % 3 ] = ( float ) value;
-					( *readingData->second )( Point( tempPoint->getColor(), tempPoint->getPos() ) );
+					tempPoint->getNormal()[ index % 3 ] = ( float ) value;
+					( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getPos() ) );
 					break;
 				}
 				case 6: case 7:
 				{
 					// Flat color case.
-					tempPoint->getColor()[ index % 3 ] = ( float ) value / 255;
+					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
 				case 8:
 				{
 					// Last point component. Send complete point to vector.
-					tempPoint->getColor()[ index % 3 ] = ( float ) value / 255;
-					( *readingData->second )( Point( tempPoint->getColor(), tempPoint->getPos() ) );
+					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
+					( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getPos() ) );
 					break;
 				}
 			}
@@ -252,15 +252,15 @@ namespace util
 				case 6: case 7:
 				{
 					// Flat color case.
-					tempPoint->getColor()[ index % 3 ] = ( float ) value / 255;
+					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
 					break;
 				}
 				case 8:
 				{
 					// Last point component. Send complete point to vector.
 					// Flat color case.
-					tempPoint->getColor()[ index % 3 ] = ( float ) value / 255;
-					( *readingData->second )( Point( tempPoint->getColor(), tempPoint->getNormal(), tempPoint->getPos() ) );
+					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
+					( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getNormal(), tempPoint->getPos() ) );
 					break;
 				}
 			}

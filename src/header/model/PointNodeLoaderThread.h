@@ -151,7 +151,7 @@ namespace model
 				const Vec3& pos = point->getPos();
 				positions.push_back( Vector4f( pos.x(), pos.y(), pos.z(), 1.f ) );
 				
-				normals.push_back( point->getColor() );
+				normals.push_back( point->getNormal() );
 			}
 			
 			Mesh& mesh = node.mesh();

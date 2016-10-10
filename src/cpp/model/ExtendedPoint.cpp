@@ -10,7 +10,7 @@ namespace model
 	{}
 	
 	ExtendedPoint::ExtendedPoint( const ExtendedPoint& other )
-	: ExtendedPoint( other.m_color, other.m_normal, other.m_pos )
+	: ExtendedPoint( other.m_normal, other.m_normal, other.m_pos )
 	{}
 	
 	ExtendedPoint& ExtendedPoint::operator=( const ExtendedPoint& other )
@@ -91,34 +91,34 @@ namespace model
 	
 	ExtendedPoint ExtendedPoint::multiply( const Float& multiplier ) const
 	{
-		return ExtendedPoint( Point::m_color * multiplier, m_normal * multiplier, Point::m_pos * multiplier );
+		return ExtendedPoint( Point::m_normal * multiplier, m_normal * multiplier, Point::m_pos * multiplier );
 	}
 	
 	ExtendedPoint operator+( const ExtendedPoint& left, const ExtendedPoint& right )
 	{
-		return ExtendedPoint( left.m_color + right.m_color, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
+		return ExtendedPoint( left.m_normal + right.m_normal, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	ExtendedPoint operator+( ExtendedPoint&& left , const ExtendedPoint& right )
 	{
-		return ExtendedPoint( left.m_color + right.m_color, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
+		return ExtendedPoint( left.m_normal + right.m_normal, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	ExtendedPoint operator+( const ExtendedPoint& left, ExtendedPoint&& right )
 	{
-		return ExtendedPoint( left.m_color + right.m_color, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
+		return ExtendedPoint( left.m_normal + right.m_normal, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	ExtendedPoint operator+( ExtendedPoint&& left, ExtendedPoint&& right )
 	{
-		return ExtendedPoint( left.m_color + right.m_color, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
+		return ExtendedPoint( left.m_normal + right.m_normal, left.m_normal + right.m_normal, left.m_pos + right.m_pos );
 	}
 	
 	ostream& operator<<( ostream &out, const ExtendedPoint &point )
 	{
 		out << "Point:" << endl
 			<< "pos = " << point.m_pos << endl
-			<< "color = " << point.m_color << endl
+			<< "color = " << point.m_normal << endl
 			<< "normal = " << point.m_normal << endl;
 			
 		return out;
@@ -129,7 +129,7 @@ namespace model
 		size_t sizeOfVec3 = sizeof( Vec3 );
 		size_t sizeOfPoint = 3 * sizeOfVec3;
 		
-		Vec3 color = Point::m_color;
+		Vec3 color = Point::m_normal;
 		Vec3 pos = Point::m_pos;
 		Vec3 normal = m_normal;
 		
