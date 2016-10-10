@@ -220,16 +220,6 @@ SplatRenderer::setup_vertex_array_buffer_object()
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
         sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
 
-    // Clipping plane p.
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(36));
-    
-    // Color rgba.
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-        sizeof(Surfel), reinterpret_cast<const GLbyte*>(48));
-
     glBindVertexArray(0);
 }
 

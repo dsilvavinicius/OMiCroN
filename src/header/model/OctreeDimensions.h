@@ -3,6 +3,7 @@
 
 #include "BasicTypes.h"
 #include "Point.h"
+#include "splat_renderer/surfel.hpp"
 
 namespace model
 {
@@ -38,14 +39,23 @@ namespace model
 			m_nodeLvl = nodeLvl;
 		}
 		
-		M calcMorton( const Point& point ) const
+		M calcMorton( const Vec3& pos ) const
 		{
-			const Vec3& pos = point.getPos();
 			Vec3 index = ( pos - m_origin ).array() / m_nodeSize.array();
 			M code;
 			code.build( index.x(), index.y(), index.z(), m_nodeLvl );
 			
 			return code;
+		}
+		
+		M calcMorton( const Point& point ) const
+		{
+			return calcMorton( point.getPos() );
+		}
+		
+		M calcMorton( const Surfel& surfel ) const
+		{
+			return calcMorton( surfel.c );
 		}
 		
 		template< typename Node >
