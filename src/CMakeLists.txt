@@ -111,20 +111,20 @@ add_library (Point_Based_Renderer_Lib
 	
 	${UI_HDRS}
 	
-	${HEADER_DIR}/${UTIL_DIR}/Stream.h						${CPP_DIR}/${UTIL_DIR}/Stream.cpp
+	${HEADER_DIR}/${UTIL_DIR}/Stream.h								${CPP_DIR}/${UTIL_DIR}/Stream.cpp
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointWritter.h
-	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h					${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Point.h						${CPP_DIR}/${MODEL_DIR}/Point.cpp
-	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h					${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
-	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h				${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Scan.h						${CPP_DIR}/${MODEL_DIR}/Scan.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Camera.h						${CPP_DIR}/${MODEL_DIR}/Camera.cpp
-	${HEADER_DIR}/${MODEL_DIR}/HierarchyCreationLog.h		${CPP_DIR}/${MODEL_DIR}/HierarchyCreationLog.cpp
-	${HEADER_DIR}/${MODEL_DIR}/RenderingState.h				${CPP_DIR}/${MODEL_DIR}/RenderingState.cpp
-	${HEADER_DIR}/${MODEL_DIR}/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/TransientRenderingState.cpp
-	${HEADER_DIR}/${MODEL_DIR}/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/QtRenderingState.cpp
-	${HEADER_DIR}/${MODEL_DIR}/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/TucanoRenderingState.cpp
+	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h							${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Point.h								${CPP_DIR}/${MODEL_DIR}/Point.cpp
+	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h							${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
+	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h						${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Scan.h								${CPP_DIR}/${MODEL_DIR}/Scan.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Camera.h								${CPP_DIR}/${MODEL_DIR}/Camera.cpp
+	${HEADER_DIR}/${MODEL_DIR}/HierarchyCreationLog.h				${CPP_DIR}/${MODEL_DIR}/HierarchyCreationLog.cpp
+	${HEADER_DIR}/${MODEL_DIR}/renderers/RenderingState.h			${CPP_DIR}/${MODEL_DIR}/renderers/RenderingState.cpp
+	${HEADER_DIR}/${MODEL_DIR}/renderers/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/renderers/TransientRenderingState.cpp
+	${HEADER_DIR}/${MODEL_DIR}/renderers/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/renderers/QtRenderingState.cpp
+	${HEADER_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/NodeLoaderThread.h
 	${HEADER_DIR}/${MODEL_DIR}/GpuAllocStatistics.h			${CPP_DIR}/${MODEL_DIR}/GpuAllocStatistics.cpp
 	

@@ -1,5 +1,5 @@
 #include "PointRendererWidget.h"
-#include "TucanoDebugRenderer.h"
+#include "renderers/TucanoDebugRenderer.h"
 #include <QDebug>
 #include <QTimer>
 

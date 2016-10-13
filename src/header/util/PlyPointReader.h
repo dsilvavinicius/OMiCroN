@@ -5,7 +5,7 @@
 #include <string>
 #include <rply.h>
 #include "Point.h"
-#include "RenderingState.h"
+#include "renderers/RenderingState.h"
 
 using namespace std;
 using namespace model;

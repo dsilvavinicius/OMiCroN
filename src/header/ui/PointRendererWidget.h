@@ -7,7 +7,7 @@
 #include <utils/qtfreecamerawidget.hpp>
 #include <point_model.hpp>
 #include "FastParallelOctree.h"
-#include "StreamingRenderer.h"
+#include "renderers/StreamingRenderer.h"
 //#include "FrontOctree.h"
 //#include "ParallelOctree.h"
 // #include "OutOfCoreDebugOctree.h"

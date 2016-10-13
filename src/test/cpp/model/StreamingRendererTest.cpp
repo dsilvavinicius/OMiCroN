@@ -2,7 +2,7 @@
 #include <utils/qtflycamerawidget.hpp>
 #include <QApplication>
 #include "PlyPointReader.h"
-#include "StreamingRenderer.h"
+#include "renderers/StreamingRenderer.h"
 #include "NodeLoader.h"
 #include "OglUtils.h"
 #include <GLHiddenWidget.h>
