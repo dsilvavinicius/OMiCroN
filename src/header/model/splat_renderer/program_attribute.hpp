@@ -18,7 +18,7 @@
 #ifndef PROGRAM_RENDER_HPP
 #define PROGRAM_RENDER_HPP
 
-#include <GLviz>
+#include <splat_renderer/program.hpp>
 
 class ProgramAttribute : public glProgram
 {

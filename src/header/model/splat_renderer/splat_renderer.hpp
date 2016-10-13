@@ -25,6 +25,7 @@
 #include "program.hpp"
 #include "surfel.hpp"
 
+#include <tucano.hpp>
 #include <Eigen/Core>
 #include <string>
 #include <vector>
@@ -64,7 +65,7 @@ class SplatRenderer
 {
 
 public:
-    SplatRenderer(GLviz::Camera const& camera);
+    SplatRenderer(Tucano::Camera const& camera);
     virtual ~SplatRenderer();
 
 	void load_to_gpu( std::vector<Surfel> const& visible_geometry );
@@ -121,7 +122,7 @@ private:
     void render_pass(bool depth_only = false);
 
 private:
-    GLviz::Camera const& m_camera;
+    Tucano::Camera const& m_camera;
 
     GLuint m_rect_vertices_vbo, m_rect_texture_uv_vbo,
         m_rect_vao, m_filter_kernel;

@@ -17,8 +17,6 @@
 
 #include "splat_renderer.hpp"
 
-#include <GLviz>
-
 #include <iostream>
 #include <cmath>
 
@@ -81,7 +79,7 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
 }
 
 
-SplatRenderer::SplatRenderer(GLviz::Camera const& camera)
+SplatRenderer::SplatRenderer(Tucano::Camera const& camera)
     : m_camera(camera), m_soft_zbuffer(true), m_smooth(false),
       m_color_material(true), m_ewa_filter(false), m_multisample(false),
       m_pointsize_method(0), m_backface_culling(false),
@@ -430,15 +428,14 @@ SplatRenderer::setup_uniforms(glProgram& program)
     
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
-    GLviz::Frustum view_frustum = m_camera.get_frustum();
         
     m_uniform_raycast.set_buffer_data(
-        m_camera.get_projection_matrix().inverse(),
+        m_camera.getProjectionMatrix().inverse(),
         viewport);
 
     Vector4f frustum_plane[6];
 
-    Matrix4f const& projection_matrix = m_camera.get_projection_matrix();
+    Matrix4f const& projection_matrix = m_camera.getProjectionMatrix();
     for (unsigned int i(0); i < 6; ++i)
     {
         frustum_plane[i] = projection_matrix.row(3) + (-1.0f + 2.0f
@@ -623,13 +620,4 @@ SplatRenderer::render_frame()
     }
 
     end_frame();
-
-#ifndef NDEBUG
-    GLenum gl_error = glGetError();
-    if (GL_NO_ERROR != gl_error)
-    {
-        std::cerr << __FILE__ << "(" << __LINE__ << "): "
-            << GLviz::get_gl_error_string(gl_error) << std::endl;
-    }
-#endif
 }

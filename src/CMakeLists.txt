@@ -98,6 +98,23 @@ include_directories ( ${Qt5Core_INCLUDE_DIRS}
 # Compiles libraries
 add_subdirectory(lib)
 
+include(shader_wrap_cpp)
+
+# GLviz shader.
+file(GLOB OPENGL_SHADERS ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader/*)
+shader_wrap_cpp(SOURCES_OPENGL_SHADERS "${OPENGL_SHADERS}")
+
+source_group("Shader Files" FILES ${OPENGL_SHADERS})
+
+add_library(shader
+    ${SOURCES_OPENGL_SHADERS}
+    ${OPENGL_SHADERS}
+)
+
+add_dependencies(shader
+    embed_resource
+)
+
 QT5_WRAP_UI( UI_HDRS
     ${HEADER_DIR}/${UI_DIR}/mainwindow.ui
 )
@@ -121,10 +138,20 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h								${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h								${CPP_DIR}/${MODEL_DIR}/Camera.cpp
 	${HEADER_DIR}/${MODEL_DIR}/HierarchyCreationLog.h				${CPP_DIR}/${MODEL_DIR}/HierarchyCreationLog.cpp
+	
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/buffer.cpp
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/framebuffer.cpp
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/program.cpp
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/program_attribute.cpp
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/program_finalization.cpp
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader.cpp
+	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/splat_renderer.cpp
+	
 	${HEADER_DIR}/${MODEL_DIR}/renderers/RenderingState.h			${CPP_DIR}/${MODEL_DIR}/renderers/RenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/renderers/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/renderers/TransientRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/renderers/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/renderers/QtRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.cpp
+	
 	${HEADER_DIR}/${MODEL_DIR}/NodeLoaderThread.h
 	${HEADER_DIR}/${MODEL_DIR}/GpuAllocStatistics.h			${CPP_DIR}/${MODEL_DIR}/GpuAllocStatistics.cpp
 	
@@ -151,7 +178,8 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${TBB_tbbmalloc_LIBRARY_RELEASE}
 	${JSONCPP_LIBRARIES}
 	RPly
-	Tlsf)
+	Tlsf
+	shader)
 
 # Creates renderer program and links with the renderer library.
 add_executable (Point_Based_Renderer

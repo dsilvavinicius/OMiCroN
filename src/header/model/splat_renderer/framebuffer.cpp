@@ -17,7 +17,6 @@
 
 #include "framebuffer.hpp"
 
-#include <GLviz>
 #include <iostream>
 #include <cstdlib>
 
@@ -305,21 +304,6 @@ Framebuffer::set_multisample(bool enable)
             enable_depth_texture();
         }
 
-#ifndef NDEBUG
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE)
-        {
-            std::cerr << __FILE__ << "(" << __LINE__ << "): "
-                << GLviz::get_gl_framebuffer_status_string(status) << std::endl;
-        }
-
-        GLenum gl_error = glGetError();
-        if (GL_NO_ERROR != gl_error)
-        {
-            std::cerr << __FILE__ << "(" << __LINE__ << "): "
-                << GLviz::get_gl_error_string(gl_error) << std::endl;
-        }
-#endif
         unbind();
     }
 }
@@ -388,22 +372,6 @@ Framebuffer::reshape(GLint width, GLint height)
         }
     }
 
-#ifndef NDEBUG
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cerr << __FILE__ << "(" << __LINE__ << "): "
-            << GLviz::get_gl_framebuffer_status_string(status) << std::endl;
-    }
-    
-    GLenum gl_error = glGetError();
-    if (GL_NO_ERROR != gl_error)
-    {
-        std::cerr << __FILE__ << "(" << __LINE__ << "): "
-            << GLviz::get_gl_error_string(gl_error) << std::endl;
-    }
-#endif
-
     unbind();
 }
 
@@ -430,15 +398,6 @@ Framebuffer::initialize()
 
     GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, buffers);
-
-#ifndef NDEBUG
-    GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cerr << __FILE__ << "(" << __LINE__ << "): "
-            << GLviz::get_gl_framebuffer_status_string(status) << std::endl;
-    }
-#endif
 }
 
 void
