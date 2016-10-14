@@ -59,14 +59,18 @@ layout(location = ATTR_T1) in vec3 u;
 #define ATTR_T2 2
 layout(location = ATTR_T2) in vec3 v;
 
-// #define ATTR_COLOR 4
-// layout(location = ATTR_COLOR) in vec4 rgba;
+#define ATTR_PLANE 3
+layout(location = ATTR_PLANE) in vec3 p;
+
+#define ATTR_COLOR 4
+layout(location = ATTR_COLOR) in vec4 rgba;
 
 out block
 {
     flat out vec3 c_eye;
     flat out vec3 u_eye;
     flat out vec3 v_eye;
+    flat out vec3 p;
     flat out vec3 n_eye;
 
     #if !VISIBILITY_PASS
@@ -336,19 +340,19 @@ void main()
 
 #if !VISIBILITY_PASS
     #if SMOOTH
-//         #if COLOR_MATERIAL
+        #if COLOR_MATERIAL
             Out.color = material_color;
-//         #else
-//             Out.color = vec3(rgba);
-//         #endif
+        #else
+            Out.color = vec3(rgba);
+        #endif
     #else
-//         #if COLOR_MATERIAL
+        #if COLOR_MATERIAL
             Out.color = lighting(n_eye, vec3(c_eye), material_color,
                                  material_shininess);
-//         #else
-//             Out.color = lighting(n_eye, vec3(c_eye), vec3(rgba),
-//                                  material_shininess);
-//         #endif
+        #else
+            Out.color = lighting(n_eye, vec3(c_eye), vec3(rgba),
+                                 material_shininess);
+        #endif
     #endif
 #endif
 
@@ -363,6 +367,7 @@ void main()
         Out.c_eye = vec3(c_eye);
         Out.u_eye = u_eye;
         Out.v_eye = v_eye;
+        Out.p = p;
         Out.n_eye = n_eye;
 
         // Pointsprite size. One additional pixel

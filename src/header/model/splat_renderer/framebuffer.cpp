@@ -19,6 +19,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <OglUtils.h>
 
 struct Framebuffer::Impl
 {
@@ -304,6 +305,10 @@ Framebuffer::set_multisample(bool enable)
             enable_depth_texture();
         }
 
+#ifndef NDEBUG
+        util::OglUtils::checkFramebuffer();
+        util::OglUtils::checkOglErrors();
+#endif
         unbind();
     }
 }
@@ -372,6 +377,11 @@ Framebuffer::reshape(GLint width, GLint height)
         }
     }
 
+#ifndef NDEBUG
+    util::OglUtils::checkFramebuffer();
+    util::OglUtils::checkOglErrors();
+#endif
+
     unbind();
 }
 
@@ -398,6 +408,11 @@ Framebuffer::initialize()
 
     GLenum buffers[] = { GL_COLOR_ATTACHMENT0 };
     glDrawBuffers(1, buffers);
+
+#ifndef NDEBUG
+    util::OglUtils::checkFramebuffer();
+	util::OglUtils::checkOglErrors();
+#endif
 }
 
 void

@@ -22,17 +22,13 @@
 #include "program_finalization.hpp"
 
 #include "framebuffer.hpp"
-#include "program.hpp"
 #include "surfel.hpp"
 
-#include <tucano.hpp>
 #include <Eigen/Core>
 #include <string>
 #include <vector>
 
-using namespace GLviz;
-
-class UniformBufferRaycast : public glUniformBuffer
+class UniformBufferRaycast : public GLviz::glUniformBuffer
 {
 
 public:
@@ -42,7 +38,7 @@ public:
         GLint const* viewport);
 };
 
-class UniformBufferFrustum : public glUniformBuffer
+class UniformBufferFrustum : public GLviz::glUniformBuffer
 {
 
 public:
@@ -51,7 +47,7 @@ public:
     void set_buffer_data(Eigen::Vector4f const* frustum_plane);
 };
 
-class UniformBufferParameter : public glUniformBuffer
+class UniformBufferParameter : public GLviz::glUniformBuffer
 {
 
 public:
@@ -142,7 +138,7 @@ private:
     float m_epsilon, m_shininess, m_radius_scale,
         m_ewa_radius;
 
-    UniformBufferCamera m_uniform_camera;
+    GLviz::UniformBufferCamera m_uniform_camera;
     UniformBufferRaycast m_uniform_raycast;
     UniformBufferFrustum m_uniform_frustum;
     UniformBufferParameter m_uniform_parameter;

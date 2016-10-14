@@ -21,7 +21,8 @@ namespace model
 			using SurfelVector = vector< Surfel >;
 			
 			SplatRendererTestWidget( QWidget *parent = 0 )
-			: QtFlycameraWidget( parent )
+			: QtFlycameraWidget( parent ),
+			m_renderer( nullptr )
 			{}
 			
 			~SplatRendererTestWidget()
@@ -60,6 +61,8 @@ namespace model
 						iter->c = pos;
 						iter->u = u;
 						iter->v = v;
+						iter->p = Vector3f::Zero();
+						iter->rgba = 0;
 						iter++;
 						
 						for( int i = 0; i < 3; ++i )
@@ -78,6 +81,7 @@ namespace model
 					surfel.c = ( surfel.c - origin ) * scale;
 				}
 				
+				camera->translate( Eigen::Vector3f( 0.0f, 0.0f, -2.0f ) );
 				m_renderer = new SplatRenderer( *camera );
 				m_renderer->load_to_gpu( m_surfels );
 				OglUtils::checkOglErrors();
@@ -86,13 +90,20 @@ namespace model
 			void resizeGL (int w, int h) override
 			{
 				QtFlycameraWidget::resizeGL( w, h );
-				m_renderer->reshape( w, h );
+				
+				if( m_renderer != nullptr )
+				{
+					m_renderer->reshape( w, h );
+				}
 			}
 			
 			void paintGL() override
 			{
-				m_renderer->render_frame();
-				OglUtils::checkOglErrors();
+				if( m_renderer != nullptr )
+				{
+					m_renderer->render_frame();
+					OglUtils::checkOglErrors();
+				}
 			}
 			
 		private:
@@ -110,8 +121,8 @@ namespace model
 		{
 			{
 				SplatRendererTestWidget widget;
-				widget.initialize();
 				widget.show();
+				widget.initialize();
 				widget.resize( 640, 480 );
 
 				QApplication::exec();

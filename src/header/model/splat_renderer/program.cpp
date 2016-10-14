@@ -116,9 +116,9 @@ UniformBufferCamera::UniformBufferCamera()
 void
 UniformBufferCamera::set_buffer_data(Tucano::Camera const& camera)
 {
-	Matrix4f const& modelview_matrix = camera.getViewMatrix().matrix();
-	Matrix4f const& projection_matrix = camera.getProjectionMatrix();
-	
+    Matrix4f const& modelview_matrix = camera.getViewMatrix().matrix();
+    Matrix4f const& projection_matrix = camera.getProjectionMatrix();
+
     bind();
     glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Matrix4f),
         modelview_matrix.data());
@@ -155,5 +155,96 @@ UniformBufferSphere::set_buffer_data(float radius, float projection)
         sizeof(GLfloat), &projection);
     unbind();
 }
+
+// ProgramMesh3::ProgramMesh3()
+//     : glProgram(), m_wireframe(false), m_smooth(false)
+// {
+//     initialize_shader_obj();
+//     initialize_program_obj();
+// }
+// 
+// void
+// ProgramMesh3::set_wireframe(bool enable)
+// {
+//     if (m_wireframe != enable)
+//     {
+//         m_wireframe = enable;
+//         initialize_program_obj();
+//     }
+// }
+// 
+// void
+// ProgramMesh3::set_smooth(bool enable)
+// {
+//     if (m_smooth != enable)
+//     {
+//         m_smooth = enable;
+//         initialize_program_obj();
+//     }
+// }
+// 
+// void
+// ProgramMesh3::initialize_shader_obj()
+// {
+//     m_mesh3_vs_obj.load_from_cstr(
+//         reinterpret_cast<char const*>(mesh3_vs_glsl));
+//     m_mesh3_gs_obj.load_from_cstr(
+//         reinterpret_cast<char const*>(mesh3_gs_glsl));
+//     m_mesh3_fs_obj.load_from_cstr(
+//         reinterpret_cast<char const*>(mesh3_fs_glsl));
+// 
+//     attach_shader(m_mesh3_vs_obj);
+//     attach_shader(m_mesh3_gs_obj);
+//     attach_shader(m_mesh3_fs_obj);
+// }
+// 
+// void
+// ProgramMesh3::initialize_program_obj()
+// {
+//     try
+//     {
+//         std::map<std::string, int> defines;
+// 
+//         defines.insert(std::make_pair("WIREFRAME", m_wireframe ? 1 : 0));
+//         defines.insert(std::make_pair("SMOOTH", m_smooth ? 1 : 0));
+// 
+//         m_mesh3_vs_obj.compile(defines);
+//         m_mesh3_gs_obj.compile(defines);
+//         m_mesh3_fs_obj.compile(defines);
+//     }
+//     catch (shader_compilation_error const& e)
+//     {
+//         std::cerr << "Error: A shader failed to compile." << std::endl
+//             << e.what() << std::endl;
+//         std::exit(EXIT_FAILURE);
+//     }
+// 
+//     try
+//     {
+//         link();
+//     }
+//     catch (shader_link_error const& e)
+//     {
+//         std::cerr << "Error: A program failed to link." << std::endl
+//             << e.what() << std::endl;
+//         std::exit(EXIT_FAILURE);
+//     }
+// 
+//     try
+//     {
+//         set_uniform_block_binding("Camera", 0);
+//         set_uniform_block_binding("Material", 1);
+//         
+//         if (m_wireframe)
+//         {
+//             set_uniform_block_binding("Wireframe", 2);
+//         }
+//     }
+//     catch (uniform_not_found_error const& e)
+//     {
+//         std::cerr << "Warning: Failed to set a uniform variable." << std::endl
+//             << e.what() << std::endl;
+//     }
+// }
 
 }

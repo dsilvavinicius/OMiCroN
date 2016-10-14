@@ -16,6 +16,7 @@
 // along with Surface Splatting. If not, see <http://www.gnu.org/licenses/>.
 
 #include "splat_renderer.hpp"
+#include <OglUtils.h>
 
 #include <iostream>
 #include <cmath>
@@ -217,6 +218,16 @@ SplatRenderer::setup_vertex_array_buffer_object()
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
         sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
+
+    // Clipping plane p.
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+        sizeof(Surfel), reinterpret_cast<const GLfloat*>(36));
+    
+    // Color rgba.
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, GL_TRUE,
+        sizeof(Surfel), reinterpret_cast<const GLbyte*>(48));
 
     glBindVertexArray(0);
 }
@@ -428,6 +439,7 @@ SplatRenderer::setup_uniforms(glProgram& program)
     
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
+//     GLviz::Frustum view_frustum = m_camera.get_frustum();
         
     m_uniform_raycast.set_buffer_data(
         m_camera.getProjectionMatrix().inverse(),
@@ -620,4 +632,8 @@ SplatRenderer::render_frame()
     }
 
     end_frame();
+
+#ifndef NDEBUG
+	util::OglUtils::checkOglErrors();
+#endif
 }
