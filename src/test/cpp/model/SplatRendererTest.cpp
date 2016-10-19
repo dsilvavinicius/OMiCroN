@@ -1,10 +1,13 @@
 #include <gtest/gtest.h>
-#include <utils/qtflycamerawidget.hpp>
+#include <utils/qtfreecamerawidget.hpp>
 #include <QApplication>
 #include "PlyPointReader.h"
 #include "splat_renderer/splat_renderer.hpp"
+// #include "splat_renderer/surfel.hpp"
 
 #include "OglUtils.h"
+#include <PlyPointWritter.h>
+#include "phongshader.hpp"
 
 using namespace std;
 using namespace util;
@@ -15,14 +18,14 @@ namespace model
 	namespace test
 	{
 		class SplatRendererTestWidget
-		: public QtFlycameraWidget
+		: public QtFreecameraWidget
 		{
 		public:
 			using SurfelVector = vector< Surfel >;
 			
 			SplatRendererTestWidget( QWidget *parent = 0 )
-			: QtFlycameraWidget( parent ),
-			m_renderer( nullptr )
+			: QtFreecameraWidget( parent )
+			, m_renderer( nullptr )
 			{}
 			
 			~SplatRendererTestWidget()
@@ -32,17 +35,15 @@ namespace model
 			
 			void initialize()
 			{
-				QtFlycameraWidget::initialize();
+				QtFreecameraWidget::initialize();
 				
 				PlyPointReader reader( "../data/example/staypuff.ply" );
-				m_surfels.resize( reader.getNumPoints() );
 				
 				Float negInf = -numeric_limits< Float >::max();
 				Float posInf = numeric_limits< Float >::max();
 				Vec3 origin = Vec3( posInf, posInf, posInf );
 				Vec3 maxCoords( negInf, negInf, negInf );
 				
-				auto iter = m_surfels.begin();
 				reader.read(
 					[ & ]( const Point& p )
 					{
@@ -58,12 +59,8 @@ namespace model
 						u *= 0.003f;
 						v *= 0.003f;
 						
-						iter->c = pos;
-						iter->u = u;
-						iter->v = v;
-						iter->p = Vector3f::Zero();
-						iter->rgba = 0;
-						iter++;
+						Surfel s( pos, u, v, Vector3f::Zero(), 255 );
+						m_surfels.push_back( s );
 						
 						for( int i = 0; i < 3; ++i )
 						{
@@ -75,13 +72,50 @@ namespace model
 				
 				Vec3 boxSize = maxCoords - origin;
 				float scale = 1.f / std::max( std::max( boxSize.x(), boxSize.y() ), boxSize.z() );
+				Vec3 midPoint = ( origin + maxCoords ) * 0.5f;
 				
 				for( Surfel& surfel : m_surfels )
 				{
-					surfel.c = ( surfel.c - origin ) * scale;
+					surfel.c = ( surfel.c - midPoint ) * scale;
 				}
 				
-				camera->translate( Eigen::Vector3f( 0.0f, 0.0f, -2.0f ) );
+// 				vector< Vector4f > vertices( m_surfels.size() );
+// 				vector< Vector3f > normals( m_surfels.size() );
+// 				vector< Vector4f > colors( m_surfels.size() );
+// 				
+// 				auto verticesIter = vertices.begin();
+// 				auto normalsIter = normals.begin();
+// 				auto colorsIter = colors.begin();
+// 				for( Surfel& surfel : m_surfels )
+// 				{
+// 					*verticesIter++ = Vector4f( surfel.c.x(), surfel.c.y(), surfel.c.z(), 1.0f );
+// 					*normalsIter++ = surfel.u.cross( surfel.v );
+// 					*colorsIter++ = Vector4f( 1.f, 1.f, 1.f, 0.f );
+// 				}
+				
+// 				PlyPointWritter writer( reader, "staypuff_temp.ply", reader.getNumPoints() );
+// 				
+// 				verticesIter = vertices.begin();
+// 				normalsIter = normals.begin();
+// 				while( verticesIter != vertices.end() )
+// 				{
+// 					Vector3f pos( verticesIter->x(), verticesIter->y(), verticesIter->z() );
+// 					Point p( *normalsIter, pos );
+// 					
+// 					writer.write( p );
+// 					
+// 					verticesIter++;
+// 					normalsIter++;
+// 				}
+				
+// 				m_mesh.loadVertices( vertices );
+// 				m_mesh.loadNormals( normals );
+// 				m_mesh.loadColors( colors );
+// 				
+// 				m_phong.setShadersDir( "../shaders/tucano/" );
+// 				m_phong.initialize();
+				
+// 				camera->translate( Eigen::Vector3f( 0.0f, 0.0f, -2.0f ) );
 				m_renderer = new SplatRenderer( *camera );
 				m_renderer->load_to_gpu( m_surfels );
 				OglUtils::checkOglErrors();
@@ -89,7 +123,7 @@ namespace model
 			
 			void resizeGL (int w, int h) override
 			{
-				QtFlycameraWidget::resizeGL( w, h );
+				QtFreecameraWidget::resizeGL( w, h );
 				
 				if( m_renderer != nullptr )
 				{
@@ -104,10 +138,26 @@ namespace model
 					m_renderer->render_frame();
 					OglUtils::checkOglErrors();
 				}
+				
+// 				glClearColor(0.0, 0.0, 0.0, 1.0);
+// 				glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+				
+// 				glCullFace( GL_BACK );
+// 				glEnable( GL_CULL_FACE );
+// 				
+// 				glEnable( GL_DEPTH_TEST );
+				
+// 				glPointSize( 2 );
+// 				
+// 				m_phong.render( m_mesh, *camera, light_trackball );
+				
+				camera->renderAtCorner();
 			}
 			
 		private:
 			SplatRenderer* m_renderer;
+// 			Mesh m_mesh;
+// 			Effects::Phong m_phong;
 			SurfelVector m_surfels;
 		};
 		

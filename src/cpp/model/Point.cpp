@@ -20,8 +20,8 @@ namespace model
 		return *this;
 	}
 	
-	Point::Point( const Vec3& color, const Vec3& pos )
-	: m_normal( color ),
+	Point::Point( const Vec3& normal, const Vec3& pos )
+	: m_normal( normal ),
 	m_pos( pos )
 	{}
 	

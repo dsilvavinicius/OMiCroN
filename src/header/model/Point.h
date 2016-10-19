@@ -18,7 +18,7 @@ namespace model
 		Point();
 		Point( const Point& other );
 		Point& operator=( const Point& other );
-		Point( const Vec3& color, const Vec3& pos );
+		Point( const Vec3& normal, const Vec3& pos );
 		Point( Point&& other );
 		Point& operator=( Point&& other);
 		

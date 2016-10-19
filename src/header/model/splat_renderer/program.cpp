@@ -120,10 +120,10 @@ UniformBufferCamera::set_buffer_data(Tucano::Camera const& camera)
     Matrix4f const& projection_matrix = camera.getProjectionMatrix();
 
     bind();
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Matrix4f),
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(GLfloat),
         modelview_matrix.data());
     glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(GLfloat),
-        sizeof(Matrix4f), projection_matrix.data());
+        16 * sizeof(GLfloat), projection_matrix.data());
     unbind();
 }
 
