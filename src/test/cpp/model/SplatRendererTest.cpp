@@ -59,7 +59,7 @@ namespace model
 						u *= 0.003f;
 						v *= 0.003f;
 						
-						Surfel s( pos, u, v, Vector3f::Zero(), 255 );
+						Surfel s( pos, u, v );
 						m_surfels.push_back( s );
 						
 						for( int i = 0; i < 3; ++i )
@@ -79,47 +79,6 @@ namespace model
 					surfel.c = ( surfel.c - midPoint ) * scale;
 				}
 				
-// 				vector< Vector4f > vertices( m_surfels.size() );
-// 				vector< Vector3f > normals( m_surfels.size() );
-// 				vector< Vector4f > colors( m_surfels.size() );
-// 				
-// 				auto verticesIter = vertices.begin();
-// 				auto normalsIter = normals.begin();
-// 				auto colorsIter = colors.begin();
-// 				for( Surfel& surfel : m_surfels )
-// 				{
-// 					*verticesIter++ = Vector4f( surfel.c.x(), surfel.c.y(), surfel.c.z(), 1.0f );
-// 					*normalsIter++ = surfel.u.cross( surfel.v );
-// 					*colorsIter++ = Vector4f( 1.f, 1.f, 1.f, 0.f );
-// 				}
-				
-// 				PlyPointWritter writer( reader, "staypuff_temp.ply", reader.getNumPoints() );
-// 				
-// 				verticesIter = vertices.begin();
-// 				normalsIter = normals.begin();
-// 				while( verticesIter != vertices.end() )
-// 				{
-// 					Vector3f pos( verticesIter->x(), verticesIter->y(), verticesIter->z() );
-// 					Point p( *normalsIter, pos );
-// 					
-// 					writer.write( p );
-// 					
-// 					verticesIter++;
-// 					normalsIter++;
-// 				}
-				
-// 				m_mesh.loadVertices( vertices );
-// 				m_mesh.loadNormals( normals );
-// 				m_mesh.loadColors( colors );
-// 				
-// 				m_phong.setShadersDir( "../shaders/tucano/" );
-// 				m_phong.initialize();
-				
-// 				camera->translate( Eigen::Vector3f( 0.0f, 0.0f, -2.0f ) );
-
-				cout << "At starting. Modelview: " << camera->getViewMatrix().matrix() << endl << endl;
-				cout << "Projection: " << camera->getProjectionMatrix() << endl << endl;
-				
 				m_renderer = new SplatRenderer( camera );
 				m_renderer->load_to_gpu( m_surfels );
 				OglUtils::checkOglErrors();
@@ -137,34 +96,14 @@ namespace model
 			
 			void paintGL() override
 			{
-				cout << "At paintGL. Modelview: " << camera->getViewMatrix().matrix() << endl << endl;
-				cout << "Projection: " << camera->getProjectionMatrix() << endl << endl;
-				
-				if( m_renderer != nullptr )
-				{
-					m_renderer->render_frame();
-					OglUtils::checkOglErrors();
-				}
-				
-// 				glClearColor(0.0, 0.0, 0.0, 1.0);
-// 				glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-				
-// 				glCullFace( GL_BACK );
-// 				glEnable( GL_CULL_FACE );
-// 				
-// 				glEnable( GL_DEPTH_TEST );
-				
-// 				glPointSize( 2 );
-// 				
-// 				m_phong.render( m_mesh, *camera, light_trackball );
+				m_renderer->render_frame();
+				OglUtils::checkOglErrors();
 				
 				camera->renderAtCorner();
 			}
 			
 		private:
 			SplatRenderer* m_renderer;
-// 			Mesh m_mesh;
-// 			Effects::Phong m_phong;
 			SurfelVector m_surfels;
 		};
 		
@@ -178,8 +117,8 @@ namespace model
 		{
 			{
 				SplatRendererTestWidget widget;
-				widget.show();
 				widget.initialize();
+				widget.show();
 				widget.resize( 640, 480 );
 
 				QApplication::exec();

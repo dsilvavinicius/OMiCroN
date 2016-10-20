@@ -84,16 +84,6 @@ ProgramAttribute::set_smooth(bool enable)
 }
 
 void
-ProgramAttribute::set_color_material(bool enable)
-{
-    if (m_color_material != enable)
-    {
-        m_color_material = enable;
-        initialize_program_obj();
-    }
-}
-
-void
 ProgramAttribute::initialize_shader_obj()
 {
     m_attribute_vs_obj.load_from_cstr(

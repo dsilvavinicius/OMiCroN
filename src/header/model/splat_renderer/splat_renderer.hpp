@@ -71,9 +71,6 @@ public:
     bool smooth() const;
     void set_smooth(bool enable = true);
 
-    bool color_material() const;
-    void set_color_material(bool enable = true);
-
     bool backface_culling() const;
     void set_backface_culling(bool enable = true);
 
@@ -131,12 +128,10 @@ private:
 
     Framebuffer m_fbo;
 
-    bool m_soft_zbuffer, m_backface_culling, m_smooth,
-        m_color_material, m_ewa_filter, m_multisample;
+    bool m_soft_zbuffer, m_backface_culling, m_smooth, m_ewa_filter, m_multisample;
     unsigned int m_pointsize_method;
     Eigen::Vector3f m_color;
-    float m_epsilon, m_shininess, m_radius_scale,
-        m_ewa_radius;
+    float m_epsilon, m_shininess, m_radius_scale, m_ewa_radius;
 
     GLviz::UniformBufferCamera m_uniform_camera;
     UniformBufferRaycast m_uniform_raycast;

@@ -82,7 +82,7 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
 
 SplatRenderer::SplatRenderer( Tucano::Camera* camera )
     : m_camera(camera), m_soft_zbuffer(true), m_smooth(false),
-      m_color_material(true), m_ewa_filter(false), m_multisample(false),
+      m_ewa_filter(false), m_multisample(false),
       m_pointsize_method(0), m_backface_culling(false),
       m_color(Vector3f(0.0, 0.25f, 1.0f)), m_epsilon(5.0f * 1e-3f),
       m_shininess(8.0f), m_radius_scale(1.0f), m_ewa_radius(1.0f)
@@ -120,7 +120,6 @@ SplatRenderer::setup_program_objects()
     m_attribute.set_visibility_pass(false);
     m_attribute.set_pointsize_method(m_pointsize_method);
     m_attribute.set_backface_culling(m_backface_culling);
-    m_attribute.set_color_material(m_color_material);
     m_attribute.set_ewa_filter(m_ewa_filter);
     m_attribute.set_smooth(m_smooth);
 
@@ -219,16 +218,6 @@ SplatRenderer::setup_vertex_array_buffer_object()
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
         sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
 
-    // Clipping plane p.
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(36));
-    
-    // Color rgba.
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4, 4, GL_UNSIGNED_BYTE, GL_TRUE,
-        sizeof(Surfel), reinterpret_cast<const GLbyte*>(48));
-
     glBindVertexArray(0);
 }
 
@@ -258,22 +247,6 @@ SplatRenderer::set_smooth(bool enable)
             m_fbo.disable_depth_texture();
             m_fbo.detach_normal_texture();
         }
-    }
-}
-
-bool
-SplatRenderer::color_material() const
-{
-    return m_color_material;
-}
-
-void
-SplatRenderer::set_color_material(bool enable)
-{
-    if (m_color_material != enable)
-    {
-        m_color_material = enable;
-        m_attribute.set_color_material(enable);
     }
 }
 

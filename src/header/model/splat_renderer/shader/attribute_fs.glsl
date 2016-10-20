@@ -49,7 +49,6 @@ in block
     flat in vec3 c_eye;
     flat in vec3 u_eye;
     flat in vec3 v_eye;
-    flat in vec3 p;
     flat in vec3 n_eye;
 
     #if !VISIBILITY_PASS
@@ -83,11 +82,6 @@ void main()
 
     vec2 u = vec2(dot(In.u_eye, d) / dot(In.u_eye, In.u_eye),
                   dot(In.v_eye, d) / dot(In.v_eye, In.v_eye));
-
-    if (dot(vec3(u, 1.0), In.p) < 0)
-    {
-        discard;
-    }
 
     float w3d = length(u);
     float zval = q.z;

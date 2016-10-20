@@ -31,7 +31,6 @@ public:
     void set_backface_culling(bool enable = true);
     void set_visibility_pass(bool enable = true);
     void set_smooth(bool enable = true);
-    void set_color_material(bool enable = true);
 
 private:
     void initialize_shader_obj();
