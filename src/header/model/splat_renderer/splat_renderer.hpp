@@ -61,7 +61,7 @@ class SplatRenderer
 {
 
 public:
-    SplatRenderer(Tucano::Camera const& camera);
+    SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
 
 	void load_to_gpu( std::vector<Surfel> const& visible_geometry );
@@ -118,7 +118,7 @@ private:
     void render_pass(bool depth_only = false);
 
 private:
-    Tucano::Camera const& m_camera;
+    Tucano::Camera* m_camera;
 
 //     GLuint m_rect_vertices_vbo, m_rect_texture_uv_vbo,
 //         m_rect_vao, m_filter_kernel;

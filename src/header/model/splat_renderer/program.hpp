@@ -36,7 +36,7 @@ class UniformBufferCamera : public glUniformBuffer
 public:
     UniformBufferCamera();
 
-    void set_buffer_data(Tucano::Camera const& camera);
+    void set_buffer_data( Tucano::Camera* camera );
 };
 
 class UniformBufferMaterial : public glUniformBuffer

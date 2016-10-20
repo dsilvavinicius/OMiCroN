@@ -134,6 +134,7 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h							${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Point.h								${CPP_DIR}/${MODEL_DIR}/Point.cpp
 	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h							${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
+	${HEADER_DIR}/${UTIL_DIR}/vsGLInfoLib.h							${CPP_DIR}/${UTIL_DIR}/vsGLInfoLib.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h						${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Scan.h								${CPP_DIR}/${MODEL_DIR}/Scan.cpp
 	${HEADER_DIR}/${MODEL_DIR}/Camera.h								${CPP_DIR}/${MODEL_DIR}/Camera.cpp

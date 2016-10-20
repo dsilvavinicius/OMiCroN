@@ -80,8 +80,8 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
 }
 
 
-SplatRenderer::SplatRenderer(Tucano::Camera const& camera)
-    : m_camera(camera)/*, m_soft_zbuffer(true), m_smooth(false),
+SplatRenderer::SplatRenderer( Tucano::Camera* camera )
+    : m_camera( camera )/*, m_soft_zbuffer(true), m_smooth(false),
       m_color_material(true), m_ewa_filter(false), m_multisample(false),
       m_pointsize_method(0), m_backface_culling(false),
       m_color(Vector3f(0.0, 0.25f, 1.0f)), m_epsilon(5.0f * 1e-3f),
@@ -207,7 +207,7 @@ SplatRenderer::setup_vertex_array_buffer_object()
     // Center c.
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
+        sizeof(Surfel), 0/*reinterpret_cast<const GLfloat*>(0)*/);
 
 //     // Tagent vector u.
 //     glEnableVertexAttribArray(1);
@@ -435,6 +435,10 @@ SplatRenderer::reshape(int width, int height)
 void
 SplatRenderer::setup_uniforms(glProgram& program)
 {
+// 	program.get_uniform_info();
+	
+	cout << "At setup_uniforms. " << endl << m_camera->getViewMatrix().matrix() << endl << endl;
+	
     m_uniform_camera.set_buffer_data(m_camera);
     
 //     GLint viewport[4];
@@ -469,9 +473,11 @@ SplatRenderer::setup_uniforms(glProgram& program)
 
 void
 SplatRenderer::render_pass(bool depth_only)
-{ 
+{
+	cout << "At render_pass. " << endl << m_camera->getViewMatrix().matrix() << endl << endl;
+	
 //     glEnable(GL_DEPTH_TEST);
-//     glEnable(GL_PROGRAM_POINT_SIZE);
+    glEnable(GL_PROGRAM_POINT_SIZE);
 
 //     if (!depth_only && m_soft_zbuffer)
 //     {
@@ -600,7 +606,7 @@ SplatRenderer::load_to_gpu(const std::vector< Surfel >& visible_geometry)
 	m_num_pts = static_cast<unsigned int>(visible_geometry.size());
 	
 	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
+// 	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_num_pts, visible_geometry.data(), GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

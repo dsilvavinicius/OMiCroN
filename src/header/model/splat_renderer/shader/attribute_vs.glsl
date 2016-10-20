@@ -334,8 +334,16 @@ void main()
 //     vec3 v_eye = radius_scale * mat3(modelview_matrix) * v;
 //     vec3 n_eye = normalize(cross(u_eye, v_eye));
 
-    gl_Position = projection_matrix * modelview_matrix * vec4(c, 1.0);
-    gl_PointSize = 10.0;
+	
+// 	{
+		gl_Position = projection_matrix * modelview_matrix * vec4(c, 1.0);
+		gl_PointSize = 1.0;
+// 	}
+// 	else
+	{
+// 		gl_Position = vec4( 0.0, 0.0, 0.0, 1.0 );
+// 		gl_PointSize = 100.0;
+	}
     
 //     vec4 p_scr;
 //     vec2 w;

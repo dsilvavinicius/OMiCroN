@@ -73,7 +73,30 @@ layout(location = FRAG_COLOR) out vec4 frag_color;
 
 void main()
 {
-		frag_color = vec4( 1.0, 1.0, 1.0, 1.0 );
+// 		float delta = 1.e-5;
+// 		if(
+// 			abs( float( projection_matrix[ 0, 0 ] ) - 1.29904 ) < delta
+// 			&& abs( float( projection_matrix[ 0, 1 ] ) ) < delta && abs( float( projection_matrix[ 0, 2 ] ) ) < delta
+// 			&& abs( float( projection_matrix[ 0, 3 ] ) ) < delta
+// 		
+// 			&& abs( float( projection_matrix[ 1, 0 ] ) ) < delta
+// 			&& abs( float( projection_matrix[ 1, 1 ] ) - 1.73205 ) < delta
+// 			&& abs( float( projection_matrix[ 1, 2 ] ) ) < delta && abs( float( projection_matrix[ 1, 3 ] ) ) < delta
+// 		
+// 			&& abs( float( projection_matrix[ 2, 0 ] ) ) < delta && abs( float( projection_matrix[ 2, 1 ] ) ) < delta
+// 			&& abs( float( projection_matrix[ 2, 2 ] ) + 1.002 ) < delta
+// 			&& abs( float( projection_matrix[ 2, 3 ] ) + 0.2002 ) < delta
+// 		
+// 			&& abs( float( projection_matrix[ 3, 0 ] ) ) < delta && abs( float( projection_matrix[ 3, 1 ] ) ) < delta
+// 			&& abs( float( projection_matrix[ 3, 2 ] ) - 1.0 ) < delta && abs( float( projection_matrix[ 3, 3 ] ) ) < delta
+// 		)
+// 		{
+			frag_color = vec4( 0.0, 1.0, 0.0, 1.0 );
+// 		}
+// 		else
+// 		{
+// 			frag_color = vec4( 1.0, 0.0, 0.0, 1.0 );
+// 		}
 
 // 		#if !VISIBILITY_PASS
 // 			frag_color = vec4(In.color, 1.0);

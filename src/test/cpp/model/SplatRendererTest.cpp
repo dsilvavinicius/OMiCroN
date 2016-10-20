@@ -116,7 +116,11 @@ namespace model
 // 				m_phong.initialize();
 				
 // 				camera->translate( Eigen::Vector3f( 0.0f, 0.0f, -2.0f ) );
-				m_renderer = new SplatRenderer( *camera );
+
+				cout << "At starting. Modelview: " << camera->getViewMatrix().matrix() << endl << endl;
+				cout << "Projection: " << camera->getProjectionMatrix() << endl << endl;
+				
+				m_renderer = new SplatRenderer( camera );
 				m_renderer->load_to_gpu( m_surfels );
 				OglUtils::checkOglErrors();
 			}
@@ -133,6 +137,9 @@ namespace model
 			
 			void paintGL() override
 			{
+				cout << "At paintGL. Modelview: " << camera->getViewMatrix().matrix() << endl << endl;
+				cout << "Projection: " << camera->getProjectionMatrix() << endl << endl;
+				
 				if( m_renderer != nullptr )
 				{
 					m_renderer->render_frame();
