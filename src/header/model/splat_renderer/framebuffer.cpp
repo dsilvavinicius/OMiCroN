@@ -16,10 +16,10 @@
 // along with Surface Splatting. If not, see <http://www.gnu.org/licenses/>.
 
 #include "framebuffer.hpp"
+#include <OglUtils.h>
 
 #include <iostream>
 #include <cstdlib>
-#include <OglUtils.h>
 
 struct Framebuffer::Impl
 {
@@ -306,7 +306,7 @@ Framebuffer::set_multisample(bool enable)
         }
 
 #ifndef NDEBUG
-        util::OglUtils::checkFramebuffer();
+		util::OglUtils::checkFramebuffer();
         util::OglUtils::checkOglErrors();
 #endif
         unbind();
@@ -378,7 +378,7 @@ Framebuffer::reshape(GLint width, GLint height)
     }
 
 #ifndef NDEBUG
-    util::OglUtils::checkFramebuffer();
+	util::OglUtils::checkFramebuffer();
     util::OglUtils::checkOglErrors();
 #endif
 
@@ -410,7 +410,7 @@ Framebuffer::initialize()
     glDrawBuffers(1, buffers);
 
 #ifndef NDEBUG
-    util::OglUtils::checkFramebuffer();
+	util::OglUtils::checkFramebuffer();
 	util::OglUtils::checkOglErrors();
 #endif
 }

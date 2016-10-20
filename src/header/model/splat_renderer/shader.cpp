@@ -32,7 +32,6 @@
 #include <iostream>
 
 #include <Eigen/Dense>
-#include <vsGLInfoLib.h>
 
 using namespace Eigen;
 
@@ -266,10 +265,4 @@ glProgram::set_uniform_block_binding(GLchar const* name, GLuint block_binding)
     }
 
     glUniformBlockBinding(m_program_obj, block_index, block_binding);
-}
-
-
-void glProgram::get_uniform_info()
-{
-	VSGLInfoLib::getUniformsInfo( m_program_obj );
 }

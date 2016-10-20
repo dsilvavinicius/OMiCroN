@@ -129,7 +129,6 @@ public:
     void set_uniform_1i(GLchar const* name, GLint value);
     void set_uniform_block_binding(GLchar const* name, GLuint block_binding);
 
-	void get_uniform_info();
 protected:
     GLuint m_program_obj;
 };

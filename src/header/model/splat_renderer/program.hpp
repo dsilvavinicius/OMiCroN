@@ -64,41 +64,41 @@ public:
     void set_buffer_data(float radius, float projection);
 };
 
-class ProgramMesh3 : public glProgram
-{
-
-public:
-    ProgramMesh3();
-
-    void set_wireframe(bool enable);
-    void set_smooth(bool enable);
-
-private:
-    void initialize_shader_obj();
-    void initialize_program_obj();
-
-private:
-    glVertexShader   m_mesh3_vs_obj;
-    glGeometryShader m_mesh3_gs_obj;
-    glFragmentShader m_mesh3_fs_obj;
-
-    bool m_wireframe, m_smooth;
-};
-
-class ProgramSphere : public glProgram
-{
-
-public:
-    ProgramSphere();
-
-private:
-    void initialize_shader_obj();
-    void initialize_program_obj();
-
-private:
-    glVertexShader    m_sphere_vs_obj;
-    glFragmentShader  m_sphere_fs_obj;
-};
+// class ProgramMesh3 : public glProgram
+// {
+// 
+// public:
+//     ProgramMesh3();
+// 
+//     void set_wireframe(bool enable);
+//     void set_smooth(bool enable);
+// 
+// private:
+//     void initialize_shader_obj();
+//     void initialize_program_obj();
+// 
+// private:
+//     glVertexShader   m_mesh3_vs_obj;
+//     glGeometryShader m_mesh3_gs_obj;
+//     glFragmentShader m_mesh3_fs_obj;
+// 
+//     bool m_wireframe, m_smooth;
+// };
+// 
+// class ProgramSphere : public glProgram
+// {
+// 
+// public:
+//     ProgramSphere();
+// 
+// private:
+//     void initialize_shader_obj();
+//     void initialize_program_obj();
+// 
+// private:
+//     glVertexShader    m_sphere_vs_obj;
+//     glFragmentShader  m_sphere_fs_obj;
+// };
 
 }
 

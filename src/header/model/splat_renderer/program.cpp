@@ -27,7 +27,6 @@
 #include <Eigen/Core>
 #include <iostream>
 #include <cstdlib>
-#include <vsGLInfoLib.h>
 
 using namespace Eigen;
 
@@ -118,8 +117,8 @@ void
 UniformBufferCamera::set_buffer_data( Tucano::Camera* camera )
 {
     bind();
-    glBufferSubData(GL_UNIFORM_BUFFER, 0, 16 * sizeof(GLfloat), camera->getViewMatrix().matrix().data());
-    glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(GLfloat), 16 * sizeof(GLfloat), camera->getProjectionMatrix().data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Matrix4f), camera->getViewMatrix().matrix().data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(GLfloat), sizeof(Matrix4f), camera->getProjectionMatrix().data());
     unbind();
 }
 
