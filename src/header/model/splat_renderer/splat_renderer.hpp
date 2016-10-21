@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include "splat_renderer/surfel.hpp"
+#include "Array.h"
 
 class UniformBufferRaycast : public GLviz::glUniformBuffer
 {
@@ -57,16 +58,29 @@ public:
         float radius_scale, float ewa_radius, float epsilon);
 };
 
+class SurfelCloud
+{
+public:
+	SurfelCloud( const Eigen::Matrix4f& model, const model::Array< Surfel >& surfels );
+	~SurfelCloud();
+	void render() const;
+	uint numPoints() const { return m_numPts; }
+	const Matrix4f& model() const { return m_model; }
+	
+private:
+	GLuint m_vbo, m_vao;
+    uint m_numPts;
+	Matrix4f m_model;
+};
+
 class SplatRenderer
 {
 
 public:
     SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
-
-	void load_to_gpu( std::vector<Surfel> const& visible_geometry );
 	
-    void render_frame();
+    void render_frame( const SurfelCloud& cloud );
 
     bool smooth() const;
     void set_smooth(bool enable = true);
@@ -108,20 +122,17 @@ private:
     void setup_screen_size_quad();
     void setup_vertex_array_buffer_object();
 
-    void setup_uniforms(glProgram& program);
+    void setup_uniforms( glProgram& program, const Matrix4f& modelView );
 
     void begin_frame();
     void end_frame();
-    void render_pass(bool depth_only = false);
+    void render_pass( const SurfelCloud& cloud,  bool depth_only = false );
 
 private:
     Tucano::Camera* m_camera;
 
     GLuint m_rect_vertices_vbo, m_rect_texture_uv_vbo,
         m_rect_vao, m_filter_kernel;
-
-    GLuint m_vbo, m_vao;
-    unsigned int m_num_pts;
 
     ProgramAttribute m_visibility, m_attribute;
     ProgramFinalization m_finalization;

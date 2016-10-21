@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <cmath>
+#include "Array.h"
 
 using namespace Eigen;
 
@@ -80,6 +81,52 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
 }
 
 
+SurfelCloud::SurfelCloud( const Matrix4f& model, const model::Array< Surfel >& surfels )
+: m_model( model )
+{
+	glGenBuffers(1, &m_vbo);
+
+    glGenVertexArrays(1, &m_vao);
+    glBindVertexArray(m_vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+
+    // Center c.
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+        sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
+
+    // Tagent vector u.
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+        sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
+
+    // Tangent vector v.
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+        sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
+	
+	m_numPts = static_cast< uint >( surfels.size() );
+	
+	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
+	
+	glBindVertexArray(0);
+}
+
+SurfelCloud::~SurfelCloud()
+{
+	glDeleteVertexArrays( 1, &m_vao );
+    glDeleteBuffers( 1, &m_vbo );
+}
+
+void SurfelCloud::render() const
+{
+	glBindVertexArray( m_vao );
+	glDrawArrays( GL_POINTS, 0, m_numPts );
+	glBindVertexArray( 0 );
+}
+
 SplatRenderer::SplatRenderer( Tucano::Camera* camera )
     : m_camera(camera), m_soft_zbuffer(true), m_smooth(false),
       m_ewa_filter(false), m_multisample(false),
@@ -95,14 +142,10 @@ SplatRenderer::SplatRenderer( Tucano::Camera* camera )
     setup_program_objects();
     setup_filter_kernel();
     setup_screen_size_quad();
-    setup_vertex_array_buffer_object();
 }
 
 SplatRenderer::~SplatRenderer()
 {
-    glDeleteVertexArrays(1, &m_vao);
-    glDeleteBuffers(1, &m_vbo);
-
     glDeleteBuffers(1, &m_rect_vertices_vbo);
     glDeleteBuffers(1, &m_rect_texture_uv_vbo);
     glDeleteVertexArrays(1, &m_rect_vao);
@@ -189,34 +232,6 @@ SplatRenderer::setup_screen_size_quad()
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,
         2 * sizeof(float), reinterpret_cast<const GLvoid*>(0));
-
-    glBindVertexArray(0);
-}
-
-void
-SplatRenderer::setup_vertex_array_buffer_object()
-{
-    glGenBuffers(1, &m_vbo);
-
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-
-    // Center c.
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
-
-    // Tagent vector u.
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
-
-    // Tangent vector v.
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
 
     glBindVertexArray(0);
 }
@@ -406,9 +421,9 @@ SplatRenderer::reshape(int width, int height)
 }
 
 void
-SplatRenderer::setup_uniforms(glProgram& program)
+SplatRenderer::setup_uniforms( glProgram& program, const Matrix4f& modelView )
 {
-    m_uniform_camera.set_buffer_data(m_camera);
+    m_uniform_camera.set_buffer_data( modelView, m_camera->getProjectionMatrix() );
     
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
@@ -441,7 +456,7 @@ SplatRenderer::setup_uniforms(glProgram& program)
 }
 
 void
-SplatRenderer::render_pass(bool depth_only)
+SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_only )
 { 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -471,8 +486,8 @@ SplatRenderer::render_pass(bool depth_only)
 
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
-
-    setup_uniforms(program);
+	
+    setup_uniforms( program, m_camera->getViewMatrix().matrix() * cloud.model() );
 
     if (!depth_only && m_soft_zbuffer && m_ewa_filter)
     {
@@ -482,9 +497,7 @@ SplatRenderer::render_pass(bool depth_only)
         program.set_uniform_1i("filter_kernel", 1);
     }
 
-    glBindVertexArray(m_vao);
-    glDrawArrays(GL_POINTS, 0, m_num_pts);
-    glBindVertexArray(0);
+    cloud.render();
 
     program.unuse();
 
@@ -545,7 +558,7 @@ SplatRenderer::end_frame()
     
     try
     {
-        setup_uniforms(m_finalization);
+        setup_uniforms(m_finalization, m_camera->getViewMatrix().matrix());
         m_finalization.set_uniform_1i("color_texture", 0);
 
         if (m_smooth)
@@ -566,22 +579,11 @@ SplatRenderer::end_frame()
 }
 
 void
-SplatRenderer::load_to_gpu(const std::vector< Surfel >& visible_geometry)
-{
-	m_num_pts = static_cast<unsigned int>(visible_geometry.size());
-	
-	glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_num_pts, &visible_geometry.front(), GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-void
-SplatRenderer::render_frame()
+SplatRenderer::render_frame( const SurfelCloud& cloud )
 {
     begin_frame();
 
-    if (m_num_pts > 0)
+    if ( cloud.numPoints() > 0)
     {
         if (m_multisample)
         {
@@ -592,10 +594,10 @@ SplatRenderer::render_frame()
 
         if (m_soft_zbuffer)
         {
-            render_pass(true);
+            render_pass( cloud, true);
         }
 
-        render_pass(false);
+        render_pass( cloud, false );
 
         if (m_multisample)
         {

@@ -13,6 +13,8 @@ using namespace std;
 using namespace util;
 using namespace Tucano;
 
+#define USE_SPLAT
+
 namespace model
 {
 	namespace test
@@ -21,16 +23,21 @@ namespace model
 		: public QtFreecameraWidget
 		{
 		public:
-			using SurfelVector = vector< Surfel >;
-			
 			SplatRendererTestWidget( QWidget *parent = 0 )
 			: QtFreecameraWidget( parent )
-			, m_renderer( nullptr )
+			
+			#ifdef USE_SPLAT
+				, m_renderer( nullptr )
+			#endif
+			
 			{}
 			
 			~SplatRendererTestWidget()
 			{
-				delete m_renderer;
+				#ifdef USE_SPLAT
+					delete m_renderer;
+					delete m_cloud;
+				#endif
 			}
 			
 			void initialize()
@@ -43,24 +50,38 @@ namespace model
 				Float posInf = numeric_limits< Float >::max();
 				Vec3 origin = Vec3( posInf, posInf, posInf );
 				Vec3 maxCoords( negInf, negInf, negInf );
+			
+				#ifdef USE_SPLAT
+					Array< Surfel > surfels( reader.getNumPoints() );
+					auto surfelIter = surfels.begin();
+				#else
+					vector< Vector4f > vertices;
+					vector< Vector3f > normals;
+				#endif
 				
 				reader.read(
 					[ & ]( const Point& p )
 					{
 						const Vec3& pos = p.getPos();
 						const Vector3f& normal = p.getNormal();
-						Vector3f pointOnPlane(
-							( normal.x() * pos.x() + normal.y() * pos.y() + normal.z() * pos.z() ) / normal.x(),
-							0.f, 0.f );
-						Vector3f u = pointOnPlane - pos;
-						u.normalize();
-						Vector3f v = normal.cross( u );
-			
-						u *= 0.003f;
-						v *= 0.003f;
 						
-						Surfel s( pos, u, v );
-						m_surfels.push_back( s );
+						#ifdef USE_SPLAT
+							Vector3f pointOnPlane(
+								( normal.x() * pos.x() + normal.y() * pos.y() + normal.z() * pos.z() ) / normal.x(),
+								0.f, 0.f );
+							Vector3f u = pointOnPlane - pos;
+							u.normalize();
+							Vector3f v = normal.cross( u );
+			
+							u *= 0.003f;
+							v *= 0.003f;
+						
+							Surfel s( pos, u, v );
+							*surfelIter++ = s;
+						#else
+							vertices.push_back( Vector4f( pos.x(), pos.y(), pos.z(), 1.f ) );
+							normals.push_back( normal );
+						#endif
 						
 						for( int i = 0; i < 3; ++i )
 						{
@@ -74,13 +95,24 @@ namespace model
 				float scale = 1.f / std::max( std::max( boxSize.x(), boxSize.y() ), boxSize.z() );
 				Vec3 midPoint = ( origin + maxCoords ) * 0.5f;
 				
-				for( Surfel& surfel : m_surfels )
-				{
-					surfel.c = ( surfel.c - midPoint ) * scale;
-				}
+				#ifdef USE_SPLAT
+					for( Surfel& surfel : surfels )
+					{
+						surfel.c = ( surfel.c - midPoint ) * scale;
+					}
+// 					Matrix4f transform = Translation3f( -midPoint * scale ) * Scaling( scale ).matrix();
+					Matrix4f transform = Matrix4f::Identity();
 				
-				m_renderer = new SplatRenderer( camera );
-				m_renderer->load_to_gpu( m_surfels );
+					m_renderer = new SplatRenderer( camera );
+					m_cloud = new SurfelCloud( transform, surfels );
+				#else
+					Affine3f transform = Translation3f( -midPoint * scale ) * Scaling( scale );
+					m_mesh.setModelMatrix( transform );
+					
+					m_mesh.loadVertices( vertices );
+					m_mesh.loadNormals( normals );
+				#endif
+				
 				OglUtils::checkOglErrors();
 			}
 			
@@ -88,23 +120,38 @@ namespace model
 			{
 				QtFreecameraWidget::resizeGL( w, h );
 				
-				if( m_renderer != nullptr )
-				{
-					m_renderer->reshape( w, h );
-				}
+				#ifdef USE_SPLAT
+					if( m_renderer != nullptr )
+					{
+						m_renderer->reshape( w, h );
+					}
+				#endif
 			}
 			
 			void paintGL() override
 			{
-				m_renderer->render_frame();
-				OglUtils::checkOglErrors();
+				#ifdef USE_SPLAT
+					m_renderer->render_frame( *m_cloud );
+				#else
+					glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+					
+					Effects::Phong phong;
+					phong.setShadersDir( "../shaders/tucano/" );
+					phong.initialize();
+					phong.render( m_mesh, *camera, light_trackball );
+				#endif
 				
+				OglUtils::checkOglErrors();
 				camera->renderAtCorner();
 			}
 			
 		private:
-			SplatRenderer* m_renderer;
-			SurfelVector m_surfels;
+			#ifdef USE_SPLAT
+				SplatRenderer* m_renderer;
+				SurfelCloud* m_cloud;
+			#else
+				Mesh m_mesh;
+			#endif
 		};
 		
         class SplatRendererTest : public ::testing::Test

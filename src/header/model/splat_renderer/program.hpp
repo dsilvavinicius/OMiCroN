@@ -36,7 +36,11 @@ class UniformBufferCamera : public glUniformBuffer
 public:
     UniformBufferCamera();
 
+	/** Setup data with the view and projection matrices of the camera. */
     void set_buffer_data( Tucano::Camera* camera );
+	
+	/** Setup data with the model-view and projection matrices. */
+	void set_buffer_data( const Eigen::Matrix4f& modelView, const Eigen::Matrix4f& projection );
 };
 
 class UniformBufferMaterial : public glUniformBuffer

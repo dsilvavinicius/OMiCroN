@@ -122,6 +122,17 @@ UniformBufferCamera::set_buffer_data( Tucano::Camera* camera )
     unbind();
 }
 
+void UniformBufferCamera::set_buffer_data( const Matrix4f& modelView, const Matrix4f& projection )
+{
+	cout << "At set_buffer_data. Modelview:" << endl << modelView << endl << "Projection:" << endl << projection << endl
+		 << endl;
+	
+	bind();
+	glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Matrix4f), modelView.data());
+    glBufferSubData(GL_UNIFORM_BUFFER, 16 * sizeof(GLfloat), sizeof(Matrix4f), projection.data());
+    unbind();
+}
+
 void
 UniformBufferMaterial::set_buffer_data(float const* mbuf)
 {
