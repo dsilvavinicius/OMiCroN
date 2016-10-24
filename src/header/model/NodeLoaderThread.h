@@ -7,6 +7,7 @@
 #include "Point.h"
 #include "O1OctreeNode.h"
 #include "GpuAllocStatistics.h"
+#include "splat_renderer/surfel.hpp"
 
 namespace model
 {
@@ -16,10 +17,10 @@ namespace model
 		Q_OBJECT
 	
 	public:
-		using Point = model::Point;
-		using PointPtr = shared_ptr< Point >;
+		using Point = Surfel;
+		using PointArray = Array< Surfel >;
 		using Alloc = TbbAllocator< Point >;
-		using Node = O1OctreeNode< PointPtr >;
+		using Node = O1OctreeNode< Point >;
 		using Siblings = Array< Node >;
 		using NodePtrList = list< Node*, typename Alloc:: template rebind< Node* >::other >;
 		using NodePtrListArray = Array< NodePtrList, typename Alloc:: template rebind< NodePtrList >::other >;
@@ -137,28 +138,14 @@ namespace model
 	
 	inline void NodeLoaderThread::load( Node& node )
 	{
-		Array< PointPtr > points = node.getContents();
+		PointArray points = node.getContents();
 		
 		ulong neededGpuMem = GpuAllocStatistics::pointSize() * points.size();
 		
 		if( memoryUsage() + neededGpuMem < m_totalGpuMem )
 		{
-			vector< Eigen::Vector4f > positions;
-			vector< Eigen::Vector3f > normals;
-			
-			for( PointPtr point : points )
-			{
-				const Vec3& pos = point->getPos();
-				positions.push_back( Vector4f( pos.x(), pos.y(), pos.z(), 1.f ) );
-				
-				normals.push_back( point->getNormal() );
-			}
-			
-			Mesh& mesh = node.mesh();
-			mesh.selectPrimitive( Mesh::POINT );
-			mesh.loadVertices( positions );
-			mesh.loadNormals( normals );
-			node.setLoadState( Node::LOADED );
+			SurfelCloud cloud( points );
+			node.loadCloud( cloud );
 			
 			GpuAllocStatistics::notifyAlloc( neededGpuMem );
 		}
@@ -175,8 +162,7 @@ namespace model
 		}
 		
 		GpuAllocStatistics::notifyDealloc( GpuAllocStatistics::pointSize() * node.getContents().size() );
-		node.mesh().reset();
-		node.setLoadState( Node::UNLOADED );
+		node.unloadCloud();
 	}
 	
 	inline void NodeLoaderThread::release( Siblings& siblings )

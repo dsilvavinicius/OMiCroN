@@ -21,6 +21,8 @@
 #include <iostream>
 #include <cstdlib>
 
+using namespace model;
+
 struct Framebuffer::Impl
 {
     virtual void framebuffer_texture_2d(GLenum target,

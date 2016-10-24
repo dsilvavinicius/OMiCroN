@@ -21,41 +21,44 @@
 #include <GL/glew.h>
 #include <memory>
 
-class Framebuffer
+namespace model
 {
+	class Framebuffer
+	{
 
-public:
-    Framebuffer();
-    ~Framebuffer();
+	public:
+		Framebuffer();
+		~Framebuffer();
 
-    GLuint color_texture();
+		GLuint color_texture();
 
-    void enable_depth_texture();
-    void disable_depth_texture();
-    GLuint depth_texture();
+		void enable_depth_texture();
+		void disable_depth_texture();
+		GLuint depth_texture();
 
-    void attach_normal_texture();
-    void detach_normal_texture();
-    GLuint normal_texture();
+		void attach_normal_texture();
+		void detach_normal_texture();
+		GLuint normal_texture();
 
-    void set_multisample(bool enable = true);
+		void set_multisample(bool enable = true);
 
-    void bind();
-    void unbind();
-    void reshape(GLint width, GLint height);
+		void bind();
+		void unbind();
+		void reshape(GLint width, GLint height);
 
-private:
-    void initialize();
-    void remove_and_delete_attachments();
+	private:
+		void initialize();
+		void remove_and_delete_attachments();
 
-    GLuint m_fbo;
-    GLuint m_color, m_normal, m_depth;
+		GLuint m_fbo;
+		GLuint m_color, m_normal, m_depth;
 
-    struct Impl;
-    struct Default;
-    struct Multisample;
+		struct Impl;
+		struct Default;
+		struct Multisample;
 
-    std::unique_ptr<Impl> m_pimpl;
-};
+		std::unique_ptr<Impl> m_pimpl;
+	};
+}
 
 #endif // FRAMEBUFFER_HPP

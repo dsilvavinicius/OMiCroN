@@ -27,7 +27,9 @@
 #include <string>
 #include <vector>
 #include "splat_renderer/surfel.hpp"
+#include "splat_renderer/surfel_cloud.h"
 #include "Array.h"
+#include "utils/frustum.hpp"
 
 class UniformBufferRaycast : public GLviz::glUniformBuffer
 {
@@ -58,30 +60,20 @@ public:
         float radius_scale, float ewa_radius, float epsilon);
 };
 
-class SurfelCloud
-{
-public:
-	SurfelCloud( const Eigen::Matrix4f& model, const model::Array< Surfel >& surfels );
-	~SurfelCloud();
-	void render() const;
-	uint numPoints() const { return m_numPts; }
-	const Matrix4f& model() const { return m_model; }
-	
-private:
-	GLuint m_vbo, m_vao;
-    uint m_numPts;
-	Matrix4f m_model;
-};
-
 class SplatRenderer
 {
 
 public:
     SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
-	
-    void render_frame( const SurfelCloud& cloud );
 
+	void begin_frame();
+	void render_cloud( const SurfelCloud& cloud );
+    void end_frame();
+	
+	bool isCullable( const AlignedBox3f& box ) const;
+	bool isRenderable( const AlignedBox3f& box, const float projThresh ) const;
+	
     bool smooth() const;
     void set_smooth(bool enable = true);
 
@@ -122,14 +114,15 @@ private:
     void setup_screen_size_quad();
     void setup_vertex_array_buffer_object();
 
+	Vector2i projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const;
+	
     void setup_uniforms( glProgram& program, const Matrix4f& modelView );
 
-    void begin_frame();
-    void end_frame();
     void render_pass( const SurfelCloud& cloud,  bool depth_only = false );
 
 private:
     Tucano::Camera* m_camera;
+	Tucano::Frustum m_frustum;
 
     GLuint m_rect_vertices_vbo, m_rect_texture_uv_vbo,
         m_rect_vao, m_filter_kernel;
@@ -137,7 +130,7 @@ private:
     ProgramAttribute m_visibility, m_attribute;
     ProgramFinalization m_finalization;
 
-    Framebuffer m_fbo;
+    model::Framebuffer m_fbo;
 
     bool m_soft_zbuffer, m_backface_culling, m_smooth, m_ewa_filter, m_multisample;
     unsigned int m_pointsize_method;
@@ -149,5 +142,123 @@ private:
     UniformBufferFrustum m_uniform_frustum;
     UniformBufferParameter m_uniform_parameter;
 };
+
+inline void SplatRenderer::render_cloud( const SurfelCloud& cloud )
+{
+	if ( cloud.numPoints() > 0)
+    {
+        if (m_multisample)
+        {
+            glEnable(GL_MULTISAMPLE);
+            glEnable(GL_SAMPLE_SHADING);
+            glMinSampleShading(4.0);
+        }
+
+        if (m_soft_zbuffer)
+        {
+            render_pass( cloud, true);
+        }
+
+        render_pass( cloud, false );
+
+        if (m_multisample)
+        {
+            glDisable(GL_MULTISAMPLE);
+            glDisable(GL_SAMPLE_SHADING);
+        }
+    }
+}
+
+inline bool SplatRenderer::isCullable( const AlignedBox3f& box ) const
+{
+	return m_frustum.isCullable( box );
+}
+
+inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float projThresh ) const
+{
+	const Vector3f& rawMin = box.min();
+	const Vector3f& rawMax = box.max();
+	Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
+	Vector4f max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
+	
+	Vector2i viewportSize = m_camera->getViewportSize();
+	
+	const Matrix4f& viewProj = m_frustum.viewProj();
+	
+	Vector2i proj0 = projToWindowCoords( min, viewProj, viewportSize );
+	Vector2i proj1 = projToWindowCoords( max, viewProj, viewportSize );
+	
+	Vector2i diagonal0 = proj1 - proj0;
+	
+	Vector3f boxSize = rawMax - rawMin;
+	
+	proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), viewProj,
+								viewportSize );
+	proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), viewProj, viewportSize );
+	
+	Vector2i diagonal1 = proj1 - proj0;
+	
+	float maxDiagLength = std::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
+	
+	return maxDiagLength < projThresh;
+}
+
+inline void SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_only )
+{ 
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
+    if (!depth_only && m_soft_zbuffer)
+    {
+        glEnable(GL_BLEND);
+        glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
+        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
+    }
+
+    glProgram &program = depth_only ? m_visibility : m_attribute;
+
+    program.use();
+
+    if (depth_only)
+    {
+        glDepthMask(GL_TRUE);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+    }
+    else
+    {
+        if (m_soft_zbuffer)
+            glDepthMask(GL_FALSE);
+        else
+            glDepthMask(GL_TRUE);
+
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+    }
+	
+    setup_uniforms( program, m_camera->getViewMatrix().matrix() * cloud.model() );
+
+    if (!depth_only && m_soft_zbuffer && m_ewa_filter)
+    {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_1D, m_filter_kernel);
+
+        program.set_uniform_1i("filter_kernel", 1);
+    }
+
+    cloud.render();
+
+    program.unuse();
+
+    glDisable(GL_PROGRAM_POINT_SIZE);
+    glDisable(GL_BLEND);
+    glDisable(GL_DEPTH_TEST);
+}
+
+inline Vector2i SplatRenderer
+::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
+{
+	Vector4f proj = viewProj * point;
+	return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
+						( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
+}
 
 #endif // SPLATRENDER_HPP

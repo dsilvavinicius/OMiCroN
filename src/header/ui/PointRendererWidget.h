@@ -37,7 +37,7 @@ public:
 	
 	using Octree = FastParallelOctree< MortonCode >;
 	using NodeLoader = typename Octree::NodeLoader;
-	using Renderer = model::StreamingRenderer< Point >;
+	using Renderer = SplatRenderer;
 
 	explicit PointRendererWidget( NodeLoader& loader, QWidget *parent );
 	~PointRendererWidget();

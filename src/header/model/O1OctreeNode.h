@@ -5,6 +5,7 @@
 #include "tucano.hpp"
 #include "Array.h"
 #include "GpuAllocStatistics.h"
+#include "splat_renderer/surfel_cloud.h"
 
 using namespace std;
 using namespace Tucano;
@@ -85,7 +86,7 @@ namespace model
 		O1OctreeNode( O1OctreeNode&& other )
 		: m_contents( std::move( other.m_contents ) ),
 		m_children( std::move( other.m_children ) ),
-		m_mesh( std::move( other.m_mesh ) ),
+		m_cloud( std::move( other.m_cloud ) ),
 		m_parent( other.m_parent ),
 		m_isLeaf( other.m_isLeaf ),
 		m_loadState( other.m_loadState.load() )
@@ -98,7 +99,7 @@ namespace model
 		{
 			m_contents = std::move( other.m_contents );
 			m_children = std::move( other.m_children );
-			m_mesh = std::move( other.m_mesh );
+			m_cloud = std::move( other.m_cloud );
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
 			m_loadState = other.m_loadState.load();
@@ -159,13 +160,25 @@ namespace model
 			m_children.clear();
 		}
 		
-		const Mesh& mesh() const { return m_mesh; }
+		const SurfelCloud& cloud() const { return m_cloud; }
 		
-		Mesh& mesh() { return m_mesh; }
+		SurfelCloud& cloud() { return m_cloud; }
+		
+		void loadCloud( const SurfelCloud& cloud )
+		{
+			m_cloud = cloud;
+			m_loadState = LoadState::LOADED;
+		}
+		
+		void unloadCloud()
+		{
+			m_cloud = SurfelCloud();
+			m_loadState = LoadState::UNLOADED;
+		}
 		
 		LoadState loadState() const { return LoadState( m_loadState.load() ); }
 		
-		void setLoadState( const LoadState loadState ) { m_loadState = loadState; } 
+		void setPendingCloud() { m_loadState = LoadState::PENDING; } 
 		
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
@@ -175,7 +188,7 @@ namespace model
 		static O1OctreeNode deserialize( byte* serialization );
 		
 	private:
-		Mesh m_mesh;
+		SurfelCloud m_cloud;
 		
 		ContentsArray m_contents;
 		
@@ -193,8 +206,8 @@ namespace model
 		bool m_isLeaf;
 	};
 	
-	template<>
-	inline O1OctreeNode< PointPtr, TbbAllocator< PointPtr > >::~O1OctreeNode()
+	template< typename Contents, typename ContentsAlloc >
+	inline O1OctreeNode< Contents, ContentsAlloc >::~O1OctreeNode()
 	{
 		m_parent = nullptr;
 		

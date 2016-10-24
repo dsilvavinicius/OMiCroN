@@ -5,7 +5,8 @@
 #include "O1OctreeNode.h"
 #include "OctreeDimensions.h"
 #include "OctreeStats.h"
-#include "renderers/StreamingRenderer.h"
+// #include "renderers/StreamingRenderer.h"
+#include "splat_renderer/splat_renderer.hpp"
 #include "NodeLoader.h"
 #include "Profiler.h"
 #include "StackTrace.h"
@@ -18,6 +19,7 @@
 #endif
 
 using namespace std;
+using namespace util;
 
 namespace model
 {
@@ -38,10 +40,10 @@ namespace model
 	class Front
 	{
 	public:
-		using Node = O1OctreeNode< PointPtr >;
+		using Node = O1OctreeNode< Surfel >;
 		using NodeArray = Array< Node >;
 		using OctreeDim = OctreeDimensions< Morton >;
-		using Renderer = StreamingRenderer< Point >;
+		using Renderer = SplatRenderer;
 		using NodeLoader = model::NodeLoader< Point >;
 		
 		/** The node type that is used in front. */
@@ -463,6 +465,8 @@ namespace model
 	{
 		auto start = Profiler::now();
 		
+		renderer.begin_frame();
+		
 		Segment& appendSeg = m_segments[ m_appendSegIdx ];
 		
 		{
@@ -516,11 +520,14 @@ namespace model
 			m_nodeLoader.onIterationEnd();
 		}
 		
+		renderer.end_frame();
+		
 		int traversalTime = Profiler::elapsedTime( start );
 		
 		start = Profiler::now();
 		
-		unsigned int numRenderedPoints = renderer.afterRendering();
+// 		unsigned int numRenderedPoints = renderer.afterRendering();
+		unsigned int numRenderedPoints = 0; // TODO: Correct this later.
 		
 		// Select next frame's placeholder substitution segment.
 		m_substitutionSegIdx = ( m_substitutionSegIdx + 1 ) % m_segments.size();
@@ -808,7 +815,8 @@ namespace model
 													 Segment& segment, Renderer& renderer )
 	{
 		segment.m_front.insert( frontIt, frontNode );
-		renderer.handleNodeRendering( *frontNode.m_octreeNode );
+		
+		renderer.render_cloud( frontNode.m_octreeNode->cloud() );
 	}
 	
 	template< typename Morton >
@@ -816,7 +824,7 @@ namespace model
 															Renderer& renderer ) const
 	{
 		frontIt++;
-		renderer.handleNodeRendering( node );
+		renderer.render_cloud( node.cloud() );
 	}
 }
 

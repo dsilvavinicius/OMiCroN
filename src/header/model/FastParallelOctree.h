@@ -21,7 +21,7 @@ namespace model
 		using Dim = typename HierarchyCreator::OctreeDim;
 		using Front = model::Front< MortonCode >;
 		using NodeLoader = typename Front::NodeLoader;
-		using Renderer = StreamingRenderer< Point >;
+		using Renderer = SplatRenderer;
 		
 		typedef struct RuntimeSetup
 		{

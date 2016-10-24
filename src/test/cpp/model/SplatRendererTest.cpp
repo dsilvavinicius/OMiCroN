@@ -104,7 +104,7 @@ namespace model
 					Matrix4f transform = Matrix4f::Identity();
 				
 					m_renderer = new SplatRenderer( camera );
-					m_cloud = new SurfelCloud( transform, surfels );
+					m_cloud = new SurfelCloud( surfels, transform );
 				#else
 					Affine3f transform = Translation3f( -midPoint * scale ) * Scaling( scale );
 					m_mesh.setModelMatrix( transform );
@@ -131,7 +131,9 @@ namespace model
 			void paintGL() override
 			{
 				#ifdef USE_SPLAT
-					m_renderer->render_frame( *m_cloud );
+					m_renderer->begin_frame();
+					m_renderer->render_cloud( *m_cloud );
+					m_renderer->end_frame();
 				#else
 					glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 					

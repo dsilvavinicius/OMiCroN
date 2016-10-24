@@ -2,6 +2,7 @@
 #define GPU_ALLOC_STATISTICS_H
 
 #include "BasicTypes.h"
+#include "splat_renderer/surfel.hpp"
 #include <atomic>
 
 namespace model
@@ -26,12 +27,7 @@ namespace model
 	
 		static ulong pointSize()
 		{
-			return 7ul * sizeof( float ); // 4 floats for positions and 3 for normals.;
-		}
-		
-		static ulong extendedPointSize()
-		{
-			return 11ul * sizeof( float ); // 4 floats for positions, 4 for colors and 3 for normals.
+			return sizeof( Surfel );
 		}
 	
 	private:

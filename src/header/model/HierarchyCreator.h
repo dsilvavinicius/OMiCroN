@@ -28,8 +28,9 @@ namespace model
 	class HierarchyCreator
 	{
 	public:
-		using PointArray = Array< PointPtr >;
-		using Node = O1OctreeNode< PointPtr >;
+		using PointArray = Array< Surfel >;
+		using PointVector = vector< Surfel, TbbAllocator< Surfel > >;
+		using Node = O1OctreeNode< Surfel >;
 		using NodeArray = Array< Node >;
 		
 		using OctreeDim = OctreeDimensions< Morton >;
@@ -281,7 +282,20 @@ namespace model
 							currentParent = parent;
 						}
 						
-						points.push_back( makeManaged< Point >( p ) );
+						const Vec3& pos = p.getPos();
+						const Vec3& normal = p.getNormal();
+						
+						Vec3 pointOnPlane(
+							( normal.x() * pos.x() + normal.y() * pos.y() + normal.z() * pos.z() ) / normal.x(),
+							0.f, 0.f );
+						Vector3f u = pointOnPlane - pos;
+						u.normalize();
+						Vector3f v = normal.cross( u );
+			
+						u *= 0.003f;
+						v *= 0.003f;
+						
+						points.push_back( Surfel( pos, u, v ) );
 					}
 				);
 				
@@ -723,7 +737,7 @@ namespace model
 					}
 				}
 				
-				Array< PointPtr > selectedPoints = samplePoints( prefixMap, nPoints );
+				PointArray selectedPoints = samplePoints( prefixMap, nPoints );
 				nextFirstNode.setContents( std::move( selectedPoints ) );
 				nextFirstNode.setChildren( std::move( mergedChild ) );
 				
@@ -848,10 +862,10 @@ namespace model
 			m_front.insertPlaceholder( childMorton, threadIdx );
 		}
 		
-		const Array< PointPtr >& childPoints = child.getContents();
+		const PointArray& childPoints = child.getContents();
 		
 		int numSamplePoints = std::max( 1., childPoints.size() * 0.015625 );
-		Array< PointPtr > selectedPoints( numSamplePoints );
+		PointArray selectedPoints( numSamplePoints );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
@@ -914,7 +928,7 @@ namespace model
 				}
 			}
 			
-			Array< PointPtr > selectedPoints = samplePoints( prefixMap, nPoints );
+			PointArray selectedPoints = samplePoints( prefixMap, nPoints );
 			
 			Node node( std::move( selectedPoints ), false );
 			node.setChildren( std::move( children ) );
@@ -929,7 +943,7 @@ namespace model
 	{
 		// LoD has 1/8 of children points.
 		int numSamplePoints = std::max( 1., nPoints * 0.015625 );
-		Array< PointPtr > selectedPoints( numSamplePoints );
+		PointArray selectedPoints( numSamplePoints );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{

@@ -82,7 +82,7 @@ namespace model
 	{
 		if( node.loadState() == Node::UNLOADED )
 		{
-			node.setLoadState( Node::PENDING );
+			node.setPendingCloud();
 			m_iterLoad[ threadIdx ].push_back( &node );
 		}
 	}
@@ -92,7 +92,7 @@ namespace model
 	{
 		if( node.loadState() == Node::LOADED )
 		{
-			node.setLoadState( Node::PENDING );
+			node.setPendingCloud();
 			m_iterUnload[ threadIdx ].push_back( &node );
 		}
 	}

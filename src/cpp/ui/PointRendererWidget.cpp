@@ -68,7 +68,7 @@ void PointRendererWidget::resizeGL( int width, int height )
 
 	if( m_renderer )
 	{
-		m_renderer->getJumpFlooding().resize( width, height );
+		m_renderer->reshape( width, height );
 	}
 	
 	updateGL();
@@ -93,10 +93,10 @@ void PointRendererWidget::paintGL (void)
 	
 	updateFromKeyInput();
 	
-	if( Profiler::elapsedTime( m_inputEndTime ) > 1000 )
-	{
-		m_renderer->selectEffect( Renderer::JUMP_FLOODING );
-	}
+// 	if( Profiler::elapsedTime( m_inputEndTime ) > 1000 )
+// 	{
+// 		m_renderer->selectEffect( Renderer::JUMP_FLOODING );
+// 	}
 	
 	auto frameStart = Profiler::now();
 	makeCurrent();
@@ -104,8 +104,6 @@ void PointRendererWidget::paintGL (void)
 	#ifdef ADAPTIVE_PROJ
 		adaptRenderingThresh();
 	#endif
-	
-	m_renderer->setupRendering();
 	
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
@@ -147,9 +145,9 @@ void PointRendererWidget::paintGL (void)
 	if( m_drawAuxViewports )
 	{
 		glEnable( GL_SCISSOR_TEST );
-		renderAuxViewport( FRONT );
-		renderAuxViewport( SIDE );
-		renderAuxViewport( TOP );
+// 		renderAuxViewport( FRONT );
+// 		renderAuxViewport( SIDE );
+// 		renderAuxViewport( TOP );
 		glDisable( GL_SCISSOR_TEST );
 	}
 	
@@ -158,81 +156,82 @@ void PointRendererWidget::paintGL (void)
 
 void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 {
-	Vector2f viewportPos;
-	
-	switch( viewport )
-	{
-		case FRONT: viewportPos[ 0 ] = 0.f; viewportPos[ 1 ] = 0.f; break;
-		case SIDE: viewportPos[ 0 ] = size().width() * 0.333f; viewportPos[ 1 ] = 0.f; break;
-		case TOP: viewportPos[ 0 ] = size().width() * 0.666f; viewportPos[ 1 ] = 0.f; break;
-	}
-	
-	Vector4f auxViewportSize( viewportPos[ 0 ], viewportPos[ 1 ], size().width() * 0.333f, size().height() * 0.333f );
-	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
-	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
-	
-	Trackball tempCamera;
-	tempCamera.setViewport( auxViewportSize );
-	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 10000.0f );
-	tempCamera.resetViewMatrix();
-	
-	switch( viewport )
-	{
-		case FRONT:
-		{
-			 tempCamera.translate( Vector3f( 0.f, 0.f, -200.f ) );
-			 break;
-		}
-		case SIDE:
-		{
-			tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
-			tempCamera.translate( Vector3f( 200.f, 0.f, 0.f ) );
-			break;
-		}
-		case TOP:
-		{
-			tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitX() ) ) );
-			tempCamera.translate( Vector3f( 0.f, -200.f, 0.f ) );
-			break;
-		}
-	}
-	
-	Phong &phong = m_renderer->getPhong();
-	phong.render( mesh, tempCamera, light_trackball );
+// 	Vector2f viewportPos;
+// 	
+// 	switch( viewport )
+// 	{
+// 		case FRONT: viewportPos[ 0 ] = 0.f; viewportPos[ 1 ] = 0.f; break;
+// 		case SIDE: viewportPos[ 0 ] = size().width() * 0.333f; viewportPos[ 1 ] = 0.f; break;
+// 		case TOP: viewportPos[ 0 ] = size().width() * 0.666f; viewportPos[ 1 ] = 0.f; break;
+// 	}
+// 	
+// 	Vector4f auxViewportSize( viewportPos[ 0 ], viewportPos[ 1 ], size().width() * 0.333f, size().height() * 0.333f );
+// 	glScissor( auxViewportSize.x(), auxViewportSize.y(), auxViewportSize.z(), auxViewportSize.w() );
+// 	glClear( GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT );
+// 	
+// 	Trackball tempCamera;
+// 	tempCamera.setViewport( auxViewportSize );
+// 	tempCamera.setPerspectiveMatrix( tempCamera.getFovy(), auxViewportSize.z() / auxViewportSize.w(), 0.1f, 10000.0f );
+// 	tempCamera.resetViewMatrix();
+// 	
+// 	switch( viewport )
+// 	{
+// 		case FRONT:
+// 		{
+// 			 tempCamera.translate( Vector3f( 0.f, 0.f, -200.f ) );
+// 			 break;
+// 		}
+// 		case SIDE:
+// 		{
+// 			tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitY() ) ) );
+// 			tempCamera.translate( Vector3f( 200.f, 0.f, 0.f ) );
+// 			break;
+// 		}
+// 		case TOP:
+// 		{
+// 			tempCamera.rotate( Quaternionf( AngleAxisf( 0.5 * M_PI, Vector3f::UnitX() ) ) );
+// 			tempCamera.translate( Vector3f( 0.f, -200.f, 0.f ) );
+// 			break;
+// 		}
+// 	}
+// 	
+// 	
+// 	Phong &phong = m_renderer->getPhong();
+// 	phong.render( mesh, tempCamera, light_trackball );
 }
 
 void PointRendererWidget::keyPressEvent( QKeyEvent * event )
 {
 	m_inputEndTime = Profiler::now();
-	m_renderer->selectEffect( Renderer::PHONG );
+// 	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = true;
 }
 
 void PointRendererWidget::keyReleaseEvent( QKeyEvent * event )
 {
 	m_inputEndTime = Profiler::now();
-	m_renderer->selectEffect( Renderer::PHONG );
+// 	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = false;
 }
 
 void PointRendererWidget::mousePressEvent( QMouseEvent * event )
 {
 	m_inputEndTime = Profiler::now();
-	m_renderer->selectEffect( Renderer::PHONG );
+// 	m_renderer->selectEffect( Renderer::PHONG );
 	QtFreecameraWidget::mousePressEvent( event );
 }
 
 void PointRendererWidget::mouseMoveEvent( QMouseEvent * event )
 {
 	m_inputEndTime = Profiler::now();
-	m_renderer->selectEffect( Renderer::PHONG );
+// 	m_renderer->selectEffect( Renderer::PHONG );
 	QtFreecameraWidget::mouseMoveEvent( event );
 }
 
 void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
 {
 	m_inputEndTime = Profiler::now();
-	m_renderer->selectEffect( Renderer::PHONG );
+// 	m_renderer->selectEffect( Renderer::PHONG );
 	QtFreecameraWidget::mouseReleaseEvent( event );
 }
 
@@ -266,21 +265,21 @@ void PointRendererWidget::updateFromKeyInput()
 
 void PointRendererWidget::toggleWriteFrames()
 {
-	m_renderer->getJumpFlooding().toggleWriteFrames();	
-	updateGL();
+// 	m_renderer->getJumpFlooding().toggleWriteFrames();	
+// 	updateGL();
 }
 
 void PointRendererWidget::toggleEffect( int id )
 {
-	m_renderer->selectEffect( ( Renderer::Effect ) id );
-	updateGL();
+// 	m_renderer->selectEffect( ( Renderer::Effect ) id );
+// 	updateGL();
 }
 
 void PointRendererWidget::reloadShaders( void )
 {
-	m_renderer->getPhong().reloadShaders();
-	m_renderer->getJumpFlooding().reloadShaders();
-	updateGL();
+// 	m_renderer->getPhong().reloadShaders();
+// 	m_renderer->getJumpFlooding().reloadShaders();
+// 	updateGL();
 }
 
 void PointRendererWidget::setFrameRate( const unsigned int& frameRate )
@@ -290,8 +289,8 @@ void PointRendererWidget::setFrameRate( const unsigned int& frameRate )
 
 void PointRendererWidget::setJFPBRFirstMaxDistance( double value )
 {
-	m_renderer->getJumpFlooding().setFirstMaxDistance( ( float )value );
-	updateGL();
+// 	m_renderer->getJumpFlooding().setFirstMaxDistance( ( float )value );
+// 	updateGL();
 }
 
 void PointRendererWidget::toggleDrawTrackball( void )
@@ -314,7 +313,7 @@ void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 
 void PointRendererWidget::setJfpbrFrameskip( const int& value )
 {
-	m_renderer->setJfpbrFrameskip( value );
+// 	m_renderer->setJfpbrFrameskip( value );
 }
 	
 void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
@@ -363,7 +362,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new Renderer( camera, &light_trackball, "shaders/tucano/" );
+	m_renderer = new Renderer( camera/**, &light_trackball, "shaders/tucano/"*/ );
 	
 	cout << "Renderer built." << endl;
 	

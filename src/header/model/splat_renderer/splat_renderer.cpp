@@ -80,55 +80,9 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
     unbind();
 }
 
-
-SurfelCloud::SurfelCloud( const Matrix4f& model, const model::Array< Surfel >& surfels )
-: m_model( model )
-{
-	glGenBuffers(1, &m_vbo);
-
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-
-    // Center c.
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
-
-    // Tagent vector u.
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
-
-    // Tangent vector v.
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
-	
-	m_numPts = static_cast< uint >( surfels.size() );
-	
-	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
-	
-	glBindVertexArray(0);
-}
-
-SurfelCloud::~SurfelCloud()
-{
-	glDeleteVertexArrays( 1, &m_vao );
-    glDeleteBuffers( 1, &m_vbo );
-}
-
-void SurfelCloud::render() const
-{
-	glBindVertexArray( m_vao );
-	glDrawArrays( GL_POINTS, 0, m_numPts );
-	glBindVertexArray( 0 );
-}
-
 SplatRenderer::SplatRenderer( Tucano::Camera* camera )
-    : m_camera(camera), m_soft_zbuffer(true), m_smooth(false),
+    : m_camera(camera), m_frustum( *camera ),
+	  m_soft_zbuffer(true), m_smooth(false),
       m_ewa_filter(false), m_multisample(false),
       m_pointsize_method(0), m_backface_culling(false),
       m_color(Vector3f(0.0, 0.25f, 1.0f)), m_epsilon(5.0f * 1e-3f),
@@ -456,61 +410,12 @@ SplatRenderer::setup_uniforms( glProgram& program, const Matrix4f& modelView )
 }
 
 void
-SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_only )
-{ 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_PROGRAM_POINT_SIZE);
-
-    if (!depth_only && m_soft_zbuffer)
-    {
-        glEnable(GL_BLEND);
-        glBlendEquationSeparate(GL_FUNC_ADD, GL_FUNC_ADD);
-        glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
-    }
-
-    glProgram &program = depth_only ? m_visibility : m_attribute;
-
-    program.use();
-
-    if (depth_only)
-    {
-        glDepthMask(GL_TRUE);
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-    }
-    else
-    {
-        if (m_soft_zbuffer)
-            glDepthMask(GL_FALSE);
-        else
-            glDepthMask(GL_TRUE);
-
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    }
-	
-    setup_uniforms( program, m_camera->getViewMatrix().matrix() * cloud.model() );
-
-    if (!depth_only && m_soft_zbuffer && m_ewa_filter)
-    {
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_1D, m_filter_kernel);
-
-        program.set_uniform_1i("filter_kernel", 1);
-    }
-
-    cloud.render();
-
-    program.unuse();
-
-    glDisable(GL_PROGRAM_POINT_SIZE);
-    glDisable(GL_BLEND);
-    glDisable(GL_DEPTH_TEST);
-}
-
-void
 SplatRenderer::begin_frame()
 {
     m_fbo.bind();
 
+	m_frustum.update( *m_camera );
+	
     glDepthMask(GL_TRUE);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     
@@ -576,39 +481,8 @@ SplatRenderer::end_frame()
     glBindVertexArray(m_rect_vao);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     glBindVertexArray(0);
-}
-
-void
-SplatRenderer::render_frame( const SurfelCloud& cloud )
-{
-    begin_frame();
-
-    if ( cloud.numPoints() > 0)
-    {
-        if (m_multisample)
-        {
-            glEnable(GL_MULTISAMPLE);
-            glEnable(GL_SAMPLE_SHADING);
-            glMinSampleShading(4.0);
-        }
-
-        if (m_soft_zbuffer)
-        {
-            render_pass( cloud, true);
-        }
-
-        render_pass( cloud, false );
-
-        if (m_multisample)
-        {
-            glDisable(GL_MULTISAMPLE);
-            glDisable(GL_SAMPLE_SHADING);
-        }
-    }
-
-    end_frame();
-
-#ifndef NDEBUG
-	util::OglUtils::checkOglErrors();
-#endif
+	
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
 }

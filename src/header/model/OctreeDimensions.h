@@ -61,7 +61,7 @@ namespace model
 		template< typename Node >
 		M calcMorton( const Node& node ) const
 		{
-			return calcMorton( *( node.getContents()[ 0 ] ) );
+			return calcMorton( node.getContents()[ 0 ] );
 		}
 		
 		/** Returns the boundaries of the node identified by the given MortonCode */
