@@ -62,8 +62,11 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 
 inline SurfelCloud::~SurfelCloud()
 {
-	glDeleteVertexArrays( 1, &m_vao );
-    glDeleteBuffers( 1, &m_vbo );
+	if( m_vao )
+	{
+		glDeleteVertexArrays( 1, &m_vao );
+		glDeleteBuffers( 1, &m_vbo );
+	}
 }
 
 inline void SurfelCloud::render() const
