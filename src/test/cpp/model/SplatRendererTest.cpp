@@ -6,28 +6,43 @@
 // #include "splat_renderer/surfel.hpp"
 
 #include "OglUtils.h"
-#include <PlyPointWritter.h>
+#include "PlyPointWritter.h"
 #include "phongshader.hpp"
+#include "NodeLoader.h"
+#include "GLHiddenWidget.h"
 
 using namespace std;
 using namespace util;
 using namespace Tucano;
 
 #define USE_SPLAT
+#define N_SEGMENTS 4
 
 namespace model
 {
 	namespace test
 	{
+		using SurfelArray = Array< Surfel >;
+		using Node = O1OctreeNode< Surfel >;
+		using Siblings = Array< Node >;
+		using NodeLoader = model::NodeLoader< Surfel >;
+		
 		class SplatRendererTestWidget
 		: public QtFreecameraWidget
 		{
 		public:
-			SplatRendererTestWidget( QWidget *parent = 0 )
-			: QtFreecameraWidget( parent )
-			
 			#ifdef USE_SPLAT
-				, m_renderer( nullptr )
+				SplatRendererTestWidget( NodeLoader& loader, QWidget *parent = 0 )
+				: QtFreecameraWidget( parent, loader.widget() ),
+				m_loader( loader ),
+				m_siblings( N_SEGMENTS ),
+				m_surfels( N_SEGMENTS ),
+				m_clouds( N_SEGMENTS ),
+				m_renderer( nullptr ),
+				m_segment( 0 )
+			#else
+				SplatRendererTestWidget( QWidget *parent = 0 )
+				: QtFreecameraWidget( parent )
 			#endif
 			
 			{}
@@ -36,7 +51,11 @@ namespace model
 			{
 				#ifdef USE_SPLAT
 					delete m_renderer;
-					delete m_cloud;
+					
+					for( SurfelCloud* cloud : m_clouds )
+					{
+						delete cloud;
+					}
 				#endif
 			}
 			
@@ -52,13 +71,23 @@ namespace model
 				Vec3 maxCoords( negInf, negInf, negInf );
 			
 				#ifdef USE_SPLAT
-					Array< Surfel > surfels( reader.getNumPoints() );
-					auto surfelIter = surfels.begin();
+					int nSurfels = reader.getNumPoints();
+					int surfelsPerSegment = ceil( float( nSurfels ) / N_SEGMENTS );
+					
+					for( int segment = 0; nSurfels > 0; nSurfels -= surfelsPerSegment )
+					{
+						int segmentSurfels = ( nSurfels - surfelsPerSegment >= 0 ) ?
+							surfelsPerSegment : nSurfels - surfelsPerSegment;
+						
+						m_surfels[ segment++ ] = SurfelArray( segmentSurfels );
+					}
 				#else
 					vector< Vector4f > vertices;
 					vector< Vector3f > normals;
 				#endif
 				
+				int pointIdx = 0;
+					
 				reader.read(
 					[ & ]( const Point& p )
 					{
@@ -77,7 +106,10 @@ namespace model
 							v *= 0.003f;
 						
 							Surfel s( pos, u, v );
-							*surfelIter++ = s;
+							
+							int segmentIdx = pointIdx / surfelsPerSegment;
+							int surfelIdx = pointIdx++ % surfelsPerSegment;
+							m_surfels[ segmentIdx ][ surfelIdx ] = s;
 						#else
 							vertices.push_back( Vector4f( pos.x(), pos.y(), pos.z(), 1.f ) );
 							normals.push_back( normal );
@@ -96,15 +128,26 @@ namespace model
 				Vec3 midPoint = ( origin + maxCoords ) * 0.5f;
 				
 				#ifdef USE_SPLAT
-					for( Surfel& surfel : surfels )
+					for( SurfelArray& surfelArray : m_surfels )
 					{
-						surfel.c = ( surfel.c - midPoint ) * scale;
+						for( Surfel& surfel : surfelArray )
+						{
+							surfel.c = ( surfel.c - midPoint ) * scale;
+						}
 					}
 // 					Matrix4f transform = Translation3f( -midPoint * scale ) * Scaling( scale ).matrix();
 					Matrix4f transform = Matrix4f::Identity();
 				
 					m_renderer = new SplatRenderer( camera );
-					m_cloud = new SurfelCloud( surfels, transform );
+					
+					for( int i = 0; i < N_SEGMENTS; ++i )
+					{
+						m_siblings[ i ] = Node( m_surfels[ i ], true );
+						m_clouds[ i ] = new SurfelCloud( m_siblings[ i ].getContents(), transform );
+						m_loader.asyncLoad( m_siblings[ i ], 0 );
+						
+						OglUtils::checkOglErrors();
+					}
 				#else
 					Affine3f transform = Translation3f( -midPoint * scale ) * Scaling( scale );
 					m_mesh.setModelMatrix( transform );
@@ -130,27 +173,118 @@ namespace model
 			
 			void paintGL() override
 			{
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				
 				#ifdef USE_SPLAT
 					m_renderer->begin_frame();
-					m_renderer->render_cloud( *m_cloud );
-					m_renderer->end_frame();
-				#else
-					glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 					
-					Effects::Phong phong;
-					phong.setShadersDir( "../shaders/tucano/" );
-					phong.initialize();
-					phong.render( m_mesh, *camera, light_trackball );
+					if( !m_siblings.empty() )
+					{
+						if( m_siblings[ 0 ].loadState() == Node::LOADED )
+						{
+							if( m_segment == N_SEGMENTS )
+							{
+								for( SurfelCloud* cloud : m_clouds )
+								{
+									m_renderer->render_cloud( *cloud );
+								}
+							}
+							else
+							{
+								m_renderer->render_cloud( *m_clouds[ m_segment ] );
+							}
+						}
+						else
+						{
+				#else
+							Effects::Phong phong;
+							phong.setShadersDir( "../shaders/tucano/" );
+							phong.initialize();
+							phong.render( m_mesh, *camera, light_trackball );
 				#endif
 				
-				OglUtils::checkOglErrors();
+							OglUtils::checkOglErrors();
+							
+				#ifdef USE_SPLAT
+						}
+					}
+					
+					m_renderer->end_frame();
+					m_loader.onIterationEnd();
+				#endif
+				
 				camera->renderAtCorner();
 			}
+			
+			#ifdef USE_SPLAT
+				void keyPressEvent( QKeyEvent * event ) override
+				{
+					QtFlycameraWidget::keyPressEvent( event );
+					
+					switch( event->key() )
+					{
+						case Qt::Key_F1 :
+						{
+							if( !m_siblings.empty() )
+							{
+								for( Node& sibling : m_siblings )
+								{
+									m_loader.asyncLoad( sibling, 0 );
+								}
+							}
+							break;
+						}
+						case Qt::Key_F2 :
+						{
+							if( !m_siblings.empty() )
+							{
+								for( Node& sibling : m_siblings )
+								{
+									m_loader.asyncUnload( sibling, 0 );
+								}
+							}
+							break;
+						}
+						case Qt::Key_F3 :
+						{
+							if( m_siblings.empty() )
+							{
+								m_siblings = Siblings( N_SEGMENTS );
+								
+								for( int i = 0; i < N_SEGMENTS; ++i )
+								{
+									m_siblings[ i ] = Node( m_surfels[ i ], true );
+									m_loader.asyncLoad( m_siblings[ i ], 0 );
+								}
+							}
+							break;
+						}
+						case Qt::Key_F4 :
+						{
+							m_loader.asyncRelease( std::move( m_siblings ), 0 );
+							break;
+						}
+						case Qt::Key_F5 :
+						{
+							m_segment = ( m_segment + 1 ) % ( N_SEGMENTS + 1 );
+							break;
+						}
+						
+						m_loader.onIterationEnd();
+						OglUtils::checkOglErrors();
+					}
+					
+				}
+			#endif
 			
 		private:
 			#ifdef USE_SPLAT
 				SplatRenderer* m_renderer;
-				SurfelCloud* m_cloud;
+				NodeLoader& m_loader;
+				Array< SurfelCloud* > m_clouds;
+				Array< SurfelArray > m_surfels;
+				Siblings m_siblings;
+				int m_segment;
 			#else
 				Mesh m_mesh;
 			#endif
@@ -165,12 +299,28 @@ namespace model
 		TEST_F( SplatRendererTest, All )
 		{
 			{
-				SplatRendererTestWidget widget;
-				widget.initialize();
-				widget.show();
-				widget.resize( 640, 480 );
+				#ifdef USE_SPLAT
+					GLHiddenWidget hiddenWidget;
+					NodeLoaderThread loaderThread( &hiddenWidget, 900ul * 1024ul * 1024ul );
+					NodeLoader loader( &loaderThread, 1 );
+				#endif
+			
+				{
+					SplatRendererTestWidget widget(
+						#ifdef USE_SPLAT
+							loader
+						#endif
+					);
+					widget.initialize();
+					widget.show();
+					widget.resize( 640, 480 );
 
-				QApplication::exec();
+					QApplication::exec();
+				}
+				
+				#ifdef USE_SPLAT
+					ASSERT_EQ( 0, loader.memoryUsage() );
+				#endif
 			}
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 		}

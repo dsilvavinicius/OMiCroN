@@ -4,7 +4,6 @@
 #include <memory>
 #include "tucano.hpp"
 #include "Array.h"
-#include "GpuAllocStatistics.h"
 #include "splat_renderer/surfel_cloud.h"
 
 using namespace std;
@@ -210,12 +209,6 @@ namespace model
 	inline O1OctreeNode< Contents, ContentsAlloc >::~O1OctreeNode()
 	{
 		m_parent = nullptr;
-		
-		if( m_loadState == LOADED )
-		{
-			ulong pointSize = GpuAllocStatistics::pointSize();
-			GpuAllocStatistics::notifyDealloc( pointSize * m_contents.size() );
-		}
 	}
 	
 	template< typename Contents, typename ContentsAlloc >

@@ -1,19 +1,19 @@
-#include <gtest/gtest.h>
-#include <utils/qtflycamerawidget.hpp>
-#include <QApplication>
-#include "PlyPointReader.h"
-#include "renderers/StreamingRenderer.h"
-#include "NodeLoader.h"
-#include "OglUtils.h"
-#include <GLHiddenWidget.h>
-
-using namespace std;
-using namespace util;
-
-namespace model
-{
-	namespace test
-	{
+// #include <gtest/gtest.h>
+// #include <utils/qtflycamerawidget.hpp>
+// #include <QApplication>
+// #include "PlyPointReader.h"
+// #include "renderers/StreamingRenderer.h"
+// #include "NodeLoader.h"
+// #include "OglUtils.h"
+// #include <GLHiddenWidget.h>
+// 
+// using namespace std;
+// using namespace util;
+// 
+// namespace model
+// {
+// 	namespace test
+// 	{
 // 		class StreamingRendererTestWidget
 // 		: public QtFlycameraWidget
 // 		{
@@ -182,5 +182,5 @@ namespace model
 // 			}
 // 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 // 		}
-	}
-}
+// 	}
+// }

@@ -146,8 +146,6 @@ namespace model
 		{
 			SurfelCloud cloud( points );
 			node.loadCloud( cloud );
-			
-			GpuAllocStatistics::notifyAlloc( neededGpuMem );
 		}
 	}
 	
@@ -161,7 +159,6 @@ namespace model
 			}
 		}
 		
-		GpuAllocStatistics::notifyDealloc( GpuAllocStatistics::pointSize() * node.getContents().size() );
 		node.unloadCloud();
 	}
 	

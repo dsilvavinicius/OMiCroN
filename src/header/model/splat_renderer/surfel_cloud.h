@@ -3,6 +3,9 @@
 
 #include "splat_renderer/surfel.hpp"
 #include "Array.h"
+#include "GpuAllocStatistics.h"
+
+using namespace model;
 
 class SurfelCloud
 {
@@ -28,36 +31,48 @@ m_model( Eigen::Matrix4f::Identity() )
 {}
 
 inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Matrix4f& model )
-: m_model( model )
 {
-	glGenBuffers(1, &m_vbo);
+	if( !surfels.empty() )
+	{
+		m_model = model;
+		m_numPts = static_cast< uint >( surfels.size() );
+		
+		GpuAllocStatistics::notifyAlloc( m_numPts * GpuAllocStatistics::pointSize() );
+		
+		glGenBuffers(1, &m_vbo);
 
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
+		glGenVertexArrays(1, &m_vao);
+		glBindVertexArray(m_vao);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 
-    // Center c.
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
+		// Center c.
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+			sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
 
-    // Tagent vector u.
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
+		// Tagent vector u.
+		glEnableVertexAttribArray(1);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+			sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
 
-    // Tangent vector v.
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-        sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
-	
-	m_numPts = static_cast< uint >( surfels.size() );
-	
-	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
-	
-	glBindVertexArray(0);
+		// Tangent vector v.
+		glEnableVertexAttribArray(2);
+		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+			sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
+		
+		glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
+		
+		glBindVertexArray(0);
+	}
+	else
+	{
+		m_vbo = 0;
+		m_vao = 0;
+		m_numPts = 0;
+		m_model = Eigen::Matrix4f::Identity();
+	}
 }
 
 inline SurfelCloud::~SurfelCloud()
@@ -66,6 +81,8 @@ inline SurfelCloud::~SurfelCloud()
 	{
 		glDeleteVertexArrays( 1, &m_vao );
 		glDeleteBuffers( 1, &m_vbo );
+		
+		GpuAllocStatistics::notifyDealloc( m_numPts * GpuAllocStatistics::pointSize() );
 	}
 }
 

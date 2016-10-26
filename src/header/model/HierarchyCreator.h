@@ -292,8 +292,8 @@ namespace model
 						u.normalize();
 						Vector3f v = normal.cross( u );
 			
-						u *= 0.003f;
-						v *= 0.003f;
+						u *= 0.00000001f;
+						v *= 0.00000001f;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}
