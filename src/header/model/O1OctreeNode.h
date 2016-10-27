@@ -161,11 +161,11 @@ namespace model
 		
 		const SurfelCloud& cloud() const { return m_cloud; }
 		
-		SurfelCloud& cloud() { return m_cloud; }
+// 		SurfelCloud& cloud() { return m_cloud; }
 		
-		void loadCloud( const SurfelCloud& cloud )
+		void loadCloud( const ContentsArray& contents )
 		{
-			m_cloud = cloud;
+			m_cloud = SurfelCloud( contents );
 			m_loadState = LoadState::LOADED;
 		}
 		

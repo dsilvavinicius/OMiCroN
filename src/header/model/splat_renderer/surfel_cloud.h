@@ -4,6 +4,7 @@
 #include "splat_renderer/surfel.hpp"
 #include "Array.h"
 #include "GpuAllocStatistics.h"
+#include "OglUtils.h"
 
 using namespace model;
 
@@ -12,12 +13,21 @@ class SurfelCloud
 public:
 	SurfelCloud();
 	SurfelCloud( const model::Array< Surfel >& surfels, const Eigen::Matrix4f& model = Eigen::Matrix4f::Identity() );
+	SurfelCloud( const SurfelCloud& other ) = delete;
+	SurfelCloud( SurfelCloud&& other );
 	~SurfelCloud();
+	
+	SurfelCloud& operator=( const SurfelCloud& other ) = delete;
+	SurfelCloud& operator=( SurfelCloud&& other );
+	
 	void render() const;
 	uint numPoints() const { return m_numPts; }
 	const Matrix4f& model() const { return m_model; }
 	
 private:
+	void clean();
+	void shallowClean();
+	
 	GLuint m_vbo, m_vao;
     uint m_numPts;
 	Matrix4f m_model;
@@ -75,7 +85,56 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 	}
 }
 
+inline SurfelCloud::SurfelCloud( SurfelCloud&& other )
+: m_vbo( other.m_vbo ),
+m_vao( other.m_vao ),
+m_numPts( other.m_numPts ),
+m_model( other.m_model )
+{
+	other.shallowClean();
+}
+
+inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
+{
+	clean();
+	
+	m_vbo = other.m_vbo;
+	m_vao = other.m_vao;
+	m_numPts = other.m_numPts;
+	m_model = other.m_model;
+	
+	other.shallowClean();
+	
+	return *this;
+}
+
 inline SurfelCloud::~SurfelCloud()
+{
+	clean();
+}
+
+inline void SurfelCloud::render() const
+{
+	glBindVertexArray( m_vao );
+	
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
+	
+	glDrawArrays( GL_POINTS, 0, m_numPts );
+	
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
+		
+	glBindVertexArray( 0 );
+	
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
+}
+
+inline void SurfelCloud::clean()
 {
 	if( m_vao )
 	{
@@ -86,11 +145,12 @@ inline SurfelCloud::~SurfelCloud()
 	}
 }
 
-inline void SurfelCloud::render() const
+inline void SurfelCloud::shallowClean()
 {
-	glBindVertexArray( m_vao );
-	glDrawArrays( GL_POINTS, 0, m_numPts );
-	glBindVertexArray( 0 );
+	m_vbo = 0;
+	m_vao = 0;
+	m_numPts = 0;
+	m_model = Matrix4f::Identity();
 }
 
 #endif

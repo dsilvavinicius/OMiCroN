@@ -428,6 +428,36 @@ SplatRenderer::begin_frame()
 void
 SplatRenderer::end_frame()
 {
+	if (m_multisample)
+	{
+		glEnable(GL_MULTISAMPLE);
+		glEnable(GL_SAMPLE_SHADING);
+		glMinSampleShading(4.0);
+	}
+
+	if (m_soft_zbuffer)
+	{
+		render_pass( true);
+	}
+
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
+	
+	render_pass( false );
+	
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
+
+	m_toRender.clear();
+	
+	if (m_multisample)
+	{
+		glDisable(GL_MULTISAMPLE);
+		glDisable(GL_SAMPLE_SHADING);
+	}
+	
     m_fbo.unbind();
 
     if (m_multisample)

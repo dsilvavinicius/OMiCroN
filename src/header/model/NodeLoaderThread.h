@@ -144,8 +144,7 @@ namespace model
 		
 		if( memoryUsage() + neededGpuMem < m_totalGpuMem )
 		{
-			SurfelCloud cloud( points );
-			node.loadCloud( cloud );
+			node.loadCloud( points );
 		}
 	}
 	

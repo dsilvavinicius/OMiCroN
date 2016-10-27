@@ -30,6 +30,7 @@
 #include "splat_renderer/surfel_cloud.h"
 #include "Array.h"
 #include "utils/frustum.hpp"
+#include "OglUtils.h"
 
 class UniformBufferRaycast : public GLviz::glUniformBuffer
 {
@@ -118,12 +119,16 @@ private:
 	
     void setup_uniforms( glProgram& program, const Matrix4f& modelView );
 
-    void render_pass( const SurfelCloud& cloud,  bool depth_only = false );
+    void render_pass( bool depth_only = false );
 
 private:
+	using RenderingVector = vector< const SurfelCloud*, TbbAllocator< const SurfelCloud* > >;
+	
     Tucano::Camera* m_camera;
 	Tucano::Frustum m_frustum;
 
+	RenderingVector m_toRender;
+	
     GLuint m_rect_vertices_vbo, m_rect_texture_uv_vbo,
         m_rect_vao, m_filter_kernel;
 
@@ -145,28 +150,7 @@ private:
 
 inline void SplatRenderer::render_cloud( const SurfelCloud& cloud )
 {
-	if ( cloud.numPoints() > 0)
-    {
-        if (m_multisample)
-        {
-            glEnable(GL_MULTISAMPLE);
-            glEnable(GL_SAMPLE_SHADING);
-            glMinSampleShading(4.0);
-        }
-
-        if (m_soft_zbuffer)
-        {
-            render_pass( cloud, true);
-        }
-
-        render_pass( cloud, false );
-
-        if (m_multisample)
-        {
-            glDisable(GL_MULTISAMPLE);
-            glDisable(GL_SAMPLE_SHADING);
-        }
-    }
+	m_toRender.push_back( &cloud );
 }
 
 inline bool SplatRenderer::isCullable( const AlignedBox3f& box ) const
@@ -203,7 +187,7 @@ inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float pr
 	return maxDiagLength < projThresh;
 }
 
-inline void SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_only )
+inline void SplatRenderer::render_pass( bool depth_only )
 { 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -218,7 +202,7 @@ inline void SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_onl
     glProgram &program = depth_only ? m_visibility : m_attribute;
 
     program.use();
-
+	
     if (depth_only)
     {
         glDepthMask(GL_TRUE);
@@ -234,8 +218,8 @@ inline void SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_onl
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
 	
-    setup_uniforms( program, m_camera->getViewMatrix().matrix() * cloud.model() );
-
+    setup_uniforms( program, m_camera->getViewMatrix().matrix()/* * cloud.model()*/ );
+	
     if (!depth_only && m_soft_zbuffer && m_ewa_filter)
     {
         glActiveTexture(GL_TEXTURE1);
@@ -243,9 +227,12 @@ inline void SplatRenderer::render_pass( const SurfelCloud& cloud, bool depth_onl
 
         program.set_uniform_1i("filter_kernel", 1);
     }
-
-    cloud.render();
-
+    
+    for( const SurfelCloud* cloud : m_toRender )
+	{
+		cloud->render();
+	}
+	
     program.unuse();
 
     glDisable(GL_PROGRAM_POINT_SIZE);

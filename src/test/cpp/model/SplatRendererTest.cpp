@@ -37,7 +37,6 @@ namespace model
 				m_loader( loader ),
 				m_siblings( N_SEGMENTS ),
 				m_surfels( N_SEGMENTS ),
-				m_clouds( N_SEGMENTS ),
 				m_renderer( nullptr ),
 				m_segment( 0 )
 			#else
@@ -51,11 +50,6 @@ namespace model
 			{
 				#ifdef USE_SPLAT
 					delete m_renderer;
-					
-					for( SurfelCloud* cloud : m_clouds )
-					{
-						delete cloud;
-					}
 				#endif
 			}
 			
@@ -143,7 +137,6 @@ namespace model
 					for( int i = 0; i < N_SEGMENTS; ++i )
 					{
 						m_siblings[ i ] = Node( m_surfels[ i ], true );
-						m_clouds[ i ] = new SurfelCloud( m_siblings[ i ].getContents(), transform );
 						m_loader.asyncLoad( m_siblings[ i ], 0 );
 						
 						OglUtils::checkOglErrors();
@@ -184,14 +177,14 @@ namespace model
 						{
 							if( m_segment == N_SEGMENTS )
 							{
-								for( SurfelCloud* cloud : m_clouds )
+								for( const Node& node : m_siblings )
 								{
-									m_renderer->render_cloud( *cloud );
+									m_renderer->render_cloud( node.cloud() );
 								}
 							}
 							else
 							{
-								m_renderer->render_cloud( *m_clouds[ m_segment ] );
+								m_renderer->render_cloud( m_siblings[ m_segment ].cloud() );
 							}
 						}
 						else
@@ -281,7 +274,6 @@ namespace model
 			#ifdef USE_SPLAT
 				SplatRenderer* m_renderer;
 				NodeLoader& m_loader;
-				Array< SurfelCloud* > m_clouds;
 				Array< SurfelArray > m_surfels;
 				Siblings m_siblings;
 				int m_segment;
