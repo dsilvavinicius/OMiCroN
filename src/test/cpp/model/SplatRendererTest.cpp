@@ -134,13 +134,16 @@ namespace model
 				
 					m_renderer = new SplatRenderer( camera );
 					
-					for( int i = 0; i < N_SEGMENTS; ++i )
+					for( int i = 0; i < /*N_SEGMENTS*/ 1; ++i )
 					{
 						m_siblings[ i ] = Node( m_surfels[ i ], true );
+// 						m_siblings[ i ].loadGPU();
 						m_loader.asyncLoad( m_siblings[ i ], 0 );
 						
 						OglUtils::checkOglErrors();
 					}
+					m_loader.onIterationEnd();
+					
 				#else
 					Affine3f transform = Translation3f( -midPoint * scale ) * Scaling( scale );
 					m_mesh.setModelMatrix( transform );
@@ -166,43 +169,46 @@ namespace model
 			
 			void paintGL() override
 			{
+				makeCurrent();
+				
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
 				#ifdef USE_SPLAT
-					m_renderer->begin_frame();
-					
 					if( !m_siblings.empty() )
 					{
-						if( m_siblings[ 0 ].loadState() == Node::LOADED )
-						{
-							if( m_segment == N_SEGMENTS )
-							{
-								for( const Node& node : m_siblings )
+// 						if( m_segment == N_SEGMENTS )
+// 						{
+// 							for( const Node& node : m_siblings )
+// // 							for( int i = 0; i < N_SEGMENTS - 1; ++i )
+// 							{
+// 								const Node& node = m_siblings[ i ];
+								const Node& node = m_siblings[ 0 ];
+								if( node.loadState() == Node::LOADED )
 								{
 									m_renderer->render_cloud( node.cloud() );
 								}
-							}
-							else
-							{
-								m_renderer->render_cloud( m_siblings[ m_segment ].cloud() );
-							}
-						}
-						else
-						{
+// 							}
+// 						}
+// 						else
+// 						{
+// 							const Node& node = m_siblings[ m_segment ];
+// 							if( node.loadState() == Node::LOADED )
+// 							{
+// 								m_renderer->render_cloud( node.cloud() );
+// 							}
+// 						}
+					}
 				#else
-							Effects::Phong phong;
-							phong.setShadersDir( "../shaders/tucano/" );
-							phong.initialize();
-							phong.render( m_mesh, *camera, light_trackball );
+					Effects::Phong phong;
+					phong.setShadersDir( "../shaders/tucano/" );
+					phong.initialize();
+					phong.render( m_mesh, *camera, light_trackball );
 				#endif
-				
-							OglUtils::checkOglErrors();
+					
+					OglUtils::checkOglErrors();
 							
 				#ifdef USE_SPLAT
-						}
-					}
-					
-					m_renderer->end_frame();
+					m_renderer->render_frame();
 					m_loader.onIterationEnd();
 				#endif
 				

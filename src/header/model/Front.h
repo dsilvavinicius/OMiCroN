@@ -465,8 +465,6 @@ namespace model
 	{
 		auto start = Profiler::now();
 		
-		renderer.begin_frame();
-		
 		Segment& appendSeg = m_segments[ m_appendSegIdx ];
 		
 		{
@@ -520,7 +518,7 @@ namespace model
 			m_nodeLoader.onIterationEnd();
 		}
 		
-		renderer.end_frame();
+		renderer.render_frame();
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		

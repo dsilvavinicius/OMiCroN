@@ -68,9 +68,8 @@ public:
     SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
 
-	void begin_frame();
 	void render_cloud( const SurfelCloud& cloud );
-    void end_frame();
+    void render_frame();
 	
 	bool isCullable( const AlignedBox3f& box ) const;
 	bool isRenderable( const AlignedBox3f& box, const float projThresh ) const;

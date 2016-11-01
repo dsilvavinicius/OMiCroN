@@ -163,16 +163,16 @@ namespace model
 		
 // 		SurfelCloud& cloud() { return m_cloud; }
 		
-		void loadCloud( const ContentsArray& contents )
+		void loadGPU()
 		{
-			m_cloud = SurfelCloud( contents );
+			m_cloud = SurfelCloud( m_contents );
 			m_loadState = LoadState::LOADED;
 		}
 		
-		void unloadCloud()
+		void unloadGPU()
 		{
-			m_cloud = SurfelCloud();
 			m_loadState = LoadState::UNLOADED;
+			m_cloud = SurfelCloud();
 		}
 		
 		LoadState loadState() const { return LoadState( m_loadState.load() ); }

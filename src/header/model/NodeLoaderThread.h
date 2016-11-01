@@ -138,13 +138,11 @@ namespace model
 	
 	inline void NodeLoaderThread::load( Node& node )
 	{
-		PointArray points = node.getContents();
-		
-		ulong neededGpuMem = GpuAllocStatistics::pointSize() * points.size();
+		ulong neededGpuMem = GpuAllocStatistics::pointSize() * node.getContents().size();
 		
 		if( memoryUsage() + neededGpuMem < m_totalGpuMem )
 		{
-			node.loadCloud( points );
+			node.loadGPU();
 		}
 	}
 	
@@ -158,7 +156,7 @@ namespace model
 			}
 		}
 		
-		node.unloadCloud();
+		node.unloadGPU();
 	}
 	
 	inline void NodeLoaderThread::release( Siblings& siblings )

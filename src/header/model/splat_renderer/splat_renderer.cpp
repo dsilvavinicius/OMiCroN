@@ -410,107 +410,110 @@ SplatRenderer::setup_uniforms( glProgram& program, const Matrix4f& modelView )
 }
 
 void
-SplatRenderer::begin_frame()
+SplatRenderer::render_frame()
 {
-    m_fbo.bind();
-
-	m_frustum.update( *m_camera );
-	
-    glDepthMask(GL_TRUE);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    
-    glClearColor(0.0, 0.0, 0.0, 0.0);
-    glClearDepth(1.0);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void
-SplatRenderer::end_frame()
-{
-	if (m_multisample)
+	if( !m_toRender.empty() )
 	{
-		glEnable(GL_MULTISAMPLE);
-		glEnable(GL_SAMPLE_SHADING);
-		glMinSampleShading(4.0);
+		m_fbo.bind();
+
+		m_frustum.update( *m_camera );
+		
+		glDepthMask(GL_TRUE);
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		
+		glClearColor(0.0, 0.0, 0.0, 0.0);
+		glClearDepth(1.0);
+
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+		if (m_multisample)
+		{
+			glEnable(GL_MULTISAMPLE);
+			glEnable(GL_SAMPLE_SHADING);
+			glMinSampleShading(4.0);
+		}
+
+		#ifndef NDEBUG
+			util::OglUtils::checkOglErrors();
+		#endif
+		
+		if (m_soft_zbuffer)
+		{
+			render_pass( true);
+		}
+
+		#ifndef NDEBUG
+			util::OglUtils::checkOglErrors();
+		#endif
+		
+		render_pass( false );
+		
+		#ifndef NDEBUG
+			util::OglUtils::checkOglErrors();
+		#endif
+
+		m_toRender.clear();
+		
+		if (m_multisample)
+		{
+			glDisable(GL_MULTISAMPLE);
+			glDisable(GL_SAMPLE_SHADING);
+		}
+		
+		m_fbo.unbind();
+
+		if (m_multisample)
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.color_texture());
+
+			if (m_smooth)
+			{
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.normal_texture());
+
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.depth_texture());
+			}
+		}
+		else
+		{
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, m_fbo.color_texture());
+
+			if (m_smooth)
+			{
+				glActiveTexture(GL_TEXTURE1);
+				glBindTexture(GL_TEXTURE_2D, m_fbo.normal_texture());
+
+				glActiveTexture(GL_TEXTURE2);
+				glBindTexture(GL_TEXTURE_2D, m_fbo.depth_texture());
+			}
+		}
+
+		m_finalization.use();
+		
+		try
+		{
+			setup_uniforms(m_finalization, m_camera->getViewMatrix().matrix());
+			m_finalization.set_uniform_1i("color_texture", 0);
+
+			if (m_smooth)
+			{
+				m_finalization.set_uniform_1i("normal_texture", 1);
+				m_finalization.set_uniform_1i("depth_texture", 2);
+			}
+		}
+		catch (uniform_not_found_error const& e)
+		{
+			std::cerr << "Warning: Failed to set a uniform variable." << std::endl
+				<< e.what() << std::endl;
+		}
+
+		glBindVertexArray(m_rect_vao);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glBindVertexArray(0);
 	}
-
-	if (m_soft_zbuffer)
-	{
-		render_pass( true);
-	}
-
-	#ifndef NDEBUG
-		util::OglUtils::checkOglErrors();
-	#endif
-	
-	render_pass( false );
-	
-	#ifndef NDEBUG
-		util::OglUtils::checkOglErrors();
-	#endif
-
-	m_toRender.clear();
-	
-	if (m_multisample)
-	{
-		glDisable(GL_MULTISAMPLE);
-		glDisable(GL_SAMPLE_SHADING);
-	}
-	
-    m_fbo.unbind();
-
-    if (m_multisample)
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.color_texture());
-
-        if (m_smooth)
-        {
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.normal_texture());
-
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.depth_texture());
-        }
-    }
-    else
-    {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, m_fbo.color_texture());
-
-        if (m_smooth)
-        {
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, m_fbo.normal_texture());
-
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, m_fbo.depth_texture());
-        }
-    }
-
-    m_finalization.use();
-    
-    try
-    {
-        setup_uniforms(m_finalization, m_camera->getViewMatrix().matrix());
-        m_finalization.set_uniform_1i("color_texture", 0);
-
-        if (m_smooth)
-        {
-            m_finalization.set_uniform_1i("normal_texture", 1);
-            m_finalization.set_uniform_1i("depth_texture", 2);
-        }
-    }
-    catch (uniform_not_found_error const& e)
-    {
-        std::cerr << "Warning: Failed to set a uniform variable." << std::endl
-            << e.what() << std::endl;
-    }
-
-    glBindVertexArray(m_rect_vao);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    glBindVertexArray(0);
 	
 	#ifndef NDEBUG
 		util::OglUtils::checkOglErrors();
