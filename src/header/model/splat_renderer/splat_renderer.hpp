@@ -68,7 +68,7 @@ public:
     SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
 
-	void render_cloud( const SurfelCloud& cloud );
+	void render_cloud( SurfelCloud& cloud );
     void render_frame();
 	
 	bool isCullable( const AlignedBox3f& box ) const;
@@ -121,7 +121,7 @@ private:
     void render_pass( bool depth_only = false );
 
 private:
-	using RenderingVector = vector< const SurfelCloud*, TbbAllocator< const SurfelCloud* > >;
+	using RenderingVector = vector< SurfelCloud*, TbbAllocator< SurfelCloud* > >;
 	
     Tucano::Camera* m_camera;
 	Tucano::Frustum m_frustum;
@@ -147,7 +147,7 @@ private:
     UniformBufferParameter m_uniform_parameter;
 };
 
-inline void SplatRenderer::render_cloud( const SurfelCloud& cloud )
+inline void SplatRenderer::render_cloud( SurfelCloud& cloud )
 {
 	m_toRender.push_back( &cloud );
 }
@@ -227,7 +227,7 @@ inline void SplatRenderer::render_pass( bool depth_only )
         program.set_uniform_1i("filter_kernel", 1);
     }
     
-    for( const SurfelCloud* cloud : m_toRender )
+    for( SurfelCloud* cloud : m_toRender )
 	{
 		cloud->render();
 	}

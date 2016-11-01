@@ -8,6 +8,9 @@
 
 using namespace model;
 
+/** Surfel cloud that supports async loading. Ctors can be called by a thread sharing Opengl context with a rendering
+ * thread. The ctor will ensure VBO creation and data loading. VAO is created later at the first time the cloud is
+ * rendered (since VAO cannot be shared among different threads). */
 class SurfelCloud
 {
 public:
@@ -20,7 +23,7 @@ public:
 	SurfelCloud& operator=( const SurfelCloud& other ) = delete;
 	SurfelCloud& operator=( SurfelCloud&& other );
 	
-	void render() const;
+	void render();
 	uint numPoints() const { return m_numPts; }
 	const Matrix4f& model() const { return m_model; }
 	
@@ -40,32 +43,66 @@ inline SurfelCloud::SurfelCloud()
 m_vao( 0 ),
 m_numPts( 0 ),
 m_model( Eigen::Matrix4f::Identity() )
-{
-	#ifndef NDEBUG
-		cout << "Cloud default ctor. " << endl << *this << endl << endl;
-	#endif
-}
+{}
 
 inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Matrix4f& model )
+: m_vao( 0 )
 {
 	if( !surfels.empty() )
 	{
-		#ifndef NDEBUG
-		cout << "Surfels: " << endl;
-		for( int i = 0; i < 10; ++i )
-		{
-			cout << surfels[ i ] << endl;
-		}
-		cout << endl;
-		#endif
-		
 		m_model = model;
 		m_numPts = static_cast< uint >( surfels.size() );
 		
 		GpuAllocStatistics::notifyAlloc( m_numPts * GpuAllocStatistics::pointSize() );
 		
 		glGenBuffers(1, &m_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
+		
+		#ifndef NDEBUG
+			util::OglUtils::checkOglErrors();
+		#endif
+	}
+	else
+	{
+		m_vbo = 0;
+		m_numPts = 0;
+		m_model = Eigen::Matrix4f::Identity();
+	}
+}
 
+inline SurfelCloud::SurfelCloud( SurfelCloud&& other )
+: m_vbo( other.m_vbo ),
+m_vao( other.m_vao ),
+m_numPts( other.m_numPts ),
+m_model( other.m_model )
+{
+	other.shallowClean();
+}
+
+inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
+{
+	clean();
+	
+	m_vbo = other.m_vbo;
+	m_vao = other.m_vao;
+	m_numPts = other.m_numPts;
+	m_model = other.m_model;
+	
+	other.shallowClean();
+	
+	return *this;
+}
+
+inline SurfelCloud::~SurfelCloud()
+{
+	clean();
+}
+
+inline void SurfelCloud::render()
+{
+	if( !m_vao )
+	{
 		glGenVertexArrays(1, &m_vao);
 		glBindVertexArray(m_vao);
 
@@ -85,87 +122,13 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		glEnableVertexAttribArray(2);
 		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
 			sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
-		
-		glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_STATIC_DRAW);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
-		
-		glBindVertexArray(0);
-		
-		#ifndef NDEBUG
-			util::OglUtils::checkOglErrors();
-		#endif
 	}
 	else
 	{
-		m_vbo = 0;
-		m_vao = 0;
-		m_numPts = 0;
-		m_model = Eigen::Matrix4f::Identity();
+		glBindVertexArray( m_vao );
 	}
 	
-	#ifndef NDEBUG
-		cout << "Cloud ctor. " << endl << *this << endl << endl;
-	#endif
-}
-
-inline SurfelCloud::SurfelCloud( SurfelCloud&& other )
-: m_vbo( other.m_vbo ),
-m_vao( other.m_vao ),
-m_numPts( other.m_numPts ),
-m_model( other.m_model )
-{
-	#ifndef NDEBUG
-		cout << "Cloud move ctor. " << endl << *this << endl
-			 << "Moved: " << other << endl << endl;
-	#endif
-	
-	other.shallowClean();
-}
-
-inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
-{
-	clean();
-	
-	m_vbo = other.m_vbo;
-	m_vao = other.m_vao;
-	m_numPts = other.m_numPts;
-	m_model = other.m_model;
-	
-	#ifndef NDEBUG
-		cout << "Cloud move assign. " << endl << *this << endl
-			 << "Moved: " << other << endl << endl;
-	#endif
-	
-	other.shallowClean();
-	
-	return *this;
-}
-
-inline SurfelCloud::~SurfelCloud()
-{
-	#ifndef NDEBUG
-		cout << "Cloud dtor. " << endl << *this << endl << endl;
-	#endif
-	
-	clean();
-}
-
-inline void SurfelCloud::render() const
-{
-	glBindVertexArray( m_vao );
-	
-	#ifndef NDEBUG
-		util::OglUtils::checkOglErrors();
-	#endif
-	
-// 	glDrawArrays( GL_POINTS, 0, m_numPts );
-	glDrawArrays( GL_POINTS, 0, 1000 );
-	
-	#ifndef NDEBUG
-		cout << "Rendering cloud" << endl << *this << endl << endl;
-		util::OglUtils::checkOglErrors();
-	#endif
-		
+	glDrawArrays( GL_POINTS, 0, m_numPts );
 	glBindVertexArray( 0 );
 	
 	#ifndef NDEBUG
@@ -175,29 +138,20 @@ inline void SurfelCloud::render() const
 
 inline void SurfelCloud::clean()
 {
-	if( m_vao )
+	if( m_vbo )
 	{
-		#ifndef NDEBUG
-			cout << "Buffers deleted in " << *this << endl << endl;
-		#endif
-		
-		glDeleteVertexArrays( 1, &m_vao );
 		glDeleteBuffers( 1, &m_vbo );
-		
 		GpuAllocStatistics::notifyDealloc( m_numPts * GpuAllocStatistics::pointSize() );
 	}
 	
-	#ifndef NDEBUG
-		cout << "Cloud clean. " << endl << *this << endl << endl;
-	#endif
+	if( m_vao )
+	{
+		glDeleteVertexArrays( 1, &m_vao );
+	}
 }
 
 inline void SurfelCloud::shallowClean()
 {
-	#ifndef NDEBUG
-		cout << "Cloud shallow clean. " << endl << *this << endl << endl;
-	#endif
-	
 	m_vbo = 0;
 	m_vao = 0;
 	m_numPts = 0;

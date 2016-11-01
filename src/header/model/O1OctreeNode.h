@@ -161,7 +161,7 @@ namespace model
 		
 		const SurfelCloud& cloud() const { return m_cloud; }
 		
-// 		SurfelCloud& cloud() { return m_cloud; }
+		SurfelCloud& cloud() { return m_cloud; }
 		
 		void loadGPU()
 		{

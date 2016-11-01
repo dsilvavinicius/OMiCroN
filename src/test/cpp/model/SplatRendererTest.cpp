@@ -37,8 +37,7 @@ namespace model
 				m_loader( loader ),
 				m_siblings( N_SEGMENTS ),
 				m_surfels( N_SEGMENTS ),
-				m_renderer( nullptr ),
-				m_segment( 0 )
+				m_renderer( nullptr )
 			#else
 				SplatRendererTestWidget( QWidget *parent = 0 )
 				: QtFreecameraWidget( parent )
@@ -134,7 +133,7 @@ namespace model
 				
 					m_renderer = new SplatRenderer( camera );
 					
-					for( int i = 0; i < /*N_SEGMENTS*/ 1; ++i )
+					for( int i = 0; i < N_SEGMENTS; ++i )
 					{
 						m_siblings[ i ] = Node( m_surfels[ i ], true );
 // 						m_siblings[ i ].loadGPU();
@@ -169,34 +168,18 @@ namespace model
 			
 			void paintGL() override
 			{
-				makeCurrent();
-				
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
 				#ifdef USE_SPLAT
 					if( !m_siblings.empty() )
 					{
-// 						if( m_segment == N_SEGMENTS )
-// 						{
-// 							for( const Node& node : m_siblings )
-// // 							for( int i = 0; i < N_SEGMENTS - 1; ++i )
-// 							{
-// 								const Node& node = m_siblings[ i ];
-								const Node& node = m_siblings[ 0 ];
-								if( node.loadState() == Node::LOADED )
-								{
-									m_renderer->render_cloud( node.cloud() );
-								}
-// 							}
-// 						}
-// 						else
-// 						{
-// 							const Node& node = m_siblings[ m_segment ];
-// 							if( node.loadState() == Node::LOADED )
-// 							{
-// 								m_renderer->render_cloud( node.cloud() );
-// 							}
-// 						}
+						for( Node& node : m_siblings )
+						{
+							if( node.loadState() == Node::LOADED )
+							{
+								m_renderer->render_cloud( node.cloud() );
+							}
+						}
 					}
 				#else
 					Effects::Phong phong;
@@ -263,11 +246,6 @@ namespace model
 							m_loader.asyncRelease( std::move( m_siblings ), 0 );
 							break;
 						}
-						case Qt::Key_F5 :
-						{
-							m_segment = ( m_segment + 1 ) % ( N_SEGMENTS + 1 );
-							break;
-						}
 						
 						m_loader.onIterationEnd();
 						OglUtils::checkOglErrors();
@@ -282,7 +260,6 @@ namespace model
 				NodeLoader& m_loader;
 				Array< SurfelArray > m_surfels;
 				Siblings m_siblings;
-				int m_segment;
 			#else
 				Mesh m_mesh;
 			#endif
