@@ -54,8 +54,7 @@ namespace model
 				ChildArray siblings( nSiblings );
 				for( int i = 0; i < nSiblings; ++i )
 				{
-					OctreeNode sibling( points, false );
-					siblings[ i ] = sibling;
+					siblings[ i ] = OctreeNode( points, false );
 				}
 				
 				OctreeNode* node = siblings.data() + 1;
@@ -75,7 +74,7 @@ namespace model
 					children[ i ] = OctreeNode( std::move( childPoints ), true );
 				}
 				
-				node->setChildren( children );
+				node->setChildren( std::move( children ) );
 				
 				ASSERT_EQ( node->getContents(), points );
 				

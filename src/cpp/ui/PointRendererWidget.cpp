@@ -47,10 +47,10 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
-	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply" ).toStdString() );
+// 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply" ).toStdString() );
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
@@ -92,7 +92,9 @@ void PointRendererWidget::paintGL (void)
 	
 	updateFromKeyInput();
 	
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor( 1.0, 1.0, 1.0, 1.0 );
+	glClearDepth( 1.0 );
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	
 // 	if( Profiler::elapsedTime( m_inputEndTime ) > 1000 )
 // 	{
@@ -112,8 +114,6 @@ void PointRendererWidget::paintGL (void)
 	FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
 	
 	int frontTrackingTime = Profiler::elapsedTime( frontTrackingStart );
-
-	//m_renderer->afterRendering();
 	
 	m_renderTime = Profiler::elapsedTime( frameStart );
 	

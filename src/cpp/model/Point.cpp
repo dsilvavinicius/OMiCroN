@@ -120,7 +120,7 @@ namespace model
 	ostream& operator<< ( ostream &out, const Point &point )
 	{
 		out << "Point:" << endl
-			<< "color = " << point.m_normal << endl
+			<< "normal = " << point.m_normal << endl
 			<< "pos = " << point.m_pos << endl;
 			
 		return out;

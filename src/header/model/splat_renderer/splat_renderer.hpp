@@ -107,6 +107,10 @@ public:
     void set_ewa_radius(float ewa_radius);
 
     void reshape(int width, int height);
+	
+	ulong afterRendering();
+	
+	const Tucano::Camera& camera() const;
 
 private:
     void setup_program_objects();
@@ -145,10 +149,18 @@ private:
     UniformBufferRaycast m_uniform_raycast;
     UniformBufferFrustum m_uniform_frustum;
     UniformBufferParameter m_uniform_parameter;
+	
+	// Stats.
+	ulong m_renderedSplats;
 };
 
 inline void SplatRenderer::render_cloud( SurfelCloud& cloud )
 {
+	#ifndef NDEBUG
+		cout << "Pushing to render list: " << endl << cloud << endl << endl;
+	#endif
+	
+	m_renderedSplats += cloud.numPoints();
 	m_toRender.push_back( &cloud );
 }
 
@@ -245,6 +257,19 @@ inline Vector2i SplatRenderer
 	Vector4f proj = viewProj * point;
 	return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
 						( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
+}
+
+inline ulong SplatRenderer::afterRendering()
+{
+	ulong renderedSplats = m_renderedSplats;
+	m_renderedSplats = 0ul;
+	
+	return renderedSplats;
+}
+
+inline const Tucano::Camera& SplatRenderer::camera() const
+{
+	return *m_camera;
 }
 
 #endif // SPLATRENDER_HPP

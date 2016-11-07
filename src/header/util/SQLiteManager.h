@@ -442,14 +442,13 @@ namespace util
 		{
 			++nNodes;
 			byte* blob = ( byte* ) sqlite3_column_blob( m_nodeIntervalQuery, 0 );
-			OctreeNode node = OctreeNode::deserialize( blob );
-			tempNodes.push_back( node );
+			tempNodes.push_back( OctreeNode::deserialize( blob ) );
 		}
 		
 		NodeArray nodes( nNodes );
 		for( int i = 0; i < nNodes; ++i )
 		{
-			nodes[ i ] = tempNodes[ i ];
+			nodes[ i ] = std::move( tempNodes[ i ] );
 		}
 		
 		safeReset( m_nodeIntervalQuery );

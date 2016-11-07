@@ -252,6 +252,15 @@ namespace model
 						{
 							if( points.size() > 0 )
 							{
+								#ifdef DEBUG
+// 								{
+// 									cout << "Creating node "
+// 										 << leafLvlDimCpy.calcMorton( points[ 0 ] ).getPathToRoot( true ) << "Size: "
+// 										 << points.size() << endl << "First point: " << points[ 0 ] << endl << endl;
+// 								}
+								#endif
+								
+								
 								nodeList.push_back( Node( std::move( points ), true ) );
 								
 								points = PointVector();
@@ -292,8 +301,8 @@ namespace model
 						u.normalize();
 						Vector3f v = normal.cross( u );
 			
-						u *= 0.00000001f;
-						v *= 0.00000001f;
+						u *= 0.000001f;
+						v *= 0.000001f;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}
@@ -634,11 +643,24 @@ namespace model
 		// Parents are expected to be set once.
 		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
 		{
+			#ifdef DEBUG
+// 			{
+// 				cout << "Setting as parent: " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
+// 					 << node << endl << endl;
+// 			}
+			#endif
+			
 			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 			
 			for( Node& child : node.child() )
 			{
 				child.setParent( &node );
+				
+				#ifdef DEBUG
+// 				{
+// 					cout << "Child: " << childDim.calcMorton( child ).getPathToRoot( true ) << child << endl << endl;
+// 				}
+				#endif
 				
 				if( child.isLeaf() )
 				{
@@ -887,6 +909,20 @@ namespace model
 			}
 		}
 		
+		#ifdef DEBUG
+// 		{
+// 			OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+// 			cout << "Creating node from single. " << nextLvlDim.calcMorton( node ).getPathToRoot( true ) << node
+// 				 << endl << endl;
+// 			if( !isLeaf )
+// 			{
+// 				Node& firstChild = node.child()[ 0 ];
+// 				cout << "First child: " << m_octreeDim.calcMorton( firstChild ).getPathToRoot( true ) << firstChild
+// 					 << endl << endl;
+// 			}
+// 		}
+		#endif
+		
 		return node;
 	}
 	
@@ -932,6 +968,17 @@ namespace model
 			
 			Node node( std::move( selectedPoints ), false );
 			node.setChildren( std::move( children ) );
+			
+			#ifdef DEBUG
+// 			{
+// 				Node& firstChild = node.child()[ 0 ];
+// 				
+// 				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+// 				cout << "Creating inner: " << nextLvlDim.calcMorton( node ).getPathToRoot( true ) << node << endl << endl
+// 					 << "First child: " << m_octreeDim.calcMorton( firstChild ).getPathToRoot( true ) << firstChild
+// 					 << endl << endl;
+// 			}
+			#endif
 			
 			return node;
 		}

@@ -31,6 +31,17 @@ namespace model
 			PENDING = 0x2,
 		};
 		
+		friend ostream& operator<<( ostream& out, const LoadState loadState )
+		{
+			switch( loadState )
+			{
+				case LOADED: out << "LOADED"; break;
+				case UNLOADED: out << "UNLOADED"; break;
+				case PENDING: out << "PENDING"; break;
+			}
+			return out;
+		}
+		
 		/** Initializes and empty unusable node. */
 		O1OctreeNode()
 		: m_contents(),
@@ -58,28 +69,32 @@ namespace model
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
 		 * resources. Mesh GPU data is not copied. */
-		O1OctreeNode( const O1OctreeNode& other )
-		: m_contents( other.m_contents ),
-		m_children( other.m_children ),
-		m_parent( other.m_parent ),
-		m_isLeaf( other.m_isLeaf ),
-		m_loadState( UNLOADED )
-		{}
+// 		O1OctreeNode( const O1OctreeNode& other )
+// 		: m_contents( other.m_contents ),
+// 		m_children( other.m_children ),
+// 		m_parent( other.m_parent ),
+// 		m_isLeaf( other.m_isLeaf ),
+// 		m_loadState( UNLOADED )
+// 		{}
+
+		O1OctreeNode( const O1OctreeNode& other ) = delete;
 		
 		~O1OctreeNode();
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
 		 * resources. Mesh GPU data is not copied. */
-		O1OctreeNode& operator=( const O1OctreeNode& other )
-		{
-			m_contents = other.m_contents;
-			m_children = other.m_children;
-			m_parent = other.m_parent;
-			m_isLeaf = other.m_isLeaf;
-			m_loadState = UNLOADED;
-			
-			return *this;
-		}
+// 		O1OctreeNode& operator=( const O1OctreeNode& other )
+// 		{
+// 			m_contents = other.m_contents;
+// 			m_children = other.m_children;
+// 			m_parent = other.m_parent;
+// 			m_isLeaf = other.m_isLeaf;
+// 			m_loadState = UNLOADED;
+// 			
+// 			return *this;
+// 		}
+		
+		O1OctreeNode& operator=( const O1OctreeNode& other ) = delete;
 		
 		/** Move ctor. */
 		O1OctreeNode( O1OctreeNode&& other )
@@ -273,8 +288,14 @@ namespace model
 	template< typename C >
 	ostream& operator<<( ostream& out, const O1OctreeNode< C >& node )
 	{
-		out << "points: " << endl << node.m_contents << endl
-			<< "is leaf? " << node.m_isLeaf << endl << endl;
+		out << "Addr: " << &node << endl
+			<< "First point: " << node.m_contents[ 0 ] << endl
+			<< "Number of points: " << node.m_contents.size() << endl
+			<< "Parent: " << node.m_parent << endl
+			<< "Children addr: " << node.m_children.data() << endl
+			<< "Is leaf? " << node.m_isLeaf << endl
+			<< "Load state: " << node.loadState() << endl
+			<< "Cloud: " << endl << node.m_cloud;
 			
 		return out;
 	}

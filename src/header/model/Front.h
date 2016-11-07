@@ -10,6 +10,7 @@
 #include "NodeLoader.h"
 #include "Profiler.h"
 #include "StackTrace.h"
+#include "phongshader.hpp"
 
 // #define DEBUG
 #define N_THREADS 1
@@ -65,22 +66,12 @@ namespace model
 				return *this;
 			}
 			
-			#ifdef DEBUG
-// 			void assertNode() const
-// 			{
-// 				//stringstream ss;
-// 				if( m_octreeNode == nullptr )
-// 				{
-// 					stringstream ss; ss << "Front node with null octree node. Addr: " << this << endl << endl;
-// 					throw logic_error( ss.str() );
-// 				}
-// 				if( m_morton.getBits() == 0x0 )
-// 				{
-// 					stringstream ss; ss << "Front node with null morton code. Addr: " << this << endl << endl;
-// 					throw logic_error( ss.str() );
-// 				}
-// 			}
-			#endif
+			friend ostream& operator<<( ostream& out, const FrontNode& node )
+			{
+				out << "Morton:" << node.m_morton.getPathToRoot( true ) << "Node: " << endl << *node.m_octreeNode
+					<< endl << endl;
+				return out;
+			}
 			
 			Node* m_octreeNode;
 			Morton m_morton;
@@ -163,7 +154,7 @@ namespace model
 		/** Substitute a placeholder with the first node of the given substitution level. */
 		bool substitutePlaceholder( FrontNode& node, int substitutionLvl );
 		
-		bool checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
+		bool checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
 						 FrontListIter& frontIt, Segment& segment, int substituionLvl, Renderer& renderer,
 					const Float projThresh );
 		
@@ -182,6 +173,8 @@ namespace model
 		{
 			return m_substitutionSegIdx >= rangeStartIdx && m_substitutionSegIdx < rangeStartIdx + rangeSize;
 		}
+		
+		void renderDebug( const Node& node, const Renderer& renderer ) const;
 		
 		#ifdef DEBUG
 			void assertFrontIterator( const FrontListIter& iter, const FrontList& front )
@@ -393,6 +386,12 @@ namespace model
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
+		#ifdef DEBUG
+		{
+			cout << "Inserting into buffer end " << frontNode << endl << endl;
+		}
+		#endif
+		
 		list.push_back( frontNode );
 	}
 	
@@ -408,6 +407,12 @@ namespace model
 	{
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
+		
+		#ifdef DEBUG
+		{
+			cout << "Inserting into buffer " << frontNode << endl << endl;
+		}
+		#endif
 		
 		list.insert( iter, frontNode );
 	}
@@ -518,14 +523,13 @@ namespace model
 			m_nodeLoader.onIterationEnd();
 		}
 		
-		renderer.render_frame();
+// 		renderer.render_frame();
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
 		start = Profiler::now();
 		
-// 		unsigned int numRenderedPoints = renderer.afterRendering();
-		unsigned int numRenderedPoints = 0; // TODO: Correct this later.
+		unsigned int numRenderedPoints = renderer.afterRendering();
 		
 		// Select next frame's placeholder substitution segment.
 		m_substitutionSegIdx = ( m_substitutionSegIdx + 1 ) % m_segments.size();
@@ -628,6 +632,12 @@ namespace model
 		
 		if( !isCullable )
 		{
+			#ifdef DEBUG
+			{
+				cout << "Trying to render: " << morton.getPathToRoot( true ) << node << endl << endl;
+			}
+			#endif
+			
 			// No prunning or branching done. Just send the current front node for rendering.
 			setupNodeRenderingNoFront( frontIt, node, renderer );
 			return;
@@ -655,6 +665,12 @@ namespace model
 				{
 					node = substituteCandidate;
 					
+					#ifdef DEBUG
+					{
+						cout << "Loading from subst " << node << endl << endl;
+					}
+					#endif
+					
 					m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
 					
 					substitutionLvlList.erase( substitutionLvlList.begin() );
@@ -673,7 +689,7 @@ namespace model
 	
 	template< typename Morton >
 	inline bool Front< Morton >
-	::checkPrune( const Morton& parentMorton, const Node* parentNode, const OctreeDim& parentLvlDim,
+	::checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
 				  FrontListIter& frontIt, Segment& segment, int substitutionLvl, Renderer& renderer,
 			   const Float projThresh )
 	{
@@ -718,6 +734,18 @@ namespace model
 			{
 				pruneFlag = false;
 			}
+		}
+		
+		if( pruneFlag && parentNode->loadState() != Node::LOADED )
+		{
+			#ifdef DEBUG
+			{
+				cout << "Loading from prunning " << parentMorton.getPathToRoot( true ) << endl << endl;
+			}
+			#endif
+			
+			m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
+			pruneFlag = false;
 		}
 		
 		return pruneFlag;
@@ -772,6 +800,12 @@ namespace model
 			{
 				for( Node& child : children )
 				{
+					#ifdef DEBUG
+					{
+						cout << "Loading from branching " << node << endl << endl;
+					}
+					#endif
+					
 					m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
 				}
 			}
@@ -814,7 +848,20 @@ namespace model
 	{
 		segment.m_front.insert( frontIt, frontNode );
 		
-		renderer.render_cloud( frontNode.m_octreeNode->cloud() );
+		Node* node = frontNode.m_octreeNode;
+		
+		#ifdef DEBUG
+		{
+			cout << "Trying to render: " << endl << frontNode << endl << endl;
+		}
+		#endif
+		
+		if( node->loadState() == Node::LOADED )
+		{
+			renderDebug( *node, renderer );
+			
+// 			renderer.render_cloud( node->cloud() );
+		}
 	}
 	
 	template< typename Morton >
@@ -822,7 +869,38 @@ namespace model
 															Renderer& renderer ) const
 	{
 		frontIt++;
-		renderer.render_cloud( node.cloud() );
+		
+		if( node.loadState() == Node::LOADED )
+		{
+			renderDebug( node, renderer );
+			
+// 			renderer.render_cloud( node.cloud() );
+		}
+	}
+	
+	template< typename Morton >
+	inline void Front< Morton >::renderDebug( const Node& node, const Renderer& renderer ) const
+	{
+		const Array< Surfel >& surfels = node.getContents();
+			
+		Mesh mesh;
+		mesh.selectPrimitive( Mesh::POINT );
+		vector< Vector4f > vertices;
+		vector< Vector3f > normals;
+		
+		for( const Surfel& surfel : surfels )
+		{
+			vertices.push_back( Vector4f( surfel.c.x(), surfel.c.y(), surfel.c.z(), 1.f ) );
+			normals.push_back( surfel.u.cross( surfel.v ) );
+		}
+		mesh.loadVertices( vertices );
+		mesh.loadNormals( normals );
+		
+		Effects::Phong phong;
+		phong.setShadersDir( "shaders/tucano/" );
+		phong.initialize();
+		
+		phong.render( mesh, renderer.camera(), renderer.camera() );
 	}
 }
 

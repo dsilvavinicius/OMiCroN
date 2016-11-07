@@ -58,7 +58,7 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		glGenBuffers(1, &m_vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
-		
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		#ifndef NDEBUG
 			util::OglUtils::checkOglErrors();
 		#endif

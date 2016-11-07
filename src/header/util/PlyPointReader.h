@@ -18,12 +18,6 @@ namespace util
 	class PlyPointReader 
 	{
 	public:
-		enum Precision
-		{
-			SINGLE = 0x1,
-			DOUBLE = 0x2
-		};
-		
 		friend PlyPointWritter;
 		
 		/** Checks if the file is valid, opens it, reads its header and discovers the number of points in it.
@@ -36,27 +30,24 @@ namespace util
 		/** Copies the header of the file managed by this reader to other file. */
 		p_ply copyHeader( const string& outFilename );
 		
-		/** Reads a .ply file. . 
-		 * @param precision specifies the desired precision for read points. It must agree with the template
-		 * parameters of this method. */
-		void read( const function< void( const Point& ) >& onPointDone, Precision precision = SINGLE );
+		/** Reads a .ply file. */
+		void read( const function< void( const Point& ) >& onPointDone );
 	
 		long getNumPoints() { return m_numPoints; }
 	
 	protected:
-		void setupAdditionalCallbacks( p_ply ply, const Precision& precision,
-									   pair< Point*, function< void( const Point& ) >* >& cbNeededData );
+		void setupAdditionalCallbacks( p_ply ply, pair< Point*, function< void( const Point& ) >* >& cbNeededData );
 		
 		/** Internal customizable reading method. Should setup reading needed data, callbacks, do the reading itself and free reading
 		 * needed data.
 		 * @returns ply_read() return code. */
-		virtual int doRead( p_ply& ply, const Precision& precision );
+		virtual int doRead( p_ply& ply );
 		
 		/** Copies the property to out's header. */
 		void copyProperty( p_ply_property property, p_ply out );
 		
 		/** Internal method that calculates the property flag for each invocation of the reading vertex callback. */
-		static unsigned int getPropFlag( const unsigned int& propIndex, const Precision& precision );
+		static unsigned int getPropFlag( const unsigned int& propIndex );
 		
 		/** Method used as RPly vertex callback. */
 		static int vertexCB( p_ply_argument argument );
@@ -118,7 +109,7 @@ namespace util
 		}
 	}
 	
-	inline void PlyPointReader::read( const function< void( const Point& ) >& onPointDone, Precision precision )
+	inline void PlyPointReader::read( const function< void( const Point& ) >& onPointDone )
 	{
 		m_onPointDone = onPointDone;
 		
@@ -127,7 +118,7 @@ namespace util
 		/* Change to PLY standard */
 // 		setlocale( LC_NUMERIC, "C" );
 		
-		int resultCode = doRead( m_ply, precision );
+		int resultCode = doRead( m_ply );
 		
 		if( !resultCode )
 		{
@@ -140,26 +131,21 @@ namespace util
 // 		setlocale( LC_NUMERIC, old_locale );
 	}
 	
-	inline int PlyPointReader::doRead( p_ply& ply, const Precision& precision )
+	inline int PlyPointReader::doRead( p_ply& ply )
 	{
 		/** Temp point used to hold intermediary incomplete data before sending it to its final destiny. */
 		Point tempPoint;
 		pair< Point*, function< void( const Point& ) >* > cbNeededData( &tempPoint, &m_onPointDone );
 		
-		ply_set_read_cb( ply, "vertex", "x", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 0, precision ) );
-		ply_set_read_cb( ply, "vertex", "y", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 1, precision ) );
-		ply_set_read_cb( ply, "vertex", "z", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 2, precision ) );
+		ply_set_read_cb( ply, "vertex", "x", PlyPointReader::vertexCB, &cbNeededData, 0 );
+		ply_set_read_cb( ply, "vertex", "y", PlyPointReader::vertexCB, &cbNeededData, 1 );
+		ply_set_read_cb( ply, "vertex", "z", PlyPointReader::vertexCB, &cbNeededData, 2 );
 		
-		ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 3, precision ) );
-		ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 4, precision ) );
-		ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, getPropFlag( 5, precision ) );
+		ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, 3 );
+		ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, 4 );
+		ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, 5 );
 		
 		return ply_read( ply );
-	}
-	
-	inline unsigned int PlyPointReader::getPropFlag( const unsigned int& propIndex, const Precision& precision )
-	{
-		return propIndex | ( precision << 4 );
 	}
 	
 	/** Struct to handle callback data. Agnostic to point type. */
@@ -209,15 +195,13 @@ namespace util
 	
 	inline int PlyPointReader::vertexCB( p_ply_argument argument )
 	{
-		long propFlag;
+		long index;
 		void *rawReadingData;
-		ply_get_argument_user_data( argument, &rawReadingData, &propFlag );
+		ply_get_argument_user_data( argument, &rawReadingData, &index );
 		
 		auto readingData = ( pair< Point*, function< void( const Point& ) >* >* ) rawReadingData;
 		
 		float value = ply_get_argument_value( argument );
-		
-		unsigned int index = propFlag & 0xF;
 		
 		CBDataHandler dataHandler;
 		dataHandler( index, value, readingData );
