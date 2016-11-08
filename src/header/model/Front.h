@@ -12,7 +12,7 @@
 #include "StackTrace.h"
 #include "phongshader.hpp"
 
-// #define DEBUG
+#define DEBUG
 #define N_THREADS 1
 
 #ifdef DEBUG
@@ -386,12 +386,6 @@ namespace model
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
-		#ifdef DEBUG
-		{
-			cout << "Inserting into buffer end " << frontNode << endl << endl;
-		}
-		#endif
-		
 		list.push_back( frontNode );
 	}
 	
@@ -407,12 +401,6 @@ namespace model
 	{
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
-		
-		#ifdef DEBUG
-		{
-			cout << "Inserting into buffer " << frontNode << endl << endl;
-		}
-		#endif
 		
 		list.insert( iter, frontNode );
 	}
@@ -470,6 +458,8 @@ namespace model
 	{
 		auto start = Profiler::now();
 		
+		renderer.begin_frame();
+		
 		Segment& appendSeg = m_segments[ m_appendSegIdx ];
 		
 		{
@@ -523,13 +513,13 @@ namespace model
 			m_nodeLoader.onIterationEnd();
 		}
 		
-// 		renderer.render_frame();
+		renderer.render_frame();
 		
 		int traversalTime = Profiler::elapsedTime( start );
 		
 		start = Profiler::now();
 		
-		unsigned int numRenderedPoints = renderer.afterRendering();
+		unsigned int numRenderedPoints = renderer.end_frame();
 		
 		// Select next frame's placeholder substitution segment.
 		m_substitutionSegIdx = ( m_substitutionSegIdx + 1 ) % m_segments.size();
@@ -665,12 +655,6 @@ namespace model
 				{
 					node = substituteCandidate;
 					
-					#ifdef DEBUG
-					{
-						cout << "Loading from subst " << node << endl << endl;
-					}
-					#endif
-					
 					m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
 					
 					substitutionLvlList.erase( substitutionLvlList.begin() );
@@ -738,12 +722,6 @@ namespace model
 		
 		if( pruneFlag && parentNode->loadState() != Node::LOADED )
 		{
-			#ifdef DEBUG
-			{
-				cout << "Loading from prunning " << parentMorton.getPathToRoot( true ) << endl << endl;
-			}
-			#endif
-			
 			m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
 			pruneFlag = false;
 		}
@@ -800,12 +778,6 @@ namespace model
 			{
 				for( Node& child : children )
 				{
-					#ifdef DEBUG
-					{
-						cout << "Loading from branching " << node << endl << endl;
-					}
-					#endif
-					
 					m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
 				}
 			}
@@ -858,9 +830,9 @@ namespace model
 		
 		if( node->loadState() == Node::LOADED )
 		{
-			renderDebug( *node, renderer );
+// 			renderDebug( *node, renderer );
 			
-// 			renderer.render_cloud( node->cloud() );
+			renderer.render_cloud( node->cloud() );
 		}
 	}
 	
@@ -872,9 +844,9 @@ namespace model
 		
 		if( node.loadState() == Node::LOADED )
 		{
-			renderDebug( node, renderer );
+// 			renderDebug( node, renderer );
 			
-// 			renderer.render_cloud( node.cloud() );
+			renderer.render_cloud( node.cloud() );
 		}
 	}
 	

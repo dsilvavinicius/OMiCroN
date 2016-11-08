@@ -32,6 +32,8 @@
 #include "utils/frustum.hpp"
 #include "OglUtils.h"
 
+#define DEBUG
+
 class UniformBufferRaycast : public GLviz::glUniformBuffer
 {
 
@@ -68,8 +70,10 @@ public:
     SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
 
+	void begin_frame();
 	void render_cloud( SurfelCloud& cloud );
     void render_frame();
+	ulong end_frame();
 	
 	bool isCullable( const AlignedBox3f& box ) const;
 	bool isRenderable( const AlignedBox3f& box, const float projThresh ) const;
@@ -107,8 +111,6 @@ public:
     void set_ewa_radius(float ewa_radius);
 
     void reshape(int width, int height);
-	
-	ulong afterRendering();
 	
 	const Tucano::Camera& camera() const;
 
@@ -156,8 +158,10 @@ private:
 
 inline void SplatRenderer::render_cloud( SurfelCloud& cloud )
 {
-	#ifndef NDEBUG
+	#ifdef DEBUG
+	{
 		cout << "Pushing to render list: " << endl << cloud << endl << endl;
+	}
 	#endif
 	
 	m_renderedSplats += cloud.numPoints();
@@ -196,6 +200,20 @@ inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float pr
 	float maxDiagLength = std::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
 	
 	return maxDiagLength < projThresh;
+}
+
+inline void SplatRenderer::begin_frame()
+{
+	m_frustum.update( *m_camera );
+	m_fbo.bind();
+	
+	glDepthMask(GL_TRUE);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClearDepth(1.0);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 inline void SplatRenderer::render_pass( bool depth_only )
@@ -259,7 +277,7 @@ inline Vector2i SplatRenderer
 						( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
 }
 
-inline ulong SplatRenderer::afterRendering()
+inline ulong SplatRenderer::end_frame()
 {
 	ulong renderedSplats = m_renderedSplats;
 	m_renderedSplats = 0ul;
@@ -271,5 +289,7 @@ inline const Tucano::Camera& SplatRenderer::camera() const
 {
 	return *m_camera;
 }
+
+#undef DEBUG
 
 #endif // SPLATRENDER_HPP

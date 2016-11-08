@@ -172,6 +172,8 @@ namespace model
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				
 				#ifdef USE_SPLAT
+					m_renderer->begin_frame();
+				
 					if( !m_siblings.empty() )
 					{
 						for( Node& node : m_siblings )

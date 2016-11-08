@@ -6,6 +6,8 @@
 #include "GpuAllocStatistics.h"
 #include "OglUtils.h"
 
+#define DEBUG
+
 using namespace model;
 
 /** Surfel cloud that supports async loading. Ctors can be called by a thread sharing Opengl context with a rendering
@@ -128,6 +130,10 @@ inline void SurfelCloud::render()
 		glBindVertexArray( m_vao );
 	}
 	
+	#ifndef DEBUG
+		cout << "Rendering: " << endl << *this << endl << endl;
+	#endif
+	
 	glDrawArrays( GL_POINTS, 0, m_numPts );
 	glBindVertexArray( 0 );
 	
@@ -140,12 +146,24 @@ inline void SurfelCloud::clean()
 {
 	if( m_vbo )
 	{
+		#ifdef DEBUG
+		{
+			cout << "Cleaning vbo" << endl << *this << endl << endl;
+		}
+		#endif
+		
 		glDeleteBuffers( 1, &m_vbo );
 		GpuAllocStatistics::notifyDealloc( m_numPts * GpuAllocStatistics::pointSize() );
 	}
 	
 	if( m_vao )
 	{
+		#ifdef DEBUG
+		{
+			cout << "Cleaning vao" << endl << *this << endl << endl;
+		}
+		#endif
+		
 		glDeleteVertexArrays( 1, &m_vao );
 	}
 }
@@ -164,5 +182,7 @@ inline ostream& operator<<( ostream& out, const SurfelCloud& cloud )
 		<< cloud.m_numPts << " model matrix: " << endl << cloud.m_model;
 	return out;
 }
+
+#undef DEBUG
 
 #endif
