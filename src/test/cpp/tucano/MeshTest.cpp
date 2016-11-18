@@ -114,9 +114,6 @@ namespace Tucano
 				mesh.unmapNormals();
 				checkOglErrors();
 				
-				mesh.unmapColors();
-				checkOglErrors();
-				
 				mesh.unmapIndices();
 				checkOglErrors();
 				

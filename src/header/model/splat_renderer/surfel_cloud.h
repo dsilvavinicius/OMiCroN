@@ -6,7 +6,7 @@
 #include "GpuAllocStatistics.h"
 #include "OglUtils.h"
 
-#define DEBUG
+// #define DEBUG
 
 using namespace model;
 
@@ -45,11 +45,23 @@ inline SurfelCloud::SurfelCloud()
 m_vao( 0 ),
 m_numPts( 0 ),
 m_model( Eigen::Matrix4f::Identity() )
-{}
+{
+	#ifdef DEBUG
+	{
+		cout << "Default ctor: " << *this << endl << endl;
+	}
+	#endif
+}
 
 inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Matrix4f& model )
 : m_vao( 0 )
 {
+	#ifdef DEBUG
+	{
+		cout << "Ctor beginning: " << *this << endl << endl;
+	}
+	#endif
+	
 	if( !surfels.empty() )
 	{
 		m_model = model;
@@ -71,6 +83,12 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		m_numPts = 0;
 		m_model = Eigen::Matrix4f::Identity();
 	}
+	
+	#ifdef DEBUG
+	{
+		cout << "Ctor ending: " << *this << endl << endl;
+	}
+	#endif
 }
 
 inline SurfelCloud::SurfelCloud( SurfelCloud&& other )
@@ -80,6 +98,12 @@ m_numPts( other.m_numPts ),
 m_model( other.m_model )
 {
 	other.shallowClean();
+	
+	#ifdef DEBUG
+	{
+		cout << "Move ctor: " << *this << endl << endl;
+	}
+	#endif
 }
 
 inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
@@ -93,11 +117,23 @@ inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
 	
 	other.shallowClean();
 	
+	#ifdef DEBUG
+	{
+		cout << "Move assignment: " << *this << endl << endl;
+	}
+	#endif
+	
 	return *this;
 }
 
 inline SurfelCloud::~SurfelCloud()
 {
+	#ifdef DEBUG
+	{
+		cout << "Dtor:" << endl << *this << endl << endl;
+	}
+	#endif
+	
 	clean();
 }
 

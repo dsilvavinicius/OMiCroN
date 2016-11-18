@@ -34,6 +34,8 @@ macro (create_source_groups ui_dir model_dir util_dir)
 	source_group (util FILES ${UTIL})
 endmacro (create_source_groups)
 
+cmake_policy (SET CMP0026 OLD)
+
 # Adding package finders directory.
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -63,14 +65,13 @@ setup_package(GLEW)
 setup_package(Eigen3)
 setup_package(SQLite3)
 setup_package(Freetype)
-setup_package(TBB)
 setup_package(Jsoncpp)
 
 # Set Qt dirs.
 find_package (Qt5Core REQUIRED)
 find_package (Qt5Gui REQUIRED)
 find_package (Qt5Widgets REQUIRED)
-find_package (Qt53D REQUIRED)
+find_package (Qt5OpenGL REQUIRED)
 find_package (Qt5Sql REQUIRED)
 
 set (RPLY_DIR "lib/rply")
@@ -80,7 +81,7 @@ set (TLSF_DIR "lib/tlsf")
 include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
 	${Qt5Widgets_INCLUDE_DIRS}
-	${Qt53D_INCLUDE_DIRS}
+	${Qt5OpenGL_INCLUDE_DIRS}
 	${Qt5Sql_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIR}
 	include/
@@ -165,18 +166,24 @@ add_library (Point_Based_Renderer_Lib
     ${JUMP_FLOODING_DIR}/point_model.hpp	${JUMP_FLOODING_DIR}/point_model.cpp 
     ${JUMP_FLOODING_DIR}/bin.cpp )
 
+    
+# Set TBB variables
+
+include_directories ("/usr/include/tbb")
+link_directories("/usr/lib/x86_64-linux-gnu")
+    
 # Link all necessary libs.
 target_link_libraries (Point_Based_Renderer_Lib
 	Qt5::Core
 	Qt5::Gui
 	Qt5::Widgets
-	Qt5::3D
+	Qt5::OpenGL
 	Qt5::Sql
 	${SQLITE3_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	${TBB_tbbmalloc_LIBRARY_RELEASE}
+	"/usr/lib/x86_64-linux-gnu/libtbbmalloc.so"
 	${JSONCPP_LIBRARIES}
 	RPly
 	Tlsf

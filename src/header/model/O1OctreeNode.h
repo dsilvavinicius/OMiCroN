@@ -5,6 +5,9 @@
 #include "tucano.hpp"
 #include "Array.h"
 #include "splat_renderer/surfel_cloud.h"
+#include "HierarchyCreationLog.h"
+
+// #define DEBUG
 
 using namespace std;
 using namespace Tucano;
@@ -65,7 +68,13 @@ namespace model
 		m_parent( nullptr ),
 		m_children(),
 		m_loadState( UNLOADED )
-		{}
+		{
+// 			#ifdef DEBUG
+// 			{
+// 				cout << "Node created: " << *this << endl << endl;
+// 			}
+// 			#endif
+		}
 		
 		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
 		 * resources. Mesh GPU data is not copied. */
@@ -157,13 +166,20 @@ namespace model
 		/** Sets the array of children. */
 		void setChildren( const NodeArray& children )
 		{
-			m_children.~NodeArray();
+			m_children.clear();
 			m_children = children;
 		}
 		
 		void setChildren( NodeArray&& children )
 		{
-			m_children.~NodeArray();
+			m_children.clear();
+			
+// 			#ifdef DEBUG
+// 				stringstream ss; ss << "child dtor: " << m_children << endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				HierarchyCreationLog::flush();
+// 			#endif
+			
 			m_children = std::move( children );
 		}
 		
@@ -288,17 +304,20 @@ namespace model
 	template< typename C >
 	ostream& operator<<( ostream& out, const O1OctreeNode< C >& node )
 	{
-		out << "Addr: " << &node << endl
-			<< "First point: " << node.m_contents[ 0 ] << endl
-			<< "Number of points: " << node.m_contents.size() << endl
-			<< "Parent: " << node.m_parent << endl
-			<< "Children addr: " << node.m_children.data() << endl
-			<< "Is leaf? " << node.m_isLeaf << endl
-			<< "Load state: " << node.loadState() << endl
-			<< "Cloud: " << endl << node.m_cloud;
-			
+		out
+// 			<< "Addr: " << &node << endl
+// 			<< "Points: " << node.m_contents << endl
+// 			<< "First point: " << node.m_contents[ 0 ] << endl
+// 			<< "Parent: " << node.m_parent << endl
+			<< "Children: " << node.m_children << endl
+// 			<< "Is leaf? " << node.m_isLeaf << endl
+// 			<< "Load state: " << node.loadState() << endl
+// 			<< "Cloud: " << endl << node.m_cloud;
+			;
 		return out;
 	}
 }
+
+#undef DEBUG
 
 #endif

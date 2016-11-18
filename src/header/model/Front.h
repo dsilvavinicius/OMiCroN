@@ -12,7 +12,7 @@
 #include "StackTrace.h"
 #include "phongshader.hpp"
 
-#define DEBUG
+// #define DEBUG
 #define N_THREADS 1
 
 #ifdef DEBUG
@@ -655,6 +655,7 @@ namespace model
 				{
 					node = substituteCandidate;
 					
+// 					node.m_octreeNode->loadGPU();
 					m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
 					
 					substitutionLvlList.erase( substitutionLvlList.begin() );
@@ -722,6 +723,7 @@ namespace model
 		
 		if( pruneFlag && parentNode->loadState() != Node::LOADED )
 		{
+// 			parentNode->loadGPU();
 			m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
 			pruneFlag = false;
 		}
@@ -750,6 +752,7 @@ namespace model
 			{
 				for( Node& node : parentNode->child() )
 				{
+// 					node.unloadGPU();
 					m_nodeLoader.asyncUnload( node, omp_get_thread_num() );
 				}
 			}
@@ -778,6 +781,7 @@ namespace model
 			{
 				for( Node& child : children )
 				{
+// 					child.loadGPU();
 					m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
 				}
 			}

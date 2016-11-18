@@ -32,7 +32,7 @@
 #include "utils/frustum.hpp"
 #include "OglUtils.h"
 
-#define DEBUG
+// #define DEBUG
 
 class UniformBufferRaycast : public GLviz::glUniformBuffer
 {

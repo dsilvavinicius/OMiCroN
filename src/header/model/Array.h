@@ -93,7 +93,7 @@ namespace model
 		
 		Array& operator=( const Array& other )
 		{
-			this->~Array();
+			this->clear();
 			
 			if( other.m_size != 0 )
 			{
@@ -120,7 +120,7 @@ namespace model
 		
 		Array& operator=( Array&& other )
 		{
-			this->~Array();
+			this->clear();
 			
 			m_array = other.m_array;
 			m_size = other.m_size;
@@ -300,27 +300,41 @@ namespace model
 		uint m_size;
 	};
 	
+// 	#define DETAILED_STREAM
+	
 	template< typename Type, typename Alloc >
 	ostream& operator<<( ostream& out, const Array< Type, Alloc >& array )
 	{
-		for( int i = 0; i < array.m_size; ++i )
-		{
-			out << array[ i ] << endl;
-		}
-		out << endl;
+		out << "size: " << array.size() << " addr: " << array.m_array;
+		
+		#ifdef DETAILED_STREAM
+			out << endl;
+			for( int i = 0; i < array.m_size; ++i )
+			{
+				out << array[ i ] << endl;
+			}
+		#endif
+		
 		return out;
 	}
 	
 	template< typename Type, typename Alloc >
 	ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array )
 	{
-		for( int i = 0; i < array.m_size; ++i )
-		{
-			out << *array[ i ] << endl;
-		}
-		out << endl;
+		out << "size: " << array.size() << " addr: " << array.m_array;
+		
+		#ifdef DETAILED_STREAM
+			out << endl;
+			for( int i = 0; i < array.m_size; ++i )
+			{
+				out << *array[ i ] << endl;
+			}
+		#endif
+		
 		return out;
 	}
+	
+	#undef DETAILED_STREAM
 }
 
 #endif

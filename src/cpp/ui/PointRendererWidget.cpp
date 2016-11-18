@@ -329,7 +329,13 @@ void PointRendererWidget::openMesh( const string& filename )
 		delete m_octree;
 	}
 	
-	Octree::RuntimeSetup runtime( 4, 4/*32*/, 1024ul * 1024ul * 1024ul * 12ul, true );
+	// Debug value.
+// 	int nThreads = 1;
+	
+	// Best value for performance
+	int nThreads = 4;
+	
+	Octree::RuntimeSetup runtime( nThreads, 4/*32*/, 1024ul * 1024ul * 1024ul * 12ul, true );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{

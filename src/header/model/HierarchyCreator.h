@@ -980,6 +980,14 @@ namespace model
 // 			}
 			#endif
 			
+			#ifdef DEBUG
+			{
+				stringstream ss; ss << "Inner: " << endl << node << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
+			}
+			#endif
+			
 			return node;
 		}
 	}

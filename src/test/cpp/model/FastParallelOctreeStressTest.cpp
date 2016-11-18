@@ -9,7 +9,7 @@ namespace model
 {
 	namespace test
 	{
-		TEST( FastParallelOctreeStressTest, Stress )
+		TEST( FastParallelOctreeStressTest, DISABLED_Stress )
 		{
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton >;

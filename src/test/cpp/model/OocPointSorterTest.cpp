@@ -147,14 +147,14 @@ namespace model
 				  1325568ul );
 		}
 		
-		TEST_F( OocPointSorterTest, David )
+		TEST_F( OocPointSorterTest, DISABLED_David )
 		{
 			test( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesFlippedNormals/David.gp",
 				  "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls", 11,
 				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul, 468640353ul );
 		}
 		
-		TEST_F( OocPointSorterTest, DavidResort )
+		TEST_F( OocPointSorterTest, DISABLED_DavidResort )
 		{
 			using Sorter = OocPointSorter< MediumMortonCode >;
 			using OctreeDim = typename Sorter::OctreeDim;
