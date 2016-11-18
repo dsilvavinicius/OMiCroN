@@ -174,8 +174,6 @@ namespace model
 			return m_substitutionSegIdx >= rangeStartIdx && m_substitutionSegIdx < rangeStartIdx + rangeSize;
 		}
 		
-		void renderDebug( const Node& node, const Renderer& renderer ) const;
-		
 		#ifdef DEBUG
 			void assertFrontIterator( const FrontListIter& iter, const FrontList& front )
 			{
@@ -834,9 +832,11 @@ namespace model
 		
 		if( node->loadState() == Node::LOADED )
 		{
-// 			renderDebug( *node, renderer );
-			
-			renderer.render_cloud( node->cloud() );
+			#ifdef TUCANO_RENDERER
+				renderer.render_cloud_tucano( node->getContents() );
+			#else
+				renderer.render_cloud( node->cloud() );
+			#endif
 		}
 	}
 	
@@ -848,35 +848,12 @@ namespace model
 		
 		if( node.loadState() == Node::LOADED )
 		{
-// 			renderDebug( node, renderer );
-			
-			renderer.render_cloud( node.cloud() );
+			#ifdef TUCANO_RENDERER
+				renderer.render_cloud_tucano( node.getContents() );
+			#else
+				renderer.render_cloud( node.cloud() );
+			#endif
 		}
-	}
-	
-	template< typename Morton >
-	inline void Front< Morton >::renderDebug( const Node& node, const Renderer& renderer ) const
-	{
-		const Array< Surfel >& surfels = node.getContents();
-			
-		Mesh mesh;
-		mesh.selectPrimitive( Mesh::POINT );
-		vector< Vector4f > vertices;
-		vector< Vector3f > normals;
-		
-		for( const Surfel& surfel : surfels )
-		{
-			vertices.push_back( Vector4f( surfel.c.x(), surfel.c.y(), surfel.c.z(), 1.f ) );
-			normals.push_back( surfel.u.cross( surfel.v ) );
-		}
-		mesh.loadVertices( vertices );
-		mesh.loadNormals( normals );
-		
-		Effects::Phong phong;
-		phong.setShadersDir( "shaders/tucano/" );
-		phong.initialize();
-		
-		phong.render( mesh, renderer.camera(), renderer.camera() );
 	}
 }
 

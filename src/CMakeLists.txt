@@ -150,8 +150,6 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/splat_renderer.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/renderers/RenderingState.h			${CPP_DIR}/${MODEL_DIR}/renderers/RenderingState.cpp
-	${HEADER_DIR}/${MODEL_DIR}/renderers/TransientRenderingState.h	${CPP_DIR}/${MODEL_DIR}/renderers/TransientRenderingState.cpp
-	${HEADER_DIR}/${MODEL_DIR}/renderers/QtRenderingState.h			${CPP_DIR}/${MODEL_DIR}/renderers/QtRenderingState.cpp
 	${HEADER_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.h		${CPP_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/NodeLoaderThread.h

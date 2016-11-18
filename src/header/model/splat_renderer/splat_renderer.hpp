@@ -33,6 +33,11 @@
 #include "OglUtils.h"
 
 // #define DEBUG
+#define TUCANO_RENDERER
+
+#ifdef TUCANO_RENDERER
+	#include "phongshader.hpp"
+#endif
 
 class UniformBufferRaycast : public GLviz::glUniformBuffer
 {
@@ -72,7 +77,12 @@ public:
 
 	void begin_frame();
 	void render_cloud( SurfelCloud& cloud );
-    void render_frame();
+    
+	#ifdef TUCANO_RENDERER
+		void render_cloud_tucano( const model::Array< Surfel >& surfels ) const;
+	#endif
+	
+	void render_frame();
 	ulong end_frame();
 	
 	bool isCullable( const AlignedBox3f& box ) const;
@@ -168,6 +178,30 @@ inline void SplatRenderer::render_cloud( SurfelCloud& cloud )
 	m_toRender.push_back( &cloud );
 }
 
+#ifdef TUCANO_RENDERER
+	inline void SplatRenderer::render_cloud_tucano( const model::Array< Surfel >& surfels ) const
+	{
+		Mesh mesh;
+		mesh.selectPrimitive( Mesh::POINT );
+		vector< Vector4f > vertices;
+		vector< Vector3f > normals;
+		
+		for( const Surfel& surfel : surfels )
+		{
+			vertices.push_back( Vector4f( surfel.c.x(), surfel.c.y(), surfel.c.z(), 1.f ) );
+			normals.push_back( surfel.u.cross( surfel.v ) );
+		}
+		mesh.loadVertices( vertices );
+		mesh.loadNormals( normals );
+		
+		Effects::Phong phong;
+		phong.setShadersDir( "shaders/tucano/" );
+		phong.initialize();
+		
+		phong.render( mesh, *m_camera, *m_camera );
+	}
+#endif
+
 inline bool SplatRenderer::isCullable( const AlignedBox3f& box ) const
 {
 	return m_frustum.isCullable( box );
@@ -205,7 +239,10 @@ inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float pr
 inline void SplatRenderer::begin_frame()
 {
 	m_frustum.update( *m_camera );
-	m_fbo.bind();
+	
+	#ifndef TUCANO_RENDERER
+		m_fbo.bind();
+	#endif
 	
 	glDepthMask(GL_TRUE);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -269,12 +306,104 @@ inline void SplatRenderer::render_pass( bool depth_only )
     glDisable(GL_DEPTH_TEST);
 }
 
-inline Vector2i SplatRenderer
-::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
+inline void SplatRenderer::render_frame()
 {
-	Vector4f proj = viewProj * point;
-	return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
-						( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
+	#ifndef TUCANO_RENDERER
+		if( !m_toRender.empty() )
+		{
+			if (m_multisample)
+			{
+				glEnable(GL_MULTISAMPLE);
+				glEnable(GL_SAMPLE_SHADING);
+				glMinSampleShading(4.0);
+			}
+
+			#ifndef NDEBUG
+				util::OglUtils::checkOglErrors();
+			#endif
+			
+			if (m_soft_zbuffer)
+			{
+				render_pass( true);
+			}
+
+			#ifndef NDEBUG
+				util::OglUtils::checkOglErrors();
+			#endif
+			
+			render_pass( false );
+			
+			#ifndef NDEBUG
+				util::OglUtils::checkOglErrors();
+			#endif
+
+			m_toRender.clear();
+			
+			if (m_multisample)
+			{
+				glDisable(GL_MULTISAMPLE);
+				glDisable(GL_SAMPLE_SHADING);
+			}
+			
+			m_fbo.unbind();
+
+			if (m_multisample)
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.color_texture());
+
+				if (m_smooth)
+				{
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.normal_texture());
+
+					glActiveTexture(GL_TEXTURE2);
+					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.depth_texture());
+				}
+			}
+			else
+			{
+				glActiveTexture(GL_TEXTURE0);
+				glBindTexture(GL_TEXTURE_2D, m_fbo.color_texture());
+
+				if (m_smooth)
+				{
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, m_fbo.normal_texture());
+
+					glActiveTexture(GL_TEXTURE2);
+					glBindTexture(GL_TEXTURE_2D, m_fbo.depth_texture());
+				}
+			}
+
+			m_finalization.use();
+			
+			try
+			{
+				setup_uniforms(m_finalization, m_camera->getViewMatrix().matrix());
+				m_finalization.set_uniform_1i("color_texture", 0);
+
+				if (m_smooth)
+				{
+					m_finalization.set_uniform_1i("normal_texture", 1);
+					m_finalization.set_uniform_1i("depth_texture", 2);
+				}
+			}
+			catch (uniform_not_found_error const& e)
+			{
+				std::cerr << "Warning: Failed to set a uniform variable." << std::endl
+					<< e.what() << std::endl;
+			}
+
+			glBindVertexArray(m_rect_vao);
+			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+			glBindVertexArray(0);
+		}
+	#endif
+	
+	#ifndef NDEBUG
+		util::OglUtils::checkOglErrors();
+	#endif
 }
 
 inline ulong SplatRenderer::end_frame()
@@ -283,6 +412,14 @@ inline ulong SplatRenderer::end_frame()
 	m_renderedSplats = 0ul;
 	
 	return renderedSplats;
+}
+
+inline Vector2i SplatRenderer
+::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
+{
+	Vector4f proj = viewProj * point;
+	return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
+						( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
 }
 
 inline const Tucano::Camera& SplatRenderer::camera() const
