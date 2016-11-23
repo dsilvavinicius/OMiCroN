@@ -7,6 +7,7 @@
 #include "OglUtils.h"
 
 // #define DEBUG
+// #define BUFFER_MTX
 
 using namespace model;
 
@@ -35,7 +36,9 @@ private:
 	void clean();
 	void shallowClean();
 	
-	static mutex m_bufferBindMtx;
+	#ifdef BUFFER_MTX
+		static mutex m_bufferBindMtx;
+	#endif
 	
 	GLuint m_vbo, m_vao;
     uint m_numPts;
@@ -72,7 +75,9 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		GpuAllocStatistics::notifyAlloc( m_numPts * GpuAllocStatistics::pointSize() );
 		
 		{
-			lock_guard< mutex > lock( m_bufferBindMtx );
+			#ifdef BUFFER_MTX
+				lock_guard< mutex > lock( m_bufferBindMtx );
+			#endif
 			
 			glGenBuffers(1, &m_vbo);
 			glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
@@ -147,7 +152,9 @@ inline SurfelCloud::~SurfelCloud()
 inline void SurfelCloud::render()
 {
 	{
-		lock_guard< mutex > lock( m_bufferBindMtx );
+		#ifdef BUFFER_MTX
+			lock_guard< mutex > lock( m_bufferBindMtx );
+		#endif
 	
 		if( !m_vao )
 		{
@@ -227,5 +234,6 @@ inline ostream& operator<<( ostream& out, const SurfelCloud& cloud )
 }
 
 #undef DEBUG
+#undef BUFFER_MTX
 
 #endif
