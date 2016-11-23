@@ -183,11 +183,17 @@ namespace model
 			m_children = std::move( children );
 		}
 		
+		/** Release the child nodes. The node is not turned into leaf. Useful to release memory momentarily. */
+		void releaseChildren()
+		{
+			m_children.clear();
+		}
+		
 		/** Transforms the node into a leaf, releasing all child nodes. */
 		void turnLeaf()
 		{
 			m_isLeaf = true;
-			m_children.clear();
+			releaseChildren();
 		}
 		
 		const SurfelCloud& cloud() const { return m_cloud; }

@@ -163,11 +163,7 @@ namespace model
 	{
 		for( Node& sibling : siblings )
 		{
-			Siblings& children = sibling.child();
-			if( !children.empty() )
-			{
-				release( children );
-			}
+			sibling.releaseChildren();
 		}
 		
 		siblings.clear();

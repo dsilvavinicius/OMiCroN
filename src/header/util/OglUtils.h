@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <stdexcept>
-#include <GL/glu.h>
+#include <GL/glew.h>
 #include <sstream>
 
 using namespace std;

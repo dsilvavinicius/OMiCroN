@@ -33,7 +33,7 @@
 #include "OglUtils.h"
 
 // #define DEBUG
-#define TUCANO_RENDERER
+// #define TUCANO_RENDERER
 
 #ifdef TUCANO_RENDERER
 	#include "phongshader.hpp"

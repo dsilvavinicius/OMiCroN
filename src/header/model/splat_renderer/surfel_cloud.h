@@ -35,6 +35,8 @@ private:
 	void clean();
 	void shallowClean();
 	
+	static mutex m_bufferBindMtx;
+	
 	GLuint m_vbo, m_vao;
     uint m_numPts;
 	Matrix4f m_model;
@@ -69,10 +71,15 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		
 		GpuAllocStatistics::notifyAlloc( m_numPts * GpuAllocStatistics::pointSize() );
 		
-		glGenBuffers(1, &m_vbo);
-		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		{
+			lock_guard< mutex > lock( m_bufferBindMtx );
+			
+			glGenBuffers(1, &m_vbo);
+			glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(Surfel) * m_numPts, surfels.data(), GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+		
 		#ifndef NDEBUG
 			util::OglUtils::checkOglErrors();
 		#endif
@@ -139,39 +146,39 @@ inline SurfelCloud::~SurfelCloud()
 
 inline void SurfelCloud::render()
 {
-	if( !m_vao )
 	{
-		glGenVertexArrays(1, &m_vao);
-		glBindVertexArray(m_vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-
-		// Center c.
-		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
-			sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
-
-		// Tagent vector u.
-		glEnableVertexAttribArray(1);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
-			sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
-
-		// Tangent vector v.
-		glEnableVertexAttribArray(2);
-		glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-			sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
-	}
-	else
-	{
-		glBindVertexArray( m_vao );
-	}
+		lock_guard< mutex > lock( m_bufferBindMtx );
 	
-	#ifndef DEBUG
-		cout << "Rendering: " << endl << *this << endl << endl;
-	#endif
-	
-	glDrawArrays( GL_POINTS, 0, m_numPts );
-	glBindVertexArray( 0 );
+		if( !m_vao )
+		{
+			glGenVertexArrays(1, &m_vao);
+			glBindVertexArray(m_vao);
+
+			glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
+
+			// Center c.
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+				sizeof(Surfel), reinterpret_cast<const GLfloat*>(0));
+
+			// Tagent vector u.
+			glEnableVertexAttribArray(1);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+				sizeof(Surfel), reinterpret_cast<const GLfloat*>(12));
+
+			// Tangent vector v.
+			glEnableVertexAttribArray(2);
+			glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
+				sizeof(Surfel), reinterpret_cast<const GLfloat*>(24));
+		}
+		else
+		{
+			glBindVertexArray( m_vao );
+		}
+		
+		glDrawArrays( GL_POINTS, 0, m_numPts );
+		glBindVertexArray( 0 );
+	}
 	
 	#ifndef NDEBUG
 		util::OglUtils::checkOglErrors();

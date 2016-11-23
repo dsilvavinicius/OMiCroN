@@ -2,6 +2,7 @@
 #define SURFEL_H
 
 #include <iostream>
+#include <Eigen/Dense>
 
 using namespace std;
 

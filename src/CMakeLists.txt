@@ -162,7 +162,9 @@ add_library (Point_Based_Renderer_Lib
 	# Jump-flooding related code.
 	${JUMP_FLOODING_DIR}/imgSpacePBR.hpp	${JUMP_FLOODING_DIR}/imgSpacePBR.cpp
     ${JUMP_FLOODING_DIR}/point_model.hpp	${JUMP_FLOODING_DIR}/point_model.cpp 
-    ${JUMP_FLOODING_DIR}/bin.cpp )
+    ${JUMP_FLOODING_DIR}/bin.cpp
+    
+    ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/surfel_cloud.cpp)
 
     
 # Set TBB variables

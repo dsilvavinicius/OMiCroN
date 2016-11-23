@@ -14,6 +14,7 @@
 
 // #define DEBUG
 #define N_THREADS 1
+#define ASYNC_LOAD
 
 #ifdef DEBUG
 	#include "HierarchyCreationLog.h"
@@ -653,9 +654,12 @@ namespace model
 				{
 					node = substituteCandidate;
 					
-// 					node.m_octreeNode->loadGPU();
-					m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
-					
+					#ifdef ASYNC_LOAD
+						m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
+					#else
+						node.m_octreeNode->loadGPU();
+					#endif
+						
 					substitutionLvlList.erase( substitutionLvlList.begin() );
 					
 					return true;
@@ -721,8 +725,12 @@ namespace model
 		
 		if( pruneFlag && parentNode->loadState() != Node::LOADED )
 		{
-// 			parentNode->loadGPU();
-			m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
+			#ifdef ASYNC_LOAD
+				m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
+			#else
+				parentNode->loadGPU();
+			#endif
+			
 			pruneFlag = false;
 		}
 		
@@ -742,7 +750,11 @@ namespace model
 		
 		if( AllocStatistics::totalAllocated() > m_memoryLimit )
 		{
-			m_nodeLoader.asyncRelease( std::move( parentNode->child() ), omp_get_thread_num() );
+			#ifdef ASYNC_LOAD
+				m_nodeLoader.asyncRelease( std::move( parentNode->child() ), omp_get_thread_num() );
+			#else
+				parentNode->releaseChildren();
+			#endif
 		}
 		else
 		{
@@ -750,8 +762,11 @@ namespace model
 			{
 				for( Node& node : parentNode->child() )
 				{
-// 					node.unloadGPU();
-					m_nodeLoader.asyncUnload( node, omp_get_thread_num() );
+					#ifdef ASYNC_LOAD
+						m_nodeLoader.asyncUnload( node, omp_get_thread_num() );
+					#else
+						node.unloadGPU();
+					#endif
 				}
 			}
 		}
@@ -779,8 +794,11 @@ namespace model
 			{
 				for( Node& child : children )
 				{
-// 					child.loadGPU();
-					m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
+					#ifdef ASYNC_LOAD
+						m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
+					#else
+						child.loadGPU();
+					#endif
 				}
 			}
 		}
@@ -858,5 +876,6 @@ namespace model
 }
 
 #undef DEBUG
+#undef ASYNC_LOAD
 
 #endif
