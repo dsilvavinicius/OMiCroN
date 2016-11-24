@@ -11,14 +11,20 @@
 #include "Profiler.h"
 #include "StackTrace.h"
 #include "phongshader.hpp"
+#include "HierarchyCreationLog.h"
 
-// #define DEBUG
-#define N_THREADS 1
+// Definitions to turn on debug logging for each Front operation.
+#define INSERTION_DEBUG
+#define SUBSTITUTION_DEBUG
+#define ORDERING_DEBUG
+#define RENDERING_DEBUG
+#define FRONT_TRACKING_DEBUG
+
+// Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
 
-#ifdef DEBUG
-	#include "HierarchyCreationLog.h"
-#endif
+// Number of threads in front tracking.
+#define N_THREADS 1
 
 using namespace std;
 using namespace util;
@@ -175,7 +181,7 @@ namespace model
 			return m_substitutionSegIdx >= rangeStartIdx && m_substitutionSegIdx < rangeStartIdx + rangeSize;
 		}
 		
-		#ifdef DEBUG
+		#ifdef ORDERING_DEBUG
 			void assertFrontIterator( const FrontListIter& iter, const FrontList& front )
 			{
 				if( iter != front.begin() )
@@ -221,7 +227,7 @@ namespace model
 						}
 					}
 				}
-				assertNode( *iter->m_octreeNode, iter->m_morton );
+// 				assertNode( *iter->m_octreeNode, iter->m_morton );
 			}
 		
 			void assertNode( const Node& node, const Morton& morton )
@@ -382,6 +388,13 @@ namespace model
 	template< typename Morton >
 	inline void Front< Morton >::insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx )
 	{
+		#ifdef INSERTION_DEBUG
+		{
+			stringstream ss; ss << "Inserting " << morton.getPathToRoot( true ) << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
@@ -395,9 +408,16 @@ namespace model
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton > ::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
+	inline void Front< Morton >::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
 													int threadIdx )
 	{
+		#ifdef INSERTION_DEBUG
+		{
+			stringstream ss; ss << "Inserting " << morton.getPathToRoot( true ) << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		FrontNode frontNode( node, morton );
 		
@@ -503,8 +523,26 @@ namespace model
 				Segment& segment = m_segments[ segmentIdx ];
 				FrontList& front = segment.m_front;
 				
+				#ifdef FRONT_TRACKING_DEBUG
+				{
+					stringstream ss; ss << "Front size: " << front.size() << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+				#endif
+				
 				for( FrontListIter iter = front.begin(); iter != front.end(); /**/ )
 				{
+					#ifdef FRONT_TRACKING_DEBUG
+					{
+						stringstream ss; ss << "Tracking " << iter->m_morton.getPathToRoot() << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
+					#endif
+					
+					#ifdef ORDERING_DEBUG
+						assertFrontIterator( iter, front );
+					#endif
+					
 					trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
 				}
 			}
@@ -568,6 +606,12 @@ namespace model
 		
 		int renderingTime = Profiler::elapsedTime( start );
 		
+		#ifdef FRONT_TRACKING_DEBUG
+		{
+			HierarchyCreationLog::logDebugMsg( "===== FRONT TRACKING END =====\n\n" );
+		}
+		#endif
+		
 		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, nNodes );
 	}
 	
@@ -621,9 +665,11 @@ namespace model
 		
 		if( !isCullable )
 		{
-			#ifdef DEBUG
+			#ifdef RENDERING_DEBUG
 			{
-				cout << "Trying to render: " << morton.getPathToRoot( true ) << node << endl << endl;
+				stringstream ss; ss << "Rendering: " << endl << morton.getPathToRoot( true ) << endl << node << endl
+					<< endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
 			}
 			#endif
 			
@@ -652,6 +698,12 @@ namespace model
 				
 				if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
 				{
+					#ifdef SUBSTITUTION_DEBUG
+						stringstream ss; ss << "Substituting placeholder " << node.m_morton.getPathToRoot( true )
+							<< " by " << substituteCandidate.m_morton.getPathToRoot( true ) << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					#endif
+					
 					node = substituteCandidate;
 					
 					#ifdef ASYNC_LOAD
@@ -842,9 +894,11 @@ namespace model
 		
 		Node* node = frontNode.m_octreeNode;
 		
-		#ifdef DEBUG
+		#ifdef RENDERING_DEBUG
 		{
-			cout << "Trying to render: " << endl << frontNode << endl << endl;
+			stringstream ss; ss << "Rendering: " << endl << frontNode.m_morton.getPathToRoot( true ) << endl <<
+				*node << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
 		
@@ -875,7 +929,12 @@ namespace model
 	}
 }
 
-#undef DEBUG
+#undef INSERTION_DEBUG
+#undef SUBSTITUTION_DEBUG
+#undef ORDERING_DEBUG
+#undef RENDERING_DEBUG
+#undef FRONT_TRACKING_DEBUG
+
 #undef ASYNC_LOAD
 
 #endif

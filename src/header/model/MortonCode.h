@@ -107,7 +107,7 @@ namespace model
 		
 		/** Returns a string indicating the path to the root code from this code.
 		 * @param simple indicates that the node should be printed in a simpler representation. */
-		string getPathToRoot( bool simple ) const;
+		string getPathToRoot( bool simple = true ) const;
 		
 		/** Gets the first code of a given lvl. */
 		static MortonCode< T > getLvlFirst( const unsigned int& lvl );
@@ -366,7 +366,7 @@ namespace model
 				ss << "0x" << hex << code.getBits() << dec << "->";
 				code = *code.traverseUp();
 			}
-			ss << "0x" << hex << code.getBits() << dec << endl;
+			ss << "0x" << hex << code.getBits() << dec;
 		}
 		else
 		{
@@ -375,7 +375,7 @@ namespace model
 				ss << code << dec << " -> ";
 				code = *code.traverseUp();
 			}
-			ss << code << dec << endl;
+			ss << code << dec;
 		}
 		
 		return ss.str();

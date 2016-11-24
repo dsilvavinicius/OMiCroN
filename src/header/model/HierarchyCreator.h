@@ -11,12 +11,11 @@
 #include "OctreeDimensions.h"
 #include "Front.h"
 #include "SQLiteManager.h"
+#include "HierarchyCreationLog.h"
 
-// #define DEBUG
-
-#ifdef DEBUG
-	#include "HierarchyCreationLog.h"
-#endif
+#define NODE_CREATION_DEBUG
+#define NODE_PROCESSING_DEBUG
+#define PARENT_DEBUG
 
 using namespace util;
 
@@ -252,12 +251,12 @@ namespace model
 						{
 							if( points.size() > 0 )
 							{
-								#ifdef DEBUG
-// 								{
-// 									cout << "Creating node "
-// 										 << leafLvlDimCpy.calcMorton( points[ 0 ] ).getPathToRoot( true ) << "Size: "
-// 										 << points.size() << endl << "First point: " << points[ 0 ] << endl << endl;
-// 								}
+								#ifdef NODE_CREATION_DEBUG
+								{
+									stringstream ss; ss << "Creating node "
+										<< leafLvlDimCpy.calcMorton( points[ 0 ] ).getPathToRoot() << endl << endl;
+									HierarchyCreationLog::logDebugMsg( ss.str() );
+								}
 								#endif
 								
 								
@@ -407,6 +406,19 @@ namespace model
 								++nSiblings;
 								input.pop_front();
 							}
+							
+							#ifdef NODE_PROCESSING_DEBUG
+							{
+								stringstream ss;
+								for( int i = 0; i < nSiblings; ++i )
+								{
+									ss << "Processing: " << m_octreeDim.calcMorton( siblings[ i ] ).getPathToRoot()
+										<< endl << endl;
+								}
+								
+								HierarchyCreationLog::logDebugMsg( ss.str() );
+							}
+							#endif
 							
 							bool isLastSiblingGroup = input.empty();
 							
@@ -622,6 +634,14 @@ namespace model
 		// Parents are expected to be set once.
 		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
 		{
+			#ifdef PARENT_DEBUG
+			{
+				stringstream ss; ss << "Setting as parent: " << m_octreeDim.calcMorton( node ).getPathToRoot()
+					<< endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 			
 			for( Node& child : node.child() )
@@ -643,11 +663,12 @@ namespace model
 		// Parents are expected to be set once.
 		if( !node.child().empty() && node.child()[ 0 ].parent() == nullptr )
 		{
-			#ifdef DEBUG
-// 			{
-// 				cout << "Setting as parent: " << m_octreeDim.calcMorton( node ).getPathToRoot( true )
-// 					 << node << endl << endl;
-// 			}
+			#ifdef PARENT_DEBUG
+			{
+				stringstream ss; ss << "Setting as parent: " << m_octreeDim.calcMorton( node ).getPathToRoot()
+					<< endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
 			#endif
 			
 			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
@@ -1037,6 +1058,8 @@ namespace model
 	}
 }
 
-#undef DEBUG
+#undef NODE_CREATION_DEBUG
+#undef NODE_PROCESSING_DEBUG
+#undef PARENT_DEBUG
 
 #endif
