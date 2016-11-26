@@ -14,11 +14,11 @@
 #include "HierarchyCreationLog.h"
 
 // Definitions to turn on debug logging for each Front operation.
-#define INSERTION_DEBUG
-#define SUBSTITUTION_DEBUG
-#define ORDERING_DEBUG
-#define RENDERING_DEBUG
-#define FRONT_TRACKING_DEBUG
+// #define INSERTION_DEBUG
+// #define SUBSTITUTION_DEBUG
+// #define ORDERING_DEBUG
+// #define RENDERING_DEBUG
+// #define FRONT_TRACKING_DEBUG
 
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
