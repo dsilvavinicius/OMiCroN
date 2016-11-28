@@ -4,6 +4,10 @@
 #include "TbbAllocator.h"
 #include "Serializer.h"
 #include <boost/concept_check.hpp>
+#include "HierarchyCreationLog.h"
+
+#define DETAILED_STREAM
+// #define DEBUG
 
 namespace model
 {
@@ -26,6 +30,13 @@ namespace model
 		Array( uint size )
 		: m_size( size )
 		{
+			#ifdef DEBUG
+			{
+				stringstream ss; ss << "[ t " << omp_get_thread_num() << " ] array addr: " << this << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			if( m_size )
 			{
 				m_array = A().allocate( size );
@@ -300,8 +311,6 @@ namespace model
 		uint m_size;
 	};
 	
-// 	#define DETAILED_STREAM
-	
 	template< typename Type, typename Alloc >
 	ostream& operator<<( ostream& out, const Array< Type, Alloc >& array )
 	{
@@ -321,7 +330,7 @@ namespace model
 	template< typename Type, typename Alloc >
 	ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array )
 	{
-		out << "size: " << array.size() << " addr: " << array.m_array;
+		out << " addr: " << &array << "size: " << array.size() << " data addr: " << array.m_array;
 		
 		#ifdef DETAILED_STREAM
 			out << endl;
@@ -333,8 +342,9 @@ namespace model
 		
 		return out;
 	}
-	
-	#undef DETAILED_STREAM
 }
+
+#undef DETAILED_STREAM
+#undef DEBUG
 
 #endif

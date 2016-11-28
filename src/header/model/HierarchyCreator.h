@@ -16,6 +16,7 @@
 #define LEAF_CREATION_DEBUG
 #define INNER_CREATION_DEBUG
 #define NODE_PROCESSING_DEBUG
+#define SPECIFIC_NODE_DEBUG
 #define NODE_LIST_MERGE_DEBUG
 #define PARENT_DEBUG
 
@@ -480,6 +481,17 @@ namespace model
 									// LOD
 									Node inner = createInnerNode( std::move( siblings ), nSiblings,
 																  threadIdx, !isBoundarySiblingGroup );
+									
+									#ifdef SPECIFIC_NODE_DEBUG
+									{
+										if( nextLvlDim.calcMorton( inner ).getBits() == 0x241 )
+										{
+											stringstream ss; ss << "[ " << threadIdx << " ]: 0x241 creation finished"
+												<< endl << endl;
+											HierarchyCreationLog::logDebugMsg( ss.str() );
+										}
+									}
+									#endif
 									
 									output.push_back( std::move( inner ) );
 									isBoundarySiblingGroup = false;
@@ -965,16 +977,61 @@ namespace model
 			m_front.insertPlaceholder( childMorton, threadIdx );
 		}
 		
+		#ifdef SPECIFIC_NODE_DEBUG
+			OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+			
+			if( nextLvlDim.calcMorton( child ).getBits() == 0x241 )
+			{
+				stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 after placeholder" << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+		#endif
+		
 		const PointArray& childPoints = child.getContents();
 		
+		#ifdef SPECIFIC_NODE_DEBUG
+			if( nextLvlDim.calcMorton( child ).getBits() == 0x241 )
+			{
+				stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 flag 0" << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+		#endif
+		
 		int numSamplePoints = std::max( 1., childPoints.size() * 0.015625 );
+		
+		#ifdef SPECIFIC_NODE_DEBUG
+			if( nextLvlDim.calcMorton( child ).getBits() == 0x241 )
+			{
+				stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 flag 1. num samples: " << numSamplePoints << endl
+					<< endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+		#endif
+		
 		PointArray selectedPoints( numSamplePoints );
+		
+		#ifdef SPECIFIC_NODE_DEBUG
+			if( nextLvlDim.calcMorton( child ).getBits() == 0x241 )
+			{
+				stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 flag 2" << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
+			}
+		#endif
 		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
 			int choosenIdx = rand() % childPoints.size();
 			selectedPoints[ i ] = childPoints[ choosenIdx ];
 		}
+		
+		#ifdef SPECIFIC_NODE_DEBUG
+			if( nextLvlDim.calcMorton( child ).getBits() == 0x241 )
+			{
+				stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 after point selection" << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+		#endif
 		
 		Node node( std::move( selectedPoints ), isLeaf );
 		if( !isLeaf )
@@ -983,26 +1040,30 @@ namespace model
 			children[ 0 ] = std::move( child );
 			node.setChildren( std::move( children ) );
 			
+			#ifdef SPECIFIC_NODE_DEBUG
+				if( nextLvlDim.calcMorton( node.child()[ 0 ] ).getBits() == 0x241 )
+				{
+					stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 before setting children as parents" << endl
+						<< endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			#endif
+			
 			Node& finalChild = node.child()[ 0 ];
 			if( setParentFlag && !finalChild.isLeaf() )
 			{
 				setParent( finalChild, threadIdx );
 			}
+			
+			#ifdef SPECIFIC_NODE_DEBUG
+				if( nextLvlDim.calcMorton( node.child()[ 0 ] ).getBits() == 0x241 )
+				{
+					stringstream ss; ss << "[ t" << threadIdx << " ]: 0x241 after setting children as parents" << endl
+						<< endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			#endif
 		}
-		
-		#ifdef DEBUG
-// 		{
-// 			OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
-// 			cout << "Creating node from single. " << nextLvlDim.calcMorton( node ).getPathToRoot( true ) << node
-// 				 << endl << endl;
-// 			if( !isLeaf )
-// 			{
-// 				Node& firstChild = node.child()[ 0 ];
-// 				cout << "First child: " << m_octreeDim.calcMorton( firstChild ).getPathToRoot( true ) << firstChild
-// 					 << endl << endl;
-// 			}
-// 		}
-		#endif
 		
 		return node;
 	}
@@ -1013,10 +1074,32 @@ namespace model
 	{
 		if( nChildren == 1 )
 		{
+			#ifdef SPECIFIC_NODE_DEBUG
+			{
+				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+				
+				if( nextLvlDim.calcMorton( inChildren[ 0 ] ).getBits() == 0x241 )
+				{
+					stringstream ss; ss << "[ " << threadIdx << " ]: 0x241 starting creation from single" << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			}
+			#endif
+			
 			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, threadIdx, setParentFlag );
 		}
 		else
 		{
+			#ifdef SPECIFIC_NODE_DEBUG
+				OctreeDim nextLvlDim( m_octreeDim, m_octreeDim.m_nodeLvl - 1 );
+				
+				if( nextLvlDim.calcMorton( inChildren[ 0 ] ).getBits() == 0x241 )
+				{
+					stringstream ss; ss << "[ " << threadIdx << " ]: 0x241 starting inner creation." << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			#endif
+			
 			NodeArray children( nChildren );
 			
 			// Verify if placeholders are necessary.
@@ -1045,7 +1128,23 @@ namespace model
 				}
 			}
 			
+			#ifdef SPECIFIC_NODE_DEBUG
+				if( nextLvlDim.calcMorton( children[ 0 ] ).getBits() == 0x241 )
+				{
+					stringstream ss; ss << "[ " << threadIdx << " ]: 0x241 prefix map created" << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			#endif
+			
 			PointArray selectedPoints = samplePoints( prefixMap, nPoints );
+			
+			#ifdef SPECIFIC_NODE_DEBUG
+				if( nextLvlDim.calcMorton( children[ 0 ] ).getBits() == 0x241 )
+				{
+					stringstream ss; ss << "[ " << threadIdx << " ]: 0x241 points sampled" << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			#endif
 			
 			Node node( std::move( selectedPoints ), false );
 			node.setChildren( std::move( children ) );
@@ -1102,6 +1201,7 @@ namespace model
 #undef LEAF_CREATION_DEBUG
 #undef INNER_CREATION_DEBUG
 #undef NODE_PROCESSING_DEBUG
+#undef SPECIFIC_NODE_DEBUG
 #undef NODE_LIST_MERGE_DEBUG
 #undef PARENT_DEBUG
 

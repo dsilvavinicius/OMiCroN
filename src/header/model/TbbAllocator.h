@@ -7,6 +7,10 @@
 #include <mutex>
 #include <atomic>
 #include <tbb/scalable_allocator.h>
+#include <sstream>
+#include "HierarchyCreationLog.h"
+
+#define DEBUG
 
 using namespace std;
 using namespace tbb;
@@ -76,8 +80,30 @@ namespace model
 		
 		pointer allocate( size_type n )
 		{
+			#ifdef DEBUG
+			{
+				if( n == 158 )
+				{
+					stringstream ss; ss << "[ t" << omp_get_thread_num() << " ] starting allocation" << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			}
+			#endif
+			
 			pointer p = ScalableAlloc().allocate( n );
+			
+			#ifdef DEBUG
+			{
+				if( n == 158 )
+				{
+					stringstream ss; ss << "[ t" << omp_get_thread_num() << " ] allocated" << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+			}
+			#endif
+			
 			AllocStatistics::notifyAlloc( scalable_msize( p ) );
+			
 			return p;
 		}
 		void deallocate( pointer p, size_type = 0 )
@@ -95,5 +121,7 @@ namespace model
 		bool operator!=( const TbbAllocator& ){ return false; }
 	};
 }
+
+#undef DEBUG
 
 #endif
