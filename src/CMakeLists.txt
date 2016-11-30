@@ -169,8 +169,8 @@ add_library (Point_Based_Renderer_Lib
     
 # Set TBB variables
 
-include_directories ("/usr/include/tbb")
-link_directories("/usr/lib/x86_64-linux-gnu")
+include_directories ("include/tbb")
+link_directories("lib/tbb")
     
 # Link all necessary libs.
 target_link_libraries (Point_Based_Renderer_Lib
@@ -183,7 +183,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	"/usr/lib/x86_64-linux-gnu/libtbbmalloc.so"
+	"libtbbmalloc.so"
 	${JSONCPP_LIBRARIES}
 	RPly
 	Tlsf

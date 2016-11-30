@@ -13,12 +13,12 @@
 #include "SQLiteManager.h"
 #include "HierarchyCreationLog.h"
 
-#define LEAF_CREATION_DEBUG
-#define INNER_CREATION_DEBUG
-#define NODE_PROCESSING_DEBUG
-#define SPECIFIC_NODE_DEBUG
-#define NODE_LIST_MERGE_DEBUG
-#define PARENT_DEBUG
+// #define LEAF_CREATION_DEBUG
+// #define INNER_CREATION_DEBUG
+// #define NODE_PROCESSING_DEBUG
+// #define SPECIFIC_NODE_DEBUG
+// #define NODE_LIST_MERGE_DEBUG
+// #define PARENT_DEBUG
 
 using namespace util;
 

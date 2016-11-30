@@ -174,9 +174,9 @@ namespace model
 		{
 			if( m_size != 0 )
 			{
-				for( int i = 0; i < m_size; i++ )
+				for( auto iter = begin(); iter != end(); iter++  )
 				{
-					( m_array + i )->~T();
+					A().destroy( iter );
 				}
 				
 				// Debug
@@ -237,7 +237,7 @@ namespace model
 		/** Inits the internal array. */
 		void initArray()
 		{
-			for(  auto iter = begin(); iter != end(); iter++ )
+			for( auto iter = begin(); iter != end(); iter++ )
 			{
 				A().construct( iter );
 			}

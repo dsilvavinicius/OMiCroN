@@ -156,7 +156,7 @@ namespace model
 		
 		void setContents( ContentsArray&& contents )
 		{
-			m_contents.~ContentsArray();
+			m_contents.clear();
 			m_contents = std::move( contents );
 		}
 		

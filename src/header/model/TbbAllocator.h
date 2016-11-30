@@ -6,7 +6,16 @@
 #include <thread>
 #include <mutex>
 #include <atomic>
-#include <tbb/scalable_allocator.h>
+
+#define SCALABLE
+
+#ifdef SCALABLE
+	#include <scalable_allocator.h>
+#else
+	#include <malloc.h>
+	#include <tbb_allocator.h>
+#endif
+
 #include <sstream>
 #include "HierarchyCreationLog.h"
 
@@ -59,15 +68,20 @@ namespace model
 	template< typename T >
 	class TbbAllocator
 	{
-		using ScalableAlloc = scalable_allocator< T >;
+		#ifdef SCALABLE
+			using InternalAlloc = scalable_allocator< T >;
+		#else
+			using InternalAlloc = tbb_allocator< T >;
+		#endif
+		
 	public:
-		using value_type = typename ScalableAlloc::value_type;
-		using pointer = typename ScalableAlloc::pointer;
-		using const_pointer = typename ScalableAlloc::const_pointer;
-		using reference = typename ScalableAlloc::reference;
-		using const_reference = typename ScalableAlloc::const_reference;
-		using size_type = typename ScalableAlloc::size_type;
-		using difference_type = typename ScalableAlloc::difference_type;
+		using value_type = typename InternalAlloc::value_type;
+		using pointer = typename InternalAlloc::pointer;
+		using const_pointer = typename InternalAlloc::const_pointer;
+		using reference = typename InternalAlloc::reference;
+		using const_reference = typename InternalAlloc::const_reference;
+		using size_type = typename InternalAlloc::size_type;
+		using difference_type = typename InternalAlloc::difference_type;
 		
 		template< typename U >
 		struct rebind{ using other = TbbAllocator< U >; };
@@ -90,7 +104,13 @@ namespace model
 			}
 			#endif
 			
-			pointer p = ScalableAlloc().allocate( n );
+			#ifdef SCALABLE
+				pointer p = InternalAlloc().allocate( n );
+				AllocStatistics::notifyAlloc( scalable_msize( p ) );
+			#else
+				pointer p = ( pointer ) malloc( sizeof( T ) * n );
+				AllocStatistics::notifyAlloc( malloc_usable_size( p ) );
+			#endif
 			
 			#ifdef DEBUG
 			{
@@ -101,21 +121,24 @@ namespace model
 				}
 			}
 			#endif
-			
-			AllocStatistics::notifyAlloc( scalable_msize( p ) );
-			
+				
 			return p;
 		}
 		void deallocate( pointer p, size_type = 0 )
 		{
-			AllocStatistics::notifyDealloc( scalable_msize( p ) );
-			ScalableAlloc().deallocate( p, 0 );
+			#ifdef SCALABLE
+				AllocStatistics::notifyDealloc( scalable_msize( p ) );
+				InternalAlloc().deallocate( p, 0 );
+			#else
+				AllocStatistics::notifyDealloc( malloc_usable_size( p ) );
+				free( p );
+			#endif
 		}
 		
 		template< class U, class... Args >
-		void construct( U* p, Args&&... args ) { ScalableAlloc().construct( p, std::forward< Args >( args )... ); }
+		void construct( U* p, Args&&... args ) { InternalAlloc().construct( p, std::forward< Args >( args )... ); }
 		
-		void destroy( T* p ){ ScalableAlloc().destroy( p ); }
+		void destroy( T* p ){ InternalAlloc().destroy( p ); }
 		
 		bool operator==( const TbbAllocator& ){ return true; }
 		bool operator!=( const TbbAllocator& ){ return false; }
