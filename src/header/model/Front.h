@@ -19,6 +19,7 @@
 // #define ORDERING_DEBUG
 // #define RENDERING_DEBUG
 // #define FRONT_TRACKING_DEBUG
+// #define PRUNING_DEBUG
 
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
@@ -738,11 +739,33 @@ namespace model
 		if( renderer.isCullable( parentBox ) )
 		{
 			pruneFlag = true;
+			
+			#ifdef PRUNING_DEBUG
+			{
+				stringstream ss; ss << parentMorton.getPathToRoot() << ": CULLABLE." << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
 		}
 		else
 		{
+			#ifdef PRUNING_DEBUG
+			{
+				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT CULLABLE." << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			if( renderer.isRenderable( parentBox, projThresh ) )
 			{
+				#ifdef PRUNING_DEBUG
+				{
+					stringstream ss; ss << "Parent " << parentMorton.getPathToRoot() << ": RENDERABLE." << endl
+						<< endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+				#endif
+				
 				pruneFlag = true;
 			}
 		}
@@ -771,6 +794,14 @@ namespace model
 			if( ( !m_leafLvlLoadedFlag && siblingIter == segment.m_front.end() ) ||
 				nSiblings != parentNode->child().size() )
 			{
+				#ifdef PRUNING_DEBUG
+				{
+					stringstream ss; ss << parentMorton.getPathToRoot() << ": last sibling group."
+						<< endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+				#endif
+				
 				pruneFlag = false;
 			}
 		}
@@ -783,8 +814,24 @@ namespace model
 				parentNode->loadGPU();
 			#endif
 			
+			#ifdef PRUNING_DEBUG
+			{
+				stringstream ss; ss << parentMorton.getPathToRoot() << ": not loaded."
+					<< endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+				
 			pruneFlag = false;
 		}
+		
+		#ifdef PRUNING_DEBUG
+		{
+			stringstream ss; ss << parentMorton.getPathToRoot() << ": prunning successful? " << pruneFlag
+				<< endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
 		
 		return pruneFlag;
 	}
@@ -934,6 +981,7 @@ namespace model
 #undef ORDERING_DEBUG
 #undef RENDERING_DEBUG
 #undef FRONT_TRACKING_DEBUG
+#undef PRUNING_DEBUG
 
 #undef ASYNC_LOAD
 

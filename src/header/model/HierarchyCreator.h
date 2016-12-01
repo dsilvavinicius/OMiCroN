@@ -13,6 +13,9 @@
 #include "SQLiteManager.h"
 #include "HierarchyCreationLog.h"
 
+// Enables node colapse when leaves do not have siblings.
+#define NODE_COLAPSE
+
 // #define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG
 // #define NODE_PROCESSING_DEBUG
@@ -96,11 +99,13 @@ namespace model
 		 * (the same way as STL). */
 		void setParent( Node& node, const int threadIdx, typename Front::FrontListIter& frontIter ) /*const*/;
 		
+	#ifdef NODE_COLAPSE
 		/** Collapses (turn into leaf) a node if it has only one child. */
 		void collapse( Node& node ) const;
 		
 		/** If needed, collapses (turn into leaf) the boundary nodes of a worklist. */
 		void collapseBoundaries( NodeList& list ) const;
+	#endif
 		
 		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
@@ -616,7 +621,10 @@ namespace model
 					{
 						// The last NodeList is not collapsed and the parent of its children is not set yet.
 						NodeList& lastList = m_lvlWorkLists[ lvl - 1 ].back();
-						collapseBoundaries( lastList );
+						
+						#ifdef NODE_COLAPSE
+							collapseBoundaries( lastList );
+						#endif
 						
 						for( Node& child : lastList.back().child() )
 						{
@@ -763,6 +771,7 @@ namespace model
 		}
 	}
 	
+#ifdef NODE_COLAPSE
 	template< typename Morton >
 	inline void HierarchyCreator< Morton >::collapse( Node& node ) const
 	{
@@ -785,6 +794,7 @@ namespace model
 			collapse( list.back() );
 		}
 	}
+#endif
 
 	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 	 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
@@ -886,14 +896,16 @@ namespace model
 				}
 			}
 			
-			collapseBoundaries( previousProcessed );
+			#ifdef NODE_COLAPSE
+				collapseBoundaries( previousProcessed );
 			
-			// If needed, collapse the first node of nextProcessed
-			NodeArray& newNextFirstNodeChild = nextFirstNode.child();
-			if( newNextFirstNodeChild.size() == 1 && newNextFirstNodeChild[ 0 ].isLeaf() )
-			{
-				nextFirstNode.turnLeaf();
-			}
+				// If needed, collapse the first node of nextProcessed
+				NodeArray& newNextFirstNodeChild = nextFirstNode.child();
+				if( newNextFirstNodeChild.size() == 1 && newNextFirstNodeChild[ 0 ].isLeaf() )
+				{
+					nextFirstNode.turnLeaf();
+				}
+			#endif
 		}
 	}
 		
@@ -1197,6 +1209,8 @@ namespace model
 		return ss.str();
 	}
 }
+
+#undef NODE_COLAPSE
 
 #undef LEAF_CREATION_DEBUG
 #undef INNER_CREATION_DEBUG

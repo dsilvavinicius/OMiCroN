@@ -101,8 +101,8 @@ private:
 		TOP
 	};
 	
-	/** Adapts the rendering threshold for the next frame. */
-	void adaptRenderingThresh();
+	/** Adapts the rendering threshold for the current frame based on last frame performance. */
+	void adaptRenderingThresh( const float renderTime );
 
 	/** Renders auxiliary viewports for debugging purposes. */
 	void renderAuxViewport( const Viewport& viewport );
@@ -126,17 +126,15 @@ private:
 	/** Current normalized distance threshold used to control octree node rendering. */
 	float m_projThresh;
 	
-	/** Current render time used to adapt the projection threshold. In ms. */
-	float m_renderTime;
-	
-	/** Desired render time. Used to adapt the projection threshold. In ms. */
+	/** Desired render time. It is defined as the time interval between calls of paintGL. Used to adapt the projection
+	 * threshold. In ms. */
 	float m_desiredRenderTime;
 	
 	/** Rendering time tolerance used to verify if projection threshold adaptation is needed. In ms. */
 	float m_renderingTimeTolerance;
 	
-	/** Time when a frame is finished. Used to measure performance only. In ms. */
-	chrono::system_clock::time_point m_endOfFrameTime;
+	/** Time when a frame is started. Used to measure performance and adapt the projection threshold. */
+	chrono::system_clock::time_point m_beginOfFrameTime;
 };
 
 #endif // PointRendererWidget

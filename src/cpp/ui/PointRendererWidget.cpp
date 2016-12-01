@@ -8,7 +8,6 @@
 PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
 : Tucano::QtFreecameraWidget( parent, loader.widget() ),
 m_projThresh( 1.f ),
-m_renderTime( 0.f ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
@@ -62,9 +61,9 @@ void PointRendererWidget::resizeGL( int width, int height )
 }
 
 
-void PointRendererWidget::adaptRenderingThresh()
+void PointRendererWidget::adaptRenderingThresh( const float renderTime )
 {
-	float renderTimeDiff = m_renderTime - m_desiredRenderTime;
+	float renderTimeDiff = renderTime - m_desiredRenderTime;
 	
 	if( abs( renderTimeDiff ) > m_renderingTimeTolerance )
 	{
@@ -78,16 +77,18 @@ void PointRendererWidget::paintGL (void)
 {
 	//cout << "=== Painting starts ===" << endl << endl;
 	
+	int frameTime = Profiler::elapsedTime( m_beginOfFrameTime );
+	m_beginOfFrameTime = Profiler::now();
+	
 	updateFromKeyInput();
 	
 	glClearColor( 1.0f, 1.0f, 1.0f, 1.0f ); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	auto frameStart = Profiler::now();
 	makeCurrent();
 
 	#ifdef ADAPTIVE_PROJ
-		adaptRenderingThresh();
+		adaptRenderingThresh( frameTime );
 	#endif
 	
 	// Render the scene.
@@ -97,15 +98,12 @@ void PointRendererWidget::paintGL (void)
 	
 	int frontTrackingTime = Profiler::elapsedTime( frontTrackingStart );
 	
-	m_renderTime = Profiler::elapsedTime( frameStart );
-	
 	// Render debug data.
 	stringstream debugSS;
-	debugSS << "Total frame time: " << m_renderTime << " ms" << endl << endl
-			<< "Render time (traversal + rendering): " << frontTrackingTime << " ms" << endl << endl
-			<< "Time between frames: " << Profiler::elapsedTime( m_endOfFrameTime, frameStart ) << "ms" << endl
+	debugSS << "Total frame time: " << frameTime << " ms" << endl << endl
+			<< "Front tracking time: " << frontTrackingTime << " ms" << endl << endl
 			<< "Desired render time: " << m_desiredRenderTime << " ms" << endl << endl
-			<< "Render time diff: " << m_renderTime - m_desiredRenderTime << endl << endl
+			<< "Render time diff: " << frameTime - m_desiredRenderTime << endl << endl
 			<< "Rendering time tolerance: " << m_renderingTimeTolerance << " ms" << endl << endl
 			<< "Rendering threshold: " << m_projThresh << endl << endl
 			<< stats;
@@ -122,8 +120,6 @@ void PointRendererWidget::paintGL (void)
 	{
 		camera->renderAtCorner();
 	}
-	
-	m_endOfFrameTime = Profiler::now();
 	
 	if( m_drawAuxViewports )
 	{
@@ -366,11 +362,9 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	cout << "Renderer built." << endl;
 	
-	auto frontTrackingStart = Profiler::now();
+	m_beginOfFrameTime = Profiler::now();
 	
 	m_octree->trackFront( *m_renderer, m_projThresh );
-	updateGL();
 	
-	m_endOfFrameTime = Profiler::now();
-	m_renderTime = Profiler::elapsedTime( frontTrackingStart, m_endOfFrameTime );
+	updateGL();
 }
