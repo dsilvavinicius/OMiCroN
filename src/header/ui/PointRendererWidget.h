@@ -1,16 +1,10 @@
 #ifndef POINT_RENDERER_WIDGET_H
 #define POINT_RENDERER_WIDGET_H
 
-//#include <GL/glew.h>
-//#include <phongshader.hpp>
-//#include <imgSpacePBR.hpp>
 #include <utils/qtfreecamerawidget.hpp>
 #include <point_model.hpp>
 #include "FastParallelOctree.h"
 #include "renderers/StreamingRenderer.h"
-//#include "FrontOctree.h"
-//#include "ParallelOctree.h"
-// #include "OutOfCoreDebugOctree.h"
 #include <QApplication>
 
 using namespace std;
@@ -25,16 +19,6 @@ public:
 	using MortonCode = MediumMortonCode;
 	
 	using Point = model::Point;
-// 	using PointPtr = shared_ptr< Point >;
-// 	using PointVector = vector< PointPtr, ManagedAllocator< PointPtr > >;
-// 	using PointReader = util::PlyPointReader< Point >;
-	
-// 	using OctreeNode = model::OctreeNode< PointVector >;
-// 	using Hierarchy = OctreeMap< MortonCode, OctreeNode >;
-// 	
-// 	using OctreeParams = model::OctreeParams< MortonCode, Point, OctreeNode, Hierarchy >;
-// 	using Octree = model::DefaultOutOfCoreDebugOctree< OctreeParams >;
-	
 	using Octree = FastParallelOctree< MortonCode >;
 	using NodeLoader = typename Octree::NodeLoader;
 	using Renderer = SplatRenderer;
@@ -150,9 +134,6 @@ private:
 	
 	/** Rendering time tolerance used to verify if projection threshold adaptation is needed. In ms. */
 	float m_renderingTimeTolerance;
-	
-	/** Time when the last user keyboard or mouse input occurred. */
-	chrono::system_clock::time_point m_inputEndTime;
 	
 	/** Time when a frame is finished. Used to measure performance only. In ms. */
 	chrono::system_clock::time_point m_endOfFrameTime;

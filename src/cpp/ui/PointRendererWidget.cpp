@@ -30,18 +30,6 @@ PointRendererWidget::~PointRendererWidget()
 
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
-	// Init MemoryManager allowing 9GB of data.
-// 	DefaultManager< MortonCode, Point, OctreeNode >::initInstance( 1024ul * 1024ul * 1024ul * 9 );
-	
-	//Ken12MemoryManager< MortonCode, Point, InnerNode, LeafNode >::initInstance(
-	//	1.5f * 1024ul * 1024ul * 1024ul / sizeof( MortonCode ) /* 1.5GB for MortonCodes */,
-	//	3.25f * 1024ul * 1024ul * 1024ul / sizeof( Point ) /* 3.25GB for Points */,
-	//	1.625f * 1024ul * 1024ul * 1024ul / sizeof( InnerNode ) /* 1.625GB for Nodes */,
-	//	1.625f * 1024ul * 1024ul * 1024ul / sizeof( LeafNode ) /* 1.625GB for Nodes */
-	//);
-	
-// 	cout << "MemoryManager initialized: " << endl << SingletonMemoryManager::instance() << endl;
-	
 	Tucano::QtFreecameraWidget::initialize();
 	
 	setFrameRate( frameRate );
@@ -94,15 +82,6 @@ void PointRendererWidget::paintGL (void)
 	
 	glClearColor( 1.0f, 1.0f, 1.0f, 1.0f ); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-// 	glClearColor( 1.0, 1.0, 1.0, 1.0 );
-// 	glClearDepth( 1.0 );
-// 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-	
-// 	if( Profiler::elapsedTime( m_inputEndTime ) > 1000 )
-// 	{
-// 		m_renderer->selectEffect( Renderer::JUMP_FLOODING );
-// 	}
 	
 	auto frameStart = Profiler::now();
 	makeCurrent();
@@ -206,37 +185,59 @@ void PointRendererWidget::renderAuxViewport( const Viewport& viewport )
 
 void PointRendererWidget::keyPressEvent( QKeyEvent * event )
 {
-	m_inputEndTime = Profiler::now();
-// 	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = true;
 }
 
 void PointRendererWidget::keyReleaseEvent( QKeyEvent * event )
 {
-	m_inputEndTime = Profiler::now();
-// 	m_renderer->selectEffect( Renderer::PHONG );
 	m_keys[ event->key() ] = false;
 }
 
 void PointRendererWidget::mousePressEvent( QMouseEvent * event )
 {
-	m_inputEndTime = Profiler::now();
-// 	m_renderer->selectEffect( Renderer::PHONG );
-	QtFreecameraWidget::mousePressEvent( event );
+	setFocus ();
+	Eigen::Vector2f screen_pos (event->x(), event->y());
+	if (event->button() == Qt::LeftButton)
+	{
+		camera->startRotation(screen_pos);
+		camera->updateViewMatrix();
+	}
+	if (event->button() == Qt::MiddleButton)
+	{
+		camera->startRotation(screen_pos);
+		camera->updateViewMatrix();
+	}
+	if (event->button() == Qt::RightButton)
+	{
+		light_trackball.rotateCamera(screen_pos);
+	}
 }
 
 void PointRendererWidget::mouseMoveEvent( QMouseEvent * event )
 {
-	m_inputEndTime = Profiler::now();
-// 	m_renderer->selectEffect( Renderer::PHONG );
-	QtFreecameraWidget::mouseMoveEvent( event );
+	Eigen::Vector2f screen_pos (event->x(), event->y());
+	if (event->buttons() & Qt::LeftButton)
+	{
+		camera->rotate(screen_pos);
+		camera->updateViewMatrix();
+	}
+	if(event->buttons() & Qt::MiddleButton)
+	{
+		camera->rotateZ(screen_pos);
+		camera->updateViewMatrix();
+	}
+	if (event->buttons() & Qt::RightButton)
+	{
+		light_trackball.rotateCamera(screen_pos);
+	}
 }
 
 void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
 {
-	m_inputEndTime = Profiler::now();
-// 	m_renderer->selectEffect( Renderer::PHONG );
-	QtFreecameraWidget::mouseReleaseEvent( event );
+	if (event->button() == Qt::RightButton)
+	{
+		light_trackball.endRotation();
+	}
 }
 
 void PointRendererWidget::updateFromKeyInput()
@@ -269,21 +270,14 @@ void PointRendererWidget::updateFromKeyInput()
 
 void PointRendererWidget::toggleWriteFrames()
 {
-// 	m_renderer->getJumpFlooding().toggleWriteFrames();	
-// 	updateGL();
 }
 
 void PointRendererWidget::toggleEffect( int id )
 {
-// 	m_renderer->selectEffect( ( Renderer::Effect ) id );
-// 	updateGL();
 }
 
 void PointRendererWidget::reloadShaders( void )
 {
-// 	m_renderer->getPhong().reloadShaders();
-// 	m_renderer->getJumpFlooding().reloadShaders();
-// 	updateGL();
 }
 
 void PointRendererWidget::setFrameRate( const unsigned int& frameRate )
@@ -293,8 +287,6 @@ void PointRendererWidget::setFrameRate( const unsigned int& frameRate )
 
 void PointRendererWidget::setJFPBRFirstMaxDistance( double value )
 {
-// 	m_renderer->getJumpFlooding().setFirstMaxDistance( ( float )value );
-// 	updateGL();
 }
 
 void PointRendererWidget::toggleDrawTrackball( void )
@@ -311,13 +303,11 @@ void PointRendererWidget::toggleDrawAuxViewports( void )
 
 void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 {
-// 	m_octree->toggleDebug( value );
 	updateGL();
 }
 
 void PointRendererWidget::setJfpbrFrameskip( const int& value )
 {
-// 	m_renderer->setJfpbrFrameskip( value );
 }
 	
 void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
@@ -333,7 +323,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	
 	// Debug value.
-// 	int nThreads = 1;
+	// 	int nThreads = 1;
 	
 	// Best value for performance
 	int nThreads = 4;
