@@ -17,9 +17,10 @@
 // #define INSERTION_DEBUG
 // #define SUBSTITUTION_DEBUG
 // #define ORDERING_DEBUG
-// #define RENDERING_DEBUG
-// #define FRONT_TRACKING_DEBUG
-// #define PRUNING_DEBUG
+#define RENDERING_DEBUG
+#define FRONT_TRACKING_DEBUG
+#define PRUNING_DEBUG
+#define BRANCHING_DEBUG
 
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
@@ -733,6 +734,14 @@ namespace model
 				  FrontListIter& frontIt, Segment& segment, int substitutionLvl, Renderer& renderer,
 			   const Float projThresh )
 	{
+		#ifdef PRUNING_DEBUG
+		{
+			stringstream ss; ss << parentMorton.getPathToRoot() << " checking prune." << endl << parentNode << endl
+				<< endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		AlignedBox3f parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
 		bool pruneFlag = false;
@@ -760,7 +769,7 @@ namespace model
 			{
 				#ifdef PRUNING_DEBUG
 				{
-					stringstream ss; ss << "Parent " << parentMorton.getPathToRoot() << ": RENDERABLE." << endl
+					stringstream ss; ss << parentMorton.getPathToRoot() << ": RENDERABLE." << endl
 						<< endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
@@ -768,6 +777,13 @@ namespace model
 				
 				pruneFlag = true;
 			}
+			#ifdef PRUNING_DEBUG
+			else
+			{
+				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT RENDERABLE." << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
 		}
 		
 		if( pruneFlag )
@@ -879,12 +895,27 @@ namespace model
 	::checkBranch( const OctreeDim& nodeLvlDim, Node& node, const Morton& morton, Renderer& renderer,
 				   const Float projThresh, bool& out_isCullable )
 	{
+		#ifdef BRANCHING_DEBUG
+		{
+			stringstream ss; ss << morton.getPathToRoot() << ": checking branch." << endl << node << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		AlignedBox3f box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
 		
 		if( !node.isLeaf() && !node.child().empty() )
 		{
 			NodeArray& children = node.child();
+			
+			#ifdef BRANCHING_DEBUG
+			{
+				stringstream ss; ss << morton.getPathToRoot() << endl << "Children: " << children << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
 			if( children[ 0 ].loadState() == Node::LOADED )
 			{
 				return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
@@ -982,6 +1013,7 @@ namespace model
 #undef RENDERING_DEBUG
 #undef FRONT_TRACKING_DEBUG
 #undef PRUNING_DEBUG
+#undef BRANCHING_DEBUG
 
 #undef ASYNC_LOAD
 

@@ -32,8 +32,12 @@
 #include "utils/frustum.hpp"
 #include "OglUtils.h"
 
-// #define DEBUG
+// Substitutes the splat rendering shaders by a Tucano phong shader. Bad perfomance, but good for debugging.
 // #define TUCANO_RENDERER
+
+// Defines for debugging output.
+// #define IS_RENDERABLE_DEBUG
+#define RENDERING_DEBUG
 
 #ifdef TUCANO_RENDERER
 	#include "phongshader.hpp"
@@ -130,7 +134,7 @@ private:
     void setup_screen_size_quad();
     void setup_vertex_array_buffer_object();
 
-	Vector2i projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const;
+	Vector2f projToNormDeviceCoords( const Vector4f& point, const Matrix4f& viewProj ) const;
 	
     void setup_uniforms( glProgram& program, const Matrix4f& modelView );
 
@@ -168,9 +172,10 @@ private:
 
 inline void SplatRenderer::render_cloud( SurfelCloud& cloud )
 {
-	#ifdef DEBUG
+	#ifdef RENDERING_DEBUG
 	{
-		cout << "Pushing to render list: " << endl << cloud << endl << endl;
+		stringstream ss; ss << "Pushing to render list: " << endl << cloud << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
 	}
 	#endif
 	
@@ -211,27 +216,38 @@ inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float pr
 {
 	const Vector3f& rawMin = box.min();
 	const Vector3f& rawMax = box.max();
-	Vector4f min( rawMin.x(), rawMin.y(), rawMin.z(), 1 );
-	Vector4f max( rawMax.x(), rawMax.y(), rawMax.z(), 1 );
 	
-	Vector2i viewportSize = m_camera->getViewportSize();
+	float delta = 1e-6f;
+	
+	// No points in plane z = 0 are allowed, since their homogeneous projections are undefined.
+	Vector4f min( rawMin.x(), rawMin.y(), ( fabs( rawMin.z() ) < delta ) ? rawMax.z() : rawMin.z(), 1 );
+	Vector4f max( rawMax.x(), rawMax.y(), ( fabs( rawMax.z() ) < delta ) ? rawMin.z() : rawMax.z(), 1  );
 	
 	const Matrix4f& viewProj = m_frustum.viewProj();
 	
-	Vector2i proj0 = projToWindowCoords( min, viewProj, viewportSize );
-	Vector2i proj1 = projToWindowCoords( max, viewProj, viewportSize );
+	Vector2f proj00 = projToNormDeviceCoords( min, viewProj );
+	Vector2f proj01 = projToNormDeviceCoords( max, viewProj );
 	
-	Vector2i diagonal0 = proj1 - proj0;
+	Vector2f diagonal0 = proj01 - proj00;
 	
 	Vector3f boxSize = rawMax - rawMin;
 	
-	proj0 = projToWindowCoords( Vector4f( min.x() + boxSize.x(), min.y() + boxSize.y(), min.z(), 1 ), viewProj,
-								viewportSize );
-	proj1 = projToWindowCoords( Vector4f( max.x(), max.y(), max.z() + boxSize.z(), 1 ), viewProj, viewportSize );
+	Vector2f proj10 = projToNormDeviceCoords( Vector4f( min.x(), max.y(), max.z(), 1 ), viewProj );
+	Vector2f proj11 = projToNormDeviceCoords( Vector4f( max.x(), min.y(), min.z(), 1 ), viewProj );
 	
-	Vector2i diagonal1 = proj1 - proj0;
+	Vector2f diagonal1 = proj11 - proj10;
 	
 	float maxDiagLength = std::max( diagonal0.squaredNorm(), diagonal1.squaredNorm() );
+	
+	#ifdef IS_RENDERABLE_DEBUG
+	{
+		stringstream ss; ss << "Viewproj: " << endl << viewProj << endl << "Min: " << endl << min << endl << "Max: "
+			<< max << endl << "Proj00: " << endl << proj00 << endl << "Proj01" << endl << proj01 << endl << "Proj10"
+			<< endl << proj10 << endl << "Proj11" << endl << proj11 << endl << "Diagonal0: " << diagonal0
+			<< " Diagonal1 : " << diagonal1 << " Max diag norm: " << maxDiagLength << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
+	}
+	#endif
 	
 	return maxDiagLength < projThresh;
 }
@@ -414,12 +430,19 @@ inline ulong SplatRenderer::end_frame()
 	return renderedSplats;
 }
 
-inline Vector2i SplatRenderer
-::projToWindowCoords( const Vector4f& point, const Matrix4f& viewProj, const Vector2i& viewportSize ) const
+inline Vector2f SplatRenderer
+::projToNormDeviceCoords( const Vector4f& point, const Matrix4f& viewProj ) const
 {
 	Vector4f proj = viewProj * point;
-	return Vector2i( ( proj.x() / proj.w() + 1.f ) * 0.5f * viewportSize.x(),
-						( proj.y() / proj.w() + 1.f ) * 0.5f * viewportSize.y() );
+	
+	#ifdef IS_RENDERABLE_DEBUG
+	{
+		stringstream ss; ss << "P: " << endl << point << endl << "proj: " << endl << proj << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
+	}
+	#endif
+	
+	return Vector2f( proj.x() / proj.w(), proj.y() / proj.w() );
 }
 
 inline const Tucano::Camera& SplatRenderer::camera() const
@@ -427,6 +450,7 @@ inline const Tucano::Camera& SplatRenderer::camera() const
 	return *m_camera;
 }
 
-#undef DEBUG
+#undef IS_RENDERABLE_DEBUG
+#undef RENDERING_DEBUG
 
 #endif // SPLATRENDER_HPP

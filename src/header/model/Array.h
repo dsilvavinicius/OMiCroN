@@ -6,7 +6,7 @@
 #include <boost/concept_check.hpp>
 #include "HierarchyCreationLog.h"
 
-#define DETAILED_STREAM
+// #define DETAILED_STREAM
 // #define DEBUG
 
 namespace model

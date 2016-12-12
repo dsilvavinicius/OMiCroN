@@ -46,8 +46,10 @@ namespace model
 			
 			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
 							 octreeJson[ "size" ][ "z" ].asFloat() );
+			Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(), octreeJson[ "origin" ][ "y" ].asFloat(),
+							 octreeJson[ "origin" ][ "z" ].asFloat() );
 			
-			OctreeDim comp( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
+			OctreeDim comp( octreeOrigin, octreeSize, octreeJson[ "depth" ].asUInt() );
 			
 			// Debug
 			{
@@ -170,8 +172,10 @@ namespace model
 			ifs >> octreeJson;
 			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
 							 octreeJson[ "size" ][ "z" ].asFloat() );
+			Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(), octreeJson[ "origin" ][ "y" ].asFloat(),
+							   octreeJson[ "origin" ][ "z" ].asFloat() );
 			
-			OctreeDim dim( Vec3::Zero(), octreeSize, 11 );
+			OctreeDim dim( octreeOrigin, octreeSize, 11 );
 			
 			Sorter sorter( plyGroupFilename, outputFolder, dim, totalSize, memoryQuota );
 			test( sorter, octreeFilename, 468640353ul );

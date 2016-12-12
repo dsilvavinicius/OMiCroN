@@ -7,7 +7,7 @@
 
 PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
 : Tucano::QtFreecameraWidget( parent, loader.widget() ),
-m_projThresh( 1.f ),
+m_projThresh( 2.f ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
@@ -67,9 +67,9 @@ void PointRendererWidget::adaptRenderingThresh( const float renderTime )
 	
 	if( abs( renderTimeDiff ) > m_renderingTimeTolerance )
 	{
-		m_projThresh += renderTimeDiff * 1.0e-1f;
-		m_projThresh = std::max( m_projThresh, 1.f );
-		m_projThresh = std::min( m_projThresh, 500.f );
+		m_projThresh += renderTimeDiff * 1e-6;
+		m_projThresh = std::max( m_projThresh, 0.001953125f ); // 2 / 1024. So it is expected a screen of 1024 pixels.
+		m_projThresh = std::min( m_projThresh, 2.f );
 	}
 }
 
@@ -324,7 +324,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	// Best value for performance
 	int nThreads = 4;
 	
-	Octree::RuntimeSetup runtime( nThreads, 4/*32*/, 1024ul * 1024ul * 1024ul * 12ul, true );
+	Octree::RuntimeSetup runtime( nThreads, 2/*32*/, 1024ul * 1024ul * 1024ul * 12ul, true );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{

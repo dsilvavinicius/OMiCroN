@@ -168,7 +168,11 @@ namespace model
 		Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(),
 						 octreeJson[ "size" ][ "y" ].asFloat(),
 						 octreeJson[ "size" ][ "z" ].asFloat() );
-		m_dim = Dim( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
+		Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(),
+						   octreeJson[ "origin" ][ "y" ].asFloat(),
+						   octreeJson[ "origin" ][ "z" ].asFloat() );
+		
+		m_dim = Dim( octreeOrigin, octreeSize, octreeJson[ "depth" ].asUInt() );
 		
 		// Debug
 		{

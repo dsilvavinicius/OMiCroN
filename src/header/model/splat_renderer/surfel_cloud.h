@@ -5,8 +5,12 @@
 #include "Array.h"
 #include "GpuAllocStatistics.h"
 #include "OglUtils.h"
+#include "HierarchyCreationLog.h"
 
 // #define DEBUG
+#define CONSTRUCTION_DEBUG
+#define CLEANING_DEBUG
+#define RENDERING_DEBUG
 // #define BUFFER_MTX
 
 using namespace model;
@@ -51,22 +55,17 @@ m_vao( 0 ),
 m_numPts( 0 ),
 m_model( Eigen::Matrix4f::Identity() )
 {
-	#ifdef DEBUG
-	{
-		cout << "Default ctor: " << *this << endl << endl;
-	}
-	#endif
+// 	#ifdef CONSTRUCTION_DEBUG
+// 	{
+// 		stringstream ss; ss << "Default ctor: " << *this << endl << endl;
+// 		HierarchyCreationLog::logDebugMsg( ss.str() );
+// 	}
+// 	#endif
 }
 
 inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Matrix4f& model )
 : m_vao( 0 )
 {
-	#ifdef DEBUG
-	{
-		cout << "Ctor beginning: " << *this << endl << endl;
-	}
-	#endif
-	
 	if( !surfels.empty() )
 	{
 		m_model = model;
@@ -96,9 +95,10 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		m_model = Eigen::Matrix4f::Identity();
 	}
 	
-	#ifdef DEBUG
+	#ifdef CONSTRUCTION_DEBUG
 	{
-		cout << "Ctor ending: " << *this << endl << endl;
+		stringstream ss; ss << "Ctor: " << *this << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
 	}
 	#endif
 }
@@ -111,9 +111,10 @@ m_model( other.m_model )
 {
 	other.shallowClean();
 	
-	#ifdef DEBUG
+	#ifdef CONSTRUCTION_DEBUG
 	{
-		cout << "Move ctor: " << *this << endl << endl;
+		stringstream ss; ss << "Move ctor: " << *this << endl << "Moved: " << endl << other << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
 	}
 	#endif
 }
@@ -129,9 +130,10 @@ inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
 	
 	other.shallowClean();
 	
-	#ifdef DEBUG
+	#ifdef CONSTRUCTION_DEBUG
 	{
-		cout << "Move assignment: " << *this << endl << endl;
+		stringstream ss; ss << "Move assignment: " << *this << endl << "Moved: " << endl << other << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
 	}
 	#endif
 	
@@ -151,6 +153,14 @@ inline SurfelCloud::~SurfelCloud()
 
 inline void SurfelCloud::render()
 {
+	#ifdef RENDERING_DEBUG
+	{
+		stringstream ss; ss << "Rendering" << endl << *this << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
+		HierarchyCreationLog::flush();
+	}
+	#endif
+	
 	{
 		#ifdef BUFFER_MTX
 			lock_guard< mutex > lock( m_bufferBindMtx );
@@ -196,9 +206,10 @@ inline void SurfelCloud::clean()
 {
 	if( m_vbo )
 	{
-		#ifdef DEBUG
+		#ifdef CLEANING_DEBUG
 		{
-			cout << "Cleaning vbo" << endl << *this << endl << endl;
+			stringstream ss; ss << "Cleaning vbo" << endl << *this << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
 		
@@ -208,9 +219,10 @@ inline void SurfelCloud::clean()
 	
 	if( m_vao )
 	{
-		#ifdef DEBUG
+		#ifdef CLEANING_DEBUG
 		{
-			cout << "Cleaning vao" << endl << *this << endl << endl;
+			stringstream ss; ss << "Cleaning vao" << endl << *this << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
 		
@@ -234,6 +246,9 @@ inline ostream& operator<<( ostream& out, const SurfelCloud& cloud )
 }
 
 #undef DEBUG
+#undef CONSTRUCTION_DEBUG
+#undef CLEANING_DEBUG
+#undef RENDERING_DEBUG
 #undef BUFFER_MTX
 
 #endif

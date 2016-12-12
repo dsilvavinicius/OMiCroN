@@ -312,13 +312,13 @@ namespace model
 	{
 		out
 			<< "Addr: " << &node << endl
-			<< "Points: " << node.m_contents << endl
-			<< "First point: " << node.m_contents[ 0 ] << endl
+// 			<< "Points: " << node.m_contents << endl
+// 			<< "First point: " << node.m_contents[ 0 ] << endl
 			<< "Parent: " << node.m_parent << endl
 			<< "Children: " << node.m_children << endl
 			<< "Is leaf? " << node.m_isLeaf << endl
 			<< "Load state: " << node.loadState() << endl
-			<< "Cloud: " << endl << node.m_cloud;
+			<< "Cloud: " << endl << node.m_cloud
 			;
 		return out;
 	}

@@ -14,14 +14,14 @@
 #include "HierarchyCreationLog.h"
 
 // Enables node colapse when leaves do not have siblings.
-#define NODE_COLAPSE
+// #define NODE_COLAPSE
 
 // #define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG
 // #define NODE_PROCESSING_DEBUG
 // #define SPECIFIC_NODE_DEBUG
 // #define NODE_LIST_MERGE_DEBUG
-// #define PARENT_DEBUG
+#define PARENT_DEBUG
 
 using namespace util;
 
@@ -252,6 +252,12 @@ namespace model
 				reader.read(
 					[ & ]( const Point& p )
 					{
+// 						Point p( point );
+// 						
+// 						// A shift in z direction in order to avoid points lying in z = 0 plane. Necessary because
+// 						// of later projection operations, performed in homogeneous coordinates. 
+// 						p.getPos() += Vec3( 0.f, 0.f, 1.f );
+						
 						Morton code = leafLvlDimCpy.calcMorton( p );
 						Morton parent = *code.traverseUp();
 						
@@ -301,6 +307,7 @@ namespace model
 						const Vec3& pos = p.getPos();
 						const Vec3& normal = p.getNormal();
 						
+						// This can lead to a division by 0.
 						Vec3 pointOnPlane(
 							( normal.x() * pos.x() + normal.y() * pos.y() + normal.z() * pos.z() ) / normal.x(),
 							0.f, 0.f );
@@ -308,8 +315,10 @@ namespace model
 						u.normalize();
 						Vector3f v = normal.cross( u );
 			
-						u *= 0.0005f;
-						v *= 0.0005f;
+						u *= 0.00055f;
+						v *= 0.00055f;
+// 						u *= 0.00001f;
+// 						v *= 0.00001f;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}
@@ -503,13 +512,6 @@ namespace model
 								}
 							}
 						}
-						
-						#ifdef NODE_PROCESSING_DEBUG
-						{
-							stringstream ss; ss << "[ t " << omp_get_thread_num() << " ] finished" << endl << endl;
-							HierarchyCreationLog::logDebugMsg( ss.str() );
-						}
-						#endif
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					

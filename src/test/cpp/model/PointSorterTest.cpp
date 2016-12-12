@@ -44,7 +44,10 @@ namespace model
 			
 			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
 							 octreeJson[ "size" ][ "z" ].asFloat() );
-			OctreeDim comp( Vec3::Zero(), octreeSize, octreeJson[ "depth" ].asUInt() );
+			Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(), octreeJson[ "origin" ][ "y" ].asFloat(),
+							   octreeJson[ "origin" ][ "z" ].asFloat() );
+			
+			OctreeDim comp( octreeOrigin, octreeSize, octreeJson[ "depth" ].asUInt() );
 			
 			// Debug
 			{
