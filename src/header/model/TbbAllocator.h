@@ -7,7 +7,7 @@
 #include <mutex>
 #include <atomic>
 
-// #define SCALABLE
+#define SCALABLE
 
 #ifdef SCALABLE
 	#include <scalable_allocator.h>

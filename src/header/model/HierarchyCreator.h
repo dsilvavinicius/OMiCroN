@@ -21,7 +21,7 @@
 // #define NODE_PROCESSING_DEBUG
 // #define SPECIFIC_NODE_DEBUG
 // #define NODE_LIST_MERGE_DEBUG
-#define PARENT_DEBUG
+// #define PARENT_DEBUG
 
 using namespace util;
 
@@ -315,10 +315,10 @@ namespace model
 						u.normalize();
 						Vector3f v = normal.cross( u );
 			
-						u *= 0.00055f;
-						v *= 0.00055f;
-// 						u *= 0.00001f;
-// 						v *= 0.00001f;
+// 						u *= 0.00055f;
+// 						v *= 0.00055f;
+						u *= 0.00001f;
+						v *= 0.00001f;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}
@@ -470,7 +470,8 @@ namespace model
 									#ifdef INNER_CREATION_DEBUG
 									{
 										stringstream ss; ss << "[ t" << omp_get_thread_num()
-											<< " ] creating inner from collapse: "
+											<< " ] creating collapsed inner " << ( ( isBoundarySiblingGroup ) ? "boundary:"
+											: "not boundary:" )
 											<< nextLvlDim.calcMorton( siblings[ 0 ] ).getPathToRoot() << endl << endl;
 										HierarchyCreationLog::logDebugMsg( ss.str() );
 									}
@@ -486,7 +487,8 @@ namespace model
 									#ifdef INNER_CREATION_DEBUG
 									{
 										stringstream ss; ss << "[ t" << omp_get_thread_num()
-											<< " ] creating inner LoD: "
+											<< " ] creating LoD inner " << ( ( isBoundarySiblingGroup ) ? "boundary:"
+											: "not boundary:" )
 											<< nextLvlDim.calcMorton( siblings[ 0 ] ).getPathToRoot() << endl << endl;
 										HierarchyCreationLog::logDebugMsg( ss.str() );
 									}
@@ -514,12 +516,6 @@ namespace model
 						}
 					}
 					// END PARALLEL WORKLIST PROCESSING.
-					
-					#ifdef NODE_LIST_MERGE_DEBUG
-					{
-						HierarchyCreationLog::logDebugMsg( "Starting output merge\n\n" );
-					}
-					#endif
 					
 					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
 					

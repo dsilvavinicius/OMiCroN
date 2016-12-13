@@ -17,10 +17,10 @@
 // #define INSERTION_DEBUG
 // #define SUBSTITUTION_DEBUG
 // #define ORDERING_DEBUG
-#define RENDERING_DEBUG
-#define FRONT_TRACKING_DEBUG
-#define PRUNING_DEBUG
-#define BRANCHING_DEBUG
+// #define RENDERING_DEBUG
+// #define FRONT_TRACKING_DEBUG
+// #define PRUNING_DEBUG
+// #define BRANCHING_DEBUG
 
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD

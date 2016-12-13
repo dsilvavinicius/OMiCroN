@@ -6,11 +6,13 @@
 #include "Array.h"
 #include "splat_renderer/surfel_cloud.h"
 #include "HierarchyCreationLog.h"
+#include "StackTrace.h"
 
-// #define DEBUG
+// #define CTOR_DEBUG
 
 using namespace std;
 using namespace Tucano;
+using namespace util;
 
 namespace model
 {
@@ -115,6 +117,14 @@ namespace model
 		m_loadState( other.m_loadState.load() )
 		{
 			other.m_parent = nullptr;
+			
+			#ifdef CTOR_DEBUG
+			{
+				stringstream ss; ss << "Move ctor" << endl << *this << endl << "Moved: " << endl << other << endl
+					<< "Stack: " << StackTrace::toString() << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
 		}
 		
 		/** Move assignment. */
@@ -128,6 +138,14 @@ namespace model
 			m_loadState = other.m_loadState.load();
 			
 			other.m_parent = nullptr;
+			
+			#ifdef CTOR_DEBUG
+			{
+				stringstream ss; ss << "Move op" << endl << *this << endl << "Moved: " << endl << other << endl
+					<< "Stack: " << StackTrace::toString() << endl << endl;;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
 			
 			return *this;
 		}
@@ -324,6 +342,6 @@ namespace model
 	}
 }
 
-#undef DEBUG
+#undef CTOR_DEBUG
 
 #endif

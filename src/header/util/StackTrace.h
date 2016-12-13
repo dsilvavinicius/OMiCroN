@@ -48,7 +48,6 @@ namespace util
 			{
 				ss << strings[ i ] << endl;
 			}
-			ss << endl;
 			
 			free( strings );
 			return ss.str();

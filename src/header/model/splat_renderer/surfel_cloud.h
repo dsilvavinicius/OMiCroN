@@ -8,9 +8,9 @@
 #include "HierarchyCreationLog.h"
 
 // #define DEBUG
-#define CONSTRUCTION_DEBUG
-#define CLEANING_DEBUG
-#define RENDERING_DEBUG
+// #define CTOR_DEBUG
+// #define CLEANING_DEBUG
+// #define RENDERING_DEBUG
 // #define BUFFER_MTX
 
 using namespace model;
@@ -55,7 +55,7 @@ m_vao( 0 ),
 m_numPts( 0 ),
 m_model( Eigen::Matrix4f::Identity() )
 {
-// 	#ifdef CONSTRUCTION_DEBUG
+// 	#ifdef CTOR_DEBUG
 // 	{
 // 		stringstream ss; ss << "Default ctor: " << *this << endl << endl;
 // 		HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -95,7 +95,7 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 		m_model = Eigen::Matrix4f::Identity();
 	}
 	
-	#ifdef CONSTRUCTION_DEBUG
+	#ifdef CTOR_DEBUG
 	{
 		stringstream ss; ss << "Ctor: " << *this << endl << endl;
 		HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -111,7 +111,7 @@ m_model( other.m_model )
 {
 	other.shallowClean();
 	
-	#ifdef CONSTRUCTION_DEBUG
+	#ifdef CTOR_DEBUG
 	{
 		stringstream ss; ss << "Move ctor: " << *this << endl << "Moved: " << endl << other << endl << endl;
 		HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -130,7 +130,7 @@ inline SurfelCloud& SurfelCloud::operator=( SurfelCloud&& other )
 	
 	other.shallowClean();
 	
-	#ifdef CONSTRUCTION_DEBUG
+	#ifdef CTOR_DEBUG
 	{
 		stringstream ss; ss << "Move assignment: " << *this << endl << "Moved: " << endl << other << endl << endl;
 		HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -246,7 +246,7 @@ inline ostream& operator<<( ostream& out, const SurfelCloud& cloud )
 }
 
 #undef DEBUG
-#undef CONSTRUCTION_DEBUG
+#undef CTOR_DEBUG
 #undef CLEANING_DEBUG
 #undef RENDERING_DEBUG
 #undef BUFFER_MTX

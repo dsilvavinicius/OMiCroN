@@ -37,7 +37,7 @@
 
 // Defines for debugging output.
 // #define IS_RENDERABLE_DEBUG
-#define RENDERING_DEBUG
+// #define RENDERING_DEBUG
 
 #ifdef TUCANO_RENDERER
 	#include "phongshader.hpp"
