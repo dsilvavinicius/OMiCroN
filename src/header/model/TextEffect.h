@@ -369,7 +369,7 @@ namespace model
 			
 			Vector2f scale( 2.0 / viewport[ 2 ], 2.0 / viewport[ 3 ] );
 			
-			render( text, SMALL, projPos.head< 3 >(), scale );
+			render( text, MEDIUM, projPos.head< 3 >(), scale );
 		}
 	}
 	

@@ -12,6 +12,7 @@
 #include "StackTrace.h"
 #include "phongshader.hpp"
 #include "HierarchyCreationLog.h"
+#include "TextEffect.h"
 
 // Definitions to turn on debug logging for each Front operation.
 // #define INSERTION_DEBUG
@@ -24,6 +25,9 @@
 
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
+
+// Render an id text in each rendered node.
+#define NODE_ID_TEXT
 
 // Number of threads in front tracking.
 #define N_THREADS 1
@@ -345,6 +349,11 @@ namespace model
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
+		
+		#ifdef NODE_ID_TEXT
+			TextEffect m_textEffect;
+			vector< pair< string, Vector4f >, TbbAllocator< pair< string, Vector4f > > > m_nodeIds;
+		#endif
 	};
 	
 	template< typename Morton >
@@ -374,6 +383,12 @@ namespace model
 		}
 		
 		m_segments[ 0 ].m_isSubstituting = true;
+		
+		#ifdef NODE_ID_TEXT
+		{
+			m_textEffect.initialize( "shaders/Inconsolata.otf" );
+		}
+		#endif
 	}
 
 	template< typename Morton >
@@ -556,6 +571,32 @@ namespace model
 		
 		renderer.render_frame();
 		
+		#ifdef NODE_ID_TEXT
+		{
+			m_textEffect.setColor( Vector4f( 0.f, 0.f, 0.f, 1.f ) );
+			
+			glEnable( GL_BLEND );
+			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+			
+			glCullFace( GL_BACK );
+			glEnable( GL_CULL_FACE );
+			
+			glEnable( GL_DEPTH_TEST );
+			
+			Camera camera = renderer.camera();
+			
+			for( const pair< string, Vector4f >& nodeId : m_nodeIds )
+			{
+				m_textEffect.render( nodeId.first, nodeId.second, camera );
+			}
+			
+			glDisable( GL_BLEND );
+			glDisable( GL_CULL_FACE );
+			glDisable( GL_DEPTH_TEST );
+		}
+		#endif
+		
+		
 		int traversalTime = Profiler::elapsedTime( start );
 		
 		start = Profiler::now();
@@ -674,6 +715,16 @@ namespace model
 				stringstream ss; ss << "Rendering: " << endl << morton.getPathToRoot( true ) << endl << node << endl
 					<< endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
+			#ifdef NODE_ID_TEXT
+			{
+				const Vec3& textPos = node.getContents()[ 0 ].c;
+				
+				m_nodeIds.push_back(
+					pair< string, Vector4f >( morton.toString(), Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )
+				);
 			}
 			#endif
 			
@@ -984,6 +1035,17 @@ namespace model
 		}
 		#endif
 		
+		#ifdef NODE_ID_TEXT
+		{
+			const Vec3& textPos = node->getContents()[ 0 ].c;
+			
+			m_nodeIds.push_back(
+				pair< string, Vector4f >( frontNode.m_morton.toString(),
+										  Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )
+			);
+		}
+		#endif
+		
 		if( node->loadState() == Node::LOADED )
 		{
 			#ifdef TUCANO_RENDERER
@@ -1020,5 +1082,6 @@ namespace model
 #undef BRANCHING_DEBUG
 
 #undef ASYNC_LOAD
+#undef NODE_ID_TEXT
 
 #endif
