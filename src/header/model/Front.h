@@ -589,6 +589,7 @@ namespace model
 			{
 				m_textEffect.render( nodeId.first, nodeId.second, camera );
 			}
+			m_nodeIds.clear();
 			
 			glDisable( GL_BLEND );
 			glDisable( GL_CULL_FACE );
