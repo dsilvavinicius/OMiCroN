@@ -17,8 +17,8 @@
 // #define INSERTION_DEBUG
 // #define SUBSTITUTION_DEBUG
 // #define ORDERING_DEBUG
-// #define RENDERING_DEBUG
-// #define FRONT_TRACKING_DEBUG
+#define RENDERING_DEBUG
+#define FRONT_TRACKING_DEBUG
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
 
@@ -165,9 +165,10 @@ namespace model
 		
 		bool checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
 						 FrontListIter& frontIt, Segment& segment, int substituionLvl, Renderer& renderer,
-					const Float projThresh );
+					const Float projThresh, bool& out_isCullable );
 		
-		void prune( FrontListIter& frontIt, Segment& segment, Node* parentNode, Renderer& renderer );
+		void prune( FrontListIter& frontIt, Segment& segment, Node* parentNode, const bool parentIsCullable,
+					Renderer& renderer );
 		
 		bool checkBranch( const OctreeDim& nodeLvlDim, Node& node, const Morton& morton, Renderer& renderer,
 						  const Float projThresh, bool& out_isCullable );
@@ -527,7 +528,8 @@ namespace model
 				
 				#ifdef FRONT_TRACKING_DEBUG
 				{
-					stringstream ss; ss << "Front size: " << front.size() << endl << endl;
+					stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << "Size: " << front.size()
+						<< endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 				#endif
@@ -645,11 +647,11 @@ namespace model
 		{
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
-			
+			bool parentIsCullable;
 			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, segment, substitutionLvl, renderer,
-							projThresh ) )
+							projThresh, parentIsCullable ) )
 			{
-				prune( frontIt, segment, parentNode, renderer );
+				prune( frontIt, segment, parentNode, parentIsCullable, renderer );
 				lastParent = parentNode;
 				
 				return;
@@ -732,7 +734,7 @@ namespace model
 	inline bool Front< Morton >
 	::checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
 				  FrontListIter& frontIt, Segment& segment, int substitutionLvl, Renderer& renderer,
-			   const Float projThresh )
+			   const Float projThresh, bool& out_isCullable )
 	{
 		#ifdef PRUNING_DEBUG
 		{
@@ -745,7 +747,8 @@ namespace model
 		AlignedBox3f parentBox = parentLvlDim.getMortonBoundaries( parentMorton );
 		
 		bool pruneFlag = false;
-		if( renderer.isCullable( parentBox ) )
+		out_isCullable = renderer.isCullable( parentBox );
+		if( out_isCullable )
 		{
 			pruneFlag = true;
 			
@@ -759,30 +762,30 @@ namespace model
 		else
 		{
 			#ifdef PRUNING_DEBUG
-			{
-				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT CULLABLE." << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
+// 			{
+// 				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT CULLABLE." << endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			}
 			#endif
 			
 			if( renderer.isRenderable( parentBox, projThresh ) )
 			{
 				#ifdef PRUNING_DEBUG
-				{
-					stringstream ss; ss << parentMorton.getPathToRoot() << ": RENDERABLE." << endl
-						<< endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
+// 				{
+// 					stringstream ss; ss << parentMorton.getPathToRoot() << ": RENDERABLE." << endl
+// 						<< endl;
+// 					HierarchyCreationLog::logDebugMsg( ss.str() );
+// 				}
 				#endif
 				
 				pruneFlag = true;
 			}
 			#ifdef PRUNING_DEBUG
-			else
-			{
-				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT RENDERABLE." << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
+// 			else
+// 			{
+// 				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT RENDERABLE." << endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			}
 			#endif
 		}
 		
@@ -831,22 +834,22 @@ namespace model
 			#endif
 			
 			#ifdef PRUNING_DEBUG
-			{
-				stringstream ss; ss << parentMorton.getPathToRoot() << ": not loaded."
-					<< endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
+// 			{
+// 				stringstream ss; ss << parentMorton.getPathToRoot() << ": not loaded."
+// 					<< endl << endl;
+// 				HierarchyCreationLog::logDebugMsg( ss.str() );
+// 			}
 			#endif
 				
 			pruneFlag = false;
 		}
 		
 		#ifdef PRUNING_DEBUG
-		{
-			stringstream ss; ss << parentMorton.getPathToRoot() << ": prunning successful? " << pruneFlag
-				<< endl << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
+// 		{
+// 			stringstream ss; ss << parentMorton.getPathToRoot() << ": prunning successful? " << pruneFlag
+// 				<< endl << endl;
+// 			HierarchyCreationLog::logDebugMsg( ss.str() );
+// 		}
 		#endif
 		
 		return pruneFlag;
@@ -854,7 +857,7 @@ namespace model
 	
 	template< typename Morton >
 	inline void Front< Morton >::prune( FrontListIter& frontIt, Segment& segment, Node* parentNode,
-											   Renderer& renderer )
+										const bool parentIsCullable, Renderer& renderer )
 	{
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
 		
@@ -887,7 +890,15 @@ namespace model
 		}
 		
 		FrontNode frontNode( *parentNode, parentMorton );
-		setupNodeRendering( frontIt, frontNode, segment, renderer );
+		
+		if( parentIsCullable )
+		{
+			segment.m_front.insert( frontIt, frontNode );
+		}
+		else
+		{
+			setupNodeRendering( frontIt, frontNode, segment, renderer );
+		}
 	}
 	
 	template< typename Morton >
@@ -908,13 +919,6 @@ namespace model
 		if( !node.isLeaf() && !node.child().empty() )
 		{
 			NodeArray& children = node.child();
-			
-			#ifdef BRANCHING_DEBUG
-			{
-				stringstream ss; ss << morton.getPathToRoot() << endl << "Children: " << children << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
-			#endif
 			
 			if( children[ 0 ].loadState() == Node::LOADED )
 			{

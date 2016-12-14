@@ -94,32 +94,12 @@ namespace model
 		
 		pointer allocate( size_type n )
 		{
-			#ifdef DEBUG
-			{
-				if( n == 158 )
-				{
-					stringstream ss; ss << "[ t" << omp_get_thread_num() << " ] starting allocation" << endl << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
-			}
-			#endif
-			
 			#ifdef SCALABLE
 				pointer p = InternalAlloc().allocate( n );
 				AllocStatistics::notifyAlloc( scalable_msize( p ) );
 			#else
 				pointer p = ( pointer ) malloc( sizeof( T ) * n );
 				AllocStatistics::notifyAlloc( malloc_usable_size( p ) );
-			#endif
-			
-			#ifdef DEBUG
-			{
-				if( n == 158 )
-				{
-					stringstream ss; ss << "[ t" << omp_get_thread_num() << " ] allocated" << endl << endl;
-					HierarchyCreationLog::logDebugMsg( ss.str() );
-				}
-			}
 			#endif
 				
 			return p;

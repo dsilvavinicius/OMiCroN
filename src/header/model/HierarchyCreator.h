@@ -16,7 +16,7 @@
 // Enables node colapse when leaves do not have siblings.
 // #define NODE_COLAPSE
 
-// #define LEAF_CREATION_DEBUG
+#define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG
 // #define NODE_PROCESSING_DEBUG
 // #define SPECIFIC_NODE_DEBUG
@@ -317,8 +317,8 @@ namespace model
 			
 // 						u *= 0.00055f;
 // 						v *= 0.00055f;
-						u *= 0.00001f;
-						v *= 0.00001f;
+						u *= 0.00005f;
+						v *= 0.00005f;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}
