@@ -8,6 +8,9 @@
 #include "O1OctreeNode.h"
 #include "GpuAllocStatistics.h"
 #include "splat_renderer/surfel.hpp"
+#include "HierarchyCreationLog.h"
+
+#define DEBUG
 
 namespace model
 {
@@ -39,6 +42,8 @@ namespace model
 		bool isReleasing();
 		
 		const QGLWidget* widget();
+		
+		friend ostream& operator<<( ostream& out, const NodeLoaderThread& loader );
 		
 	protected:
 		void run() Q_DECL_OVERRIDE;
@@ -108,6 +113,13 @@ namespace model
 	{
 		m_widget->makeCurrent();
 		
+		#ifdef DEBUG
+		{
+			stringstream ss; ss << *this << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		NodePtrList loadList;
 		NodePtrList unloadList;
 		SiblingsList releaseList;
@@ -168,6 +180,15 @@ namespace model
 		
 		siblings.clear();
 	}
+	
+	inline ostream& operator<<( ostream& out, const NodeLoaderThread& loader )
+	{
+		out << "Pending requests: load: " << loader.m_load.size() << " unload: " << loader.m_unload.size()
+			<< " release: " << loader.m_release.size();
+		return out;
+	}
 }
+
+#undef DEBUG
 
 #endif

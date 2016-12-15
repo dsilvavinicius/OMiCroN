@@ -18,8 +18,8 @@
 // #define INSERTION_DEBUG
 // #define SUBSTITUTION_DEBUG
 // #define ORDERING_DEBUG
-#define RENDERING_DEBUG
-#define FRONT_TRACKING_DEBUG
+// #define RENDERING_DEBUG
+// #define FRONT_TRACKING_DEBUG
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
 
@@ -27,7 +27,7 @@
 #define ASYNC_LOAD
 
 // Render an id text in each rendered node.
-#define NODE_ID_TEXT
+// #define NODE_ID_TEXT
 
 // Number of threads in front tracking.
 #define N_THREADS 1
