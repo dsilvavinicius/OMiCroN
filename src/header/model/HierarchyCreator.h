@@ -316,8 +316,10 @@ namespace model
 			
 // 						u *= 0.00055f;
 // 						v *= 0.00055f;
-						u *= 0.00005f;
-						v *= 0.00005f;
+// 						u *= 0.00005f;
+// 						v *= 0.00005f;
+						u *= 0.00003f;
+						v *= 0.00003f;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}

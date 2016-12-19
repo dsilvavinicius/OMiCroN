@@ -566,10 +566,9 @@ namespace model
 				}
 			}
 			
+			renderer.render_frame();
 			m_nodeLoader.onIterationEnd();
 		}
-		
-		renderer.render_frame();
 		
 		#ifdef NODE_ID_TEXT
 		{

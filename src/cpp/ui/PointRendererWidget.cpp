@@ -324,7 +324,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	// Best value for performance
 	int nThreads = 4;
 	
-	Octree::RuntimeSetup runtime( nThreads, 8/*32*/, 1024ul * 1024ul * 1024ul * 12ul, true );
+	Octree::RuntimeSetup runtime( nThreads, 8/*32*/, 1024ul * 1024ul * 1024ul * 7ul, true );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{

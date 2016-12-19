@@ -91,7 +91,7 @@ namespace model
 	
 	inline bool NodeLoaderThread::reachedGpuMemQuota()
 	{
-		return float( memoryUsage() ) > 0.95f * float( m_totalGpuMem );
+		return float( memoryUsage() ) > 0.50f * float( m_totalGpuMem );
 	}
 	
 	inline ulong NodeLoaderThread::memoryUsage()
@@ -156,6 +156,11 @@ namespace model
 		{
 			node.loadGPU();
 		}
+		else
+		{
+			// This is just to ensure setting the UNLOADED flag for the node.
+			node.unloadGPU();
+		}
 	}
 	
 	inline void NodeLoaderThread::unload( Node& node )
@@ -183,8 +188,9 @@ namespace model
 	
 	inline ostream& operator<<( ostream& out, const NodeLoaderThread& loader )
 	{
-		out << "Pending requests: load: " << loader.m_load.size() << " unload: " << loader.m_unload.size()
-			<< " release: " << loader.m_release.size();
+		out << "Main memory allocated: " << AllocStatistics::totalAllocated() << " bytes. GPU memory allocated: "
+			<< GpuAllocStatistics::totalAllocated() << " bytes. Pending requests: load: "
+			<< loader.m_load.size() << " unload: " << loader.m_unload.size() << " release: " << loader.m_release.size();
 		return out;
 	}
 }
