@@ -31,18 +31,18 @@ namespace model
 		
 		enum LoadState
 		{
-			LOADED = 0x0,
-			UNLOADED = 0x1,
-			PENDING = 0x2,
+			LOAD = 0x0,
+			UNLOAD = 0x1,
+			RENDER = 0x2,
 		};
 		
 		friend ostream& operator<<( ostream& out, const LoadState loadState )
 		{
 			switch( loadState )
 			{
-				case LOADED: out << "LOADED"; break;
-				case UNLOADED: out << "UNLOADED"; break;
-				case PENDING: out << "PENDING"; break;
+				case LOAD: out << "LOAD"; break;
+				case UNLOAD: out << "UNLOAD"; break;
+				case RENDER: out << "RENDER"; break;
 			}
 			return out;
 		}
@@ -53,7 +53,7 @@ namespace model
 		m_isLeaf( false ),
 		m_parent( nullptr ),
 		m_children(),
-		m_loadState( UNLOADED )
+		m_loadState( UNLOAD )
 		{}
 		
 		O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
@@ -61,7 +61,7 @@ namespace model
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children(),
-		m_loadState( UNLOADED )
+		m_loadState( UNLOAD )
 		{}
 		
 		O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
@@ -69,7 +69,7 @@ namespace model
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children(),
-		m_loadState( UNLOADED )
+		m_loadState( UNLOAD )
 		{
 // 			#ifdef DEBUG
 // 			{
@@ -220,19 +220,27 @@ namespace model
 		
 		void loadGPU()
 		{
-			m_cloud = SurfelCloud( m_contents );
-			m_loadState = LoadState::LOADED;
+			if( m_loadState == LoadState::UNLOAD )
+			{
+				m_cloud = SurfelCloud( m_contents );
+				m_loadState = LoadState::LOAD;
+			}
 		}
 		
 		void unloadGPU()
 		{
-			m_loadState = LoadState::UNLOADED;
 			m_cloud = SurfelCloud();
 		}
 		
 		LoadState loadState() const { return LoadState( m_loadState.load() ); }
 		
-		void setPendingCloud() { m_loadState = LoadState::PENDING; } 
+		/* Atomically compares and swaps the LoadState of the node. */
+		bool compareAndSwapLoadState( const LoadState expected, const LoadState desired )
+		{
+			char exp = expected;
+			char des = desired;
+			return m_loadState.compare_exchange_strong( exp, des );
+		}
 		
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
@@ -333,8 +341,8 @@ namespace model
 // 			<< "Points: " << node.m_contents << endl
 // 			<< "First point: " << node.m_contents[ 0 ] << endl
 // 			<< "Parent: " << node.m_parent << endl
-			<< "Children: " << node.m_children << endl
-			<< "Is leaf? " << node.m_isLeaf << endl
+// 			<< "Children: " << node.m_children << endl
+// 			<< "Is leaf? " << node.m_isLeaf << endl
 			<< "Load state: " << node.loadState() << endl
 // 			<< "Cloud: " << endl << node.m_cloud
 			;

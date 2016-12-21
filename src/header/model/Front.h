@@ -553,7 +553,8 @@ namespace model
 				{
 					#ifdef FRONT_TRACKING_DEBUG
 					{
-						stringstream ss; ss << "Tracking " << iter->m_morton.getPathToRoot() << endl << endl;
+						stringstream ss; ss << "Tracking " << iter->m_morton.getPathToRoot() << endl
+							<< *iter->m_octreeNode << endl << endl;
 						HierarchyCreationLog::logDebugMsg( ss.str() );
 					}
 					#endif
@@ -566,8 +567,8 @@ namespace model
 				}
 			}
 			
-			renderer.render_frame();
 			m_nodeLoader.onIterationEnd();
+			renderer.render_frame();
 		}
 		
 		#ifdef NODE_ID_TEXT
@@ -876,7 +877,7 @@ namespace model
 			}
 		}
 		
-		if( pruneFlag && parentNode->loadState() != Node::LOADED )
+		if( pruneFlag && parentNode->loadState() != Node::LOAD )
 		{
 			#ifdef ASYNC_LOAD
 				m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
@@ -971,7 +972,7 @@ namespace model
 		{
 			NodeArray& children = node.child();
 			
-			if( children[ 0 ].loadState() == Node::LOADED )
+			if( children[ 0 ].loadState() == Node::LOAD )
 			{
 				return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
 			}
@@ -1046,12 +1047,12 @@ namespace model
 		}
 		#endif
 		
-		if( node->loadState() == Node::LOADED )
+		if( node->loadState() == Node::LOAD )
 		{
 			#ifdef TUCANO_RENDERER
 				renderer.render_cloud_tucano( node->getContents() );
 			#else
-				renderer.render_cloud( node->cloud() );
+				renderer.render( *node );
 			#endif
 		}
 	}
@@ -1062,12 +1063,12 @@ namespace model
 	{
 		frontIt++;
 		
-		if( node.loadState() == Node::LOADED )
+		if( node.loadState() == Node::LOAD )
 		{
 			#ifdef TUCANO_RENDERER
 				renderer.render_cloud_tucano( node.getContents() );
 			#else
-				renderer.render_cloud( node.cloud() );
+				renderer.render( node );
 			#endif
 		}
 	}

@@ -80,9 +80,8 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncLoad( Node& node, const uint threadIdx )
 	{
-		if( node.loadState() == Node::UNLOADED )
+		if( node.loadState() == Node::UNLOAD )
 		{
-			node.setPendingCloud();
 			m_iterLoad[ threadIdx ].push_back( &node );
 		}
 	}
@@ -90,9 +89,8 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncUnload( Node& node, const uint threadIdx )
 	{
-		if( node.loadState() == Node::LOADED )
+		if( node.loadState() == Node::LOAD || node.loadState() == Node::RENDER )
 		{
-			node.setPendingCloud();
 			m_iterUnload[ threadIdx ].push_back( &node );
 		}
 	}

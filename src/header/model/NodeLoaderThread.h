@@ -91,7 +91,7 @@ namespace model
 	
 	inline bool NodeLoaderThread::reachedGpuMemQuota()
 	{
-		return float( memoryUsage() ) > 0.50f * float( m_totalGpuMem );
+		return float( memoryUsage() ) > 0.1f * float( m_totalGpuMem );
 	}
 	
 	inline ulong NodeLoaderThread::memoryUsage()
@@ -146,6 +146,8 @@ namespace model
 		{
 			release( siblings );
 		}
+		
+		m_widget->doneCurrent();
 	}
 	
 	inline void NodeLoaderThread::load( Node& node )
@@ -156,22 +158,17 @@ namespace model
 		{
 			node.loadGPU();
 		}
-		else
-		{
-			// This is just to ensure setting the UNLOADED flag for the node.
-			node.unloadGPU();
-		}
 	}
 	
 	inline void NodeLoaderThread::unload( Node& node )
 	{
 		for( Node& child : node.child() )
 		{
-			if( child.loadState() == Node::LOADED )
-			{
-				unload( child ); 
-			}
+			unload( child ); 
 		}
+		
+		while( !node.compareAndSwapLoadState( Node::LOAD, Node::UNLOAD ) && node.loadState() != Node::UNLOAD )
+		{}
 		
 		node.unloadGPU();
 	}

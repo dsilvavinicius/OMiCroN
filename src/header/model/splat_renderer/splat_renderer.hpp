@@ -29,6 +29,7 @@
 #include "splat_renderer/surfel.hpp"
 #include "splat_renderer/surfel_cloud.h"
 #include "Array.h"
+#include <O1OctreeNode.h>
 #include "utils/frustum.hpp"
 #include "OglUtils.h"
 
@@ -38,6 +39,7 @@
 // Defines for debugging output.
 // #define IS_RENDERABLE_DEBUG
 // #define RENDERING_DEBUG
+#define GL_ERROR_DEBUG
 
 #ifdef TUCANO_RENDERER
 	#include "phongshader.hpp"
@@ -76,11 +78,13 @@ class SplatRenderer
 {
 
 public:
+	using Node = O1OctreeNode< Surfel >;
+	
     SplatRenderer( Tucano::Camera* camera );
     virtual ~SplatRenderer();
 
 	void begin_frame();
-	void render_cloud( SurfelCloud& cloud );
+	void render( Node& node );
     
 	#ifdef TUCANO_RENDERER
 		void render_cloud_tucano( const model::Array< Surfel >& surfels ) const;
@@ -141,7 +145,7 @@ private:
     void render_pass( bool depth_only = false );
 
 private:
-	using RenderingVector = vector< SurfelCloud*, TbbAllocator< SurfelCloud* > >;
+	using RenderingVector = vector< Node*, TbbAllocator< Node* > >;
 	
     Tucano::Camera* m_camera;
 	Tucano::Frustum m_frustum;
@@ -170,17 +174,17 @@ private:
 	ulong m_renderedSplats;
 };
 
-inline void SplatRenderer::render_cloud( SurfelCloud& cloud )
+inline void SplatRenderer::render( Node& node )
 {
 	#ifdef RENDERING_DEBUG
 	{
-		stringstream ss; ss << "Pushing to render list: " << endl << cloud << endl << endl;
+		stringstream ss; ss << "Pushing to render list: " << endl << node << endl << endl;
 		HierarchyCreationLog::logDebugMsg( ss.str() );
 	}
 	#endif
 	
-	m_renderedSplats += cloud.numPoints();
-	m_toRender.push_back( &cloud );
+	m_renderedSplats += node.cloud().numPoints();
+	m_toRender.push_back( &node );
 }
 
 #ifdef TUCANO_RENDERER
@@ -310,9 +314,31 @@ inline void SplatRenderer::render_pass( bool depth_only )
         program.set_uniform_1i("filter_kernel", 1);
     }
     
-    for( SurfelCloud* cloud : m_toRender )
+    if( depth_only )
 	{
-		cloud->render();
+		for( Node* node : m_toRender )
+		{
+			if( node->compareAndSwapLoadState( Node::LOAD, Node::RENDER ) )
+			{
+				node->cloud().render();
+			}
+		}
+	}
+	else
+	{
+		for( Node* node : m_toRender )
+		{
+			// This compare and swap is necessary for the case where just the attribute pass is used ( no depth pass
+			// before ). This way the load state is assured to be RENDER if it was not unloaded between insertion into
+			// the rendering vector and the actual rendering.
+			node->compareAndSwapLoadState( Node::LOAD, Node::RENDER );
+			
+			if( node->loadState() == Node::RENDER )
+			{
+				node->cloud().render();
+				node->compareAndSwapLoadState( Node::RENDER, Node::LOAD );
+			}
+		}
 	}
 	
     program.unuse();
@@ -340,7 +366,7 @@ inline void SplatRenderer::render_frame()
 			
 			if (m_soft_zbuffer)
 			{
-				render_pass( true);
+				render_pass( true );
 			}
 
 			#ifndef NDEBUG
@@ -417,7 +443,7 @@ inline void SplatRenderer::render_frame()
 		}
 	#endif
 	
-	#ifndef NDEBUG
+	#if defined GL_ERROR_DEBUG || !defined NDEBUG
 		util::OglUtils::checkOglErrors();
 	#endif
 }
@@ -452,5 +478,6 @@ inline const Tucano::Camera& SplatRenderer::camera() const
 
 #undef IS_RENDERABLE_DEBUG
 #undef RENDERING_DEBUG
+#undef GL_ERROR_DEBUG
 
 #endif // SPLATRENDER_HPP

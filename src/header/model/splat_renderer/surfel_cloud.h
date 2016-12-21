@@ -11,6 +11,8 @@
 // #define CTOR_DEBUG
 // #define CLEANING_DEBUG
 // #define RENDERING_DEBUG
+// #define GL_ERROR_DEBUG
+
 // #define BUFFER_MTX
 
 using namespace model;
@@ -84,7 +86,7 @@ inline SurfelCloud::SurfelCloud( const model::Array< Surfel >& surfels, const Ma
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 		
-		#ifndef NDEBUG
+		#if defined GL_ERROR_DEBUG || !defined NDEBUG
 			util::OglUtils::checkOglErrors();
 		#endif
 	}
@@ -197,7 +199,7 @@ inline void SurfelCloud::render()
 		glBindVertexArray( 0 );
 	}
 	
-	#ifndef NDEBUG
+	#if defined GL_ERROR_DEBUG || !defined NDEBUG
 		util::OglUtils::checkOglErrors();
 	#endif
 }
@@ -249,6 +251,7 @@ inline ostream& operator<<( ostream& out, const SurfelCloud& cloud )
 #undef CTOR_DEBUG
 #undef CLEANING_DEBUG
 #undef RENDERING_DEBUG
+#undef GL_ERROR_DEBUG
 #undef BUFFER_MTX
 
 #endif

@@ -178,9 +178,9 @@ namespace model
 					{
 						for( Node& node : m_siblings )
 						{
-							if( node.loadState() == Node::LOADED )
+							if( node.loadState() == Node::LOAD )
 							{
-								m_renderer->render_cloud( node.cloud() );
+								m_renderer->render( node );
 							}
 						}
 					}
