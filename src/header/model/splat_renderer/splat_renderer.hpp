@@ -260,7 +260,7 @@ inline void SplatRenderer::begin_frame()
 {
 	m_frustum.update( *m_camera );
 	
-	#ifndef TUCANO_RENDERER
+	#if !defined TUCANO_RENDERER && !defined DEBUG_RENDERING
 		m_fbo.bind();
 	#endif
 	
@@ -364,10 +364,12 @@ inline void SplatRenderer::render_frame()
 				util::OglUtils::checkOglErrors();
 			#endif
 			
-			if (m_soft_zbuffer)
-			{
-				render_pass( true );
-			}
+			#ifndef DEBUG_RENDERING
+				if (m_soft_zbuffer)
+				{
+					render_pass( true );
+				}
+			#endif
 
 			#ifndef NDEBUG
 				util::OglUtils::checkOglErrors();
@@ -381,65 +383,67 @@ inline void SplatRenderer::render_frame()
 
 			m_toRender.clear();
 			
-			if (m_multisample)
-			{
-				glDisable(GL_MULTISAMPLE);
-				glDisable(GL_SAMPLE_SHADING);
-			}
-			
-			m_fbo.unbind();
-
-			if (m_multisample)
-			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.color_texture());
-
-				if (m_smooth)
+			#ifndef DEBUG_RENDERING
+				if (m_multisample)
 				{
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.normal_texture());
-
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.depth_texture());
+					glDisable(GL_MULTISAMPLE);
+					glDisable(GL_SAMPLE_SHADING);
 				}
-			}
-			else
-			{
-				glActiveTexture(GL_TEXTURE0);
-				glBindTexture(GL_TEXTURE_2D, m_fbo.color_texture());
+				
+				m_fbo.unbind();
 
-				if (m_smooth)
+				if (m_multisample)
 				{
-					glActiveTexture(GL_TEXTURE1);
-					glBindTexture(GL_TEXTURE_2D, m_fbo.normal_texture());
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.color_texture());
 
-					glActiveTexture(GL_TEXTURE2);
-					glBindTexture(GL_TEXTURE_2D, m_fbo.depth_texture());
+					if (m_smooth)
+					{
+						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.normal_texture());
+
+						glActiveTexture(GL_TEXTURE2);
+						glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_fbo.depth_texture());
+					}
 				}
-			}
-
-			m_finalization.use();
-			
-			try
-			{
-				setup_uniforms(m_finalization, m_camera->getViewMatrix().matrix());
-				m_finalization.set_uniform_1i("color_texture", 0);
-
-				if (m_smooth)
+				else
 				{
-					m_finalization.set_uniform_1i("normal_texture", 1);
-					m_finalization.set_uniform_1i("depth_texture", 2);
-				}
-			}
-			catch (uniform_not_found_error const& e)
-			{
-				std::cerr << "Warning: Failed to set a uniform variable." << std::endl
-					<< e.what() << std::endl;
-			}
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, m_fbo.color_texture());
 
-			glBindVertexArray(m_rect_vao);
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-			glBindVertexArray(0);
+					if (m_smooth)
+					{
+						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D, m_fbo.normal_texture());
+
+						glActiveTexture(GL_TEXTURE2);
+						glBindTexture(GL_TEXTURE_2D, m_fbo.depth_texture());
+					}
+				}
+
+				m_finalization.use();
+				
+				try
+				{
+					setup_uniforms(m_finalization, m_camera->getViewMatrix().matrix());
+					m_finalization.set_uniform_1i("color_texture", 0);
+
+					if (m_smooth)
+					{
+						m_finalization.set_uniform_1i("normal_texture", 1);
+						m_finalization.set_uniform_1i("depth_texture", 2);
+					}
+				}
+				catch (uniform_not_found_error const& e)
+				{
+					std::cerr << "Warning: Failed to set a uniform variable." << std::endl
+						<< e.what() << std::endl;
+				}
+
+				glBindVertexArray(m_rect_vao);
+				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+				glBindVertexArray(0);
+			#endif
 		}
 	#endif
 	

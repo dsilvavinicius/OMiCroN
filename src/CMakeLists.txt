@@ -103,6 +103,7 @@ include(shader_wrap_cpp)
 
 # GLviz shader.
 file(GLOB OPENGL_SHADERS ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader/*)
+
 shader_wrap_cpp(SOURCES_OPENGL_SHADERS "${OPENGL_SHADERS}")
 
 source_group("Shader Files" FILES ${OPENGL_SHADERS})

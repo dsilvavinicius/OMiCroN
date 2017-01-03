@@ -22,6 +22,8 @@
 
 extern unsigned char const attribute_vs_glsl[];
 extern unsigned char const attribute_fs_glsl[];
+extern unsigned char const debug_vs_glsl[];
+extern unsigned char const debug_fs_glsl[];
 extern unsigned char const lighting_glsl[];
 
 ProgramAttribute::ProgramAttribute()
@@ -86,13 +88,23 @@ ProgramAttribute::set_smooth(bool enable)
 void
 ProgramAttribute::initialize_shader_obj()
 {
-    m_attribute_vs_obj.load_from_cstr(
-        reinterpret_cast<char const*>(attribute_vs_glsl));
-    m_lighting_vs_obj.load_from_cstr(
-        reinterpret_cast<char const*>(lighting_glsl));
+	#ifdef DEBUG_RENDERING
+		m_attribute_vs_obj.load_from_cstr(
+			reinterpret_cast<char const*>(debug_vs_glsl));
+		m_lighting_vs_obj.load_from_cstr(
+			reinterpret_cast<char const*>(lighting_glsl));
 
-    m_attribute_fs_obj.load_from_cstr(
-        reinterpret_cast<char const*>(attribute_fs_glsl));
+		m_attribute_fs_obj.load_from_cstr(
+			reinterpret_cast<char const*>(debug_fs_glsl));
+	#else
+		m_attribute_vs_obj.load_from_cstr(
+			reinterpret_cast<char const*>(attribute_vs_glsl));
+		m_lighting_vs_obj.load_from_cstr(
+			reinterpret_cast<char const*>(lighting_glsl));
+
+		m_attribute_fs_obj.load_from_cstr(
+			reinterpret_cast<char const*>(attribute_fs_glsl));
+	#endif
 }
 
 void
