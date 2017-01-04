@@ -307,9 +307,28 @@ namespace model
 						const Vec3& normal = p.getNormal();
 						
 						// This can lead to a division by 0.
-						Vec3 pointOnPlane(
-							( normal.x() * pos.x() + normal.y() * pos.y() + normal.z() * pos.z() ) / normal.x(),
-							0.f, 0.f );
+						float epsilon = 1e-10;
+						float planeMinusD = normal.x() * pos.x() + normal.y() * pos.y() + normal.z() * pos.z();
+						
+						Vec3 pointOnPlane;
+						if( fabs( normal.x() ) > epsilon )
+						{
+							pointOnPlane = Vec3( planeMinusD / normal.x(), 0.f, 0.f );
+						}
+						else if( fabs( normal.y() ) > epsilon )
+						{
+							pointOnPlane = Vec3( 0.f, planeMinusD / normal.y(), 0.f );
+						}
+						else if( fabs( normal.z() ) > epsilon )
+						{
+							pointOnPlane = Vec3( 0.f, 0.f, planeMinusD / normal.z() );
+						}
+						else
+						{
+// 							cout << "Read point has zero vector normal." << endl << endl;
+							return;
+						}
+						
 						Vector3f u = pointOnPlane - pos;
 						u.normalize();
 						Vector3f v = normal.cross( u );
