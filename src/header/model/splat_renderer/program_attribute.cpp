@@ -88,7 +88,7 @@ ProgramAttribute::set_smooth(bool enable)
 void
 ProgramAttribute::initialize_shader_obj()
 {
-	#ifdef DEBUG_RENDERING
+	#ifdef PROGRAM_ATTRIBUTE_DEBUG
 		m_attribute_vs_obj.load_from_cstr(
 			reinterpret_cast<char const*>(debug_vs_glsl));
 		m_lighting_vs_obj.load_from_cstr(

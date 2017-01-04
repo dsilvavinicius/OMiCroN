@@ -260,7 +260,7 @@ inline void SplatRenderer::begin_frame()
 {
 	m_frustum.update( *m_camera );
 	
-	#if !defined TUCANO_RENDERER && !defined DEBUG_RENDERING
+	#if !defined TUCANO_RENDERER && !defined PROGRAM_ATTRIBUTE_DEBUG
 		m_fbo.bind();
 	#endif
 	
@@ -364,7 +364,7 @@ inline void SplatRenderer::render_frame()
 				util::OglUtils::checkOglErrors();
 			#endif
 			
-			#ifndef DEBUG_RENDERING
+			#ifndef PROGRAM_ATTRIBUTE_DEBUG
 				if (m_soft_zbuffer)
 				{
 					render_pass( true );
@@ -383,7 +383,7 @@ inline void SplatRenderer::render_frame()
 
 			m_toRender.clear();
 			
-			#ifndef DEBUG_RENDERING
+			#ifndef PROGRAM_ATTRIBUTE_DEBUG
 				if (m_multisample)
 				{
 					glDisable(GL_MULTISAMPLE);

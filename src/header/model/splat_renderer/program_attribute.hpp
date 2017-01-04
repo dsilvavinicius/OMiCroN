@@ -21,7 +21,7 @@
 #include <splat_renderer/program.hpp>
 
 // Define that enables the debug rendering of the points. This mode just renders all points without any reconstruction.
-// #define DEBUG_RENDERING
+#define PROGRAM_ATTRIBUTE_DEBUG
 
 class ProgramAttribute : public glProgram
 {
