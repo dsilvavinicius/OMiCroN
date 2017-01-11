@@ -26,6 +26,15 @@
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
 
+// Cut rendering methods.
+#define RENDER_ENTIRE_CUT 0 // Renders the entire cut. The default and correct method to visualize the point cloud.
+#define RENDER_OLD_CUT_ONLY 1 // Debug. Renders only nodes that were in cuts rendered already.
+#define RENDER_NEW_CUT_ONLY 2 // Debug. Renders only nodes at the end of the front that were added to the cut recently
+							  // and were not rendered yet.
+
+// Choosen cut rendering method
+#define CUT_RENDERING_METHOD RENDER_ENTIRE_CUT
+
 // Render an id text in each rendered node.
 // #define NODE_ID_TEXT
 
@@ -181,12 +190,14 @@ namespace model
 		
 		void setupNodeRendering( FrontListIter& iter, const FrontNode& frontNode, Segment& segment, Renderer& renderer );
 		
-		void setupNodeRenderingNoFront( FrontListIter& iter, Node& node, Renderer& renderer ) const;
+		void setupNodeRenderingNoFront( const Morton& moton, Node& node, Renderer& renderer );
 		
 		bool isSubstIdxInRange( const uint rangeStartIdx, const uint rangeSize ) const
 		{
 			return m_substitutionSegIdx >= rangeStartIdx && m_substitutionSegIdx < rangeStartIdx + rangeSize;
 		}
+		
+		void unloadInGpu( Node& node );
 		
 		#ifdef ORDERING_DEBUG
 			void assertFrontIterator( const FrontListIter& iter, const FrontList& front )
@@ -353,6 +364,10 @@ namespace model
 		#ifdef NODE_ID_TEXT
 			TextEffect m_textEffect;
 			vector< pair< string, Vector4f >, TbbAllocator< pair< string, Vector4f > > > m_nodeIds;
+		#endif
+			
+		#if CUT_RENDERING_METHOD == RENDER_NEW_CUT_ONLY || CUT_RENDERING_METHOD == RENDER_OLD_CUT_ONLY
+			Morton m_lastRendered;
 		#endif
 	};
 	
@@ -711,27 +726,7 @@ namespace model
 		
 		if( !isCullable )
 		{
-			#ifdef RENDERING_DEBUG
-			{
-				stringstream ss; ss << "Rendering: " << endl << morton.getPathToRoot( true ) << endl << node << endl
-					<< endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
-			#endif
-			
-			#ifdef NODE_ID_TEXT
-			{
-				const Vec3& textPos = node.getContents()[ 0 ].c;
-				
-				m_nodeIds.push_back(
-					pair< string, Vector4f >( morton.toString(), Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )
-				);
-			}
-			#endif
-			
-			// No prunning or branching done. Just send the current front node for rendering.
-			setupNodeRenderingNoFront( frontIt, node, renderer );
-			return;
+			setupNodeRenderingNoFront( morton, node, renderer );
 		}
 		
 		frontIt++;
@@ -763,7 +758,7 @@ namespace model
 					node = substituteCandidate;
 					
 					#ifdef ASYNC_LOAD
-						m_nodeLoader.asyncLoad( *node.m_octreeNode, omp_get_thread_num() );
+						node.m_octreeNode->loadInGpu();
 					#else
 						node.m_octreeNode->loadGPU();
 					#endif
@@ -877,10 +872,10 @@ namespace model
 			}
 		}
 		
-		if( pruneFlag && parentNode->loadState() != Node::LOAD )
+		if( pruneFlag && !parentNode->isLoaded() )
 		{
 			#ifdef ASYNC_LOAD
-				m_nodeLoader.asyncLoad( *parentNode, omp_get_thread_num() );
+				parentNode->loadInGpu();
 			#else
 				parentNode->loadGPU();
 			#endif
@@ -928,12 +923,12 @@ namespace model
 		}
 		else
 		{
-			if( m_nodeLoader.reachedGpuMemQuota() )
+			if( GpuAllocStatistics::reachedGpuMemQuota() )
 			{
 				for( Node& node : parentNode->child() )
 				{
 					#ifdef ASYNC_LOAD
-						m_nodeLoader.asyncUnload( node, omp_get_thread_num() );
+						unloadInGpu( node );
 					#else
 						node.unloadGPU();
 					#endif
@@ -972,7 +967,7 @@ namespace model
 		{
 			NodeArray& children = node.child();
 			
-			if( children[ 0 ].loadState() == Node::LOAD )
+			if( children[ 0 ].isLoaded() )
 			{
 				return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
 			}
@@ -981,7 +976,7 @@ namespace model
 				for( Node& child : children )
 				{
 					#ifdef ASYNC_LOAD
-						m_nodeLoader.asyncLoad( child, omp_get_thread_num() );
+						child.loadInGpu();
 					#else
 						child.loadGPU();
 					#endif
@@ -1026,51 +1021,77 @@ namespace model
 	{
 		segment.m_front.insert( frontIt, frontNode );
 		
-		Node* node = frontNode.m_octreeNode;
-		
+		setupNodeRenderingNoFront( frontNode.m_morton, *frontNode.m_octreeNode, renderer );
+	}
+	
+	template< typename Morton >
+	inline void Front< Morton >::setupNodeRenderingNoFront( const Morton& morton, Node& node, Renderer& renderer )
+	{
 		#ifdef RENDERING_DEBUG
 		{
-			stringstream ss; ss << "Rendering: " << endl << frontNode.m_morton.getPathToRoot( true ) << endl <<
-				*node << endl << endl;
+			stringstream ss; ss << "Rendering: " << endl << morton.getPathToRoot( true ) << endl << node << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif
 		
-		#ifdef NODE_ID_TEXT
+		if( node.isLoaded() )
 		{
-			const Vec3& textPos = node->getContents()[ 0 ].c;
-			
-			m_nodeIds.push_back(
-				pair< string, Vector4f >( frontNode.m_morton.toString(),
-										  Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )
-			);
-		}
-		#endif
+			#ifdef NODE_ID_TEXT
+			{
+				const Vec3& textPos = node.getContents()[ 0 ].c;
+				
+				m_nodeIds.push_back(
+					pair< string, Vector4f >( morton.toString(), Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )
+				);
+			}
+			#endif
 		
-		if( node->loadState() == Node::LOAD )
-		{
-			#ifdef TUCANO_RENDERER
-				renderer.render_cloud_tucano( node->getContents() );
+			#if CUT_RENDERING_METHOD == RENDER_NEW_CUT_ONLY
+				if( m_lastRendered < morton )
+				{
+					#ifdef TUCANO_RENDERER
+						renderer.render_cloud_tucano( node );
+					#else
+						renderer.render( node );
+					#endif
+					
+					m_lastRendered = morton;
+				}
+			#elif CUT_RENDERING_METHOD == RENDER_OLD_CUT_ONLY
+				if( m_lastRendered < morton )
+				{
+					m_lastRendered = morton;
+				}
+				else
+				{
+					#ifdef TUCANO_RENDERER
+						renderer.render_cloud_tucano( node );
+					#else
+						renderer.render( node );
+					#endif
+				}
 			#else
-				renderer.render( *node );
+				#ifdef TUCANO_RENDERER
+					renderer.render_cloud_tucano( node );
+				#else
+					renderer.render( node );
+				#endif
 			#endif
 		}
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::setupNodeRenderingNoFront( FrontListIter& frontIt, Node& node,
-															Renderer& renderer ) const
+	inline void Front< Morton >::unloadInGpu( Node& node )
 	{
-		frontIt++;
-		
-		if( node.loadState() == Node::LOAD )
+		for( Node& child : node.child() )
 		{
-			#ifdef TUCANO_RENDERER
-				renderer.render_cloud_tucano( node.getContents() );
-			#else
-				renderer.render( node );
-			#endif
+			if( child.isLoaded() )
+			{
+				child.unloadInGpu();
+			}
 		}
+		
+		node.unloadInGpu();
 	}
 }
 

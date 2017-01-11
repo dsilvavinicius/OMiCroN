@@ -10,7 +10,7 @@
 #include "splat_renderer/surfel.hpp"
 #include "HierarchyCreationLog.h"
 
-#define DEBUG
+// #define DEBUG
 
 namespace model
 {
@@ -38,6 +38,8 @@ namespace model
 		bool reachedGpuMemQuota();
 		
 		ulong memoryUsage();
+		
+		bool hasMemoryFor( const PointArray& points );
 		
 		bool isReleasing();
 		
@@ -99,6 +101,12 @@ namespace model
 		return GpuAllocStatistics::totalAllocated();
 	}
 	
+	inline bool NodeLoaderThread::hasMemoryFor( const PointArray& points )
+	{
+		ulong neededGpuMem = GpuAllocStatistics::pointSize() * points.size();
+		return memoryUsage() + neededGpuMem < m_totalGpuMem;
+	}
+	
 	inline bool NodeLoaderThread::isReleasing()
 	{
 		return m_releaseFlag;
@@ -152,11 +160,9 @@ namespace model
 	
 	inline void NodeLoaderThread::load( Node& node )
 	{
-		ulong neededGpuMem = GpuAllocStatistics::pointSize() * node.getContents().size();
-		
-		if( memoryUsage() + neededGpuMem < m_totalGpuMem )
+		if( hasMemoryFor( node.getContents() ) )
 		{
-			node.loadGPU();
+			node.loadInGpu();
 		}
 	}
 	
@@ -167,10 +173,7 @@ namespace model
 			unload( child ); 
 		}
 		
-		while( !node.compareAndSwapLoadState( Node::LOAD, Node::UNLOAD ) && node.loadState() != Node::UNLOAD )
-		{}
-		
-		node.unloadGPU();
+		node.unloadInGpu();
 	}
 	
 	inline void NodeLoaderThread::release( Siblings& siblings )

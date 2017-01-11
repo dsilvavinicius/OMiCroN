@@ -37,6 +37,8 @@ namespace model
 	class MortonCode
 	{
 	public:
+		MortonCode();
+		
 		//TODO: Put move constructors here.
 		void* operator new( size_t size );
 		void* operator new[]( size_t size );
@@ -133,6 +135,11 @@ namespace model
 		
 		T m_bits;
 	};
+	
+	template< typename T >
+	inline MortonCode< T >::MortonCode()
+	: m_bits( 0 )
+	{}
 	
 	template< typename T >
 	inline void* MortonCode< T >::operator new( size_t size )

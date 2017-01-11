@@ -3,6 +3,7 @@
 
 #include "BasicTypes.h"
 #include "splat_renderer/surfel.hpp"
+#include "Array.h"
 #include <atomic>
 
 namespace model
@@ -29,9 +30,21 @@ namespace model
 		{
 			return sizeof( Surfel );
 		}
+		
+		static bool hasMemoryFor( const model::Array< Surfel >& points )
+		{
+			ulong neededGpuMem = pointSize() * points.size();
+			return totalAllocated() + neededGpuMem < m_totalGpuMem;
+		}
+		
+		static bool reachedGpuMemQuota()
+		{
+			return float( totalAllocated() ) > 0.1f * float( m_totalGpuMem );
+		}
 	
 	private:
 		static atomic_ulong m_allocated;
+		static ulong m_totalGpuMem;
 	};
 }
 

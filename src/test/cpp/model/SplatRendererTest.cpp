@@ -178,7 +178,7 @@ namespace model
 					{
 						for( Node& node : m_siblings )
 						{
-							if( node.loadState() == Node::LOAD )
+							if( node.isLoaded() )
 							{
 								m_renderer->render( node );
 							}

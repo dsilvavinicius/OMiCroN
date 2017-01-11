@@ -9,6 +9,7 @@
 #include "StackTrace.h"
 
 // #define CTOR_DEBUG
+// #define LOADING_DEBUG
 
 using namespace std;
 using namespace Tucano;
@@ -29,31 +30,13 @@ namespace model
 		using NodeAlloc = typename ContentsAlloc:: template rebind< O1OctreeNode >::other;
 		using NodeArray = Array< O1OctreeNode, NodeAlloc >;
 		
-		enum LoadState
-		{
-			LOAD = 0x0,
-			UNLOAD = 0x1,
-			RENDER = 0x2,
-		};
-		
-		friend ostream& operator<<( ostream& out, const LoadState loadState )
-		{
-			switch( loadState )
-			{
-				case LOAD: out << "LOAD"; break;
-				case UNLOAD: out << "UNLOAD"; break;
-				case RENDER: out << "RENDER"; break;
-			}
-			return out;
-		}
-		
 		/** Initializes and empty unusable node. */
 		O1OctreeNode()
 		: m_contents(),
 		m_isLeaf( false ),
 		m_parent( nullptr ),
 		m_children(),
-		m_loadState( UNLOAD )
+		m_cloud( nullptr )
 		{}
 		
 		O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
@@ -61,7 +44,7 @@ namespace model
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children(),
-		m_loadState( UNLOAD )
+		m_cloud( nullptr )
 		{}
 		
 		O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
@@ -69,41 +52,12 @@ namespace model
 		m_isLeaf( isLeaf ),
 		m_parent( nullptr ),
 		m_children(),
-		m_loadState( UNLOAD )
-		{
-// 			#ifdef DEBUG
-// 			{
-// 				cout << "Node created: " << *this << endl << endl;
-// 			}
-// 			#endif
-		}
-		
-		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
-		 * resources. Mesh GPU data is not copied. */
-// 		O1OctreeNode( const O1OctreeNode& other )
-// 		: m_contents( other.m_contents ),
-// 		m_children( other.m_children ),
-// 		m_parent( other.m_parent ),
-// 		m_isLeaf( other.m_isLeaf ),
-// 		m_loadState( UNLOADED )
-// 		{}
+		m_cloud( nullptr )
+		{}
 
 		O1OctreeNode( const O1OctreeNode& other ) = delete;
 		
 		~O1OctreeNode();
-		
-		/** IMPORTANT: parent pointer is not deeply copied, since the node has responsibility only over its own children
-		 * resources. Mesh GPU data is not copied. */
-// 		O1OctreeNode& operator=( const O1OctreeNode& other )
-// 		{
-// 			m_contents = other.m_contents;
-// 			m_children = other.m_children;
-// 			m_parent = other.m_parent;
-// 			m_isLeaf = other.m_isLeaf;
-// 			m_loadState = UNLOADED;
-// 			
-// 			return *this;
-// 		}
 		
 		O1OctreeNode& operator=( const O1OctreeNode& other ) = delete;
 		
@@ -111,12 +65,12 @@ namespace model
 		O1OctreeNode( O1OctreeNode&& other )
 		: m_contents( std::move( other.m_contents ) ),
 		m_children( std::move( other.m_children ) ),
-		m_cloud( std::move( other.m_cloud ) ),
+		m_cloud( other.m_cloud ),
 		m_parent( other.m_parent ),
-		m_isLeaf( other.m_isLeaf ),
-		m_loadState( other.m_loadState.load() )
+		m_isLeaf( other.m_isLeaf )
 		{
 			other.m_parent = nullptr;
+			other.m_cloud = nullptr;
 			
 			#ifdef CTOR_DEBUG
 			{
@@ -132,12 +86,12 @@ namespace model
 		{
 			m_contents = std::move( other.m_contents );
 			m_children = std::move( other.m_children );
-			m_cloud = std::move( other.m_cloud );
+			m_cloud = other.m_cloud;
 			m_parent = other.m_parent;
 			m_isLeaf = other.m_isLeaf;
-			m_loadState = other.m_loadState.load();
 			
 			other.m_parent = nullptr;
+			other.m_cloud = nullptr;
 			
 			#ifdef CTOR_DEBUG
 			{
@@ -214,32 +168,58 @@ namespace model
 			releaseChildren();
 		}
 		
-		const SurfelCloud& cloud() const { return m_cloud; }
+		const SurfelCloud& cloud() const { return *m_cloud; }
 		
-		SurfelCloud& cloud() { return m_cloud; }
+		SurfelCloud& cloud() { return *m_cloud; }
 		
-		void loadGPU()
+		void loadInGpu()
 		{
-			if( m_loadState == LoadState::UNLOAD )
+			if( !m_cloud && GpuAllocStatistics::hasMemoryFor( m_contents ) )
 			{
-				m_cloud = SurfelCloud( m_contents );
-				m_loadState = LoadState::LOAD;
+				m_cloud = new SurfelCloud( m_contents );
+				
+				#ifdef LOADING_DEBUG
+				{
+					stringstream ss; ss << "Cloud prepared to load: " << m_cloud << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+				#endif
 			}
 		}
 		
-		void unloadGPU()
+		void unloadInGpu()
 		{
-			m_cloud = SurfelCloud();
+			if( m_cloud )
+			{
+				#ifdef LOADING_DEBUG
+				{
+					stringstream ss; ss << "Unloading cloud: " << m_cloud << endl << endl;
+					HierarchyCreationLog::logDebugMsg( ss.str() );
+				}
+				#endif
+				
+				delete m_cloud;
+				m_cloud = nullptr;
+			}
 		}
 		
-		LoadState loadState() const { return LoadState( m_loadState.load() ); }
-		
-		/* Atomically compares and swaps the LoadState of the node. */
-		bool compareAndSwapLoadState( const LoadState expected, const LoadState desired )
+		bool isLoaded() const
 		{
-			char exp = expected;
-			char des = desired;
-			return m_loadState.compare_exchange_strong( exp, des );
+			if( m_cloud )
+			{
+				if( m_cloud->loadStatus() == SurfelCloud::LOADED )
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return false;
+			}
 		}
 		
 		template< typename C >
@@ -250,7 +230,7 @@ namespace model
 		static O1OctreeNode deserialize( byte* serialization );
 		
 	private:
-		SurfelCloud m_cloud;
+		SurfelCloud* m_cloud;
 		
 		ContentsArray m_contents;
 		
@@ -262,8 +242,6 @@ namespace model
 		// children can be released from octree cache.
 		NodeArray m_children;
 		
-		atomic_char m_loadState;
-		
 		// CACHE INVARIANT. Indicates if the node is leaf.
 		bool m_isLeaf;
 	};
@@ -272,6 +250,11 @@ namespace model
 	inline O1OctreeNode< Contents, ContentsAlloc >::~O1OctreeNode()
 	{
 		m_parent = nullptr;
+		if( m_cloud )
+		{
+			delete m_cloud;
+			m_cloud = nullptr;
+		}
 	}
 	
 	template< typename Contents, typename ContentsAlloc >
@@ -343,7 +326,7 @@ namespace model
 // 			<< "Parent: " << node.m_parent << endl
 // 			<< "Children: " << node.m_children << endl
 // 			<< "Is leaf? " << node.m_isLeaf << endl
-			<< "Load state: " << node.loadState() << endl
+			<< "Load state: " << node.isLoaded() << endl
 // 			<< "Cloud: " << endl << node.m_cloud
 			;
 		return out;
@@ -351,5 +334,6 @@ namespace model
 }
 
 #undef CTOR_DEBUG
+#undef LOADING_DEBUG
 
 #endif

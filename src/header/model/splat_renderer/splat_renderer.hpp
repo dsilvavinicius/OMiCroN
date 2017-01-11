@@ -39,7 +39,8 @@
 // Defines for debugging output.
 // #define IS_RENDERABLE_DEBUG
 // #define RENDERING_DEBUG
-#define GL_ERROR_DEBUG
+// #define GL_ERROR_DEBUG
+// #define LOCK_DEBUG
 
 #ifdef TUCANO_RENDERER
 	#include "phongshader.hpp"
@@ -87,7 +88,7 @@ public:
 	void render( Node& node );
     
 	#ifdef TUCANO_RENDERER
-		void render_cloud_tucano( const model::Array< Surfel >& surfels ) const;
+		void render_cloud_tucano( Node& node ) const;
 	#endif
 	
 	void render_frame();
@@ -182,14 +183,16 @@ inline void SplatRenderer::render( Node& node )
 		HierarchyCreationLog::logDebugMsg( ss.str() );
 	}
 	#endif
-	
+
 	m_renderedSplats += node.cloud().numPoints();
 	m_toRender.push_back( &node );
 }
 
 #ifdef TUCANO_RENDERER
-	inline void SplatRenderer::render_cloud_tucano( const model::Array< Surfel >& surfels ) const
+	inline void SplatRenderer::render_cloud_tucano( Node& node ) const
 	{
+		model::Array< Surfel >& surfels = node.getContents()
+		
 		Mesh mesh;
 		mesh.selectPrimitive( Mesh::POINT );
 		vector< Vector4f > vertices;
@@ -314,31 +317,9 @@ inline void SplatRenderer::render_pass( bool depth_only )
         program.set_uniform_1i("filter_kernel", 1);
     }
     
-    if( depth_only )
+	for( Node* node : m_toRender )
 	{
-		for( Node* node : m_toRender )
-		{
-			if( node->compareAndSwapLoadState( Node::LOAD, Node::RENDER ) )
-			{
-				node->cloud().render();
-			}
-		}
-	}
-	else
-	{
-		for( Node* node : m_toRender )
-		{
-			// This compare and swap is necessary for the case where just the attribute pass is used ( no depth pass
-			// before ). This way the load state is assured to be RENDER if it was not unloaded between insertion into
-			// the rendering vector and the actual rendering.
-			node->compareAndSwapLoadState( Node::LOAD, Node::RENDER );
-			
-			if( node->loadState() == Node::RENDER )
-			{
-				node->cloud().render();
-				node->compareAndSwapLoadState( Node::RENDER, Node::LOAD );
-			}
-		}
+		node->cloud().render();
 	}
 	
     program.unuse();

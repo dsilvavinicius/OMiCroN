@@ -80,8 +80,9 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncLoad( Node& node, const uint threadIdx )
 	{
-		if( node.loadState() == Node::UNLOAD )
+		if( m_loaderThread->hasMemoryFor( node.getContents() ) && !node.isLoaded() )
 		{
+			node.loadInGpu();
 			m_iterLoad[ threadIdx ].push_back( &node );
 		}
 	}
@@ -89,16 +90,18 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncUnload( Node& node, const uint threadIdx )
 	{
-		if( node.loadState() == Node::LOAD || node.loadState() == Node::RENDER )
-		{
-			m_iterUnload[ threadIdx ].push_back( &node );
-		}
+// 		if( node.isLoaded() )
+// 		{
+// 			m_iterUnload[ threadIdx ].push_back( &node );
+// 		}
+
+// 		node.unloadGPU();
 	}
 	
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncRelease( Siblings&& siblings, const uint threadIdx )
 	{
-		m_iterRelease[ threadIdx ].push_back( std::move( siblings ) );
+// 		m_iterRelease[ threadIdx ].push_back( std::move( siblings ) );
 	}
 	
 	template< typename Point, typename Alloc >

@@ -22,6 +22,8 @@
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 
+#define PARENT_POINTS_RATIO 0.125f/*0.015625f*/
+
 using namespace util;
 
 namespace model
@@ -1006,7 +1008,7 @@ namespace model
 		
 		const PointArray& childPoints = child.getContents();
 		
-		int numSamplePoints = std::max( 1., childPoints.size() * 0.015625 );
+		int numSamplePoints = std::max( 1.f, childPoints.size() * PARENT_POINTS_RATIO );
 		PointArray selectedPoints( numSamplePoints );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
@@ -1083,8 +1085,7 @@ namespace model
 	inline typename HierarchyCreator< Morton >::PointArray HierarchyCreator< Morton >
 	::samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const
 	{
-		// LoD has 1/8 of children points.
-		int numSamplePoints = std::max( 1., nPoints * 0.015625 );
+		int numSamplePoints = std::max( 1.f, nPoints * PARENT_POINTS_RATIO );
 		PointArray selectedPoints( numSamplePoints );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
