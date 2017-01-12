@@ -101,7 +101,7 @@ namespace model
 	template< typename Point, typename Alloc >
 	inline void NodeLoader< Point, Alloc >::asyncRelease( Siblings&& siblings, const uint threadIdx )
 	{
-// 		m_iterRelease[ threadIdx ].push_back( std::move( siblings ) );
+		m_iterRelease[ threadIdx ].push_back( std::move( siblings ) );
 	}
 	
 	template< typename Point, typename Alloc >
