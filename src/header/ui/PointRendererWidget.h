@@ -2,9 +2,9 @@
 #define POINT_RENDERER_WIDGET_H
 
 #include <utils/qtfreecamerawidget.hpp>
-#include <point_model.hpp>
 #include "FastParallelOctree.h"
 #include "renderers/StreamingRenderer.h"
+#include "global_malloc.h"
 #include <QApplication>
 
 using namespace std;

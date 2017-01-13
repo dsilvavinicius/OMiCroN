@@ -32,6 +32,7 @@
 #include <O1OctreeNode.h>
 #include "utils/frustum.hpp"
 #include "OglUtils.h"
+#include "global_malloc.h"
 
 // Substitutes the splat rendering shaders by a Tucano phong shader. Bad perfomance, but good for debugging.
 // #define TUCANO_RENDERER

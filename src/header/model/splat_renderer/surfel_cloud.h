@@ -7,6 +7,7 @@
 #include "GpuAllocStatistics.h"
 #include "OglUtils.h"
 #include "HierarchyCreationLog.h"
+#include "global_malloc.h"
 
 // #define DEBUG
 // #define CTOR_DEBUG

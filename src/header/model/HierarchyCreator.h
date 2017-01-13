@@ -12,6 +12,7 @@
 #include "Front.h"
 #include "SQLiteManager.h"
 #include "HierarchyCreationLog.h"
+#include "global_malloc.h"
 
 // Enables node colapse when leaves do not have siblings.
 // #define NODE_COLAPSE
@@ -22,7 +23,8 @@
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 
-#define PARENT_POINTS_RATIO 0.125f/*0.015625f*/
+#define PARENT_POINTS_RATIO 0.125f
+#define PARENT_SURFEL_TANGENT_MULTIPLIER 4.5f
 
 using namespace util;
 
@@ -1014,7 +1016,10 @@ namespace model
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
 			int choosenIdx = rand() % childPoints.size();
-			selectedPoints[ i ] = childPoints[ choosenIdx ];
+			Surfel s = childPoints[ choosenIdx ];
+			s.u *= PARENT_SURFEL_TANGENT_MULTIPLIER;
+			s.v *= PARENT_SURFEL_TANGENT_MULTIPLIER;
+			selectedPoints[ i ] = s;
 		}
 		
 		Node node( std::move( selectedPoints ), isLeaf );
@@ -1092,7 +1097,11 @@ namespace model
 		{
 			int choosenIdx = rand() % nPoints;
 			SiblingPointsPrefixMapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
-			selectedPoints[ i ] = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
+			
+			Surfel s = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
+			s.u *= PARENT_SURFEL_TANGENT_MULTIPLIER;
+			s.v *= PARENT_SURFEL_TANGENT_MULTIPLIER;
+			selectedPoints[ i ] = s;
 		}
 		
 		return selectedPoints;
@@ -1126,6 +1135,9 @@ namespace model
 }
 
 #undef NODE_COLAPSE
+
+#undef PARENT_POINTS_RATIO
+#undef PARENT_SURFEL_TANGENT_MULTIPLIER
 
 #undef LEAF_CREATION_DEBUG
 #undef INNER_CREATION_DEBUG

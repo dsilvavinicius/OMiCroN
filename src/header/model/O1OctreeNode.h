@@ -7,6 +7,7 @@
 #include "splat_renderer/surfel_cloud.h"
 #include "HierarchyCreationLog.h"
 #include "StackTrace.h"
+#include "global_malloc.h"
 
 // #define CTOR_DEBUG
 // #define LOADING_DEBUG

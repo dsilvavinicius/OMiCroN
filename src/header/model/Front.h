@@ -13,6 +13,7 @@
 #include "phongshader.hpp"
 #include "HierarchyCreationLog.h"
 #include "TextEffect.h"
+#include "global_malloc.h"
 
 // Definitions to turn on debug logging for each Front operation.
 // #define INSERTION_DEBUG
@@ -913,7 +914,7 @@ namespace model
 			frontIt = segment.m_front.erase( frontIt );
 		}
 		
-		if( AllocStatistics::totalAllocated() > m_memoryLimit )
+		if( AllocStatistics::totalAllocated() > m_memoryLimit && parentNode->child()[ 0 ].isLeaf() )
 		{
 			#ifdef ASYNC_LOAD
 				m_nodeLoader.asyncRelease( std::move( parentNode->child() ), omp_get_thread_num() );

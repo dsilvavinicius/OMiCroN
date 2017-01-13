@@ -123,6 +123,8 @@ QT5_WRAP_UI( UI_HDRS
 
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
+	${CPP_DIR}/${MODEL_DIR}/global_new_delete.cpp
+
 	${HEADER_DIR}/${UI_DIR}/GLHiddenWidget.h		${CPP_DIR}/${UI_DIR}/GLHiddenWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/MainWindow.h			${CPP_DIR}/${UI_DIR}/MainWindow.cpp

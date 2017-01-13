@@ -11,6 +11,7 @@
 
 #include "Stream.h"
 #include "MemoryUtils.h"
+#include "global_malloc.h"
 
 using namespace std;
 

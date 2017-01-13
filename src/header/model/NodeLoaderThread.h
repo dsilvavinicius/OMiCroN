@@ -10,7 +10,7 @@
 #include "splat_renderer/surfel.hpp"
 #include "HierarchyCreationLog.h"
 
-#define DEBUG
+// #define DEBUG
 
 namespace model
 {

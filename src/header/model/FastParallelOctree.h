@@ -6,6 +6,7 @@
 #include "O1OctreeNode.h"
 #include "HierarchyCreator.h"
 #include "Front.h"
+#include "global_malloc.h"
 
 namespace model
 {

@@ -8,6 +8,7 @@
 #include "PlyPointWritter.h"
 #include "OctreeDimensions.h"
 #include "Profiler.h"
+#include "global_malloc.h"
 
 using namespace std;
 using namespace util;

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <Eigen/Dense>
+#include "global_malloc.h"
 
 using namespace std;
 using namespace Eigen;
