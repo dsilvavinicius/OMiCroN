@@ -29,7 +29,7 @@ int main(int argc, char **argv)
 	MainWindow window;
 
     window.show();
-	window.resize( 1200, 1000 );
+	window.resize( 1280, 1024 );
 
     window.initialize();
 	

@@ -24,7 +24,7 @@
 // #define PARENT_DEBUG
 
 #define PARENT_POINTS_RATIO 0.125f
-#define PARENT_SURFEL_TANGENT_MULTIPLIER 4.5f
+#define PARENT_SURFEL_TANGENT_MULTIPLIER 2.5f
 
 using namespace util;
 

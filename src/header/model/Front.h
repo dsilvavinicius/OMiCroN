@@ -914,16 +914,16 @@ namespace model
 			frontIt = segment.m_front.erase( frontIt );
 		}
 		
-		if( AllocStatistics::totalAllocated() > m_memoryLimit && parentNode->child()[ 0 ].isLeaf() )
-		{
-			#ifdef ASYNC_LOAD
-				m_nodeLoader.asyncRelease( std::move( parentNode->child() ), omp_get_thread_num() );
-			#else
-				parentNode->releaseChildren();
-			#endif
-		}
-		else
-		{
+// 		if( AllocStatistics::totalAllocated() > m_memoryLimit && parentNode->child()[ 0 ].isLeaf() )
+// 		{
+// 			#ifdef ASYNC_LOAD
+// 				m_nodeLoader.asyncRelease( std::move( parentNode->child() ), omp_get_thread_num() );
+// 			#else
+// 				parentNode->releaseChildren();
+// 			#endif
+// 		}
+// 		else
+// 		{
 			if( GpuAllocStatistics::reachedGpuMemQuota() )
 			{
 				for( Node& node : parentNode->child() )
@@ -935,7 +935,7 @@ namespace model
 					#endif
 				}
 			}
-		}
+// 		}
 		
 		FrontNode frontNode( *parentNode, parentMorton );
 		
