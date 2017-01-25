@@ -968,20 +968,25 @@ namespace model
 		{
 			NodeArray& children = node.child();
 			
-			if( children[ 0 ].isLoaded() )
+			bool areChildrenLoaded = true;
+			
+			for( Node& child : children )
 			{
-				return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
-			}
-			else
-			{
-				for( Node& child : children )
+				if( !child.isLoaded() )
 				{
 					#ifdef ASYNC_LOAD
 						child.loadInGpu();
 					#else
 						child.loadGPU();
 					#endif
+					
+					areChildrenLoaded = false;
 				}
+			}
+			
+			if( areChildrenLoaded )
+			{
+				return !renderer.isRenderable( box, projThresh ) && !out_isCullable;
 			}
 		}
 		

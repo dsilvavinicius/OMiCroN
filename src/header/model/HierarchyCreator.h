@@ -23,8 +23,9 @@
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 
-#define PARENT_POINTS_RATIO 0.125f
-#define PARENT_SURFEL_TANGENT_MULTIPLIER 2.5f
+#define PARENT_POINTS_RATIO 0.25f
+#define PARENT_SURFEL_TANGENT_MULTIPLIER 2.7f
+#define LEAF_SURFEL_TANGENT_SIZE 0.000037f
 
 using namespace util;
 
@@ -337,14 +338,8 @@ namespace model
 						u.normalize();
 						Vector3f v = normal.cross( u );
 			
-// 						u *= 0.00055f;
-// 						v *= 0.00055f;
-// 						u *= 0.00005f;
-// 						v *= 0.00005f;
-						u *= 0.000035f;
-						v *= 0.000035f;
-// 						u *= 0.00001f;
-// 						v *= 0.00001f;
+						u *= LEAF_SURFEL_TANGENT_SIZE;
+						v *= LEAF_SURFEL_TANGENT_SIZE;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}

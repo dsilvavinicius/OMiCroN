@@ -7,7 +7,7 @@
 
 PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
 : Tucano::QtFreecameraWidget( parent, loader.widget() ),
-m_projThresh( 1.f ),
+m_projThresh( 0.75f ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
@@ -69,7 +69,7 @@ void PointRendererWidget::adaptRenderingThresh( const float renderTime )
 	{
 		m_projThresh += renderTimeDiff * 1e-10;
 		m_projThresh = std::max( m_projThresh, 0.001953125f ); // 2 / 1024. So it is expected a screen of 1024 pixels.
-		m_projThresh = std::min( m_projThresh, 1.f );
+		m_projThresh = std::min( m_projThresh, 0.75f );
 	}
 }
 
