@@ -82,6 +82,16 @@ namespace model
 			return AlignedBox3f( minBoxVert, maxBoxVert );
 		}
 		
+		OctreeDimensions levelAbove() const
+		{
+			return OctreeDimensions( *this, m_nodeLvl - 1 );
+		}
+		
+		OctreeDimensions levelBellow() const
+		{
+			return OctreeDimensions( *this, m_nodeLvl + 1 );
+		}
+		
 		/** Returns the boundaries of the node. */
 		template< typename Node >
 		AlignedBox3f getNodeBoundaries( const Node& node )
@@ -97,6 +107,11 @@ namespace model
 // 			}
 			
 			return calcMorton( p0 ) < calcMorton( p1 );
+		}
+		
+		uint level() const
+		{
+			return m_nodeLvl;
 		}
 		
 		friend ostream& operator<<( ostream& out, const OctreeDimensions& dim )

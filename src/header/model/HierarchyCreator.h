@@ -23,8 +23,11 @@
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 
-#define PARENT_POINTS_RATIO 0.25f
-#define PARENT_SURFEL_TANGENT_MULTIPLIER 2.7f
+#define DAVID_ONE_BY_FOUR
+
+// Best parameters for PARENT_POINTS_RATIO of 0.25
+#define PARENT_POINTS_RATIO 0.25f /*0.2f*/
+
 #define LEAF_SURFEL_TANGENT_SIZE 0.000037f
 
 using namespace util;
@@ -138,7 +141,13 @@ namespace model
 		
 		/** Creates a point sample with 1/8 of the points in the prefix-sum map. */
 		PointArray samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
-							  
+		
+		/** Calculates the multiplier for splat tangent vectors when constructing a parent node. The multiplier is a
+		 * linear interpolation between MAX_TANGENT_MULTIPLIER and MIN_TANGENT_MULTIPLIER, in the range of levels of
+		 * the octree.
+		 * @param octreeDim is the interpolation parameter. */
+		float calcTangentMultiplier( const OctreeDim& octreeDim ) const;
+		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
 		
@@ -996,7 +1005,7 @@ namespace model
 	inline typename HierarchyCreator< Morton >::Node HierarchyCreator< Morton >
 	::createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
-		// Setup a placeholder in front if the node is in the leaf level.
+		// Setup a placeholder in front if the node is at the leaf level.
 		Morton childMorton = m_octreeDim.calcMorton( child );
 		if( childMorton.getLevel() == m_leafLvlDim.m_nodeLvl )
 		{
@@ -1008,12 +1017,15 @@ namespace model
 		int numSamplePoints = std::max( 1.f, childPoints.size() * PARENT_POINTS_RATIO );
 		PointArray selectedPoints( numSamplePoints );
 		
+		float tangentMultiplier = calcTangentMultiplier( m_octreeDim );
+		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
 			int choosenIdx = rand() % childPoints.size();
 			Surfel s = childPoints[ choosenIdx ];
-			s.u *= PARENT_SURFEL_TANGENT_MULTIPLIER;
-			s.v *= PARENT_SURFEL_TANGENT_MULTIPLIER;
+			
+			s.u *= tangentMultiplier;
+			s.v *= tangentMultiplier;
 			selectedPoints[ i ] = s;
 		}
 		
@@ -1088,18 +1100,40 @@ namespace model
 		int numSamplePoints = std::max( 1.f, nPoints * PARENT_POINTS_RATIO );
 		PointArray selectedPoints( numSamplePoints );
 		
+		float tangentMultiplier = calcTangentMultiplier( m_octreeDim );
+		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
 			int choosenIdx = rand() % nPoints;
 			SiblingPointsPrefixMapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
 			
 			Surfel s = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
-			s.u *= PARENT_SURFEL_TANGENT_MULTIPLIER;
-			s.v *= PARENT_SURFEL_TANGENT_MULTIPLIER;
+			s.u *= tangentMultiplier;
+			s.v *= tangentMultiplier;
 			selectedPoints[ i ] = s;
 		}
 		
 		return selectedPoints;
+	}
+	
+	template< typename Morton >
+	inline float HierarchyCreator< Morton >::calcTangentMultiplier( const OctreeDim& octreeDim ) const
+	{
+		switch( octreeDim.level() )
+		{
+			#ifdef DAVID_ONE_BY_FOUR
+				// Best for David, PARENT_POINTS_RATIO = 0.25
+				case 7: return 4.2f;
+				case 6: return 2.2f;
+				case 5: return 2.1f;
+				case 4: return 2.0f;
+				case 3: return 2.0f;
+				case 2: return 1.5f;
+				case 1: return 0.0f;
+			#endif
+		}
+		
+		return 0.f;
 	}
 	
 	template< typename Morton >
@@ -1132,7 +1166,7 @@ namespace model
 #undef NODE_COLAPSE
 
 #undef PARENT_POINTS_RATIO
-#undef PARENT_SURFEL_TANGENT_MULTIPLIER
+#undef DAVID_ONE_BY_FOUR
 
 #undef LEAF_CREATION_DEBUG
 #undef INNER_CREATION_DEBUG

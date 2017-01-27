@@ -3,7 +3,7 @@
 #include <QDebug>
 #include <QTimer>
 
-#define ADAPTIVE_PROJ
+// #define ADAPTIVE_PROJ
 
 PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
 : Tucano::QtFreecameraWidget( parent, loader.widget() ),
@@ -65,11 +65,12 @@ void PointRendererWidget::adaptRenderingThresh( const float renderTime )
 {
 	float renderTimeDiff = renderTime - m_desiredRenderTime;
 	
-	if( abs( renderTimeDiff ) > m_renderingTimeTolerance )
+	if( fabs( renderTimeDiff ) > m_renderingTimeTolerance )
 	{
-		m_projThresh += renderTimeDiff * 1e-10;
+		float projIncrement = renderTimeDiff * 1e-3;
+		m_projThresh += projIncrement;
 		m_projThresh = std::max( m_projThresh, 0.001953125f ); // 2 / 1024. So it is expected a screen of 1024 pixels.
-		m_projThresh = std::min( m_projThresh, 0.75f );
+		m_projThresh = std::min( m_projThresh, 1.f );
 	}
 }
 
