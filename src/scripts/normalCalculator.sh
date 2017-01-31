@@ -1,7 +1,12 @@
 #!/bin/bash
 
-inputFolder="/media/vinicius/Expansion Drive3/Datasets/David/PlyFiles"
-outputFolder="/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesNormals"
+# David
+#inputFolder="/media/vinicius/Expansion Drive3/Datasets/David/PlyFiles"
+#outputFolder="/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesNormals"
+
+# StMathew
+inputFolder="/media/vinicius/Expansion Drive3/Datasets/StMathew/PlyFiles"
+outputFolder="/media/vinicius/Expansion Drive3/Datasets/StMathew/PlyFilesNormals"
 
 cd "/home/vinicius/Projects/PointBasedGraphics/Vrip/vrip/bin"
 

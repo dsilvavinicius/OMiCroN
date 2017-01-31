@@ -29,7 +29,7 @@ namespace model
 		}
 		
 		template< typename M >
-		void test( OocPointSorter< M >& sorter, const string& octreeFilename, ulong expectedNumNodes )
+		void test( OocPointSorter< M >& sorter, const string& octreeFilename, ulong expectedNumPoints )
 		{
 			using Reader = PlyPointReader;
 			using OctreeDim = typename OocPointSorter< M >::OctreeDim;
@@ -58,7 +58,7 @@ namespace model
 			
 			Reader reader( octreeJson[ "points" ].asString() );
 			
-			ASSERT_EQ( expectedNumNodes, reader.getNumPoints() );
+			ASSERT_EQ( expectedNumPoints, reader.getNumPoints() );
 			
 			Point prev;
 			
@@ -88,7 +88,7 @@ namespace model
 		}
 		
 		void test( const string& groupFilename, const string& outputFolder, int lvls, ulong totalSizeInBytes,
-				   ulong memoryQuota, ulong expectedNumNodes )
+				   ulong memoryQuota, ulong expectedNumPoints )
 		{
 			OocPointSorter< MediumMortonCode > sorter( groupFilename, outputFolder, lvls, totalSizeInBytes,
 													   memoryQuota );
@@ -98,7 +98,7 @@ namespace model
 			int nameEndIdx = groupFilename.find_last_of( '.' );
 			string datasetName = groupFilename.substr( nameBeginIdx, nameEndIdx - nameBeginIdx );
 			
-			test( sorter, outputFolder + "/" + datasetName + ".oct", expectedNumNodes );
+			test( sorter, outputFolder + "/" + datasetName + ".oct", expectedNumPoints );
 		}
 		
 		TEST_F( OocPointSorterTest, Sort )
@@ -154,6 +154,13 @@ namespace model
 			test( "/media/vinicius/Expansion Drive3/Datasets/David/PlyFilesFlippedNormals/David.gp",
 				  "/media/vinicius/Expansion Drive3/Datasets/David/Sorted_11Lvls", 11,
 				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul, 468640353ul );
+		}
+		
+		TEST_F( OocPointSorterTest, StMathew )
+		{
+			test( "/media/vinicius/Expansion Drive3/Datasets/StMathew/StMathew.gp",
+				  "/media/vinicius/Expansion Drive3/Datasets/StMathew/Sorted_21Lvls", 21,
+				  ulong( 10.1 * 1024ul * 1024ul * 1024ul ), ulong( 10.1 * 1024ul * 1024ul * 1024ul ), 186984410ul );
 		}
 		
 		TEST_F( OocPointSorterTest, DISABLED_DavidResort )

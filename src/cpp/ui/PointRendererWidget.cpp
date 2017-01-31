@@ -37,7 +37,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply" ).toStdString() );
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
-	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
