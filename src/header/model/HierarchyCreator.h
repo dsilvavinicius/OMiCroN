@@ -23,12 +23,22 @@
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 
-#define DAVID_ONE_BY_FOUR
+// #define DAVID_ONE_BY_FOUR
+// #define ST_MATHEW
+// #define ATLAS
+#define DUOMO
 
 // Best parameters for PARENT_POINTS_RATIO of 0.25
 #define PARENT_POINTS_RATIO 0.25f /*0.2f*/
 
-#define LEAF_SURFEL_TANGENT_SIZE 0.000037f
+// Best for David
+// #define LEAF_SURFEL_TANGENT_SIZE 0.000037f
+
+// Best for StMathew, Atlas
+// #define LEAF_SURFEL_TANGENT_SIZE 0.000082f
+
+// Best for Duomo
+#define LEAF_SURFEL_TANGENT_SIZE 0.00003f
 
 using namespace util;
 
@@ -1128,8 +1138,35 @@ namespace model
 				case 5: return 2.1f;
 				case 4: return 2.0f;
 				case 3: return 2.0f;
-				case 2: return 1.5f;
-				case 1: return 0.0f;
+				case 2: return 2.0f;
+				case 1: return 2.0f;
+			#elif defined ST_MATHEW
+				// Best for StMathew, PARENT_POINTS_RATIO = 0.25
+				case 7: return 3.9f;
+				case 6: return 2.1f;
+				case 5: return 2.0f;
+				case 4: return 2.0f;
+				case 3: return 2.0f;
+				case 2: return 2.0f;
+				case 1: return 2.0f;
+			#elif defined ATLAS
+				// Best for Atlas, PARENT_POINTS_RATIO = 0.25
+				case 7: return 3.9f;
+				case 6: return 2.1f;
+				case 5: return 2.0f;
+				case 4: return 2.0f;
+				case 3: return 2.0f;
+				case 2: return 2.0f;
+				case 1: return 2.0f;
+			#elif defined DUOMO
+				// Best for Duomo, PARENT_POINTS_RATIO = 0.25
+				case 7: return 3.9f;
+				case 6: return 2.1f;
+				case 5: return 2.0f;
+				case 4: return 2.0f;
+				case 3: return 2.0f;
+				case 2: return 2.0f;
+				case 1: return 2.0f;
 			#endif
 		}
 		
@@ -1167,6 +1204,9 @@ namespace model
 
 #undef PARENT_POINTS_RATIO
 #undef DAVID_ONE_BY_FOUR
+#undef ST_MATHEW
+#undef ATLAS
+#undef DUOMO
 
 #undef LEAF_CREATION_DEBUG
 #undef INNER_CREATION_DEBUG

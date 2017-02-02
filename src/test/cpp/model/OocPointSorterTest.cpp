@@ -156,11 +156,25 @@ namespace model
 				  ulong( 25.8 * 1024ul * 1024ul * 1024ul ), 10ul * 1024ul * 1024ul * 1024ul, 468640353ul );
 		}
 		
-		TEST_F( OocPointSorterTest, StMathew )
+		TEST_F( OocPointSorterTest, DISABLED_StMathew )
 		{
 			test( "/media/vinicius/Expansion Drive3/Datasets/StMathew/StMathew.gp",
 				  "/media/vinicius/Expansion Drive3/Datasets/StMathew/Sorted_21Lvls", 21,
 				  ulong( 10.1 * 1024ul * 1024ul * 1024ul ), ulong( 10.1 * 1024ul * 1024ul * 1024ul ), 186984410ul );
+		}
+		
+		TEST_F( OocPointSorterTest, DISABLED_Atlas )
+		{
+			test( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Atlas.gp",
+				  "/media/vinicius/Expansion Drive3/Datasets/Atlas/Sorted_21Lvls", 21,
+				  ulong( 13.7f * 1024ul * 1024ul * 1024ul ), ulong( 13.7f * 1024ul * 1024ul * 1024ul ), 255035497ul );
+		}
+		
+		TEST_F( OocPointSorterTest, Duomo )
+		{
+			test( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Duomo.gp",
+				  "/media/vinicius/Expansion Drive3/Datasets/Duomo/Sorted_21Lvls", 21,
+				  ulong( 2.4f * 1024ul * 1024ul * 1024ul ), ulong( 2.4f * 1024ul * 1024ul * 1024ul ), 99665840ul );
 		}
 		
 		TEST_F( OocPointSorterTest, DISABLED_DavidResort )

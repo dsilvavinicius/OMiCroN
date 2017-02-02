@@ -325,6 +325,9 @@ namespace model
 		octreeJson[ "size" ][ "x" ] = m_comp.m_size.x();
 		octreeJson[ "size" ][ "y" ] = m_comp.m_size.y();
 		octreeJson[ "size" ][ "z" ] = m_comp.m_size.z();
+		octreeJson[ "origin" ][ "x" ] = 0;
+		octreeJson[ "origin" ][ "y" ] = 0;
+		octreeJson[ "origin" ][ "z" ] = 0;
 		octreeJson[ "depth" ] = m_comp.m_nodeLvl;
 		
 		ofstream octreeFile( octreeFilename, ofstream::out );
