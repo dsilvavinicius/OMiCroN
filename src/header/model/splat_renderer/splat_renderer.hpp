@@ -267,7 +267,7 @@ inline void SplatRenderer::begin_frame()
 	#if !defined TUCANO_RENDERER && !defined PROGRAM_ATTRIBUTE_DEBUG
 		m_fbo.bind();
 	#endif
-	
+		
 	glDepthMask(GL_TRUE);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	

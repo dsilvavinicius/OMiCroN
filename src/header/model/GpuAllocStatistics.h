@@ -39,7 +39,7 @@ namespace model
 		
 		static bool reachedGpuMemQuota()
 		{
-			return float( totalAllocated() ) > 0.1f * float( m_totalGpuMem );
+			return float( totalAllocated() ) > 0.8f * float( m_totalGpuMem );
 		}
 	
 	private:

@@ -7,7 +7,7 @@
 
 PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
 : Tucano::QtFreecameraWidget( parent, loader.widget() ),
-m_projThresh( 0.75f ),
+m_projThresh( 0.2f ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
@@ -39,8 +39,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
-	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
+// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
@@ -52,7 +52,7 @@ void PointRendererWidget::resizeGL( int width, int height )
 	// TODO: It seems that resing is resulting in memory leak ( probably in jump flooding code... ).
 	
 	camera->setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 500.0f );
+	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 1.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )

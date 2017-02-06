@@ -39,9 +39,6 @@
 // Render an id text in each rendered node.
 // #define NODE_ID_TEXT
 
-// Number of threads in front tracking.
-#define N_THREADS 1
-
 using namespace std;
 using namespace util;
 
@@ -155,48 +152,26 @@ namespace model
 		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
-		/** Front segment. Each segment contains:
-		 * a node list which have its node data,
-		 * a morton code in the deepest hierarchy level that indicates its morton code boundary,
-		 * a flag that indicates if it is substituting placeholders,
-		 * a flag that indicates if it is rendering points, i.e., updating the GPU point buffer segment. */
-		typedef struct Segment
-		{
-			Segment()
-			: m_isSubstituting( false )
-			{}
-			
-			FrontList m_front;
-			uint m_index;
-			bool m_isSubstituting;
-		} Segment;
-		
-		void trackNode( FrontListIter& frontIt, Segment& segment, Node*& lastParent, int substitutionLvl,
-						Renderer& renderer, const Float projThresh );
+		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
+						const Float projThresh );
 		
 		/** Substitute a placeholder with the first node of the given substitution level. */
 		bool substitutePlaceholder( FrontNode& node, int substitutionLvl );
 		
 		bool checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
-						 FrontListIter& frontIt, Segment& segment, int substituionLvl, Renderer& renderer,
+						 FrontListIter& frontIt, int substituionLvl, Renderer& renderer,
 					const Float projThresh, bool& out_isCullable );
 		
-		void prune( FrontListIter& frontIt, Segment& segment, Node* parentNode, const bool parentIsCullable,
-					Renderer& renderer );
+		void prune( FrontListIter& frontIt, Node* parentNode, const bool parentIsCullable, Renderer& renderer );
 		
 		bool checkBranch( const OctreeDim& nodeLvlDim, Node& node, const Morton& morton, Renderer& renderer,
 						  const Float projThresh, bool& out_isCullable );
 		
-		void branch( FrontListIter& iter, Segment& segment, Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
+		void branch( FrontListIter& iter, Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
 		
-		void setupNodeRendering( FrontListIter& iter, const FrontNode& frontNode, Segment& segment, Renderer& renderer );
+		void setupNodeRendering( FrontListIter& iter, const FrontNode& frontNode, Renderer& renderer );
 		
 		void setupNodeRenderingNoFront( const Morton& moton, Node& node, Renderer& renderer );
-		
-		bool isSubstIdxInRange( const uint rangeStartIdx, const uint rangeSize ) const
-		{
-			return m_substitutionSegIdx >= rangeStartIdx && m_substitutionSegIdx < rangeStartIdx + rangeSize;
-		}
 		
 		void unloadInGpu( Node& node );
 		
@@ -304,6 +279,9 @@ namespace model
 			}
 		#endif
 		
+		/** The internal front datastructure. Contains all FrontNodes. */
+		FrontList m_front;
+		
 		/** Node used as a placeholder in the front. It is used whenever it is known that a node should occupy a given
 		 * position, but the node itself is not defined yet because the hierarchy creation algorithm have not reached
 		 * the needed level. */
@@ -326,13 +304,6 @@ namespace model
 		/** All placeholders pending insertion. The list is sorted in hierarchy width order.  */
 		FrontList m_placeholders;
 		
-		/** Front segment array. */
-		Array< Segment > m_segments;
-		
-		/** Contains segment indices used to map threads in segments. m_threadSegmentMap[ t ] contains the segment mapped
-		 * to thread t. */
-		Array< uint > m_threadSegmentMap;
-		
 		NodeLoader& m_nodeLoader;
 		
 		/** Dimensions of the octree nodes at deepest level. */
@@ -340,24 +311,6 @@ namespace model
 		
 		/** Memory usage limit. Used to turn on/off node release. */
 		ulong m_memoryLimit;
-		
-		/** Maximum nodes per front segment. */
-		uint m_nNodesPerSegment;
-		
-		/** Segment where the placeholder substitution will occur. */
-		uint m_substitutionSegIdx;
-		
-		/** Segment idx where new placeholders will be appended. */
-		uint m_appendSegIdx;
-		
-		/** Index of the front segment selection. */
-		uint m_segSelectionIdx;
-		
-		/** Size of the front segment selection. */
-		uint m_segSelectionSize;
-		
-		/** Number of threads used for front tracking. */
-		uint m_nFrontThreads;
 		
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
@@ -381,25 +334,9 @@ namespace model
 	m_currentIterPlaceholders( nHierarchyCreationThreads ),
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
-	m_nNodesPerSegment( 9999999 ),
-	m_segments( 1 ),
-	m_substitutionSegIdx( 0 ),
-	m_appendSegIdx( 0 ),
-	m_segSelectionIdx( 0 ),
-	m_segSelectionSize( 1 ),
-	m_nFrontThreads( N_THREADS ),
-	m_threadSegmentMap( N_THREADS, uint( 0 ) ),
 	m_leafLvlLoadedFlag( false ),
 	m_nodeLoader( loader )
 	{
-		uint i = 0;
-		for( Segment& segment : m_segments )
-		{
-			segment.m_index = i++;
-		}
-		
-		m_segments[ 0 ].m_isSubstituting = true;
-		
 		#ifdef NODE_ID_TEXT
 		{
 			m_textEffect.initialize( "shaders/Inconsolata.otf" );
@@ -513,21 +450,14 @@ namespace model
 		
 		renderer.begin_frame();
 		
-		Segment& appendSeg = m_segments[ m_appendSegIdx ];
-		
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			
 			// Insert all leaf level placeholders.
-			appendSeg.m_front.splice( appendSeg.m_front.end(), m_placeholders );
+			m_front.splice( m_front.end(), m_placeholders );
 		}
 		
-		if( appendSeg.m_front.size() > m_nNodesPerSegment )
-		{
-			++m_appendSegIdx;
-		}
-		
-		if( !m_segments[ 0 ].m_front.empty() )
+		if( !m_front.empty() )
 		{
 			// The level from which the placeholders will be substituted is the one with max size, in order to maximize
 			// placeholder substitution.
@@ -545,42 +475,31 @@ namespace model
 				}
 			}
 
-			uint dispatchedThreads = isSubstIdxInRange( m_segSelectionIdx, m_segSelectionSize )
-									 ? m_segSelectionSize : m_segSelectionSize + 1;
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
-			
-// 			#pragma omp parallel for num_threads(N_THREADS)
-			for( int i = 0; i < dispatchedThreads; ++i )
+				
+			#ifdef FRONT_TRACKING_DEBUG
 			{
-				uint segmentIdx = m_threadSegmentMap[ i ];
-				
-				Segment& segment = m_segments[ segmentIdx ];
-				FrontList& front = segment.m_front;
-				
+				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << "Size: " << m_front.size()
+					<< endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
+			for( FrontListIter iter = m_front.begin(); iter != m_front.end(); /**/ )
+			{
 				#ifdef FRONT_TRACKING_DEBUG
 				{
-					stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << "Size: " << front.size()
-						<< endl << endl;
+					stringstream ss; ss << "Tracking " << iter->m_morton.getPathToRoot() << endl
+						<< *iter->m_octreeNode << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 				#endif
 				
-				for( FrontListIter iter = front.begin(); iter != front.end(); /**/ )
-				{
-					#ifdef FRONT_TRACKING_DEBUG
-					{
-						stringstream ss; ss << "Tracking " << iter->m_morton.getPathToRoot() << endl
-							<< *iter->m_octreeNode << endl << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					}
-					#endif
-					
-					#ifdef ORDERING_DEBUG
-						assertFrontIterator( iter, front );
-					#endif
-					
-					trackNode( iter, segment, lastParent, substitutionLvl, renderer, projThresh );
-				}
+				#ifdef ORDERING_DEBUG
+					assertFrontIterator( iter, front );
+				#endif
+				
+				trackNode( iter, lastParent, substitutionLvl, renderer, projThresh );
 			}
 			
 			m_nodeLoader.onIterationEnd();
@@ -620,52 +539,6 @@ namespace model
 		
 		unsigned int numRenderedPoints = renderer.end_frame();
 		
-		// Select next frame's placeholder substitution segment.
-		m_substitutionSegIdx = ( m_substitutionSegIdx + 1 ) % m_segments.size();
-		
-		if( m_segments[ m_substitutionSegIdx ].m_front.empty() )
-		{
-			m_substitutionSegIdx = 0;
-		}
-		
-		// Select next frame's point update segment range.
-		uint nextFrameFirstSeg = m_segSelectionIdx + m_segSelectionSize;
-		
-		uint segSelectionStart = ( nextFrameFirstSeg == m_segments.size() ||
-								   m_segments[ nextFrameFirstSeg ].m_front.empty() )
-								 ? 0 : nextFrameFirstSeg;
-								 
-		bool substIdxInRangeFlag = isSubstIdxInRange( segSelectionStart, m_nFrontThreads );
-		uint expectedSelectionSize = ( substIdxInRangeFlag ) ? m_nFrontThreads : m_nFrontThreads - 1;
-		
-		uint segSelectionSize = ( segSelectionStart + expectedSelectionSize <= m_appendSegIdx + 1 )
-								? expectedSelectionSize : m_appendSegIdx + 1 - segSelectionStart;
-
-		m_segSelectionIdx = segSelectionStart;
-		m_segSelectionSize = segSelectionSize;
-		
-		for( int i = 0; i < segSelectionSize; ++i )
-		{
-			m_threadSegmentMap[ i ] = segSelectionStart + i;
-			Segment& segment = m_segments[ segSelectionStart + i ];
-			segment.m_isSubstituting = false;
-		}
-		
-		Segment& substSegment = m_segments[ m_substitutionSegIdx ];
-		substSegment.m_isSubstituting = true;
-		
-		if( !substIdxInRangeFlag )
-		{
-			m_threadSegmentMap[ segSelectionSize ] = m_substitutionSegIdx;
-		}
-		
-		uint nNodes = 0;
-		// Not optimized. Probably it doesn't need to, anyway.
-		for( Segment& segment : m_segments )
-		{
-			nNodes += segment.m_front.size();
-		}
-		
 		int renderingTime = Profiler::elapsedTime( start );
 		
 		#ifdef FRONT_TRACKING_DEBUG
@@ -674,17 +547,16 @@ namespace model
 		}
 		#endif
 		
-		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, nNodes );
+		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_front.size() );
 	}
 	
 	template< typename Morton >
 	inline void Front< Morton >
-	::trackNode( FrontListIter& frontIt, Segment& segment, Node*& lastParent, int substitutionLvl, Renderer& renderer,
-				 const Float projThresh )
+	::trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer, const Float projThresh )
 	{
 		FrontNode& frontNode = *frontIt;
 		
-		if( segment.m_isSubstituting && frontNode.m_octreeNode == &m_placeholder )
+		if( frontNode.m_octreeNode == &m_placeholder )
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
@@ -706,10 +578,10 @@ namespace model
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 			bool parentIsCullable;
-			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, segment, substitutionLvl, renderer,
+			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer,
 							projThresh, parentIsCullable ) )
 			{
-				prune( frontIt, segment, parentNode, parentIsCullable, renderer );
+				prune( frontIt, parentNode, parentIsCullable, renderer );
 				lastParent = parentNode;
 				
 				return;
@@ -721,7 +593,7 @@ namespace model
 		
 		if( checkBranch( nodeLvlDim, node, morton, renderer, projThresh, isCullable ) )
 		{
-			branch( frontIt, segment, node, nodeLvlDim, renderer );
+			branch( frontIt, node, nodeLvlDim, renderer );
 			return;
 		}
 		
@@ -781,8 +653,8 @@ namespace model
 	template< typename Morton >
 	inline bool Front< Morton >
 	::checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
-				  FrontListIter& frontIt, Segment& segment, int substitutionLvl, Renderer& renderer,
-			   const Float projThresh, bool& out_isCullable )
+				  FrontListIter& frontIt, int substitutionLvl, Renderer& renderer, const Float projThresh,
+			   bool& out_isCullable )
 	{
 		#ifdef PRUNING_DEBUG
 		{
@@ -841,9 +713,9 @@ namespace model
 		{
 			int nSiblings = 0;
 			FrontListIter siblingIter = frontIt;
-			while( siblingIter != segment.m_front.end() )
+			while( siblingIter != m_front.end() )
 			{
-				if( segment.m_isSubstituting && siblingIter->m_octreeNode == &m_placeholder )
+				if( siblingIter->m_octreeNode == &m_placeholder )
 				{
 					substitutePlaceholder( *siblingIter, substitutionLvl );
 				}
@@ -858,7 +730,7 @@ namespace model
 			
 			// The last sibling group cannot be prunned when the leaf level is not loaded yet. It can be incomplete
 			// at that time and all the sibling nodes should be in front before prunning.
-			if( ( !m_leafLvlLoadedFlag && siblingIter == segment.m_front.end() ) ||
+			if( ( !m_leafLvlLoadedFlag && siblingIter == m_front.end() ) ||
 				nSiblings != parentNode->child().size() )
 			{
 				#ifdef PRUNING_DEBUG
@@ -904,14 +776,14 @@ namespace model
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::prune( FrontListIter& frontIt, Segment& segment, Node* parentNode,
-										const bool parentIsCullable, Renderer& renderer )
+	inline void Front< Morton >::prune( FrontListIter& frontIt, Node* parentNode, const bool parentIsCullable,
+										Renderer& renderer )
 	{
 		Morton parentMorton = *frontIt->m_morton.traverseUp();
 		
-		while( frontIt != segment.m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
+		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
 		{
-			frontIt = segment.m_front.erase( frontIt );
+			frontIt = m_front.erase( frontIt );
 		}
 		
 // 		if( AllocStatistics::totalAllocated() > m_memoryLimit && parentNode->child()[ 0 ].isLeaf() )
@@ -941,11 +813,11 @@ namespace model
 		
 		if( parentIsCullable )
 		{
-			segment.m_front.insert( frontIt, frontNode );
+			m_front.insert( frontIt, frontNode );
 		}
 		else
 		{
-			setupNodeRendering( frontIt, frontNode, segment, renderer );
+			setupNodeRendering( frontIt, frontNode, renderer );
 		}
 	}
 	
@@ -994,10 +866,10 @@ namespace model
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::branch( FrontListIter& frontIt,  Segment& segment, Node& node,
+	inline void Front< Morton >::branch( FrontListIter& frontIt, Node& node,
 										 const OctreeDim& nodeLvlDim, Renderer& renderer )
 	{
-		frontIt = segment.m_front.erase( frontIt );
+		frontIt = m_front.erase( frontIt );
 		
 		OctreeDim childLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl + 1 );
 		NodeArray& children = node.child();
@@ -1012,20 +884,20 @@ namespace model
 			
 			if( !renderer.isCullable( box ) )
 			{
-				setupNodeRendering( frontIt, frontNode, segment, renderer );
+				setupNodeRendering( frontIt, frontNode, renderer );
 			}
 			else
 			{
-				segment.m_front.insert( frontIt, frontNode );
+				m_front.insert( frontIt, frontNode );
 			}
 		}
 	}
 	
 	template< typename Morton >
 	inline void Front< Morton >::setupNodeRendering( FrontListIter& frontIt, const FrontNode& frontNode,
-													 Segment& segment, Renderer& renderer )
+													 Renderer& renderer )
 	{
-		segment.m_front.insert( frontIt, frontNode );
+		m_front.insert( frontIt, frontNode );
 		
 		setupNodeRenderingNoFront( frontNode.m_morton, *frontNode.m_octreeNode, renderer );
 	}
