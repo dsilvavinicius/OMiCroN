@@ -25,8 +25,8 @@
 
 // #define DAVID_ONE_BY_FOUR
 // #define ST_MATHEW
-#define ATLAS
-// #define DUOMO
+// #define ATLAS
+#define DUOMO
 
 #ifdef DAVID_ONE_BY_FOUR
 	#define LEAF_SURFEL_TANGENT_SIZE 0.000037f
@@ -36,7 +36,7 @@
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined DUOMO
 	#define LEAF_SURFEL_TANGENT_SIZE 0.000065f
-	#define PARENT_POINTS_RATIO 0.3f
+	#define PARENT_POINTS_RATIO 0.2f
 #endif
 
 using namespace util;
@@ -1159,6 +1159,7 @@ namespace model
 				case 1: return 2.0f;
 			#elif defined DUOMO
 				// Best for Duomo, PARENT_POINTS_RATIO = 0.25
+				case 8: return 2.5f;
 				case 7: return 2.0f;
 				case 6: return 2.0f;
 				case 5: return 1.7f;

@@ -124,6 +124,7 @@ QT5_WRAP_UI( UI_HDRS
 # Creates the renderer library.
 add_library (Point_Based_Renderer_Lib
 	${CPP_DIR}/${MODEL_DIR}/global_new_delete.cpp
+	${HEADER_DIR}/${MODEL_DIR}/Point.h								${CPP_DIR}/${MODEL_DIR}/Point.cpp
 
 	${HEADER_DIR}/${UI_DIR}/GLHiddenWidget.h		${CPP_DIR}/${UI_DIR}/GLHiddenWidget.cpp
 	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h	${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
@@ -136,7 +137,6 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointReader.h
 	${HEADER_DIR}/${UTIL_DIR}/PlyPointWritter.h
 	${HEADER_DIR}/${MODEL_DIR}/MortonCode.h							${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Point.h								${CPP_DIR}/${MODEL_DIR}/Point.cpp
 	${HEADER_DIR}/${UTIL_DIR}/MemoryInfo.h							${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
 	${HEADER_DIR}/${UTIL_DIR}/vsGLInfoLib.h							${CPP_DIR}/${UTIL_DIR}/vsGLInfoLib.cpp
 	${HEADER_DIR}/${MODEL_DIR}/TbbAllocator.h						${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp

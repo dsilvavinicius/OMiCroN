@@ -63,7 +63,6 @@ out block
     flat out vec3 c_eye;
     flat out vec3 u_eye;
     flat out vec3 v_eye;
-    flat out vec3 p;
     flat out vec3 n_eye;
 
     #if !VISIBILITY_PASS
