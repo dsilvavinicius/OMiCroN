@@ -29,13 +29,16 @@
 #define DUOMO
 
 #ifdef DAVID_ONE_BY_FOUR
-	#define LEAF_SURFEL_TANGENT_SIZE 0.000037f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000037f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000037f
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined ST_MATHEW || defined ATLAS
-	#define LEAF_SURFEL_TANGENT_SIZE 0.000082f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000082f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000082f
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined DUOMO
-	#define LEAF_SURFEL_TANGENT_SIZE 0.000065f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00002f
 	#define PARENT_POINTS_RATIO 0.2f
 #endif
 
@@ -151,11 +154,10 @@ namespace model
 		/** Creates a point sample with 1/8 of the points in the prefix-sum map. */
 		PointArray samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
 		
-		/** Calculates the multiplier for splat tangent vectors when constructing a parent node. The multiplier is a
-		 * linear interpolation between MAX_TANGENT_MULTIPLIER and MIN_TANGENT_MULTIPLIER, in the range of levels of
-		 * the octree.
-		 * @param octreeDim is the interpolation parameter. */
-		float calcTangentMultiplier( const OctreeDim& octreeDim ) const;
+		/** Calculates the multipliers for splat tangent vectors when constructing a parent node.
+		 * @param octreeDim is the interpolation parameter.
+		 * @returns a Vector2f, each coordinate being the multiplier for that dimension. */
+		Vector2f calcTangentMultipliers( const OctreeDim& octreeDim ) const;
 		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
@@ -356,8 +358,8 @@ namespace model
 						u.normalize();
 						Vector3f v = normal.cross( u );
 			
-						u *= LEAF_SURFEL_TANGENT_SIZE;
-						v *= LEAF_SURFEL_TANGENT_SIZE;
+						u *= LEAF_SURFEL_TANGENT_SIZE_X;
+						v *= LEAF_SURFEL_TANGENT_SIZE_Y;
 						
 						points.push_back( Surfel( pos, u, v ) );
 					}
@@ -1026,15 +1028,15 @@ namespace model
 		int numSamplePoints = std::max( 1.f, childPoints.size() * PARENT_POINTS_RATIO );
 		PointArray selectedPoints( numSamplePoints );
 		
-		float tangentMultiplier = calcTangentMultiplier( m_octreeDim );
+		Vector2f tangentMultipliers = calcTangentMultipliers( m_octreeDim );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
 			int choosenIdx = rand() % childPoints.size();
 			Surfel s = childPoints[ choosenIdx ];
 			
-			s.u *= tangentMultiplier;
-			s.v *= tangentMultiplier;
+			s.u *= tangentMultipliers.x();
+			s.v *= tangentMultipliers.y();
 			selectedPoints[ i ] = s;
 		}
 		
@@ -1109,7 +1111,7 @@ namespace model
 		int numSamplePoints = std::max( 1.f, nPoints * PARENT_POINTS_RATIO );
 		PointArray selectedPoints( numSamplePoints );
 		
-		float tangentMultiplier = calcTangentMultiplier( m_octreeDim );
+		Vector2f tangentMultipliers = calcTangentMultipliers( m_octreeDim );
 		
 		for( int i = 0; i < numSamplePoints; ++i )
 		{
@@ -1117,8 +1119,8 @@ namespace model
 			SiblingPointsPrefixMapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
 			
 			Surfel s = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
-			s.u *= tangentMultiplier;
-			s.v *= tangentMultiplier;
+			s.u *= tangentMultipliers.x();
+			s.v *= tangentMultipliers.y();
 			selectedPoints[ i ] = s;
 		}
 		
@@ -1126,51 +1128,41 @@ namespace model
 	}
 	
 	template< typename Morton >
-	inline float HierarchyCreator< Morton >::calcTangentMultiplier( const OctreeDim& octreeDim ) const
+	inline Vector2f HierarchyCreator< Morton >::calcTangentMultipliers( const OctreeDim& octreeDim ) const
 	{
 		switch( octreeDim.level() )
 		{
 			#ifdef DAVID_ONE_BY_FOUR
 				// Best for David, PARENT_POINTS_RATIO = 0.25
-				case 7: return 4.2f;
-				case 6: return 2.2f;
-				case 5: return 2.1f;
-				case 4: return 2.0f;
-				case 3: return 2.0f;
-				case 2: return 2.0f;
-				case 1: return 2.0f;
-			#elif defined ST_MATHEW
-				// Best for StMathew, PARENT_POINTS_RATIO = 0.25
-				case 7: return 3.9f;
-				case 6: return 2.1f;
-				case 5: return 2.0f;
-				case 4: return 2.0f;
-				case 3: return 2.0f;
-				case 2: return 2.0f;
-				case 1: return 2.0f;
-			#elif defined ATLAS
-				// Best for Atlas, PARENT_POINTS_RATIO = 0.25
-				case 7: return 3.9f;
-				case 6: return 2.1f;
-				case 5: return 2.0f;
-				case 4: return 2.0f;
-				case 3: return 2.0f;
-				case 2: return 2.0f;
-				case 1: return 2.0f;
+				case 7: return Vector2f( 4.2f, 4.2f );
+				case 6: return Vector2f( 2.2f, 2.2f );
+				case 5: return Vector2f( 2.1f, 2.1f );
+				case 4: return Vector2f( 2.0f, 2.0f );
+				case 3: return Vector2f( 2.0f, 2.0f );
+				case 2: return Vector2f( 2.0f, 2.0f );
+				case 1: return Vector2f( 2.0f, 2.0f );
+			#elif defined ST_MATHEW || defined ATLAS
+				// Best for StMathew and Atlas, PARENT_POINTS_RATIO = 0.25
+				case 7: return Vector2f( 3.9f, 3.9f );
+				case 6: return Vector2f( 2.1f, 2.1f );
+				case 5: return Vector2f( 2.0f, 2.0f );
+				case 4: return Vector2f( 2.0f, 2.0f );
+				case 3: return Vector2f( 2.0f, 2.0f );
+				case 2: return Vector2f( 2.0f, 2.0f );
+				case 1: return Vector2f( 2.0f, 2.0f );
 			#elif defined DUOMO
 				// Best for Duomo, PARENT_POINTS_RATIO = 0.25
-				case 8: return 2.5f;
-				case 7: return 2.0f;
-				case 6: return 2.0f;
-				case 5: return 1.7f;
-				case 4: return 1.7f;
-				case 3: return 0.0f;
-				case 2: return 0.0f;
-				case 1: return 0.0f;
+				case 7: return Vector2f( 4.4f, 4.4f );
+				case 6: return Vector2f( 2.8f, 1.5f );
+				/*case 5: return Vector2f( 2.3f, 1.5f );
+				case 4: return Vector2f( 1.5f, 1.5f );
+				case 3: return Vector2f( 1.5f, 1.5f );
+				case 2: return Vector2f( 1.5f, 1.5f );
+				case 1: return Vector2f( 1.5f, 1.5f )*/;
 			#endif
 		}
 		
-		return 0.f;
+		return Vector2f( 0.f, 0.f );
 	}
 	
 	template< typename Morton >
@@ -1203,6 +1195,9 @@ namespace model
 #undef NODE_COLAPSE
 
 #undef PARENT_POINTS_RATIO
+#undef LEAF_SURFEL_TANGENT_SIZE_X
+#undef LEAF_SURFEL_TANGENT_SIZE_Y
+
 #undef DAVID_ONE_BY_FOUR
 #undef ST_MATHEW
 #undef ATLAS
