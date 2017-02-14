@@ -175,7 +175,7 @@ namespace model
 		
 		void loadInGpu()
 		{
-			if( !m_cloud && GpuAllocStatistics::hasMemoryFor( m_contents ) )
+			if( m_cloud == nullptr && GpuAllocStatistics::hasMemoryFor( m_contents ) )
 			{
 				m_cloud = new SurfelCloud( m_contents );
 				
@@ -190,7 +190,7 @@ namespace model
 		
 		void unloadInGpu()
 		{
-			if( m_cloud )
+			if( m_cloud != nullptr )
 			{
 				#ifdef LOADING_DEBUG
 				{
@@ -206,7 +206,7 @@ namespace model
 		
 		bool isLoaded() const
 		{
-			if( m_cloud )
+			if( m_cloud != nullptr )
 			{
 				if( m_cloud->loadStatus() == SurfelCloud::LOADED )
 				{

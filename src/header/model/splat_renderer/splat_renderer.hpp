@@ -25,7 +25,7 @@
 
 #include <Eigen/Core>
 #include <string>
-#include <vector>
+#include <list>
 #include "splat_renderer/surfel.hpp"
 #include "splat_renderer/surfel_cloud.h"
 #include "Array.h"
@@ -86,6 +86,14 @@ public:
     virtual ~SplatRenderer();
 
 	void begin_frame();
+	
+	/** Removes the node from the rendering list if it is currently being referenced by the current rendering list iterator. */
+	void eraseFromList( const Node& node );
+	
+	/** Resets the inserting iterator to the beginning of the rendering list. */
+	void resetIterator();
+	
+	/** Inserts into the rendering list after the current iterator to the rendering list. */
 	void render( Node& node );
     
 	#ifdef TUCANO_RENDERER
@@ -147,12 +155,14 @@ private:
     void render_pass( bool depth_only = false );
 
 private:
-	using RenderingVector = vector< Node*, TbbAllocator< Node* > >;
+	using RenderingList = list< Node*, TbbAllocator< Node* > >;
+	using RenderingListIter = typename RenderingList::iterator;
 	
     Tucano::Camera* m_camera;
 	Tucano::Frustum m_frustum;
 
-	RenderingVector m_toRender;
+	RenderingList m_toRender;
+	RenderingListIter m_toRenderIter;
 	
     GLuint m_rect_vertices_vbo, m_rect_texture_uv_vbo,
         m_rect_vao, m_filter_kernel;
@@ -176,17 +186,92 @@ private:
 	ulong m_renderedSplats;
 };
 
-inline void SplatRenderer::render( Node& node )
+inline void SplatRenderer::eraseFromList( const Node& node )
 {
 	#ifdef RENDERING_DEBUG
 	{
-		stringstream ss; ss << "Pushing to render list: " << endl << node << endl << endl;
-		HierarchyCreationLog::logDebugMsg( ss.str() );
+		if( m_toRenderIter != m_toRender.end() )
+		{
+			stringstream ss; ss << "m_toRenderIter: " << *m_toRenderIter << " cloud: "
+				<< ( *m_toRenderIter )->cloud() << " parameter: isLoaded ? " << node.isLoaded() << " " << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
+		}
 	}
 	#endif
+	
+	if( m_toRenderIter != m_toRender.end() && node.isLoaded() && node.cloud() == ( *m_toRenderIter )->cloud() )
+	{
+		#ifdef RENDERING_DEBUG
+		{
+			stringstream ss; ss << "Erasing: " << endl << node.cloud() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
+		m_toRenderIter = m_toRender.erase( m_toRenderIter );
+		
+		#ifdef RENDERING_DEBUG
+		{
+			stringstream ss; ss << "Pointing now to: ";
+			if( m_toRenderIter != m_toRender.end() )
+			{
+				ss << ( *m_toRenderIter )->cloud() << endl;
+			}
+			else
+			{
+				ss << " end" << endl << endl;
+			}
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+	}
+}
 
+inline void SplatRenderer::resetIterator()
+{
+	#ifdef RENDERING_DEBUG
+	{
+		HierarchyCreationLog::logDebugMsg( "Resetting iterator.\n\n" );
+	}
+	#endif
+	
+	m_toRenderIter = m_toRender.begin();
+}
+
+inline void SplatRenderer::render( Node& node )
+{
 	m_renderedSplats += node.cloud().numPoints();
-	m_toRender.push_back( &node );
+	
+	if( m_toRenderIter != m_toRender.end() )
+	{
+		if( node.cloud() != ( *m_toRenderIter )->cloud() )
+		{
+			#ifdef RENDERING_DEBUG
+			{
+				stringstream ss; ss << "Pushing to render list (different): " << endl << node.cloud() << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
+			m_toRender.insert( m_toRenderIter, &node );
+		}
+		else
+		{
+			m_toRenderIter++;
+		}
+	}
+	else
+	{
+		#ifdef RENDERING_DEBUG
+		{
+			stringstream ss; ss << "Pushing to render list (list end): " << endl << node.cloud() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
+		m_toRender.insert( m_toRenderIter, &node );
+	}
 }
 
 #ifdef TUCANO_RENDERER
@@ -362,8 +447,6 @@ inline void SplatRenderer::render_frame()
 			#ifndef NDEBUG
 				util::OglUtils::checkOglErrors();
 			#endif
-
-			m_toRender.clear();
 			
 			#ifndef PROGRAM_ATTRIBUTE_DEBUG
 				if (m_multisample)
@@ -438,6 +521,14 @@ inline ulong SplatRenderer::end_frame()
 {
 	ulong renderedSplats = m_renderedSplats;
 	m_renderedSplats = 0ul;
+	
+	
+	#ifdef RENDERING_DEBUG
+	{
+		stringstream ss; ss << "Rendered nodes: " << distance( m_toRender.begin(), m_toRender.end() ) << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
+	}
+	#endif
 	
 	return renderedSplats;
 }

@@ -24,6 +24,9 @@
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
 
+// Number of front nodes processed per frame.
+#define FRONT_NODES_PER_FRAME 100
+
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
 
@@ -282,6 +285,9 @@ namespace model
 		/** The internal front datastructure. Contains all FrontNodes. */
 		FrontList m_front;
 		
+		/** Iterator used to resume front processing from previous frame. */
+		FrontListIter m_frontIter;
+		
 		/** Node used as a placeholder in the front. It is used whenever it is known that a node should occupy a given
 		 * position, but the node itself is not defined yet because the hierarchy creation algorithm have not reached
 		 * the needed level. */
@@ -337,6 +343,8 @@ namespace model
 	m_leafLvlLoadedFlag( false ),
 	m_nodeLoader( loader )
 	{
+		m_frontIter = m_front.end();
+		
 		#ifdef NODE_ID_TEXT
 		{
 			m_textEffect.initialize( "shaders/Inconsolata.otf" );
@@ -477,7 +485,7 @@ namespace model
 
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 				
-			#ifdef FRONT_TRACKING_DEBUG
+			#if defined FRONT_TRACKING_DEBUG || defined RENDERING_DEBUG
 			{
 				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << "Size: " << m_front.size()
 					<< endl << endl;
@@ -485,21 +493,27 @@ namespace model
 			}
 			#endif
 			
-			for( FrontListIter iter = m_front.begin(); iter != m_front.end(); /**/ )
+			if( m_frontIter == m_front.end() )
+			{
+				m_frontIter = m_front.begin();
+				renderer.resetIterator();
+			}
+			
+			for( int i = 0; m_frontIter != m_front.end() && i < FRONT_NODES_PER_FRAME; ++i )
 			{
 				#ifdef FRONT_TRACKING_DEBUG
 				{
-					stringstream ss; ss << "Tracking " << iter->m_morton.getPathToRoot() << endl
-						<< *iter->m_octreeNode << endl << endl;
+					stringstream ss; ss << "Tracking " << m_frontIter->m_morton.getPathToRoot() << endl
+						<< *m_frontIter->m_octreeNode << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 				#endif
 				
 				#ifdef ORDERING_DEBUG
-					assertFrontIterator( iter, front );
+					assertFrontIterator( m_frontIter, front );
 				#endif
 				
-				trackNode( iter, lastParent, substitutionLvl, renderer, projThresh );
+				trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
 			}
 			
 			m_nodeLoader.onIterationEnd();
@@ -600,6 +614,17 @@ namespace model
 		if( !isCullable )
 		{
 			setupNodeRenderingNoFront( morton, node, renderer );
+		}
+		else
+		{
+			#ifdef RENDERING_DEBUG
+			{
+				stringstream ss; ss << "Trying to remove from rendering (culled): " << morton.getPathToRoot() << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
+			renderer.eraseFromList( node );
 		}
 		
 		frontIt++;
@@ -783,6 +808,14 @@ namespace model
 		
 		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
 		{
+			#ifdef RENDERING_DEBUG
+			{
+				stringstream ss; ss << "Trying to remove from rendering (prunning): " << frontIt->m_morton.getPathToRoot() << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
+			#endif
+			
+			renderer.eraseFromList( *frontIt->m_octreeNode );
 			frontIt = m_front.erase( frontIt );
 		}
 		
@@ -869,7 +902,16 @@ namespace model
 	inline void Front< Morton >::branch( FrontListIter& frontIt, Node& node,
 										 const OctreeDim& nodeLvlDim, Renderer& renderer )
 	{
+		#ifdef RENDERING_DEBUG
+		{
+			stringstream ss; ss << "Trying to remove from rendering (branch): " << frontIt->m_morton.getPathToRoot() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
+		
 		frontIt = m_front.erase( frontIt );
+		
+		renderer.eraseFromList( node );
 		
 		OctreeDim childLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl + 1 );
 		NodeArray& children = node.child();
@@ -905,13 +947,6 @@ namespace model
 	template< typename Morton >
 	inline void Front< Morton >::setupNodeRenderingNoFront( const Morton& morton, Node& node, Renderer& renderer )
 	{
-		#ifdef RENDERING_DEBUG
-		{
-			stringstream ss; ss << "Rendering: " << endl << morton.getPathToRoot( true ) << endl << node << endl << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
-		
 		if( node.isLoaded() )
 		{
 			#ifdef NODE_ID_TEXT
@@ -952,6 +987,13 @@ namespace model
 				#ifdef TUCANO_RENDERER
 					renderer.render_cloud_tucano( node );
 				#else
+					#ifdef RENDERING_DEBUG
+					{
+						stringstream ss; ss << "Rendering: " << morton.getPathToRoot() << endl << endl;
+						HierarchyCreationLog::logDebugMsg( ss.str() );
+					}
+					#endif
+					
 					renderer.render( node );
 				#endif
 			#endif

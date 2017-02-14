@@ -43,8 +43,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( "/home/lcg/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
 // 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
 // 	openMesh( "/home/lcg/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
-	openMesh( "/home/lcg/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
+// 	openMesh( "/home/lcg/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );

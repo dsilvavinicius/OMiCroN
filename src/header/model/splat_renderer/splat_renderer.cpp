@@ -89,6 +89,8 @@ SplatRenderer::SplatRenderer( Tucano::Camera* camera )
       m_shininess(8.0f), m_radius_scale(1.0f), m_ewa_radius(1.0f),
       m_renderedSplats( 0ul )
 {
+	m_toRenderIter = m_toRender.begin();
+	
     m_uniform_camera.bind_buffer_base(0);
     m_uniform_raycast.bind_buffer_base(1);
     m_uniform_frustum.bind_buffer_base(2);

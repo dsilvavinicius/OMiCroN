@@ -6,6 +6,7 @@
 #include "Array.h"
 #include "GpuAllocStatistics.h"
 #include "OglUtils.h"
+#include <StackTrace.h>
 #include "HierarchyCreationLog.h"
 #include "global_malloc.h"
 
@@ -14,6 +15,7 @@
 // #define CLEANING_DEBUG
 // #define RENDERING_DEBUG
 // #define GL_ERROR_DEBUG
+// #define COMPARISON_DEBUG
 
 using namespace model;
 
@@ -42,6 +44,9 @@ public:
 	
 	SurfelCloud& operator=( const SurfelCloud& other ) = delete;
 	SurfelCloud& operator=( SurfelCloud&& other ) = delete;
+	
+	bool operator==( const SurfelCloud& other ) const;
+	bool operator!=( const SurfelCloud& other ) const;
 	
 	LoadStatus loadStatus();
 	
@@ -143,6 +148,23 @@ inline SurfelCloud::~SurfelCloud()
 	clean();
 }
 
+inline bool SurfelCloud::operator==( const SurfelCloud& other ) const
+{
+	#ifdef COMPARISON_DEBUG
+	{
+		stringstream ss; ss << "Comparing vbo: " << m_vbo << " with vbo: " << other.m_vbo << endl << endl;
+		HierarchyCreationLog::logDebugMsg( ss.str() );
+	}
+	#endif
+	
+	return m_vbo == other.m_vbo;
+}
+
+inline bool SurfelCloud::operator!=( const SurfelCloud& other ) const
+{
+	return !( *this == other );
+}
+
 inline void SurfelCloud::render()
 {
 	#ifdef RENDERING_DEBUG
@@ -240,5 +262,6 @@ inline ostream& operator<<( ostream& out, const SurfelCloud& cloud )
 #undef CLEANING_DEBUG
 #undef RENDERING_DEBUG
 #undef GL_ERROR_DEBUG
+#undef COMPARISON_DEBUG
 
 #endif
