@@ -36,15 +36,20 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	
 // 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply" ).toStdString() );
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/test/test.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
-// 	openMesh( "/home/lcg/vinicius/Datasets/Shallow/David.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
-// 	openMesh( "/home/lcg/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
-// 	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
-// 	openMesh( "/home/lcg/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
-	openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
-// 	openMesh( "/home/lcg/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+	
+	#ifdef DAVID
+		openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+// 		openMesh( "/home/lcg/vinicius/Datasets/Shallow/David.oct" );
+	#elif defined ST_MATHEW
+		openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
+// 		openMesh( "/home/lcg/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
+	#elif defined ATLAS
+		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
+// 		openMesh( "/home/lcg/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
+	#elif defined DUOMO
+		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
+// 		openMesh( "/home/lcg/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+	#endif
 	
 	m_timer = new QTimer( this );
 	connect( m_timer, SIGNAL( timeout() ), this, SLOT( updateGL() ) );
@@ -56,7 +61,7 @@ void PointRendererWidget::resizeGL( int width, int height )
 	// TODO: It seems that resing is resulting in memory leak ( probably in jump flooding code... ).
 	
 	camera->setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 0.5f );
+	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 1.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )

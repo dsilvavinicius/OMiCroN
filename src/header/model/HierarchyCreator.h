@@ -23,18 +23,22 @@
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 
-// #define DAVID_ONE_BY_FOUR
+// #define DAVID
 // #define ST_MATHEW
-// #define ATLAS
-#define DUOMO
+#define ATLAS
+// #define DUOMO
 
-#ifdef DAVID_ONE_BY_FOUR
+#ifdef DAVID
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000037f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000037f
 	#define PARENT_POINTS_RATIO 0.25f
-#elif defined ST_MATHEW || defined ATLAS
-	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000082f
-	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000082f
+#elif defined ATLAS
+	#define LEAF_SURFEL_TANGENT_SIZE_X /*0.000085f*/ 0.00008f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y /*0.00006f*/ 0.000055f
+	#define PARENT_POINTS_RATIO 0.25f
+#elif defined ST_MATHEW
+	#define LEAF_SURFEL_TANGENT_SIZE_X /*0.000085f*/ 0.00007f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y /*0.00006f*/ 0.000055f
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined DUOMO
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
@@ -1132,7 +1136,7 @@ namespace model
 	{
 		switch( octreeDim.level() )
 		{
-			#ifdef DAVID_ONE_BY_FOUR
+			#ifdef DAVID
 				// Best for David, PARENT_POINTS_RATIO = 0.25
 				case 7: return Vector2f( 4.2f, 4.2f );
 				case 6: return Vector2f( 2.2f, 2.2f );
@@ -1141,8 +1145,17 @@ namespace model
 				case 3: return Vector2f( 2.0f, 2.0f );
 				case 2: return Vector2f( 2.0f, 2.0f );
 				case 1: return Vector2f( 2.0f, 2.0f );
-			#elif defined ST_MATHEW || defined ATLAS
-				// Best for StMathew and Atlas, PARENT_POINTS_RATIO = 0.25
+			#elif defined ATLAS
+				// Best for Atlas, PARENT_POINTS_RATIO = 0.25
+				case 7: return Vector2f( 3.5f, 3.1f );
+				case 6: return Vector2f( 2.5f, 2.0f );
+				case 5: return Vector2f( 2.0f, 2.0f );
+				case 4: return Vector2f( 2.0f, 2.0f );
+				case 3: return Vector2f( 0.0f, 0.0f );
+				case 2: return Vector2f( 0.0f, 0.0f );
+				case 1: return Vector2f( 0.0f, 0.0f );
+			#elif defined ST_MATHEW
+				// Best for StMathew, PARENT_POINTS_RATIO = 0.25
 				case 7: return Vector2f( 3.9f, 3.9f );
 				case 6: return Vector2f( 2.1f, 2.1f );
 				case 5: return Vector2f( 2.0f, 2.0f );
@@ -1197,11 +1210,6 @@ namespace model
 #undef PARENT_POINTS_RATIO
 #undef LEAF_SURFEL_TANGENT_SIZE_X
 #undef LEAF_SURFEL_TANGENT_SIZE_Y
-
-#undef DAVID_ONE_BY_FOUR
-#undef ST_MATHEW
-#undef ATLAS
-#undef DUOMO
 
 #undef LEAF_CREATION_DEBUG
 #undef INNER_CREATION_DEBUG
