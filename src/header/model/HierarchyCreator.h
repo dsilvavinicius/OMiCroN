@@ -24,8 +24,8 @@
 // #define PARENT_DEBUG
 
 // #define DAVID
-// #define ST_MATHEW
-#define ATLAS
+#define ST_MATHEW
+// #define ATLAS
 // #define DUOMO
 
 #ifdef DAVID
@@ -33,12 +33,12 @@
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000037f
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined ATLAS
-	#define LEAF_SURFEL_TANGENT_SIZE_X /*0.000085f*/ 0.00008f
-	#define LEAF_SURFEL_TANGENT_SIZE_Y /*0.00006f*/ 0.000055f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000055f
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined ST_MATHEW
-	#define LEAF_SURFEL_TANGENT_SIZE_X /*0.000085f*/ 0.00007f
-	#define LEAF_SURFEL_TANGENT_SIZE_Y /*0.00006f*/ 0.000055f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000085f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000055f
 	#define PARENT_POINTS_RATIO 0.25f
 #elif defined DUOMO
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
@@ -1156,13 +1156,13 @@ namespace model
 				case 1: return Vector2f( 0.0f, 0.0f );
 			#elif defined ST_MATHEW
 				// Best for StMathew, PARENT_POINTS_RATIO = 0.25
-				case 7: return Vector2f( 3.9f, 3.9f );
-				case 6: return Vector2f( 2.1f, 2.1f );
+				case 7: return Vector2f( 3.7f, 3.5f );
+				case 6: return Vector2f( 2.3f, 2.0f );
 				case 5: return Vector2f( 2.0f, 2.0f );
 				case 4: return Vector2f( 2.0f, 2.0f );
-				case 3: return Vector2f( 2.0f, 2.0f );
-				case 2: return Vector2f( 2.0f, 2.0f );
-				case 1: return Vector2f( 2.0f, 2.0f );
+				case 3: return Vector2f( 0.0f, 0.0f );
+				case 2: return Vector2f( 0.0f, 0.0f );
+				case 1: return Vector2f( 0.0f, 0.0f );
 			#elif defined DUOMO
 				// Best for Duomo, PARENT_POINTS_RATIO = 0.25
 				case 7: return Vector2f( 4.4f, 4.4f );
