@@ -25,7 +25,7 @@
 // #define BRANCHING_DEBUG
 
 // Number of expected front segments.
-#define MAX_SEGMENTS_PER_FRONT 5
+#define MAX_SEGMENTS_PER_FRONT 2
 
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD

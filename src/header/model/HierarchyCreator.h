@@ -1153,10 +1153,10 @@ namespace model
 			#elif defined DUOMO
 				// Best for Duomo, PARENT_POINTS_RATIO = 0.25
 				case 7: return Vector2f( 4.4f, 4.4f );
-				case 6: return Vector2f( 2.8f, 1.5f );
-				/*case 5: return Vector2f( 2.3f, 1.5f );
-				case 4: return Vector2f( 1.5f, 1.5f );
-				case 3: return Vector2f( 1.5f, 1.5f );
+				case 6: return Vector2f( 3.0f, 2.1f );
+				case 5: return Vector2f( 2.8f, 1.8f );
+				case 4: return Vector2f( 2.0f, 2.0f );
+				/*case 3: return Vector2f( 1.5f, 1.5f );
 				case 2: return Vector2f( 1.5f, 1.5f );
 				case 1: return Vector2f( 1.5f, 1.5f )*/;
 			#endif
