@@ -2,8 +2,12 @@
 #define OCTREE_STATS_H
 
 #include <ostream>
+#include <Eigen/Dense>
+#include "Stream.h"
+#include "ReconstructionParams.h"
 
 using namespace std;
+using namespace Eigen;
 
 namespace model
 {
@@ -28,8 +32,9 @@ namespace model
 				<< "Render queue time: " << frame.m_renderQueueTime << endl
 				<< "CPU overhead: " << frame.m_cpuOverhead << endl
 				<< "Rendered points: " << frame.m_nRenderedPoints << endl
-				<< "Front insertion delay:" << frame.m_frontInsertionDelay << endl
+				<< "Front insertion delay: " << frame.m_frontInsertionDelay << endl
 				<< "Front size: " << frame.m_frontSize << endl
+				<< "Front segments: " << SEGMENTS_PER_FRONT << endl
 				<< "Front segment size: " << frame.m_frontSegmentSize;
 			return out;
 		}
@@ -104,8 +109,10 @@ namespace model
 	class CumulusStats
 	{
 	public:
-		CumulusStats()
-		: m_gpuOverhead( 0.f ),
+		CumulusStats( const float projThresh )
+		: m_projThresh( projThresh ),
+		m_hierarchyDepth( 0 ),
+		m_gpuOverhead( 0.f ),
 		m_avgGpuOverhead( 0.f )
 		{}
 		
@@ -118,13 +125,44 @@ namespace model
 		
 		friend ostream& operator<<( ostream& out, const CumulusStats& cumulusStats )
 		{
-			out << cumulusStats.m_octreeStats << endl << endl
+			out << "Dataset: " << cumulusStats.m_datasetName << endl << endl
+				<< "Hierarchy creation threads: " << HIERARCHY_CREATION_THREADS << endl << endl
+				<< "Work list size: " << WORK_LIST_SIZE << endl << endl
+				<< "Projection threshold: " << cumulusStats.m_projThresh << endl << endl
+				<< "Hierarchy depth: " << cumulusStats.m_hierarchyDepth << endl << endl
+				<< "Parent point ratio: " << PARENT_POINTS_RATIO_VALUE << endl << endl
+				<< "Leaf collapse: " <<
+				#ifdef NODE_COLAPSE
+					"true"
+				#else
+					"false"
+				#endif
+				<< endl << endl
+				<< "Leaf tangent sizes: " << endl << "{ " << LEAF_SURFEL_TANGENT_SIZE_X
+				<< ", " << LEAF_SURFEL_TANGENT_SIZE_Y << " }" << endl << endl
+				<< "=== Tangent multipliers === " << endl << "Level 1 : " << endl << ReconstructionParams::calcMultipliers( 1 ) << endl
+				<< "Level 2 : " << endl << ReconstructionParams::calcMultipliers( 2 ) << endl
+				<< "Level 3 : " << endl << ReconstructionParams::calcMultipliers( 3 ) << endl
+				<< "Level 4 : " << endl << ReconstructionParams::calcMultipliers( 4 ) << endl
+				<< "Level 5 : " << endl << ReconstructionParams::calcMultipliers( 5 ) << endl
+				<< "Level 6 : " << endl << ReconstructionParams::calcMultipliers( 6 ) << endl
+				<< "Level 7 : " << endl << ReconstructionParams::calcMultipliers( 7 ) << endl
+				<< "Level 8 : " << endl << ReconstructionParams::calcMultipliers( 8 ) << endl << endl
+				<< "Reconstruction algorithm: " << RECONSTRUCTION_ALG << endl << endl
+				<< cumulusStats.m_octreeStats << endl << endl
 				<< "=== GPU STATS === " << endl << "GPU Overhead: " << cumulusStats.m_gpuOverhead << endl
 				<< "Average GPU Overhead: " << cumulusStats.m_avgGpuOverhead;
 			return out;
 		}
 		
+		string m_datasetName;
+		int m_workListSize;
+		float m_projThresh;
+		
+		uint m_hierarchyDepth;
+		
 		OctreeStats m_octreeStats;
+		
 		float m_gpuOverhead;
 		float m_avgGpuOverhead;
 	};

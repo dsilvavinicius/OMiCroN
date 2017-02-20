@@ -24,9 +24,6 @@
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
 
-// Number of expected front segments.
-#define MAX_SEGMENTS_PER_FRONT 2
-
 // Turn on asynchronous GPU node loading.
 #define ASYNC_LOAD
 
@@ -514,7 +511,7 @@ namespace model
 				renderer.resetIterator();
 			}
 			
-			nNodesPerFrame = float( m_front.size() ) / float( MAX_SEGMENTS_PER_FRONT );
+			nNodesPerFrame = float( m_front.size() ) / float( SEGMENTS_PER_FRONT );
 			
 			for( int i = 0; m_frontIter != m_front.end() && i < nNodesPerFrame; ++i )
 			{
@@ -1041,8 +1038,6 @@ namespace model
 #undef FRONT_TRACKING_DEBUG
 #undef PRUNING_DEBUG
 #undef BRANCHING_DEBUG
-
-#undef MAX_SEGMENTS_PER_FRONT
 
 #undef ASYNC_LOAD
 #undef NODE_ID_TEXT

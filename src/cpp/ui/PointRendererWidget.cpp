@@ -13,7 +13,8 @@ draw_trackball( true ),
 m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr ),
-m_loader( loader )
+m_loader( loader ),
+m_statistics( m_projThresh )
 {
 	setlocale( LC_NUMERIC, "C" );
 	
@@ -37,16 +38,16 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( QDir::currentPath().append( "/data/example/staypuff.ply" ).toStdString() );
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 	
-	#ifdef DAVID
+	#if MODEL == DAVID
 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
 // 		openMesh( "/home/lcg/vinicius/Datasets/Shallow/David.oct" );
-	#elif defined ST_MATHEW
+	#elif MODEL == ST_MATHEW
 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
 // 		openMesh( "/home/lcg/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
-	#elif defined ATLAS
+	#elif MODEL == ATLAS
 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
 // 		openMesh( "/home/lcg/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
-	#elif defined DUOMO
+	#elif MODEL == DUOMO
 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
 // 		openMesh( "/home/lcg/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
 	#endif
@@ -119,7 +120,7 @@ void PointRendererWidget::paintGL (void)
 			<< "Render time diff: " << frameTime - m_desiredRenderTime << endl
 			<< "Rendering time tolerance: " << m_renderingTimeTolerance << " ms" << endl
 			<< "Rendering threshold: " << m_projThresh << endl*/
-			<< m_statistics << endl;
+			<< octreeStats << endl;
 			
 	//cout << debugSS.str() << endl << endl;
 	
@@ -251,9 +252,22 @@ void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
 
 void PointRendererWidget::closeEvent( QCloseEvent * event )
 {
-	stringstream ss; ss << m_statistics << endl << "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << endl << endl;
-	HierarchyCreationLog::logDebugMsg( ss.str() );
-	HierarchyCreationLog::flush();
+	time_t now = time(NULL);
+	char the_date[ 50 ];
+	the_date[0] = '\0';
+	
+	if (now != -1)
+	{
+		strftime( the_date, 50, "%H_%M-%d_%m_%Y", localtime( &now ) );
+	}
+	
+	ostringstream statsFilename; statsFilename << m_statistics.m_datasetName << "-" << the_date << ".txt";
+	ofstream statsFile( statsFilename.str() );
+	
+	ostringstream statsString; statsString << m_statistics << endl << "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << endl << endl;
+	statsFile << statsString.str();
+	
+	statsFile.close();
 	
 	cout << "Statistics saved." << endl << endl;
 	
@@ -342,13 +356,7 @@ void PointRendererWidget::openMesh( const string& filename )
 		delete m_octree;
 	}
 	
-	// Debug value.
-	// 	int nThreads = 1;
-	
-	// Best value for performance
-	int nThreads = 4;
-	
-	Octree::RuntimeSetup runtime( nThreads, 8/*32*/, 1024ul * 1024ul * 1024ul * 7ul, true );
+	Octree::RuntimeSetup runtime( HIERARCHY_CREATION_THREADS, WORK_LIST_SIZE, 1024ul * 1024ul * 1024ul * 7ul, true );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{
@@ -360,6 +368,10 @@ void PointRendererWidget::openMesh( const string& filename )
 		{
 			cout << "Octree Json " << filename << endl << octreeJson << endl;
 		}
+		{
+			m_statistics.m_hierarchyDepth = octreeJson[ "depth" ].asUInt();
+		}
+		
 		
 		m_octree = new Octree( octreeJson, m_loader, runtime );
 	}
@@ -373,6 +385,13 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	
 	cout << "Octree built." << endl;
+	
+	{
+		int startIdx = filename.find_last_of( '/' ) + 1;
+		int endIdx = filename.find_last_of( '.' );
+		string modelName = filename.substr( startIdx, endIdx - startIdx );
+		m_statistics.m_datasetName = modelName;
+	}
 	
 	mesh.reset();
 	if( m_renderer )
