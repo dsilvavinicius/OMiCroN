@@ -50,6 +50,8 @@ protected:
 	
 	virtual void mouseReleaseEvent( QMouseEvent * event ) override;
 	
+	virtual void closeEvent( QCloseEvent * event ) override;
+	
 	/** Updates the camera using the key flags.  */
 	void updateFromKeyInput();
 	
@@ -135,6 +137,9 @@ private:
 	
 	/** Time when a frame is started. Used to measure performance and adapt the projection threshold. */
 	chrono::system_clock::time_point m_beginOfFrameTime;
+	
+	/** Current and average statistics of the Octree. */
+	CumulusStats m_statistics;
 };
 
 #endif // PointRendererWidget

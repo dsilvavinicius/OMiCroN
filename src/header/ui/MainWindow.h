@@ -20,6 +20,10 @@ public:
 
 public slots:
 	void on_bt_open_cloud_clicked();
+
+protected:
+    void keyPressEvent( QKeyEvent *ke );
+	void closeEvent( QCloseEvent * event ) override;
 	
 private:
 	using NodeLoader = model::NodeLoader< typename PointRendererWidget::Point >;
@@ -27,9 +31,6 @@ private:
 	Ui::MainWindow *ui;
 	PointRendererWidget* m_pointRenderWidget;
 	NodeLoader* m_loader;
-	
-protected:
-    void keyPressEvent( QKeyEvent *ke );
 };
 
 #endif // MAINWINDOW

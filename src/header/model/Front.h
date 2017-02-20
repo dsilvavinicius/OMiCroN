@@ -152,7 +152,7 @@ namespace model
 		/** Tracks the front based on the projection threshold.
 		 * @param renderer is the responsible of rendering the points of the tracked front.
 		 * @param projThresh is the projection threashold */
-		FrontOctreeStats trackFront( Renderer& renderer, const Float projThresh );
+		OctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
 	private:
 		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
@@ -321,6 +321,10 @@ namespace model
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
 		
+		// Statistics related data.
+		chrono::system_clock::time_point m_lastInsertionTime;
+		OctreeStats m_octreeStats;
+		
 		#ifdef NODE_ID_TEXT
 			TextEffect m_textEffect;
 			vector< pair< string, Vector4f >, TbbAllocator< pair< string, Vector4f > > > m_nodeIds;
@@ -341,7 +345,8 @@ namespace model
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_leafLvlLoadedFlag( false ),
-	m_nodeLoader( loader )
+	m_nodeLoader( loader ),
+	m_lastInsertionTime( Profiler::now() )
 	{
 		m_frontIter = m_front.end();
 		
@@ -452,15 +457,25 @@ namespace model
 	}
 	
 	template< typename Morton >
-	inline FrontOctreeStats Front< Morton >::trackFront( Renderer& renderer, const Float projThresh )
+	inline OctreeStats Front< Morton >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		auto start = Profiler::now();
 		
 		renderer.begin_frame();
 		
+		// Statistics.
+		float frontInsertionDelay = 0.f;
+		int nNodesPerFrame = 0;
+		
 		{
 			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
 			
+			if( !m_placeholders.empty() )
+			{
+				frontInsertionDelay = Profiler::elapsedTime( m_lastInsertionTime );
+				m_lastInsertionTime = Profiler::now();
+			}
+				
 			// Insert all leaf level placeholders.
 			m_front.splice( m_front.end(), m_placeholders );
 		}
@@ -499,7 +514,7 @@ namespace model
 				renderer.resetIterator();
 			}
 			
-			int nNodesPerFrame = float( m_front.size() ) / float( MAX_SEGMENTS_PER_FRONT );
+			nNodesPerFrame = float( m_front.size() ) / float( MAX_SEGMENTS_PER_FRONT );
 			
 			for( int i = 0; m_frontIter != m_front.end() && i < nNodesPerFrame; ++i )
 			{
@@ -555,7 +570,7 @@ namespace model
 		
 		unsigned int numRenderedPoints = renderer.end_frame();
 		
-		int renderingTime = Profiler::elapsedTime( start );
+		int renderQueueTime = Profiler::elapsedTime( start );
 		
 		#ifdef FRONT_TRACKING_DEBUG
 		{
@@ -563,7 +578,9 @@ namespace model
 		}
 		#endif
 		
-		return FrontOctreeStats( traversalTime, renderingTime, numRenderedPoints, m_front.size() );
+		m_octreeStats.addFrame( FrameStats( traversalTime, renderQueueTime, numRenderedPoints, frontInsertionDelay, m_front.size(), nNodesPerFrame ) );
+		
+		return m_octreeStats;
 	}
 	
 	template< typename Morton >

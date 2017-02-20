@@ -107,19 +107,19 @@ void PointRendererWidget::paintGL (void)
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
 	
-	FrontOctreeStats stats = m_octree->trackFront( *m_renderer, m_projThresh );
+	OctreeStats octreeStats = m_octree->trackFront( *m_renderer, m_projThresh );
+	
+	m_statistics.addFrame( octreeStats, frameTime - m_statistics.m_octreeStats.m_currentStats.m_cpuOverhead );
 	
 	int frontTrackingTime = Profiler::elapsedTime( frontTrackingStart );
 	
 	// Render debug data.
 	stringstream debugSS;
-	debugSS << "Total frame time: " << frameTime << " ms" << endl << endl
-			<< "Front tracking time: " << frontTrackingTime << " ms" << endl << endl
-			<< "Desired render time: " << m_desiredRenderTime << " ms" << endl << endl
-			<< "Render time diff: " << frameTime - m_desiredRenderTime << endl << endl
-			<< "Rendering time tolerance: " << m_renderingTimeTolerance << " ms" << endl << endl
-			<< "Rendering threshold: " << m_projThresh << endl << endl
-			<< stats;
+	debugSS /*<< "Desired render time: " << m_desiredRenderTime << " ms" << endl
+			<< "Render time diff: " << frameTime - m_desiredRenderTime << endl
+			<< "Rendering time tolerance: " << m_renderingTimeTolerance << " ms" << endl
+			<< "Rendering threshold: " << m_projThresh << endl*/
+			<< m_statistics << endl;
 			
 	//cout << debugSS.str() << endl << endl;
 	
@@ -247,6 +247,17 @@ void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
 	{
 		light_trackball.endRotation();
 	}
+}
+
+void PointRendererWidget::closeEvent( QCloseEvent * event )
+{
+	stringstream ss; ss << m_statistics << endl << "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << endl << endl;
+	HierarchyCreationLog::logDebugMsg( ss.str() );
+	HierarchyCreationLog::flush();
+	
+	cout << "Statistics saved." << endl << endl;
+	
+	event->accept();
 }
 
 void PointRendererWidget::updateFromKeyInput()

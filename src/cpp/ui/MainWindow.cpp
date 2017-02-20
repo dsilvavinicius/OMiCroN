@@ -93,3 +93,9 @@ void MainWindow::keyPressEvent(QKeyEvent *ke)
 
     ke->accept();
 }
+
+void MainWindow::closeEvent( QCloseEvent * event )
+{
+	m_pointRenderWidget->close();
+	event->accept();
+}
