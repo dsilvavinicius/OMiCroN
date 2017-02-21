@@ -69,6 +69,9 @@ namespace model
 		
 		Node& root() { return *m_root; }
 		
+		/** Get the time needed to create the hierarchy in ms. If the hierarchy is not created yet, it returns 0. */
+		int hierarchyCreationDuration() { return m_hierarchyCreationDuration; }
+		
 		#ifdef HIERARCHY_STATS
 			atomic_ulong m_processedNodes;
 		#endif
@@ -89,7 +92,7 @@ namespace model
 		HierarchyCreator* m_hierarchyCreator;
 		
 		/** Future with the async creation result */
-		future< Node* > m_creationFuture;
+		future< pair< Node*, int > > m_creationFuture;
 		
 		/** Octree construction thread. */
 		thread m_octreeThread;
@@ -99,6 +102,9 @@ namespace model
 		
 		/** Root node of the hierarchy. */
 		Node* m_root;
+		
+		/** Duration of the hierarchy creation procedure. */
+		int m_hierarchyCreationDuration;
 	};
 	
 	template< typename Morton >
@@ -106,7 +112,8 @@ namespace model
 	::FastParallelOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
-	m_root( nullptr )
+	m_root( nullptr ),
+	m_hierarchyCreationDuration( 0 )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
@@ -229,9 +236,12 @@ namespace model
 			cout << "Waiting for async octree creation finish. It can take several minutes or hours depending on model size..."
 						<< endl << endl;
 			
-			m_root = m_creationFuture.get();
+			pair< Node*, int > creationResult = m_creationFuture.get();
 			
-			cout << "Hierarchy creation finished." << endl << endl;
+			m_root = creationResult.first;			
+			m_hierarchyCreationDuration = creationResult.second;
+			
+			cout << "Hierarchy creation finished. Duration: " << m_hierarchyCreationDuration << endl << endl;
 			
 			#ifdef HIERARCHY_STATS
 				m_processedNodes = m_hierarchyCreator.m_processedNodes;

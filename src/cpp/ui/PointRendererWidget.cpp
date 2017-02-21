@@ -7,7 +7,7 @@
 
 PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
 : Tucano::QtFreecameraWidget( parent, loader.widget() ),
-m_projThresh( 0.2f ),
+m_projThresh( PROJ_THRESHOLD ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
@@ -39,17 +39,17 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 	
 	#if MODEL == DAVID
-		openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
-// 		openMesh( "/home/lcg/vinicius/Datasets/Shallow/David.oct" );
+// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+		openMesh( "/home/vinicius/Datasets/David/Shallow/David.oct" );
 	#elif MODEL == ST_MATHEW
-		openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
-// 		openMesh( "/home/lcg/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
+// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
+		openMesh( "/home/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
 	#elif MODEL == ATLAS
-		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
-// 		openMesh( "/home/lcg/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
+// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
+		openMesh( "/home/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
 	#elif MODEL == DUOMO
-		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
-// 		openMesh( "/home/lcg/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
+		openMesh( "/home/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
 	#endif
 	
 	m_timer = new QTimer( this );
@@ -252,6 +252,8 @@ void PointRendererWidget::mouseReleaseEvent( QMouseEvent * event )
 
 void PointRendererWidget::closeEvent( QCloseEvent * event )
 {
+	m_octree->waitCreation();
+	
 	time_t now = time(NULL);
 	char the_date[ 50 ];
 	the_date[0] = '\0';
@@ -261,10 +263,12 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		strftime( the_date, 50, "%H_%M-%d_%m_%Y", localtime( &now ) );
 	}
 	
-	ostringstream statsFilename; statsFilename << m_statistics.m_datasetName << "-" << the_date << ".txt";
+	ostringstream statsFilename; statsFilename << "statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
 	ofstream statsFile( statsFilename.str() );
 	
-	ostringstream statsString; statsString << m_statistics << endl << "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << endl << endl;
+	ostringstream statsString; statsString << m_statistics << endl << "Time to create hierarchy: "
+		<< m_octree->hierarchyCreationDuration() << "ms" << endl
+		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl << endl;
 	statsFile << statsString.str();
 	
 	statsFile.close();

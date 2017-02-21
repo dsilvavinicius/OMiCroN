@@ -7,7 +7,17 @@
 using namespace Eigen;
 using namespace std;
 
+// ===== Identifiers =====
+
+#define DAVID 0
+#define ST_MATHEW 1
+#define ATLAS 2
+#define DUOMO 3
+
 // ===== Independent parameters =====
+
+// Current dataset.
+#define MODEL DAVID
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 4
@@ -15,16 +25,16 @@ using namespace std;
 // Work list size for hierarchy creation. 
 #define WORK_LIST_SIZE 8
 
-#define MODEL DAVID
-// #define MODEL ST_MATHEW
-// #define MODEL ATLAS
-// #define MODEL DUOMO
+#define PARENT_POINTS_RATIO_ONE_FOURTH
+// #define PARENT_POINTS_RATIO_ONE_FIFTH
 
-#define PARENT_POINTS_RATIO ONE_FOURTH
-// #define PARENT_POINTS_RATIO ONE_FIFTH
+#define PROJ_THRESHOLD 0.2f
 
 // Number of expected front segments.
 #define SEGMENTS_PER_FRONT 2
+
+#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
+// #define GPU_MEMORY 1024ul * 1024ul * 1024ul
 
 enum ReconstructionAlgorithm
 {
@@ -47,12 +57,12 @@ inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )
 	return out;
 }
 
-#define RECONSTRUCTION_ALG BHZK05
+#define RECONSTRUCTION_ALG WHA07
 
 // ===== Dependent parameters =====
-#if PARENT_POINTS_RATIO == ONE_FOURTH
+#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
 	#define PARENT_POINTS_RATIO_VALUE 0.25f
-#elif PARENT_POINTS_RATIO == ONE_FIFTH
+#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
 	#define PARENT_POINTS_RATIO_VALUE 0.25f
 #endif
 	
@@ -61,7 +71,7 @@ inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00003f
 #elif MODEL == ATLAS
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
-	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000055f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00007f
 #elif MODEL == ST_MATHEW
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000085f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000055f
@@ -80,7 +90,7 @@ namespace model
 			switch( level )
 			{
 				#if MODEL == DAVID
-					#if PARENT_POINTS_RATIO == ONE_FOURTH
+					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
 						case 7: return Vector2f( 3.7f, 3.7f );
 						case 6: return Vector2f( 2.5f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
@@ -88,7 +98,7 @@ namespace model
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == ATLAS
-					#if PARENT_POINTS_RATIO == ONE_FOURTH
+					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
 						case 7: return Vector2f( 3.5f, 3.1f );
 						case 6: return Vector2f( 2.5f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
@@ -96,7 +106,7 @@ namespace model
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == ST_MATHEW
-					#if PARENT_POINTS_RATIO == ONE_FOURTH
+					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
 						case 7: return Vector2f( 3.7f, 3.5f );
 						case 6: return Vector2f( 2.3f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
@@ -104,7 +114,7 @@ namespace model
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == DUOMO
-					#if PARENT_POINTS_RATIO == ONE_FIFTH
+					#ifdef PARENT_POINTS_RATIO_ONE_FIFTH
 						case 7: return Vector2f( 4.4f, 4.4f );
 						case 6: return Vector2f( 3.0f, 2.1f );
 						case 5: return Vector2f( 2.8f, 1.8f );

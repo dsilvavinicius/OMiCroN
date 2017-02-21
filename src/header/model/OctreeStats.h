@@ -128,6 +128,7 @@ namespace model
 			out << "Dataset: " << cumulusStats.m_datasetName << endl << endl
 				<< "Hierarchy creation threads: " << HIERARCHY_CREATION_THREADS << endl << endl
 				<< "Work list size: " << WORK_LIST_SIZE << endl << endl
+				<< "GPU memory allowed: " << GPU_MEMORY << endl << endl
 				<< "Projection threshold: " << cumulusStats.m_projThresh << endl << endl
 				<< "Hierarchy depth: " << cumulusStats.m_hierarchyDepth << endl << endl
 				<< "Parent point ratio: " << PARENT_POINTS_RATIO_VALUE << endl << endl

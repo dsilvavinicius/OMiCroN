@@ -61,9 +61,10 @@ namespace model
 						  ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
 		
 		/** Creates the hierarchy asychronously.
-		 * @return a future that will contain the hierarchy's root node when done. The node pointer ownership is caller's.
+		 * @return a future that will contain the hierarchy's root node and the duration of the creation in ms when done.
+		 * The node pointer ownership is caller's.
 		 */
-		future< Node* > createAsync();
+		future< pair< Node*, int > > createAsync();
 		
 		#ifdef HIERARCHY_STATS
 			atomic_ulong m_processedNodes;
@@ -207,18 +208,18 @@ namespace model
 	}
 	
 	template< typename Morton >
-	future< typename HierarchyCreator< Morton >::Node* > HierarchyCreator< Morton >::createAsync()
+	future< pair< typename HierarchyCreator< Morton >::Node*, int > > HierarchyCreator< Morton >::createAsync()
 	{
-		packaged_task< Node*() > task(
+		packaged_task< pair< Node*, int >() > task(
 			[ & ]
 			{
 				auto start = Profiler::now( "Hierarchy creation" );
 				
 				Node* root = create();
 				
-				Profiler::elapsedTime( start, "Hierarchy creation" );
+				int duration = Profiler::elapsedTime( start, "Hierarchy creation" );
 				
-				return root;
+				return pair< Node*, int >( root, duration );
 			}
 		);
 		auto future = task.get_future();
