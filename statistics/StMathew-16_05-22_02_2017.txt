@@ -1,0 +1,73 @@
+Dataset: StMathew
+
+Hierarchy creation threads: 8
+
+Work list size: 128
+
+GPU memory allowed: 7516192768
+
+Projection threshold: 0.2
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.2
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 8.5e-05, 5.5e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+0
+0
+Level 2 : 
+0
+0
+Level 3 : 
+2
+2
+Level 4 : 
+2.5
+2.5
+Level 5 : 
+2
+2
+Level 6 : 
+2.6
+2.3
+Level 7 : 
+4.7
+4.5
+Level 8 : 
+0
+0
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 27
+Render queue time: 0
+CPU overhead: 27
+Rendered points: 102
+Front insertion delay: 0
+Front size: 251
+Front segments: 2
+Front segment size: 125
+
+=== AVERAGE STATS === 
+Traversal time: 20.7447
+Render queue time: 0
+CPU overhead: 20.7447
+Rendered points: 284774
+Front insertion delay: 437.076
+Front size: 690.213
+Front segments: 2
+Front segment size: 351.462
+
+=== GPU STATS === 
+GPU Overhead: 6
+Average GPU Overhead: 31.9843
+Time to create hierarchy: 80986ms
+Dynamic memory allocated: 8422531196 bytes
+

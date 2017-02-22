@@ -263,7 +263,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		strftime( the_date, 50, "%H_%M-%d_%m_%Y", localtime( &now ) );
 	}
 	
-	ostringstream statsFilename; statsFilename << "statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
+	ostringstream statsFilename; statsFilename << "../../statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
 	ofstream statsFile( statsFilename.str() );
 	
 	ostringstream statsString; statsString << m_statistics << endl << "Time to create hierarchy: "
@@ -273,7 +273,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 	
 	statsFile.close();
 	
-	cout << "Statistics saved." << endl << endl;
+	cout << "Statistics saved into " << statsFilename.str() << endl << endl;
 	
 	event->accept();
 }

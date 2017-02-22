@@ -17,16 +17,18 @@ using namespace std;
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL ST_MATHEW
 
 // Number of threads used in the HierarchyCreator.
-#define HIERARCHY_CREATION_THREADS 4
+#define HIERARCHY_CREATION_THREADS 8
+// #define HIERARCHY_CREATION_THREADS 4
 
 // Work list size for hierarchy creation. 
-#define WORK_LIST_SIZE 8
+#define WORK_LIST_SIZE 128
+// #define WORK_LIST_SIZE 8
 
-#define PARENT_POINTS_RATIO_ONE_FOURTH
-// #define PARENT_POINTS_RATIO_ONE_FIFTH
+// #define PARENT_POINTS_RATIO_ONE_FOURTH
+#define PARENT_POINTS_RATIO_ONE_FIFTH
 
 #define PROJ_THRESHOLD 0.2f
 
@@ -63,7 +65,7 @@ inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )
 #ifdef PARENT_POINTS_RATIO_ONE_FOURTH
 	#define PARENT_POINTS_RATIO_VALUE 0.25f
 #elif defined PARENT_POINTS_RATIO_ONE_FIFTH
-	#define PARENT_POINTS_RATIO_VALUE 0.25f
+	#define PARENT_POINTS_RATIO_VALUE 0.2f
 #endif
 	
 #if MODEL == DAVID
@@ -96,6 +98,12 @@ namespace model
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 2.0f );
+					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
+						case 7: return Vector2f( 4.5f, 4.5f );
+						case 6: return Vector2f( 3.0f, 2.5f );
+						case 5: return Vector2f( 2.0f, 2.0f );
+						case 4: return Vector2f( 2.5f, 2.5f );
+						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == ATLAS
 					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
@@ -111,6 +119,12 @@ namespace model
 						case 6: return Vector2f( 2.3f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.0f, 2.0f );
+						case 3: return Vector2f( 2.0f, 2.0f );
+					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
+						case 7: return Vector2f( 4.7, 4.5f );
+						case 6: return Vector2f( 2.6f, 2.3f );
+						case 5: return Vector2f( 2.2f, 2.2f );
+						case 4: return Vector2f( 2.5f, 2.5f );
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == DUOMO
