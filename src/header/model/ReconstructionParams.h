@@ -17,7 +17,7 @@ using namespace std;
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL ST_MATHEW
+#define MODEL DUOMO
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 8
@@ -112,6 +112,12 @@ namespace model
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 2.0f );
+					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
+						case 7: return Vector2f( 4.0f, 3.6f );
+						case 6: return Vector2f( 2.5f, 2.0f );
+						case 5: return Vector2f( 2.3f, 2.3f );
+						case 4: return Vector2f( 2.3f, 2.3f );
+						case 3: return Vector2f( /*2.0f, 2.0f*/ 0.f, 0.f );
 					#endif
 				#elif MODEL == ST_MATHEW
 					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH

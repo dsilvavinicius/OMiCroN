@@ -1,0 +1,73 @@
+Dataset: Atlas
+
+Hierarchy creation threads: 8
+
+Work list size: 128
+
+GPU memory allowed: 7516192768
+
+Projection threshold: 0.2
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.2
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 8e-05, 7e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+0
+0
+Level 2 : 
+0
+0
+Level 3 : 
+0
+0
+Level 4 : 
+2.3
+2.3
+Level 5 : 
+2.3
+2.3
+Level 6 : 
+2.5
+  2
+Level 7 : 
+  4
+3.6
+Level 8 : 
+0
+0
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 46
+Render queue time: 0
+CPU overhead: 46
+Rendered points: 227
+Front insertion delay: 0
+Front size: 745
+Front segments: 2
+Front segment size: 372
+
+=== AVERAGE STATS === 
+Traversal time: 16.1724
+Render queue time: 0
+CPU overhead: 16.1724
+Rendered points: 297126
+Front insertion delay: 729.709
+Front size: 502.561
+Front segments: 2
+Front segment size: 255.086
+
+=== GPU STATS === 
+GPU Overhead: 20
+Average GPU Overhead: 33.0991
+Time to create hierarchy: 120798ms
+Dynamic memory allocated: 11483033216 bytes
+
