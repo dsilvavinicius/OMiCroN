@@ -27,8 +27,8 @@ using namespace std;
 #define WORK_LIST_SIZE 128
 // #define WORK_LIST_SIZE 8
 
-// #define PARENT_POINTS_RATIO_ONE_FOURTH
-#define PARENT_POINTS_RATIO_ONE_FIFTH
+#define PARENT_POINTS_RATIO_ONE_FOURTH
+// #define PARENT_POINTS_RATIO_ONE_FIFTH
 
 #define PROJ_THRESHOLD 0.2f
 
@@ -134,12 +134,18 @@ namespace model
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == DUOMO
-					#ifdef PARENT_POINTS_RATIO_ONE_FIFTH
+					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
+						case 7: return Vector2f( 4.2f, 4.2f );
+						case 6: return Vector2f( 2.7f, 1.9f );
+						case 5: return Vector2f( 2.6f, 1.5f );
+						case 4: return Vector2f( 2.0f, 1.7f );
+						case 3: return Vector2f( 2.0f, 2.0f );
+					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
 						case 7: return Vector2f( 4.4f, 4.4f );
 						case 6: return Vector2f( 3.0f, 2.1f );
 						case 5: return Vector2f( 2.8f, 1.8f );
 						case 4: return Vector2f( 2.0f, 2.0f );
-						case 3: return Vector2f( 2.0f, 2.0f );
+						case 3: return Vector2f( 2.0f, 1.0f );
 					#endif
 				#endif
 			}
