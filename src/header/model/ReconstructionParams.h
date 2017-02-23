@@ -14,6 +14,14 @@ using namespace std;
 #define ATLAS 2
 #define DUOMO 3
 
+enum ReconstructionAlgorithm
+{
+	ZPBG01 = 0,
+	BHZK05 = 1,
+	WHA07 = 2,
+	ZRB04 = 3
+};
+
 // ===== Independent parameters =====
 
 // Current dataset.
@@ -42,27 +50,6 @@ using namespace std;
 
 #define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
 // #define GPU_MEMORY 1024ul * 1024ul * 1024ul
-
-enum ReconstructionAlgorithm
-{
-	ZPBG01 = 0,
-	BHZK05 = 1,
-	WHA07 = 2,
-	ZRB04 = 3
-};
-
-inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )
-{
-	switch( alg )
-	{
-		case ZPBG01 : out << "ZPBG01"; break;
-		case BHZK05 : out << "BHZK05"; break;
-		case WHA07 : out << "WHA07"; break;
-		case ZRB04 : out << "ZRB04"; break;
-	}
-	
-	return out;
-}
 
 #define RECONSTRUCTION_ALG WHA07
 
@@ -159,6 +146,19 @@ namespace model
 		}
 	};
 			
+}
+
+inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )
+{
+	switch( alg )
+	{
+		case ZPBG01 : out << "ZPBG01"; break;
+		case BHZK05 : out << "BHZK05"; break;
+		case WHA07 : out << "WHA07"; break;
+		case ZRB04 : out << "ZRB04"; break;
+	}
+	
+	return out;
 }
 
 #endif
