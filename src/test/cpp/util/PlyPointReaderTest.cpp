@@ -3,6 +3,7 @@
 #include <QApplication>
 #include "PlyPointReader.h"
 #include "Stream.h"
+#include <Profiler.h>
 #include "MortonCode.h"
 
 using namespace std;
@@ -38,6 +39,24 @@ namespace util
 			ASSERT_TRUE( expectedPoint0.equal( *points[0], epsilon ) );
 			ASSERT_TRUE( expectedPoint1.equal( *points[1], epsilon ) );
 			ASSERT_TRUE( expectedPoint2.equal( *points[2], epsilon ) );
+		}
+		
+		TEST_F( PlyPointReaderTest, ProfileDavidReading )
+		{
+			string taskName = "David reading";
+			
+			auto start = Profiler::now( taskName );
+			
+			Point dontCare;
+			PlyPointReader reader( "/home/vinicius/Datasets/David/Sorted_13Lvls/David.ply" );
+			reader.read(
+				[ & ]( const Point& p )
+				{
+					dontCare = p;
+				}
+			);
+			
+			Profiler::elapsedTime( start, taskName );
 		}
 	}
 }
