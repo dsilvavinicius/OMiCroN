@@ -30,10 +30,15 @@ using namespace std;
 #define PARENT_POINTS_RATIO_ONE_FOURTH
 // #define PARENT_POINTS_RATIO_ONE_FIFTH
 
+// #define PROJ_THRESHOLD 0.2f
 #define PROJ_THRESHOLD 0.2f
 
 // Number of expected front segments.
-#define SEGMENTS_PER_FRONT 2
+// #define SEGMENTS_PER_FRONT 2
+#define SEGMENTS_PER_FRONT 10
+
+// Enables node colapse when leaves do not have siblings.
+#define NODE_COLAPSE
 
 #define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
 // #define GPU_MEMORY 1024ul * 1024ul * 1024ul

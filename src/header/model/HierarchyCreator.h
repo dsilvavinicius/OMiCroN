@@ -15,9 +15,6 @@
 #include "global_malloc.h"
 #include "ReconstructionParams.h"
 
-// Enables node colapse when leaves do not have siblings.
-// #define NODE_COLAPSE
-
 // #define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG
 // #define NODE_PROCESSING_DEBUG
