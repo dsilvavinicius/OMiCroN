@@ -260,7 +260,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 	
 	if (now != -1)
 	{
-		strftime( the_date, 50, "%H_%M-%d_%m_%Y", localtime( &now ) );
+		strftime( the_date, 50, "%d_%m_%Y-%H_%M", localtime( &now ) );
 	}
 	
 	ostringstream statsFilename; statsFilename << "../../statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
