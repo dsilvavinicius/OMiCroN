@@ -32,8 +32,8 @@ enum ReconstructionAlgorithm
 // #define HIERARCHY_CREATION_THREADS 4
 
 // Work list size for hierarchy creation. 
-#define WORK_LIST_SIZE 128
-// #define WORK_LIST_SIZE 8
+#define WORK_LIST_SIZE 32
+// #define WORK_LIST_SIZE 32
 
 #define PARENT_POINTS_RATIO_ONE_FOURTH
 // #define PARENT_POINTS_RATIO_ONE_FIFTH
