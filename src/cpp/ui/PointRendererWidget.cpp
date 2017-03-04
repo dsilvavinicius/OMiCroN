@@ -39,17 +39,29 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 // 	openMesh( QDir::currentPath().append( "/data/example/sorted_staypuff.oct" ).toStdString() );
 	
 	#if MODEL == DAVID
-// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
-		openMesh( "/home/vinicius/Datasets/David/Shallow/David.oct" );
+		#ifdef LAB
+			openMesh( "/home/vinicius/Datasets/David/Shallow/David.oct" );
+		#else
+			openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+		#endif
 	#elif MODEL == ST_MATHEW
-// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
-		openMesh( "/home/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
+		#ifdef LAB
+			openMesh( "/home/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
+		#else
+			openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
+		#endif
 	#elif MODEL == ATLAS
-// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
-		openMesh( "/home/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
+		#ifdef LAB
+			openMesh( "/home/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
+		#else
+			openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
+		#endif		
 	#elif MODEL == DUOMO
-// 		openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
-		openMesh( "/home/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+		#ifdef LAB
+			openMesh( "/home/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+		#else
+			openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
+		#endif	
 	#endif
 	
 	m_timer = new QTimer( this );
