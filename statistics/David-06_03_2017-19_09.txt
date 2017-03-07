@@ -1,0 +1,73 @@
+Dataset: David
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.2
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.2
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 3.7e-05, 3e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+0
+0
+Level 2 : 
+0
+0
+Level 3 : 
+2
+2
+Level 4 : 
+2.5
+2.5
+Level 5 : 
+2
+2
+Level 6 : 
+  3
+2.5
+Level 7 : 
+4.7
+4.7
+Level 8 : 
+0
+0
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 47
+Render queue time: 0
+CPU overhead: 47
+Rendered points: 6585
+Front insertion delay: 0
+Front size: 1567
+Front segments: 5
+Front segment size: 313
+
+=== AVERAGE STATS === 
+Traversal time: 38.3598
+Render queue time: 0
+CPU overhead: 38.3598
+Rendered points: 571794
+Front insertion delay: 142.589
+Front size: 1121.16
+Front segments: 5
+Front segment size: 224.323
+
+=== GPU STATS === 
+GPU Overhead: 59
+Average GPU Overhead: 48.354
+Time to create hierarchy: 320604ms
+Dynamic memory allocated: 21093239456 bytes
+

@@ -25,7 +25,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL DUOMO
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -35,24 +35,28 @@ enum ReconstructionAlgorithm
 // #define HIERARCHY_CREATION_THREADS 4
 
 // Work list size for hierarchy creation. 
-#define WORK_LIST_SIZE 32
+#define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
 
-#define PARENT_POINTS_RATIO_ONE_FOURTH
-// #define PARENT_POINTS_RATIO_ONE_FIFTH
+// #define PARENT_POINTS_RATIO_ONE_FOURTH
+#define PARENT_POINTS_RATIO_ONE_FIFTH
 
 // #define PROJ_THRESHOLD 0.2f
 #define PROJ_THRESHOLD 0.2f
 
 // Number of expected front segments.
 // #define SEGMENTS_PER_FRONT 2
-#define SEGMENTS_PER_FRONT 10
+// #define SEGMENTS_PER_FRONT 10
+#define SEGMENTS_PER_FRONT 5
 
 // Enables node colapse when leaves do not have siblings.
-#define NODE_COLAPSE
+// #define NODE_COLAPSE
 
-#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
-// #define GPU_MEMORY 1024ul * 1024ul * 1024ul
+#ifdef LAB
+	#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
+#else
+	#define GPU_MEMORY 1024ul * 1024ul * 1024ul
+#endif
 
 #define RECONSTRUCTION_ALG WHA07
 
@@ -88,13 +92,13 @@ namespace model
 			{
 				#if MODEL == DAVID
 					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
-						case 7: return Vector2f( 3.7f, 3.7f );
+						case 7: return Vector2f( 4.2f, 4.2f );
 						case 6: return Vector2f( 2.5f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
-						case 7: return Vector2f( 4.5f, 4.5f );
+						case 7: return Vector2f( 4.7f, 4.7f );
 						case 6: return Vector2f( 3.0f, 2.5f );
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.5f, 2.5f );
@@ -102,21 +106,21 @@ namespace model
 					#endif
 				#elif MODEL == ATLAS
 					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
-						case 7: return Vector2f( 3.5f, 3.1f );
+						case 7: return Vector2f( 3.8f, 3.5f );
 						case 6: return Vector2f( 2.5f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH
-						case 7: return Vector2f( 4.0f, 3.6f );
+						case 7: return Vector2f( 4.2f, 4.2f );
 						case 6: return Vector2f( 2.5f, 2.0f );
 						case 5: return Vector2f( 2.3f, 2.3f );
 						case 4: return Vector2f( 2.3f, 2.3f );
-						case 3: return Vector2f( /*2.0f, 2.0f*/ 0.f, 0.f );
+						case 3: return Vector2f( 2.0f, 2.0f );
 					#endif
 				#elif MODEL == ST_MATHEW
 					#ifdef PARENT_POINTS_RATIO_ONE_FOURTH
-						case 7: return Vector2f( 3.7f, 3.5f );
+						case 7: return Vector2f( 4.2f, 4.0f );
 						case 6: return Vector2f( 2.3f, 2.0f );
 						case 5: return Vector2f( 2.0f, 2.0f );
 						case 4: return Vector2f( 2.0f, 2.0f );
