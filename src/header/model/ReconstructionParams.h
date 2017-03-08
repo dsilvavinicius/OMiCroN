@@ -25,10 +25,10 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DUOMO
+#define MODEL DAVID
 
 // Define to indicates that the system will be run in the laboratory.
-// #define LAB
+#define LAB
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 8
@@ -50,7 +50,7 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 5
 
 // Enables node colapse when leaves do not have siblings.
-// #define NODE_COLAPSE
+#define NODE_COLAPSE
 
 #ifdef LAB
 	#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
