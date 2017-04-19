@@ -88,7 +88,7 @@ SplatRenderer::SplatRenderer( Tucano::Camera* camera )
       m_pointsize_method( RECONSTRUCTION_ALG ), m_backface_culling(true),
       m_color(Vector3f(0.5f, 0.5f, 0.5f)), m_epsilon(5.0f * 1e-3f),
       m_shininess(8.0f), m_radius_scale(1.0f), m_ewa_radius(1.0f),
-      m_renderedSplats( 0ul )
+      m_renderedSplats( 0ul ), m_saveFboFlag( false ), m_diskFileSuffix( 0 )
 {
 	m_toRenderIter = m_toRender.begin();
 	

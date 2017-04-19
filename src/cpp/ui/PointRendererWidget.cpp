@@ -19,6 +19,10 @@ m_statistics( m_projThresh )
 	setlocale( LC_NUMERIC, "C" );
 	
 	camera->setSpeed( 0.005f );
+	m_cameraPath.initialize( "shaders/tucano/" );
+	m_cameraPath.setAnimSpeed( 0.0015 );
+	m_cameraPath.toggleDrawControlPoints();
+	m_cameraPath.loadFromFile("../../camera_paths/camera_path");
 }
 
 PointRendererWidget::~PointRendererWidget()
@@ -120,6 +124,12 @@ void PointRendererWidget::paintGL (void)
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
 	
+	if( m_cameraPath.isAnimating() )
+	{
+		m_cameraPath.stepForward();
+		camera->setViewMatrix( m_cameraPath.cameraAtCurrentTime().inverse() );
+	}
+	
 	OctreeStats octreeStats = m_octree->trackFront( *m_renderer, m_projThresh );
 	
 	m_statistics.addFrame( octreeStats, frameTime - m_statistics.m_octreeStats.m_currentStats.m_cpuOverhead );
@@ -142,18 +152,23 @@ void PointRendererWidget::paintGL (void)
 	debugInfoDefined( QString( debugSS.str().c_str() ) );
 	
 	glEnable(GL_DEPTH_TEST);
-	if( draw_trackball )
-	{
-		camera->renderAtCorner();
-	}
 	
-	if( m_drawAuxViewports )
+	if( !m_cameraPath.isAnimating() )
 	{
-		glEnable( GL_SCISSOR_TEST );
-// 		renderAuxViewport( FRONT );
-// 		renderAuxViewport( SIDE );
-// 		renderAuxViewport( TOP );
-		glDisable( GL_SCISSOR_TEST );
+		if( draw_trackball )
+		{
+			camera->renderAtCorner();
+		}
+		m_cameraPath.render( *camera, light_trackball );
+		
+		if( m_drawAuxViewports )
+		{
+			glEnable( GL_SCISSOR_TEST );
+	// 		renderAuxViewport( FRONT );
+	// 		renderAuxViewport( SIDE );
+	// 		renderAuxViewport( TOP );
+			glDisable( GL_SCISSOR_TEST );
+		}
 	}
 	
 	//cout << "=== Painting ends ===" << endl << endl;
@@ -300,8 +315,13 @@ void PointRendererWidget::updateFromKeyInput()
 			openMesh (filename.toStdString());
 		}
 	}
+	
+	// Main camera control.
 	if( m_keys[ Qt::Key_R ] )
+	{
 		camera->reset();
+		m_cameraPath.reset();
+	}
 	if( m_keys[ Qt::Key_A ] )
 		camera->strideLeft();
 	if( m_keys[ Qt::Key_D ] )
@@ -314,6 +334,25 @@ void PointRendererWidget::updateFromKeyInput()
 		camera->moveDown();
 	if( m_keys[ Qt::Key_E ] )
 		camera->moveUp();	
+	
+	// Camera path control.
+	if( m_keys[ Qt::Key_K ] )
+	{
+		m_cameraPath.addKeyPosition( *camera );
+	}
+	if( m_keys[ Qt::Key_Equal ] )
+		m_cameraPath.setAnimSpeed( m_cameraPath.animSpeed() + 0.01);
+	if( m_keys[ Qt::Key_Minus ] )
+		m_cameraPath.setAnimSpeed( m_cameraPath.animSpeed() - 0.01);
+	if( m_keys[ Qt::Key_Space ] )
+	{
+		m_cameraPath.toggleAnimation();
+		m_renderer->toggleFboSave();
+	}
+	if( m_keys[ Qt::Key_J ] )
+		m_cameraPath.writeToFile("../../camera_paths/camera_path");
+	if( m_keys[ Qt::Key_L ] )
+		m_cameraPath.loadFromFile("../../camera_paths/camera_path");
 
 	camera->updateViewMatrix();
 }

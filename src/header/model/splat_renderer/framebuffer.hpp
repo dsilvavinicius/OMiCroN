@@ -20,6 +20,9 @@
 
 #include <GL/glew.h>
 #include <memory>
+#include <string>
+
+using namespace std;
 
 namespace model
 {
@@ -45,7 +48,7 @@ namespace model
 		void bind();
 		void unbind();
 		void reshape(GLint width, GLint height);
-
+		
 	private:
 		void initialize();
 		void remove_and_delete_attachments();

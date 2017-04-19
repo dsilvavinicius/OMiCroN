@@ -20,6 +20,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <fstream>
 
 using namespace model;
 

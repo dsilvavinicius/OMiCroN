@@ -140,6 +140,8 @@ public:
 
     void reshape(int width, int height);
 	
+	void toggleFboSave();
+	
 	const Tucano::Camera& camera() const;
 
 private:
@@ -154,6 +156,12 @@ private:
 
     void render_pass( bool depth_only = false );
 
+	/**
+	* @brief Saves the buffer to a PPM image
+	* @param attach FBO attachment to save as image (default is 0)
+	*/
+	void saveFbo( int attach = 0 );
+	
 private:
 	using RenderingList = list< Node*, TbbAllocator< Node* > >;
 	using RenderingListIter = typename RenderingList::iterator;
@@ -184,6 +192,12 @@ private:
 	
 	// Stats.
 	ulong m_renderedSplats;
+	
+	// Members related with saving FBO in disk.
+	// Flag that indicates if the fbo should be saved in Disk.
+	bool m_saveFboFlag;
+	// FBO file current suffix.
+	int m_diskFileSuffix;
 };
 
 inline void SplatRenderer::eraseFromList( const Node& node )
@@ -508,6 +522,11 @@ inline void SplatRenderer::render_frame()
 				glBindVertexArray(m_rect_vao);
 				glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 				glBindVertexArray(0);
+				
+				if( m_saveFboFlag )
+				{
+					saveFbo();
+				}
 			#endif
 		}
 	#endif
@@ -521,7 +540,6 @@ inline ulong SplatRenderer::end_frame()
 {
 	ulong renderedSplats = m_renderedSplats;
 	m_renderedSplats = 0ul;
-	
 	
 	#ifdef RENDERING_DEBUG
 	{
@@ -546,6 +564,54 @@ inline Vector2f SplatRenderer
 	#endif
 	
 	return Vector2f( proj.x() / proj.w(), proj.y() / proj.w() );
+}
+
+inline void SplatRenderer::toggleFboSave()
+{
+	m_saveFboFlag = !m_saveFboFlag;
+}
+
+inline void SplatRenderer::saveFbo( int attach )
+{
+	GLint dims[4] = {0};
+	glGetIntegerv( GL_VIEWPORT, dims );
+	int width = dims[ 2 ];
+	int height = dims[ 3 ];
+	
+	m_fbo.bind();
+
+	GLfloat * pixels = new GLfloat[(int)(width*height*4)];
+	glReadBuffer( GL_COLOR_ATTACHMENT0 + attach );
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels);
+	
+	m_fbo.unbind();
+	
+	thread t(
+		[&]()
+		{
+			stringstream filename; filename << "/media/vinicius/Expansion Drive3/Datasets/Videos/David/fbo" << m_diskFileSuffix++ << ".ppm";
+			ofstream out_stream;
+			out_stream.open( filename.str() );
+			out_stream << "P3\n";
+			out_stream << width << " " << height << "\n";
+			out_stream << "255\n";
+
+			int pos;
+			for (int j = height-1; j >= 0; --j)
+			{
+				for (int i = 0 ; i < width; ++i)
+				{
+					pos = (i + width*j)*4;
+					out_stream << (int)(255*pixels[pos+0]) << " " << (int)(255*pixels[pos+1]) << " " << (int)(255*pixels[pos+2]) << " ";
+				}
+				out_stream << "\n";
+			}
+			out_stream.close();
+		}
+	);
+	t.detach();
+	
+	delete [] pixels;
 }
 
 inline const Tucano::Camera& SplatRenderer::camera() const

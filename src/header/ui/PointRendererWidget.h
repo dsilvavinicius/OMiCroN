@@ -2,6 +2,7 @@
 #define POINT_RENDERER_WIDGET_H
 
 #include <utils/qtfreecamerawidget.hpp>
+#include <utils/path.hpp>
 #include "FastParallelOctree.h"
 #include "renderers/StreamingRenderer.h"
 #include "global_malloc.h"
@@ -140,6 +141,9 @@ private:
 	
 	/** Current and average statistics of the Octree. */
 	CumulusStats m_statistics;
+	
+	/** Camera path for making automatic videos.*/
+	Tucano::Path m_cameraPath;
 };
 
 #endif // PointRendererWidget
