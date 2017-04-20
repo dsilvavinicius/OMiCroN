@@ -197,7 +197,7 @@ private:
 	// Flag that indicates if the fbo should be saved in Disk.
 	bool m_saveFboFlag;
 	// FBO file current suffix.
-	int m_diskFileSuffix;
+	atomic_int m_diskFileSuffix;
 };
 
 inline void SplatRenderer::eraseFromList( const Node& node )
@@ -573,38 +573,74 @@ inline void SplatRenderer::toggleFboSave()
 
 inline void SplatRenderer::saveFbo( int attach )
 {
+	mutex mtx;
+	condition_variable condVar;
+	bool isCopyDone = false;
+	
 	GLint dims[4] = {0};
 	glGetIntegerv( GL_VIEWPORT, dims );
 	uint width = dims[ 2 ];
 	uint height = dims[ 3 ];
 
 	const size_t format_nchannels = 4;
-	GLfloat* pixels = ( GLfloat* ) malloc( format_nchannels * sizeof( GLfloat ) * width * height );
-    
-	glReadBuffer( GL_COLOR_ATTACHMENT0 );
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels);
-    
-	stringstream filename; filename << "/media/vinicius/Expansion Drive3/Datasets/Videos/David/fbo" << m_diskFileSuffix++ << ".ppm";
+	size_t imgSize = format_nchannels * sizeof( GLfloat ) * width * height;
+	GLfloat* pixels = new GLfloat[ imgSize ];
 	
-	ofstream out_stream;
-	out_stream.open( filename.str() );
-	out_stream << "P3\n";
-	out_stream << width << " " << height << "\n";
-	out_stream << "255\n";
-
-	int pos;
-	for (int j = height-1; j >= 0; --j)
-	{
-		for (int i = 0 ; i < width; ++i)
+	glReadBuffer( GL_COLOR_ATTACHMENT0 );
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels);
+	
+	thread t(
+		[&]()
 		{
-			pos = (i + width*j)*4;
-			out_stream << (int)(255*pixels[pos+0]) << " " << (int)(255*pixels[pos+1]) << " " << (int)(255*pixels[pos+2]) << " ";
-		}
-		out_stream << "\n";
-	}
-	out_stream.close();
+			GLfloat* threadPixels;
+			uint threadWidth, threadHeight;
+			{
+				unique_lock< std::mutex > lock( mtx );
+				threadPixels = new GLfloat[ imgSize ];
+				memcpy( threadPixels, pixels, imgSize );
+				
+				threadWidth = width;
+				threadHeight = height;
+				
+				isCopyDone = true;
+				lock.unlock();
+				
+				condVar.notify_one();
+			}
+			
+			++m_diskFileSuffix;
+			
+			stringstream filename; filename << "/media/vinicius/Expansion Drive3/Datasets/Videos/David/fbo" << m_diskFileSuffix << ".ppm";
+			
+			ofstream out_stream;
+			out_stream.open( filename.str() );
+			out_stream << "P3\n";
+			out_stream << threadWidth << " " << threadHeight << "\n";
+			out_stream << "255\n";
 
-	delete [] pixels;
+			int pos;
+			for (int j = threadHeight-1; j >= 0; --j)
+			{
+				for (int i = 0 ; i < threadWidth; ++i)
+				{
+					pos = (i + threadWidth*j)*4;
+					out_stream << (int)(255*threadPixels[pos+0]) << " " << (int)(255*threadPixels[pos+1]) << " " << (int)(255*threadPixels[pos+2]) << " ";
+				}
+				out_stream << "\n";
+			}
+			out_stream.close();
+			
+			delete[] threadPixels;
+		}
+	);
+	t.detach();
+	
+	{
+		unique_lock< std::mutex > lock( mtx );
+		condVar.wait( lock, [ & ](){ return isCopyDone; } );	
+	}
+	
+	delete[] pixels;
 }
 
 inline const Tucano::Camera& SplatRenderer::camera() const
