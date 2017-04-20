@@ -582,21 +582,21 @@ inline void SplatRenderer::saveFbo( int attach )
 	uint width = dims[ 2 ];
 	uint height = dims[ 3 ];
 
-	const size_t format_nchannels = 4;
-	size_t imgSize = format_nchannels * sizeof( GLfloat ) * width * height;
-	GLfloat* pixels = new GLfloat[ imgSize ];
+	const size_t format_nchannels = 3;
+	size_t imgSize = format_nchannels * sizeof( GLubyte ) * width * height;
+	GLubyte* pixels = new GLubyte[ imgSize ];
 	
 	glReadBuffer( GL_COLOR_ATTACHMENT0 );
-	glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels);
+	glReadPixels( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels );
 	
 	thread t(
 		[&]()
 		{
-			GLfloat* threadPixels;
+			GLubyte* threadPixels;
 			uint threadWidth, threadHeight;
 			{
 				unique_lock< std::mutex > lock( mtx );
-				threadPixels = new GLfloat[ imgSize ];
+				threadPixels = new GLubyte[ imgSize ];
 				memcpy( threadPixels, pixels, imgSize );
 				
 				threadWidth = width;
@@ -614,19 +614,13 @@ inline void SplatRenderer::saveFbo( int attach )
 			
 			ofstream out_stream;
 			out_stream.open( filename.str() );
-			out_stream << "P3\n";
+			out_stream << "P6\n";
 			out_stream << threadWidth << " " << threadHeight << "\n";
 			out_stream << "255\n";
 
-			int pos;
-			for (int j = threadHeight-1; j >= 0; --j)
+			for( int i = threadHeight - 1; i >= 0; --i )
 			{
-				for (int i = 0 ; i < threadWidth; ++i)
-				{
-					pos = (i + threadWidth*j)*4;
-					out_stream << (int)(255*threadPixels[pos+0]) << " " << (int)(255*threadPixels[pos+1]) << " " << (int)(255*threadPixels[pos+2]) << " ";
-				}
-				out_stream << "\n";
+				out_stream.write( ( char* ) threadPixels + i * threadWidth * 3, threadWidth * 3 );
 			}
 			out_stream.close();
 			
