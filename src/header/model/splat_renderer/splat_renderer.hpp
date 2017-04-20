@@ -575,42 +575,35 @@ inline void SplatRenderer::saveFbo( int attach )
 {
 	GLint dims[4] = {0};
 	glGetIntegerv( GL_VIEWPORT, dims );
-	int width = dims[ 2 ];
-	int height = dims[ 3 ];
-	
-	m_fbo.bind();
+	uint width = dims[ 2 ];
+	uint height = dims[ 3 ];
 
-	GLfloat * pixels = new GLfloat[(int)(width*height*4)];
-	glReadBuffer( GL_COLOR_ATTACHMENT0 + attach );
-	glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels);
+	const size_t format_nchannels = 4;
+	GLfloat* pixels = ( GLfloat* ) malloc( format_nchannels * sizeof( GLfloat ) * width * height );
+    
+	glReadBuffer( GL_COLOR_ATTACHMENT0 );
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, pixels);
+    
+	stringstream filename; filename << "/media/vinicius/Expansion Drive3/Datasets/Videos/David/fbo" << m_diskFileSuffix++ << ".ppm";
 	
-	m_fbo.unbind();
-	
-	thread t(
-		[&]()
+	ofstream out_stream;
+	out_stream.open( filename.str() );
+	out_stream << "P3\n";
+	out_stream << width << " " << height << "\n";
+	out_stream << "255\n";
+
+	int pos;
+	for (int j = height-1; j >= 0; --j)
+	{
+		for (int i = 0 ; i < width; ++i)
 		{
-			stringstream filename; filename << "/media/vinicius/Expansion Drive3/Datasets/Videos/David/fbo" << m_diskFileSuffix++ << ".ppm";
-			ofstream out_stream;
-			out_stream.open( filename.str() );
-			out_stream << "P3\n";
-			out_stream << width << " " << height << "\n";
-			out_stream << "255\n";
-
-			int pos;
-			for (int j = height-1; j >= 0; --j)
-			{
-				for (int i = 0 ; i < width; ++i)
-				{
-					pos = (i + width*j)*4;
-					out_stream << (int)(255*pixels[pos+0]) << " " << (int)(255*pixels[pos+1]) << " " << (int)(255*pixels[pos+2]) << " ";
-				}
-				out_stream << "\n";
-			}
-			out_stream.close();
+			pos = (i + width*j)*4;
+			out_stream << (int)(255*pixels[pos+0]) << " " << (int)(255*pixels[pos+1]) << " " << (int)(255*pixels[pos+2]) << " ";
 		}
-	);
-	t.detach();
-	
+		out_stream << "\n";
+	}
+	out_stream.close();
+
 	delete [] pixels;
 }
 
