@@ -499,9 +499,9 @@ namespace model
 									#endif
 									
 									#ifdef NODE_COLAPSE
-									bool newNodeIsLeafFlag = true;
+										bool newNodeIsLeafFlag = ( lvl == m_leafLvlDim.level() ) ? true : false;
 									#else
-									bool newNodeIsLeafFlag = false;
+										bool newNodeIsLeafFlag = false;
 									#endif
 									
 									output.push_back(
@@ -637,7 +637,10 @@ namespace model
 						NodeList& lastList = m_lvlWorkLists[ lvl - 1 ].back();
 						
 						#ifdef NODE_COLAPSE
-							collapseBoundaries( lastList );
+							if( lvl == m_leafLvlDim.level() )
+							{
+								collapseBoundaries( lastList );
+							}
 						#endif
 						
 						for( Node& child : lastList.back().child() )
@@ -911,14 +914,14 @@ namespace model
 			}
 			
 			#ifdef NODE_COLAPSE
-				collapseBoundaries( previousProcessed );
-			
-				// If needed, collapse the first node of nextProcessed
-				NodeArray& newNextFirstNodeChild = nextFirstNode.child();
-				if( newNextFirstNodeChild.size() == 1 && newNextFirstNodeChild[ 0 ].isLeaf() )
-				{
-					nextFirstNode.turnLeaf();
-				}
+// 				collapseBoundaries( previousProcessed );
+// 			
+// 				// If needed, collapse the first node of nextProcessed
+// 				NodeArray& newNextFirstNodeChild = nextFirstNode.child();
+// 				if( newNextFirstNodeChild.size() == 1 && newNextFirstNodeChild[ 0 ].isLeaf() )
+// 				{
+// 					nextFirstNode.turnLeaf();
+// 				}
 			#endif
 		}
 	}

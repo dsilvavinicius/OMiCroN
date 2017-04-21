@@ -610,7 +610,7 @@ inline void SplatRenderer::saveFbo( int attach )
 			
 			++m_diskFileSuffix;
 			
-			stringstream filename; filename << "/media/vinicius/Expansion Drive3/Datasets/Videos/David/fbo" << m_diskFileSuffix << ".ppm";
+			stringstream filename; filename << "/home/vinicius/Vídeos/OMiCroN/fbo" << m_diskFileSuffix << ".ppm";
 			
 			ofstream out_stream;
 			out_stream.open( filename.str() );
