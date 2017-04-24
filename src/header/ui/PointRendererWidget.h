@@ -92,6 +92,12 @@ public slots:
 	/** Sets the rendering time tolerance in order to verify if projection threshold adaptation is needed. In ms. */
 	void setRenderingTimeTolerance( const int& tolerance );
 
+	/** Loads the camera path for the model. */
+	void loadCameraPath();
+	
+	/** Loads the camera path for the model. */
+	void saveCameraPath();
+	
 signals:
 	/** Signals that the per-frame debug info is generated and should be presented. */
 	void debugInfoDefined( const QString& debugInfo );

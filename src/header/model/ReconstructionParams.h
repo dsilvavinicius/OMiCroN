@@ -25,7 +25,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL DUOMO
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -50,7 +50,7 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 5
 
 // Enables node colapse when leaves do not have siblings.
-#define NODE_COLAPSE
+// #define NODE_COLAPSE
 
 #ifdef LAB
 	#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
@@ -79,6 +79,16 @@ enum ReconstructionAlgorithm
 #elif MODEL ==  DUOMO
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00002f
+#endif
+
+#if MODEL == DAVID
+	#define CAMERA_PATH_SPEED 0.0015
+#elif MODEL == ATLAS
+	#define CAMERA_PATH_SPEED 0.004
+#elif MODEL == ST_MATHEW
+	#define CAMERA_PATH_SPEED 0.002
+#elif MODEL ==  DUOMO
+	#define CAMERA_PATH_SPEED 0.001
 #endif
 
 namespace model

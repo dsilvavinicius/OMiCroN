@@ -20,9 +20,9 @@ m_statistics( m_projThresh )
 	
 	camera->setSpeed( 0.005f );
 	m_cameraPath.initialize( "shaders/tucano/" );
-	m_cameraPath.setAnimSpeed( 0.0015 );
+	m_cameraPath.setAnimSpeed( CAMERA_PATH_SPEED );
 	m_cameraPath.toggleDrawControlPoints();
-	m_cameraPath.loadFromFile("../../camera_paths/camera_path");
+	loadCameraPath();
 }
 
 PointRendererWidget::~PointRendererWidget()
@@ -350,9 +350,13 @@ void PointRendererWidget::updateFromKeyInput()
 		m_renderer->toggleFboSave();
 	}
 	if( m_keys[ Qt::Key_J ] )
-		m_cameraPath.writeToFile("../../camera_paths/camera_path");
+	{
+		saveCameraPath();
+	}
 	if( m_keys[ Qt::Key_L ] )
-		m_cameraPath.loadFromFile("../../camera_paths/camera_path");
+	{
+		loadCameraPath();
+	}
 
 	camera->updateViewMatrix();
 }
@@ -465,4 +469,30 @@ void PointRendererWidget::openMesh( const string& filename )
 	m_octree->trackFront( *m_renderer, m_projThresh );
 	
 	updateGL();
+}
+
+void PointRendererWidget::loadCameraPath()
+{
+	#if MODEL == DAVID
+		m_cameraPath.loadFromFile("../../camera_paths/David");
+	#elif MODEL == ST_MATHEW
+		m_cameraPath.loadFromFile("../../camera_paths/StMathew");
+	#elif MODEL == ATLAS
+		m_cameraPath.loadFromFile("../../camera_paths/Atlas");
+	#elif MODEL == DUOMO
+		m_cameraPath.loadFromFile("../../camera_paths/Duomo");
+	#endif
+}
+	
+void PointRendererWidget::saveCameraPath()
+{
+	#if MODEL == DAVID
+		m_cameraPath.writeToFile("../../camera_paths/David");
+	#elif MODEL == ST_MATHEW
+		m_cameraPath.writeToFile("../../camera_paths/StMathew");
+	#elif MODEL == ATLAS
+		m_cameraPath.writeToFile("../../camera_paths/Atlas");
+	#elif MODEL == DUOMO
+		m_cameraPath.writeToFile("../../camera_paths/Duomo");
+	#endif
 }
