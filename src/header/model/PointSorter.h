@@ -26,6 +26,7 @@ namespace model
 		using OctreeDim = model::OctreeDimensions< M >;
 		
 		PointSorter( const string& input, const string& outFilename, uint leafLvl );
+		PointSorter( const string& input, const string& outFilename, const OctreeDim& dim );
 		~PointSorter();
 		Json::Value sort();
 		OctreeDim& comp() { return m_comp; }
@@ -98,6 +99,31 @@ namespace model
 	}
 	
 	template< typename M >
+	PointSorter< M >::PointSorter( const string& input, const string& outFilename, const OctreeDim& dim )
+	: m_reader( input ),
+	m_writter( m_reader, outFilename, m_reader.getNumPoints() ),
+	m_comp( dim )
+	{
+		cout << "Setup sorting of " << input << endl << endl;
+		
+		m_nPoints = m_reader.getNumPoints();
+		m_points = ( Point* ) malloc( sizeof( Point ) * m_nPoints );
+		
+		cout << "Reading " << m_nPoints << " points." << endl << endl;
+		auto start = Profiler::now();
+		
+		long i = 0;
+		m_reader.read(
+			[ & ]( const Point& p )
+			{
+				m_points[ i++ ] = p;
+			}
+		);
+		
+		cout << "Reading time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
+	}
+	
+	template< typename M >
 	PointSorter< M >::~ PointSorter()
 	{
 		free( m_points );
@@ -129,6 +155,9 @@ namespace model
 		auto start = Profiler::now();
 		
 		// Sort points.
+		
+		cout << "Calling std::sort." << endl << endl;
+		
 		std::sort( m_points, m_points + m_nPoints, m_comp );
 		
 		cout << "Sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;

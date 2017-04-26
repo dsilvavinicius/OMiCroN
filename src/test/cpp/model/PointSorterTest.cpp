@@ -114,5 +114,28 @@ namespace model
 			test( "../../../src/data/real/tempietto_sub_tot.ply", "../../../src/data/real/sorted_tempietto_sub_tot.ply",
 				  20, sortedPoints );
 		}
+		
+		TEST_F( PointSorterTest, David )
+		{
+			using M = ShallowMortonCode;
+			using P = Point;
+			using PointSorter = model::PointSorter< M >;
+			using OctreeDim = typename PointSorter::OctreeDim;
+			
+			ifstream ifs( "/home/vinicius/Projects/PointBasedGraphics/Datasets/David.oct" );
+			Json::Value octreeJson;
+			ifs >> octreeJson;
+			
+			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
+							 octreeJson[ "size" ][ "z" ].asFloat() );
+			Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(), octreeJson[ "origin" ][ "y" ].asFloat(),
+							 octreeJson[ "origin" ][ "z" ].asFloat() );
+			string plyFilename = octreeJson[ "points" ].asString();
+			
+			OctreeDim dim( octreeOrigin, octreeSize, 7 );
+			
+			PointSorter sorter( plyFilename, "/home/vinicius/Projects/PointBasedGraphics/Datasets/David_sorted.ply", 7 );
+			octreeJson = sorter.sort();
+		}
 	}
 }
