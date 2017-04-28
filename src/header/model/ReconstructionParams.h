@@ -38,12 +38,12 @@ enum ReconstructionAlgorithm
 #define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
 
-// #define PARENT_POINTS_RATIO_ONE_FOURTH
-#define PARENT_POINTS_RATIO_ONE_FIFTH
+#define PARENT_POINTS_RATIO_ONE_FOURTH
+// #define PARENT_POINTS_RATIO_ONE_FIFTH
 // #define PARENT_POINTS_RATIO_ONE_TENTH
 
-#define PROJ_THRESHOLD 0.2f
-// #define PROJ_THRESHOLD 0.05f
+// #define PROJ_THRESHOLD 0.2f
+#define PROJ_THRESHOLD 0.05f
 
 // Number of expected front segments.
 // #define SEGMENTS_PER_FRONT 2
@@ -51,7 +51,7 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 5
 
 // Enables node colapse when leaves do not have siblings.
-// #define NODE_COLAPSE
+#define NODE_COLAPSE
 
 #ifdef LAB
 	#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul

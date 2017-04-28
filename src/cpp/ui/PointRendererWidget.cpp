@@ -122,15 +122,16 @@ void PointRendererWidget::paintGL (void)
 		float circleRadius = 0.25f;
 		Vector3f eye( target.x() + circleRadius * cos( m_circleT ), target.y() + circleRadius * sin( m_circleT ), 0.f );
 		
-		Vector3f zaxis = ( target - eye ); zaxis.normalize();    // The "forward" vector.
-		Vector3f xaxis = zaxis.cross( Vector3f::UnitZ() ); xaxis.normalize(); // The "right" vector.
-		Vector3f yaxis = xaxis.cross( zaxis );     // The "up" vector.
+		Vector3f f = ( target - eye ); f.normalize();    // The "forward" vector.
+		Vector3f s = f.cross( -Vector3f::UnitZ() );  // The "right" vector.
+		Vector3f sNormalized = s; sNormalized.normalize();
+		Vector3f u = sNormalized.cross( f );     // The "up" vector.
  
 		Affine3f view( Affine3f::Identity() );
-		view.matrix().col( 0 ) = Vector4f( xaxis.x(), xaxis.y(), xaxis.z(), 0.f );
-		view.matrix().col( 1 ) = Vector4f( yaxis.x(), yaxis.y(), yaxis.z(), 0.f );
-		view.matrix().col( 2 ) = Vector4f( zaxis.x(), zaxis.y(), zaxis.z(), 0.f );
-		view.matrix().col( 3 ) = Vector4f( -eye.x(), -eye.y(), -eye.z(), 1.f );
+		view.matrix().row( 0 ) = Vector4f( s.x(), s.y(), s.z(), -eye.x() );
+		view.matrix().row( 1 ) = Vector4f( u.x(), u.y(), u.z(), -eye.y() );
+		view.matrix().row( 2 ) = Vector4f( -f.x(), -f.y(), -f.z(), -eye.z() );
+		view.matrix().row( 3 ) = Vector4f( 0.f, 0.f, 0.f, 1.f );
 		
 // 		camera->setViewMatrix( view );
 		
@@ -152,11 +153,11 @@ void PointRendererWidget::paintGL (void)
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
 	
-	if( m_cameraPath.isAnimating() )	
-	{
-		m_cameraPath.stepForward();
-		camera->setViewMatrix( m_cameraPath.cameraAtCurrentTime().inverse() );
-	}
+// 	if( m_cameraPath.isAnimating() )	
+// 	{
+// 		m_cameraPath.stepForward();
+// 		camera->setViewMatrix( m_cameraPath.cameraAtCurrentTime().inverse() );
+// 	}
 	
 	OctreeStats octreeStats = m_octree->trackFront( *m_renderer, m_projThresh );
 	
@@ -507,7 +508,11 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	// Render the scene one time, traveling from octree's root to init m_renderTime for future projection
 	// threshold adaptations.
-	m_renderer = new Renderer( camera/**, &light_trackball, "shaders/tucano/"*/ );
+	Vector3f centroid = m_octree->dim().m_size * 0.5f;
+	
+	cout << "Model centroid: " << centroid << endl << "Model origin: " << m_octree->dim().m_origin << endl << endl;
+	
+	m_renderer = new Renderer( camera, centroid );
 	
 	cout << "Renderer built." << endl;
 	
@@ -551,9 +556,9 @@ void PointRendererWidget::loadScreenshotCamera()
 	#elif MODEL == ST_MATHEW
 		m_cameraPath.loadFromFile("../../screenshot_cameras/StMathew");
 	#elif MODEL == ATLAS
-		m_cameraPath.loadFromFile("../../screenshot_cameras/Atlas_screenshot");
+		m_cameraPath.loadFromFile("../../screenshot_cameras/Atlas");
 	#elif MODEL == DUOMO
-		m_cameraPath.loadFromFile("../../screenshot_cameras/Duomo_screenshot");
+		m_cameraPath.loadFromFile("../../screenshot_cameras/Duomo");
 	#endif
 }
 	

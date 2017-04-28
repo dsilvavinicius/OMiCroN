@@ -1,0 +1,73 @@
+Dataset: Duomo
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 7516192768
+
+Projection threshold: 0.2
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.2
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 8e-05, 2e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+0
+0
+Level 2 : 
+0
+0
+Level 3 : 
+2
+1
+Level 4 : 
+2
+2
+Level 5 : 
+2.8
+1.8
+Level 6 : 
+  3
+2.1
+Level 7 : 
+4.4
+4.4
+Level 8 : 
+0
+0
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 43
+Render queue time: 0
+CPU overhead: 43
+Rendered points: 747908
+Front insertion delay: 0
+Front size: 1582
+Front segments: 5
+Front segment size: 316
+
+=== AVERAGE STATS === 
+Traversal time: 41.2431
+Render queue time: 0
+CPU overhead: 41.2431
+Rendered points: 228746
+Front insertion delay: 81.0166
+Front size: 1423.38
+Front segments: 5
+Front segment size: 285.119
+
+=== GPU STATS === 
+GPU Overhead: 20
+Average GPU Overhead: 25.5032
+Time to create hierarchy: 39342ms
+Dynamic memory allocated: 4489711956 bytes
+

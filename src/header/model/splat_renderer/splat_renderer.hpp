@@ -1,4 +1,4 @@
-// This file is part of Surface Splatting.
+// // This file is part of Surface Splatting.
 //
 // Copyright (C) 2010, 2015 by Sebastian Lipponer.
 // 
@@ -82,7 +82,7 @@ class SplatRenderer
 public:
 	using Node = O1OctreeNode< Surfel >;
 	
-    SplatRenderer( Tucano::Camera* camera );
+    SplatRenderer( Tucano::Camera* camera, const Vector3f& modelCentroid = Vector3f::Zero() );
     virtual ~SplatRenderer();
 
 	void begin_frame();
@@ -169,6 +169,10 @@ private:
     Tucano::Camera* m_camera;
 	Tucano::Frustum m_frustum;
 
+	// Spaguetti.
+	Affine3f m_model;
+	Vector3f m_modelCentroid;
+	
 	RenderingList m_toRender;
 	RenderingListIter m_toRenderIter;
 	
@@ -407,7 +411,15 @@ inline void SplatRenderer::render_pass( bool depth_only )
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
 	
-    setup_uniforms( program, m_camera->getViewMatrix().matrix()/* * cloud.model()*/ );
+	if( m_saveFboFlag )
+	{
+		m_model.rotate( AngleAxisf( 0.001 * M_PI, Vector3f::UnitZ() ) );
+	}
+	
+	Matrix4f model = ( m_saveFboFlag ) ? m_model.matrix() : Matrix4f::Identity();
+	
+	setup_uniforms( program, m_camera->getViewMatrix().matrix() * model );
+    
 	
     if (!depth_only && m_soft_zbuffer && m_ewa_filter)
     {

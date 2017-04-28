@@ -81,15 +81,18 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
     unbind();
 }
 
-SplatRenderer::SplatRenderer( Tucano::Camera* camera )
+SplatRenderer::SplatRenderer( Tucano::Camera* camera, const Vector3f& modelCentroid )
     : m_camera(camera), m_frustum( *camera ),
 	  m_soft_zbuffer(true), m_smooth(false),
       m_ewa_filter(true), m_multisample(false),
       m_pointsize_method( RECONSTRUCTION_ALG ), m_backface_culling(true),
       m_color(Vector3f(0.5f, 0.5f, 0.5f)), m_epsilon(5.0f * 1e-3f),
       m_shininess(8.0f), m_radius_scale(1.0f), m_ewa_radius(1.0f),
-      m_renderedSplats( 0ul ), m_saveFboFlag( false ), m_diskFileSuffix( -1 )
+      m_renderedSplats( 0ul ), m_saveFboFlag( false ), m_diskFileSuffix( -1 ),
+      m_model( Affine3f::Identity() ), m_modelCentroid( modelCentroid )
 {
+	m_model.translate( -m_modelCentroid );
+	
 	m_toRenderIter = m_toRender.begin();
 	
     m_uniform_camera.bind_buffer_base(0);
