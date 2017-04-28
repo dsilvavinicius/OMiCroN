@@ -98,6 +98,12 @@ public slots:
 	/** Loads the camera path for the model. */
 	void saveCameraPath();
 	
+	/** Loads the camera matrix for a screenshots. */
+	void loadScreenshotCamera();
+	
+	/** Loads the camera matrix for a screenshot. */
+	void saveScreenshotCamera();
+	
 signals:
 	/** Signals that the per-frame debug info is generated and should be presented. */
 	void debugInfoDefined( const QString& debugInfo );
@@ -150,6 +156,13 @@ private:
 	
 	/** Camera path for making automatic videos.*/
 	Tucano::Path m_cameraPath;
+	
+	// Circle path related members.
+	/** Checks if the camera will be in a circle path for video. */
+	bool m_circlePathFlag;
+	
+	/** Circle parameter t */
+	float m_circleT;
 };
 
 #endif // PointRendererWidget

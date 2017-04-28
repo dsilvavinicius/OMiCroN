@@ -14,7 +14,9 @@ m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr ),
 m_loader( loader ),
-m_statistics( m_projThresh )
+m_statistics( m_projThresh ),
+m_circlePathFlag( false ),
+m_circleT( 0.f )
 {
 	setlocale( LC_NUMERIC, "C" );
 	
@@ -78,7 +80,7 @@ void PointRendererWidget::resizeGL( int width, int height )
 	// TODO: It seems that resing is resulting in memory leak ( probably in jump flooding code... ).
 	
 	camera->setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
-	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 1.0f );
+	camera->setPerspectiveMatrix( camera->getFovy(), width / height, 0.001f, 10.0f );
 	light_trackball.setViewport( Eigen::Vector2f( ( float )width, ( float )height ) );
 
 	if( m_renderer )
@@ -112,6 +114,28 @@ void PointRendererWidget::paintGL (void)
 	
 	updateFromKeyInput();
 	
+	if( m_circlePathFlag )
+	{
+// 		m_circleT += 0.1f * M_PI;
+// 		
+// 		Vector3f eye(  );
+// 		x  =  h + r cos(t)
+// 		y  =  k + r sin(t)
+// 		
+// 		Vector3f circleCenter( 0.f, 0.f, 0.f );
+// 		float circleRadius = 2.f;
+// 		Affine3f view( Affine3f::Identity() );
+// 		AngleAxisf rotation0( M_PI * 0.5, Vector3f::UnitX() );
+// 		AngleAxisf rotation1( m_circleT, Vector3f::UnitZ() );
+// 		view.rotate( rotation1 * rotation0 );
+// 		view.translate( rotation1 * rotation0 * Vector3f( 0.0f, 0.0f, circleRadius ) );
+// 		
+// 		Flycamera cameraCpy;
+// 		cameraCpy.setViewMatrix( view );
+// 		
+// 		m_cameraPath.addKeyPosition( cameraCpy );
+	}
+	
 	glClearColor( 1.0f, 1.0f, 1.0f, 1.0f ); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -124,7 +148,7 @@ void PointRendererWidget::paintGL (void)
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
 	
-	if( m_cameraPath.isAnimating() )
+	if( m_cameraPath.isAnimating() )	
 	{
 		m_cameraPath.stepForward();
 		camera->setViewMatrix( m_cameraPath.cameraAtCurrentTime().inverse() );
@@ -252,7 +276,7 @@ void PointRendererWidget::mousePressEvent( QMouseEvent * event )
 
 void PointRendererWidget::mouseMoveEvent( QMouseEvent * event )
 {
-	Eigen::Vector2f screen_pos (event->x(), event->y());
+	Eigen::Vector2f screen_pos( event->x(), event->y() );
 	if (event->buttons() & Qt::LeftButton)
 	{
 		camera->rotate(screen_pos);
@@ -317,11 +341,6 @@ void PointRendererWidget::updateFromKeyInput()
 	}
 	
 	// Main camera control.
-	if( m_keys[ Qt::Key_R ] )
-	{
-		camera->reset();
-		m_cameraPath.reset();
-	}
 	if( m_keys[ Qt::Key_A ] )
 		camera->strideLeft();
 	if( m_keys[ Qt::Key_D ] )
@@ -333,32 +352,56 @@ void PointRendererWidget::updateFromKeyInput()
 	if( m_keys[ Qt::Key_C ] )
 		camera->moveDown();
 	if( m_keys[ Qt::Key_E ] )
-		camera->moveUp();	
+		camera->moveUp();
 	
-	// Camera path control.
+	if( m_keys[ Qt::Key_R ] )
+	{
+		m_cameraPath.reset();
+		m_keys[ Qt::Key_R ] = false;
+	}
 	if( m_keys[ Qt::Key_K ] )
 	{
 		m_cameraPath.addKeyPosition( *camera );
+		m_keys[ Qt::Key_K ] = false;
 	}
-	if( m_keys[ Qt::Key_Equal ] )
-		m_cameraPath.setAnimSpeed( m_cameraPath.animSpeed() + 0.01);
-	if( m_keys[ Qt::Key_Minus ] )
-		m_cameraPath.setAnimSpeed( m_cameraPath.animSpeed() - 0.01);
 	if( m_keys[ Qt::Key_Space ] )
 	{
 		m_cameraPath.toggleAnimation();
 		m_renderer->toggleFboSave();
+		m_keys[ Qt::Key_Space ] = false;
 	}
 	if( m_keys[ Qt::Key_J ] )
 	{
 		saveCameraPath();
+		m_keys[ Qt::Key_J ] = false;
 	}
 	if( m_keys[ Qt::Key_L ] )
 	{
 		loadCameraPath();
+		m_keys[ Qt::Key_L ] = false;
 	}
-
-	camera->updateViewMatrix();
+	if( m_keys[ Qt::Key_I ] )
+	{
+		m_cameraPath.reset();
+		saveScreenshotCamera();
+		m_keys[ Qt::Key_I ] = false;
+	}
+	if( m_keys[ Qt::Key_O ] )
+	{
+		loadScreenshotCamera();
+		m_keys[ Qt::Key_O ] = false;
+	}
+	
+	if( m_keys[ Qt::Key_Enter ] )
+	{
+		m_circlePathFlag = !m_circlePathFlag;
+		camera->updateViewMatrixLookAt();
+		m_keys[ Qt::Key_Enter ] = false;
+	}
+	else
+	{
+		camera->updateViewMatrix();
+	}
 }
 
 void PointRendererWidget::toggleWriteFrames()
@@ -494,5 +537,33 @@ void PointRendererWidget::saveCameraPath()
 		m_cameraPath.writeToFile("../../camera_paths/Atlas");
 	#elif MODEL == DUOMO
 		m_cameraPath.writeToFile("../../camera_paths/Duomo");
+	#endif
+}
+
+void PointRendererWidget::loadScreenshotCamera()
+{
+	#if MODEL == DAVID
+		m_cameraPath.loadFromFile("../../screenshot_cameras/David");
+	#elif MODEL == ST_MATHEW
+		m_cameraPath.loadFromFile("../../screenshot_cameras/StMathew");
+	#elif MODEL == ATLAS
+		m_cameraPath.loadFromFile("../../screenshot_cameras/Atlas_screenshot");
+	#elif MODEL == DUOMO
+		m_cameraPath.loadFromFile("../../screenshot_cameras/Duomo_screenshot");
+	#endif
+}
+	
+void PointRendererWidget::saveScreenshotCamera()
+{
+	m_cameraPath.addKeyPosition( *camera );
+	
+	#if MODEL == DAVID
+		m_cameraPath.writeToFile("../../screenshot_cameras/David");
+	#elif MODEL == ST_MATHEW
+		m_cameraPath.writeToFile("../../screenshot_cameras/StMathew");
+	#elif MODEL == ATLAS
+		m_cameraPath.writeToFile("../../screenshot_cameras/Atlas");
+	#elif MODEL == DUOMO
+		m_cameraPath.writeToFile("../../screenshot_cameras/Duomo");
 	#endif
 }

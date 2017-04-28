@@ -38,12 +38,12 @@ enum ReconstructionAlgorithm
 #define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
 
-// #define PARENT_POINTS_RATIO_ONE_FOURTH
-#define PARENT_POINTS_RATIO_ONE_FIFTH
+#define PARENT_POINTS_RATIO_ONE_FOURTH
+// #define PARENT_POINTS_RATIO_ONE_FIFTH
 // #define PARENT_POINTS_RATIO_ONE_TENTH
 
 // #define PROJ_THRESHOLD 0.2f
-#define PROJ_THRESHOLD 0.2f
+#define PROJ_THRESHOLD 0.05f
 
 // Number of expected front segments.
 // #define SEGMENTS_PER_FRONT 2
@@ -85,7 +85,7 @@ enum ReconstructionAlgorithm
 #endif
 
 #if MODEL == DAVID
-	#define CAMERA_PATH_SPEED 0.0015
+	#define CAMERA_PATH_SPEED 0.005
 #elif MODEL == ATLAS
 	#define CAMERA_PATH_SPEED 0.004
 #elif MODEL == ST_MATHEW
