@@ -24,6 +24,7 @@ m_circleT( 0.f )
 	m_cameraPath.initialize( "shaders/tucano/" );
 	m_cameraPath.setAnimSpeed( CAMERA_PATH_SPEED );
 	m_cameraPath.toggleDrawControlPoints();
+// 	m_cameraPath.toggleDrawQuaternions();
 	loadCameraPath();
 }
 
@@ -116,24 +117,27 @@ void PointRendererWidget::paintGL (void)
 	
 	if( m_circlePathFlag )
 	{
-// 		m_circleT += 0.1f * M_PI;
-// 		
-// 		Vector3f eye(  );
-// 		x  =  h + r cos(t)
-// 		y  =  k + r sin(t)
-// 		
-// 		Vector3f circleCenter( 0.f, 0.f, 0.f );
-// 		float circleRadius = 2.f;
-// 		Affine3f view( Affine3f::Identity() );
-// 		AngleAxisf rotation0( M_PI * 0.5, Vector3f::UnitX() );
-// 		AngleAxisf rotation1( m_circleT, Vector3f::UnitZ() );
-// 		view.rotate( rotation1 * rotation0 );
-// 		view.translate( rotation1 * rotation0 * Vector3f( 0.0f, 0.0f, circleRadius ) );
-// 		
-// 		Flycamera cameraCpy;
-// 		cameraCpy.setViewMatrix( view );
-// 		
-// 		m_cameraPath.addKeyPosition( cameraCpy );
+		m_circleT += 0.1f * M_PI;
+		Vector3f target( 0.f, 0.f, 0.f );
+		float circleRadius = 0.25f;
+		Vector3f eye( target.x() + circleRadius * cos( m_circleT ), target.y() + circleRadius * sin( m_circleT ), 0.f );
+		
+		Vector3f zaxis = ( target - eye ); zaxis.normalize();    // The "forward" vector.
+		Vector3f xaxis = zaxis.cross( Vector3f::UnitZ() ); xaxis.normalize(); // The "right" vector.
+		Vector3f yaxis = xaxis.cross( zaxis );     // The "up" vector.
+ 
+		Affine3f view( Affine3f::Identity() );
+		view.matrix().col( 0 ) = Vector4f( xaxis.x(), xaxis.y(), xaxis.z(), 0.f );
+		view.matrix().col( 1 ) = Vector4f( yaxis.x(), yaxis.y(), yaxis.z(), 0.f );
+		view.matrix().col( 2 ) = Vector4f( zaxis.x(), zaxis.y(), zaxis.z(), 0.f );
+		view.matrix().col( 3 ) = Vector4f( -eye.x(), -eye.y(), -eye.z(), 1.f );
+		
+// 		camera->setViewMatrix( view );
+		
+		Flycamera cameraCpy;
+		cameraCpy.setViewMatrix( view );
+		
+		m_cameraPath.addKeyPosition( cameraCpy );
 	}
 	
 	glClearColor( 1.0f, 1.0f, 1.0f, 1.0f ); 
