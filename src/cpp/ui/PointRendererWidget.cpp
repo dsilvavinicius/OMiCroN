@@ -399,7 +399,7 @@ void PointRendererWidget::updateFromKeyInput()
 	if( m_keys[ Qt::Key_Enter ] )
 	{
 		m_circlePathFlag = !m_circlePathFlag;
-		camera->updateViewMatrixLookAt();
+// 		camera->updateViewMatrixLookAt();
 		m_keys[ Qt::Key_Enter ] = false;
 	}
 	else
@@ -560,6 +560,7 @@ void PointRendererWidget::loadScreenshotCamera()
 void PointRendererWidget::saveScreenshotCamera()
 {
 	m_cameraPath.addKeyPosition( *camera );
+	m_cameraPath.addKeyPosition( *camera ); // Spaguetti needed.
 	
 	#if MODEL == DAVID
 		m_cameraPath.writeToFile("../../screenshot_cameras/David");

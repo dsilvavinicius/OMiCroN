@@ -122,7 +122,8 @@ namespace model
 			using PointSorter = model::PointSorter< M >;
 			using OctreeDim = typename PointSorter::OctreeDim;
 			
-			ifstream ifs( "/home/vinicius/Projects/PointBasedGraphics/Datasets/David.oct" );
+// 			ifstream ifs( "/home/vinicius/Projects/PointBasedGraphics/Datasets/David.oct" );
+			ifstream ifs( "/home/vinicius/Datasets/David/Sorted_13Lvls/David.oct" );
 			Json::Value octreeJson;
 			ifs >> octreeJson;
 			
@@ -134,7 +135,7 @@ namespace model
 			
 			OctreeDim dim( octreeOrigin, octreeSize, 7 );
 			
-			PointSorter sorter( plyFilename, "/home/vinicius/Projects/PointBasedGraphics/Datasets/David_sorted.ply", 7 );
+			PointSorter sorter( plyFilename, "/home/vinicius/Datasets/David/Sorted_13Lvls/David_sorted.ply", 7 );
 			octreeJson = sorter.sort();
 		}
 	}
