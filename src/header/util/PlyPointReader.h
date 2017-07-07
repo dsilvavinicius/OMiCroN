@@ -21,8 +21,7 @@ namespace util
 		friend PlyPointWritter;
 		
 		/** Checks if the file is valid, opens it, reads its header and discovers the number of points in it.
-		 * @throws runtime_error if the file or its header cannot be read.
-		 * @param onPointDone is a function that process a read point. */
+		 * @throws runtime_error if the file or its header cannot be read.  */
 		PlyPointReader( const string& fileName );
 		
 		~PlyPointReader() { ply_close( m_ply ); }

@@ -156,13 +156,6 @@ private:
 	
 	/** Camera path for making automatic videos.*/
 	Tucano::Path m_cameraPath;
-	
-	// Circle path related members.
-	/** Checks if the camera will be in a circle path for video. */
-	bool m_circlePathFlag;
-	
-	/** Circle parameter t */
-	float m_circleT;
 };
 
 #endif // PointRendererWidget

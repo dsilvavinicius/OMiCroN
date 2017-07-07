@@ -142,6 +142,8 @@ public:
 	
 	void toggleFboSave();
 	
+	void toggleModelMatrixUse();
+	
 	const Tucano::Camera& camera() const;
 
 private:
@@ -200,6 +202,10 @@ private:
 	// Members related with saving FBO in disk.
 	// Flag that indicates if the fbo should be saved in Disk.
 	bool m_saveFboFlag;
+	
+	// Indicates that the model matrix should be used.
+	bool m_useModelMatrix;
+	
 	// FBO file current suffix.
 	atomic_int m_diskFileSuffix;
 };
@@ -411,15 +417,15 @@ inline void SplatRenderer::render_pass( bool depth_only )
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     }
 	
-	if( m_saveFboFlag )
+	Matrix4f model( Matrix4f::Identity() );
+	
+	if( m_useModelMatrix )
 	{
 		m_model.rotate( AngleAxisf( 0.001 * M_PI, Vector3f::UnitZ() ) );
+		model = m_model.matrix();
 	}
 	
-	Matrix4f model = ( m_saveFboFlag ) ? m_model.matrix() : Matrix4f::Identity();
-	
 	setup_uniforms( program, m_camera->getViewMatrix().matrix() * model );
-    
 	
     if (!depth_only && m_soft_zbuffer && m_ewa_filter)
     {
@@ -581,6 +587,11 @@ inline Vector2f SplatRenderer
 inline void SplatRenderer::toggleFboSave()
 {
 	m_saveFboFlag = !m_saveFboFlag;
+}
+
+inline void SplatRenderer::toggleModelMatrixUse()
+{
+	m_useModelMatrix = !m_useModelMatrix;
 }
 
 inline void SplatRenderer::saveFbo( int attach )

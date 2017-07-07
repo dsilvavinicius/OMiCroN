@@ -14,9 +14,7 @@ m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr ),
 m_loader( loader ),
-m_statistics( m_projThresh ),
-m_circlePathFlag( false ),
-m_circleT( 0.f )
+m_statistics( m_projThresh )
 {
 	setlocale( LC_NUMERIC, "C" );
 	
@@ -115,32 +113,6 @@ void PointRendererWidget::paintGL (void)
 	
 	updateFromKeyInput();
 	
-	if( m_circlePathFlag )
-	{
-		m_circleT += 0.1f * M_PI;
-		Vector3f target( 0.f, 0.f, 0.f );
-		float circleRadius = 0.25f;
-		Vector3f eye( target.x() + circleRadius * cos( m_circleT ), target.y() + circleRadius * sin( m_circleT ), 0.f );
-		
-		Vector3f f = ( target - eye ); f.normalize();    // The "forward" vector.
-		Vector3f s = f.cross( -Vector3f::UnitZ() );  // The "right" vector.
-		Vector3f sNormalized = s; sNormalized.normalize();
-		Vector3f u = sNormalized.cross( f );     // The "up" vector.
- 
-		Affine3f view( Affine3f::Identity() );
-		view.matrix().row( 0 ) = Vector4f( s.x(), s.y(), s.z(), -eye.x() );
-		view.matrix().row( 1 ) = Vector4f( u.x(), u.y(), u.z(), -eye.y() );
-		view.matrix().row( 2 ) = Vector4f( -f.x(), -f.y(), -f.z(), -eye.z() );
-		view.matrix().row( 3 ) = Vector4f( 0.f, 0.f, 0.f, 1.f );
-		
-// 		camera->setViewMatrix( view );
-		
-		Flycamera cameraCpy;
-		cameraCpy.setViewMatrix( view );
-		
-		m_cameraPath.addKeyPosition( cameraCpy );
-	}
-	
 	glClearColor( 1.0f, 1.0f, 1.0f, 1.0f ); 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
@@ -153,11 +125,14 @@ void PointRendererWidget::paintGL (void)
 	// Render the scene.
 	auto frontTrackingStart = Profiler::now();
 	
-// 	if( m_cameraPath.isAnimating() )	
-// 	{
-// 		m_cameraPath.stepForward();
-// 		camera->setViewMatrix( m_cameraPath.cameraAtCurrentTime().inverse() );
-// 	}
+	if( m_cameraPath.isAnimating() )	
+	{
+// 		if( !m_cameraPath.isAnimationAtEnd() )
+// 		{
+			m_cameraPath.stepForward();
+// 		}
+		camera->setViewMatrix( m_cameraPath.cameraAtCurrentTime().inverse() );
+	}
 	
 	OctreeStats octreeStats = m_octree->trackFront( *m_renderer, m_projThresh );
 	
@@ -399,8 +374,8 @@ void PointRendererWidget::updateFromKeyInput()
 	
 	if( m_keys[ Qt::Key_Enter ] )
 	{
-		m_circlePathFlag = !m_circlePathFlag;
-// 		camera->updateViewMatrixLookAt();
+		m_renderer->toggleModelMatrixUse();
+		m_renderer->toggleFboSave();
 		m_keys[ Qt::Key_Enter ] = false;
 	}
 	else
