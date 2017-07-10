@@ -46,6 +46,8 @@ namespace model
 		// Header pass: compute total number of points, faces and prefix sum for point indices.
 		ifstream groupFile( m_groupFilename );
 		
+		cout << "Starting header pass." << endl << endl;
+		
 		while( !groupFile.eof() )
 		{
 			string plyFilename;
@@ -59,6 +61,8 @@ namespace model
 			
 			pointPrefixSum.push( totalPoints );
 		}
+		
+		cout << "Header pass. Total points: " << totalPoints << ", total faces: " << totalFaces << endl << endl;
 		
 		PlyPointAndFaceWriter writer( m_outputFilename, totalPoints, totalFaces );
 		
@@ -79,6 +83,8 @@ namespace model
 			);
 		}
 		
+		cout << "Ended point pass." << endl << endl;
+		
 		// Second pass: faces.
 		groupFile = ifstream( m_groupFilename );
 		
@@ -91,7 +97,6 @@ namespace model
 				[&]( const Vec3& face )
 				{
 					uint prefixSum = pointPrefixSum.front();
-					pointPrefixSum.pop();
 					
 					Vec3 prefixedFace( face.x() + prefixSum, face.y() + prefixSum, face.z() + prefixSum );
 					writer.writeTri( prefixedFace );
@@ -99,7 +104,11 @@ namespace model
 			);
 			
 			faceReader.read();
+			
+			pointPrefixSum.pop();
 		}
+		
+		cout << "Ended face pass." << endl << endl;
 	}
 }
 

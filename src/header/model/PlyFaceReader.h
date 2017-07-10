@@ -85,6 +85,8 @@ namespace model
 		{
 			reader->m_onFaceDone( reader->m_tempFace );
 		}
+		
+		return 1;
 	}
 }
 

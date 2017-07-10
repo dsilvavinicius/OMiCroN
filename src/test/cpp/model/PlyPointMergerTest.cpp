@@ -24,5 +24,15 @@ namespace model
 			
 			cout << "Merge generated at " << outputPath << ". Meshlab can be used to visualize the results." << endl << endl;
 		}
+		
+		TEST_F( PlyPointMergerTest, MergeDavid )
+		{
+			string outputPath = "/media/vinicius/Expansion Drive3/Datasets/David/PlyPointMergerTest/DavidWithFaces.ply";
+			
+			PlyPointMerger merger( "/media/vinicius/Expansion Drive3/Datasets/David/PlyPointMergerTest/David.gp", outputPath );
+			merger.merge();
+			
+			cout << "Merge generated at " << outputPath << ". Meshlab can be used to visualize the results." << endl << endl;
+		}
 	}
 }
