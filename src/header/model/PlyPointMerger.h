@@ -78,7 +78,7 @@ namespace model
 			pointReader.read(
 				[ & ]( const Point& p )
 				{
-					writer.writePos( p.getPos() );
+					writer.writeVertex( p );
 				}
 			);
 		}

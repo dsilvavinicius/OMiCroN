@@ -47,9 +47,9 @@ namespace model
 		
 		TEST_F( PlyPointMergerTest, MergeStMathew )
 		{
-			string outputPath = "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/PlyPointMergerTest/StMathewWithFaces.ply";
+			string outputPath = "/media/vinicius/Expansion Drive3/Datasets/StMathew/PlyPointMergerTest/StMathewWithFaces.ply";
 			
-			PlyPointMerger merger( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/PlyPointMergerTest/StMathew_lab.gp", outputPath );
+			PlyPointMerger merger( "/media/vinicius/Expansion Drive3/Datasets/StMathew/PlyPointMergerTest/StMathew.gp", outputPath );
 			merger.merge();
 			
 			cout << "Merge generated at " << outputPath << ". Meshlab can be used to visualize the results." << endl << endl;

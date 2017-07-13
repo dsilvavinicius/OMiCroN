@@ -3,6 +3,7 @@
 
 #include <rply.h>
 #include "BasicTypes.h"
+#include "Point.h"
 
 namespace model
 {
@@ -12,7 +13,7 @@ namespace model
 		PlyPointAndFaceWriter( const string& filename, ulong nPoints, ulong nFaces );
 		~PlyPointAndFaceWriter();
 		
-		void writePos( const Vec3& pos );
+		void writeVertex( const Point& p );
 		void writeTri( const Vec3& tri );
 		
 	private:
@@ -26,6 +27,9 @@ namespace model
 		ply_add_property( m_ply, "x", PLY_FLOAT32, PLY_FLOAT32, PLY_FLOAT32 );
 		ply_add_property( m_ply, "y", PLY_FLOAT32, PLY_FLOAT32, PLY_FLOAT32 );
 		ply_add_property( m_ply, "z", PLY_FLOAT32, PLY_FLOAT32, PLY_FLOAT32 );
+		ply_add_property( m_ply, "nx", PLY_FLOAT32, PLY_FLOAT32, PLY_FLOAT32 );
+		ply_add_property( m_ply, "ny", PLY_FLOAT32, PLY_FLOAT32, PLY_FLOAT32 );
+		ply_add_property( m_ply, "nz", PLY_FLOAT32, PLY_FLOAT32, PLY_FLOAT32 );
 		
 		ply_add_element( m_ply, "face", nFaces);
 		ply_add_list_property( m_ply, "vertex_indices", PLY_UCHAR, PLY_INT );
@@ -38,11 +42,15 @@ namespace model
 		ply_close( m_ply );
 	}
 	
-	inline void PlyPointAndFaceWriter::writePos( const Vec3& pos )
+	inline void PlyPointAndFaceWriter::writeVertex( const Point& p )
 	{
-		ply_write( m_ply, pos.x() );
-		ply_write( m_ply, pos.y() );
-		ply_write( m_ply, pos.z() );
+		ply_write( m_ply, p.getPos().x() );
+		ply_write( m_ply, p.getPos().y() );
+		ply_write( m_ply, p.getPos().z() );
+		
+		ply_write( m_ply, p.getNormal().x() );
+		ply_write( m_ply, p.getNormal().y() );
+		ply_write( m_ply, p.getNormal().z() );
 	}
 	
 	inline void PlyPointAndFaceWriter::writeTri( const Vec3& tri )
