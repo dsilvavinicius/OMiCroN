@@ -122,21 +122,11 @@ namespace model
 			using PointSorter = model::PointSorter< M >;
 			using OctreeDim = typename PointSorter::OctreeDim;
 			
-// 			ifstream ifs( "/home/vinicius/Projects/PointBasedGraphics/Datasets/David.oct" );
-			ifstream ifs( "/home/vinicius/Datasets/David/Sorted_13Lvls/David.oct" );
-			Json::Value octreeJson;
-			ifs >> octreeJson;
+			int sortLevel = 9;
 			
-			Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(), octreeJson[ "size" ][ "y" ].asFloat(),
-							 octreeJson[ "size" ][ "z" ].asFloat() );
-			Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(), octreeJson[ "origin" ][ "y" ].asFloat(),
-							 octreeJson[ "origin" ][ "z" ].asFloat() );
-			string plyFilename = octreeJson[ "points" ].asString();
-			
-			OctreeDim dim( octreeOrigin, octreeSize, 7 );
-			
-			PointSorter sorter( plyFilename, "/home/vinicius/Datasets/David/Sorted_13Lvls/David_sorted.ply", 7 );
-			octreeJson = sorter.sort();
+			PointSorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/PlyPointMergerTest/DavidWithFaces.ply",
+								"/media/vinicius/Expansion Drive3/Datasets/David/PlyPointMergerTest/DavidWithFaces_sorted9.ply", sortLevel );
+			sorter.sort();
 		}
 	}
 }
