@@ -118,14 +118,36 @@ namespace model
 		TEST_F( PointSorterTest, David )
 		{
 			using M = ShallowMortonCode;
-			using P = Point;
 			using PointSorter = model::PointSorter< M >;
-			using OctreeDim = typename PointSorter::OctreeDim;
 			
 			int sortLevel = 9;
 			
-			PointSorter sorter( "/media/vinicius/Expansion Drive3/Datasets/David/PlyPointMergerTest/DavidWithFaces.ply",
-								"/media/vinicius/Expansion Drive3/Datasets/David/PlyPointMergerTest/DavidWithFaces_sorted9.ply", sortLevel );
+			PointSorter sorter( "/media/viniciusdasilva/Expansion Drive/Datasets/David/PlyPointMergerTest/DavidWithFaces.ply",
+								"/media/viniciusdasilva/Expansion Drive/Datasets/David/PlyPointMergerTest/DavidWithFaces_sorted9.ply", sortLevel );
+			sorter.sort();
+		}
+		
+		TEST_F( PointSorterTest, Atlas )
+		{
+			using M = ShallowMortonCode;
+			using PointSorter = model::PointSorter< M >;
+			
+			int sortLevel = 9;
+			
+			PointSorter sorter( "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/PlyPointMergerTest/AtlasWithFaces.ply",
+								"/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/PlyPointMergerTest/AtlasWithFaces_sorted9.ply", sortLevel );
+			sorter.sort();
+		}
+		
+		TEST_F( PointSorterTest, StMathew )
+		{
+			using M = ShallowMortonCode;
+			using PointSorter = model::PointSorter< M >;
+			
+			int sortLevel = 9;
+			
+			PointSorter sorter( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/PlyPointMergerTest/StMathewWithFaces.ply",
+								"/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/PlyPointMergerTest/StMathewWithFaces_sorted9.ply", sortLevel );
 			sorter.sort();
 		}
 	}

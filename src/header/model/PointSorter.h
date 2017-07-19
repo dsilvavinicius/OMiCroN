@@ -78,6 +78,8 @@ namespace model
 		
 		cout << "Reading time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
+		start = Profiler::now();
+		
 		Vec3 octreeSize = maxCoords - origin;
 		
 		// Normalizing model.
@@ -92,10 +94,7 @@ namespace model
 		
 		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * scale, leafLvl );
 		
-		// Debug
-		{
-			cout << "Scale: " << scale << endl << "Octree dim: " <<  m_comp << endl;
-		}
+		cout << "Normalizing time (ms): " << Profiler::elapsedTime( start ) << endl << endl << "Scale: " << scale << endl << "Octree dim: " <<  m_comp << endl;
 	}
 	
 	template< typename M >
