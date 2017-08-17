@@ -41,6 +41,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeStressTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/StreamingRendererTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SplatRendererTest.cpp
+	${CPP_DIR}/${MODEL_DIR}/OctreeFileTest.cpp
 	${CPP_DIR}/tucano/MeshTest.cpp
 	
 	${HEADER_DIR}/${MODEL_DIR}/TextTestWidget.h		${CPP_DIR}/${MODEL_DIR}/TextTestWidget.cpp

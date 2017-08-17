@@ -143,6 +143,15 @@ namespace model
 			return *this;
 		}
 		
+		/** Ctor to init from stream.
+		 @param input is expected to be binary and writen with operator<<( ostream&, const Array< Type, Alloc >& ) */
+		Array( ifstream& input )
+		{
+			input.read( reinterpret_cast< char* >( &m_size ), sizeof( uint ) );
+			m_array = A().allocate( m_size );
+			initArray( input );
+		}
+		
 		~Array()
 		{
 			clear();
@@ -215,6 +224,20 @@ namespace model
 			return array;
 		}
 		
+		string toString() const
+		{
+			stringstream ss; ss << "size: " << m_size << " addr: " << m_array;
+		
+			#ifdef DETAILED_STREAM
+				out << endl;
+				for( int i = 0; i < m_size; ++i )
+				{
+					out << m_array[ i ] << endl;
+				}
+			#endif
+			return ss.str();
+		}
+		
 		uint size() const { return m_size; }
 		
 		bool empty() const { return m_size == 0; }
@@ -228,11 +251,21 @@ namespace model
 		const_iterator begin() const noexcept { return m_array; }
 		const_iterator end() const noexcept { return m_array + m_size; }
 		
+		// Binary persistence. Structure: | array size | contents |
+		void persist( ostream& out ) const
+		{
+			out.write( reinterpret_cast< const char* >( &m_size ), sizeof( uint ) );
+			for( const T& content : *this )
+			{
+				content.persist( out );
+			}
+		}
+		
 		template< typename Type, typename Alloc >
 		friend ostream& operator<<( ostream& out, const Array< Type, Alloc >& array );
 		
-		template< typename Type, typename Alloc >
-		friend ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array );
+// 		template< typename Type, typename Alloc >
+// 		friend ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array );
 		
 	private:
 		/** Inits the internal array. */
@@ -241,6 +274,14 @@ namespace model
 			for( auto iter = begin(); iter != end(); iter++ )
 			{
 				A().construct( iter );
+			}
+		}
+		
+		void initArray( ifstream& input )
+		{
+			for( auto iter = begin(); iter != end(); iter++ )
+			{
+				A().construct( iter, input );
 			}
 		}
 		
@@ -315,34 +356,26 @@ namespace model
 	template< typename Type, typename Alloc >
 	ostream& operator<<( ostream& out, const Array< Type, Alloc >& array )
 	{
-		out << "size: " << array.size() << " addr: " << array.m_array;
-		
-		#ifdef DETAILED_STREAM
-			out << endl;
-			for( int i = 0; i < array.m_size; ++i )
-			{
-				out << array[ i ] << endl;
-			}
-		#endif
+		out << array.toString();
 		
 		return out;
 	}
 	
-	template< typename Type, typename Alloc >
-	ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array )
-	{
-		out << " addr: " << &array << "size: " << array.size() << " data addr: " << array.m_array;
-		
-		#ifdef DETAILED_STREAM
-			out << endl;
-			for( int i = 0; i < array.m_size; ++i )
-			{
-				out << *array[ i ] << endl;
-			}
-		#endif
-		
-		return out;
-	}
+// 	template< typename Type, typename Alloc >
+// 	ostream& operator<<( ostream& out, const Array< shared_ptr< Type >, Alloc >& array )
+// 	{
+// 		out << " addr: " << &array << "size: " << array.size() << " data addr: " << array.m_array;
+// 		
+// 		#ifdef DETAILED_STREAM
+// 			out << endl;
+// 			for( int i = 0; i < array.m_size; ++i )
+// 			{
+// 				out << *array[ i ] << endl;
+// 			}
+// 		#endif
+// 		
+// 		return out;
+// 	}
 }
 
 #undef DETAILED_STREAM

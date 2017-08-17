@@ -105,6 +105,14 @@ namespace model
 			return *this;
 		}
 		
+		O1OctreeNode( ifstream& input )
+		: O1OctreeNode()
+		{
+			input.read( reinterpret_cast< char* >( &m_isLeaf ), sizeof( bool ) );
+			m_contents = ContentsArray( input );
+			m_children = NodeArray( input );
+		}
+		
 		void* operator new( size_t size );
 		void* operator new[]( size_t size );
 		void operator delete( void* p );
@@ -223,6 +231,31 @@ namespace model
 			}
 		}
 		
+		string toString() const
+		{
+			stringstream ss;
+			ss
+	// 			<< "Addr: " << &node << endl
+	// 			<< "Points: " << node.m_contents << endl
+	// 			<< "First point: " << node.m_contents[ 0 ] << endl
+	// 			<< "Parent: " << node.m_parent << endl
+	// 			<< "Children: " << node.m_children << endl
+	// 			<< "Is leaf? " << node.m_isLeaf << endl
+				<< "Load state: " << isLoaded() << endl
+	// 			<< "Cloud: " << endl << node.m_cloud
+				;
+			
+			return ss.str();
+		}
+		
+		// Binary persistence. Structure: | leaf flag | point data | children data |
+		void persist( ostream& out ) const
+		{
+			out.write( reinterpret_cast< char* >( m_isLeaf ), sizeof( bool ) );
+			m_contents.persist( out );
+			m_children.persist( out );
+		}
+		
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
 		
@@ -320,16 +353,8 @@ namespace model
 	template< typename C >
 	ostream& operator<<( ostream& out, const O1OctreeNode< C >& node )
 	{
-		out
-// 			<< "Addr: " << &node << endl
-// 			<< "Points: " << node.m_contents << endl
-// 			<< "First point: " << node.m_contents[ 0 ] << endl
-// 			<< "Parent: " << node.m_parent << endl
-// 			<< "Children: " << node.m_children << endl
-// 			<< "Is leaf? " << node.m_isLeaf << endl
-			<< "Load state: " << node.isLoaded() << endl
-// 			<< "Cloud: " << endl << node.m_cloud
-			;
+		out << node.toString();
+		
 		return out;
 	}
 }

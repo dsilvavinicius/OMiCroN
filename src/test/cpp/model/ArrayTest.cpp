@@ -80,21 +80,21 @@ namespace model
 				ASSERT_TRUE( expected.equal( *point, 1.e-15 ) );
 			}
 			
-			size_t expectedSerialSize = sizeof( uint ) + array.size() * sizeof( Point );
-			byte* bytes = Serializer::newByteArray( expectedSerialSize );
-			
-			ASSERT_EQ( expectedSerialSize, array.serialize( &bytes ) );
-			
-			PointArray deserialized = PointArray::deserialize( bytes );
-			
-			for( int i = 0; i < array.size(); ++i )
-			{
-// 				cout << "Expected: " << *array[ i ] << endl
-// 						<< "Got: " << *deserialized[ i ] << endl;
-				ASSERT_TRUE( array[ i ]->equal( *deserialized[ i ], 1.e-15 ) );
-			}
-			
-			Serializer::dispose( bytes );
+// 			size_t expectedSerialSize = sizeof( uint ) + array.size() * sizeof( Point );
+// 			byte* bytes = Serializer::newByteArray( expectedSerialSize );
+// 			
+// 			ASSERT_EQ( expectedSerialSize, array.serialize( &bytes ) );
+// 			
+// 			PointArray deserialized = PointArray::deserialize( bytes );
+// 			
+// 			for( int i = 0; i < array.size(); ++i )
+// 			{
+// // 				cout << "Expected: " << *array[ i ] << endl
+// // 						<< "Got: " << *deserialized[ i ] << endl;
+// 				ASSERT_TRUE( array[ i ]->equal( *deserialized[ i ], 1.e-15 ) );
+// 			}
+// 			
+// 			Serializer::dispose( bytes );
 		}
 		
 		TYPED_TEST( ArrayTest, API )
