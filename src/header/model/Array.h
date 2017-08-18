@@ -64,6 +64,13 @@ namespace model
 			}
 		}
 		
+// 		explicit Array( const T&& initValue )
+// 		: m_size( 1 )
+// 		{
+// 			m_array = A().allocate( 1 );
+// 			A().construct( m_array, std::move( initValue ) );
+// 		}
+		
 		/** Ctor that takes resposibility of a given array with the given size. */
 		explicit Array( uint size, T* array )
 		: m_size( size ),

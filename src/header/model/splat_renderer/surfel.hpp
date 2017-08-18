@@ -18,6 +18,8 @@ struct Surfel
 	 * @param input is expected to be binary and writen with persist() */
 	Surfel( ifstream& input );
 	
+	bool operator==( const Surfel& other ) const;
+	
 	string toString() const;
 	
 	/** Binary persistence. Structure: | c | u | v |. */
@@ -50,6 +52,11 @@ inline Surfel::Surfel( ifstream& input )
 	input.read( reinterpret_cast< char* >( &z ), sizeof( float ) );
 	
 	v = Eigen::Vector3f( x, y, z );
+}
+
+inline bool Surfel::operator==( const Surfel& other ) const
+{
+	return c.isApprox( other.c ) && u.isApprox( other.u ) && v.isApprox( other.v );
 }
 
 inline string Surfel::toString() const
