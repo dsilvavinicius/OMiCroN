@@ -26,12 +26,25 @@ namespace model
 	inline void OctreeFile::write( const string& filename, const OctreeFile::Node& root )
 	{
 		ofstream file( filename, ofstream::out | ofstream::binary );
+		
+		if( file.fail() )
+		{
+			stringstream ss; ss << filename << " could not be opened properly.";
+			throw logic_error( ss.str() );
+		}
+		
 		root.persist( file );
 	}
 
 	inline OctreeFile::NodePtr OctreeFile::read( const string& filename )
 	{
 		ifstream file( filename, ofstream::in | ofstream::binary );
+		
+		if( file.fail() )
+		{
+			stringstream ss; ss << filename << " could not be opened properly.";
+			throw logic_error( ss.str() );
+		}
 		
 		auto root = new Node( file );
 		

@@ -251,7 +251,7 @@ namespace model
 		// Binary persistence. Structure: | leaf flag | point data | children data |
 		void persist( ostream& out ) const
 		{
-			out.write( reinterpret_cast< char* >( m_isLeaf ), sizeof( bool ) );
+			out.write( reinterpret_cast< const char* >( &m_isLeaf ), sizeof( bool ) );
 			m_contents.persist( out );
 			m_children.persist( out );
 		}
