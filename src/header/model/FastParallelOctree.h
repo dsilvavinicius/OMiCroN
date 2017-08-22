@@ -7,10 +7,11 @@
 #include "HierarchyCreator.h"
 #include "Front.h"
 #include "global_malloc.h"
+#include "RuntimeSetup.h"
 
 namespace model
 {
-	/** Out-of-core fast parallel octree. Provides visualization while async constructing the hierarchy bottom-up. */
+	/** Fast parallel octree. Provides visualization while async constructing the hierarchy bottom-up. */
 	template< typename MortonCode >
 	class FastParallelOctree
 	{
@@ -24,26 +25,10 @@ namespace model
 		using NodeLoader = typename Front::NodeLoader;
 		using Renderer = SplatRenderer;
 		
-		typedef struct RuntimeSetup
-		{
-			RuntimeSetup( int nThreads = 8, ulong loadPerThread = 1024, ulong memoryQuota = 1024 * 1024 * 8,
-						  bool isAsync = false )
-			: m_nThreads( nThreads ),
-			m_loadPerThread( loadPerThread ),
-			m_memoryQuota( memoryQuota ),
-			m_isAsync( isAsync )
-			{}
-			
-			int m_nThreads;
-			ulong m_loadPerThread;
-			ulong m_memoryQuota;
-			bool m_isAsync;
-		} RuntimeSetup;
-		
 		/**
 		 * Ctor. Creates the octree from a .ply file, generating a sorted file in the process which can be used with
 		 * the other constructor in order to increase creation performance.
-		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Lesser values incur in
+		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Smaller values incur in
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
 		FastParallelOctree( const string& plyFilename, const int maxLvl, NodeLoader& nodeLoader,

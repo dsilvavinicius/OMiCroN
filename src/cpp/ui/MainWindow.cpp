@@ -34,32 +34,18 @@ MainWindow::~MainWindow()
 void MainWindow::initialize()
 {
     m_pointRenderWidget->initialize( ui->sld_frame_rate->value(), ui->sld_frame_tolerance->value() );
-
-    ui->group_effects->setId( ui->radio_phong, TucanoRenderingState::PHONG );
-    ui->group_effects->setId( ui->radio_jfpbr, TucanoRenderingState::JUMP_FLOODING );
-
-    connect( ui->group_effects, static_cast< void ( QButtonGroup::* )( int )>( &QButtonGroup::buttonClicked ),
-			 m_pointRenderWidget, &PointRendererWidget::toggleEffect );
     
-	connect( ui->button_reload_shaders, &QPushButton::clicked, m_pointRenderWidget, &PointRendererWidget::reloadShaders );
+	connect( ui->bt_save_octree, &QPushButton::clicked, m_pointRenderWidget, &PointRendererWidget::saveOctree );
     
 	connect( ui->sld_frame_rate, &QSlider::valueChanged, m_pointRenderWidget, &PointRendererWidget::setFrameRate );
 	
-	connect( ui->sld_frameskip, &QSlider::valueChanged, m_pointRenderWidget, &PointRendererWidget::setJfpbrFrameskip );
-	
 	connect( ui->sld_frame_tolerance, &QSlider::valueChanged, m_pointRenderWidget,
 			 &PointRendererWidget::setRenderingTimeTolerance );
-	
-	connect( ui->spinbox_first_max_distance,
-			 static_cast< void ( QDoubleSpinBox::* )( double )>( &QDoubleSpinBox::valueChanged ), m_pointRenderWidget,
-			 &PointRendererWidget::setJFPBRFirstMaxDistance );
     
 	connect( ui->check_trackball, &QCheckBox::stateChanged, m_pointRenderWidget, &PointRendererWidget::toggleDrawTrackball );
 	
 	connect( ui->ckbx_draw_viewports, &QCheckBox::stateChanged, m_pointRenderWidget,
 			 &PointRendererWidget::toggleDrawAuxViewports );
-	
-	connect( ui->bt_write_frames, &QCheckBox::stateChanged, m_pointRenderWidget, &PointRendererWidget::toggleWriteFrames );
 	
 	connect( ui->bt_draw_node_debug, &QCheckBox::stateChanged, m_pointRenderWidget,
 			 &PointRendererWidget::toggleNodeDebugDraw );

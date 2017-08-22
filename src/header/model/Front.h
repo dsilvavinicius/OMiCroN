@@ -44,9 +44,9 @@ using namespace util;
 
 namespace model
 {
-	/** Out-of-core visualization front of an hierarchy under construction. Front ensures that its nodes are always sorted
+	/** Visualization front of an hierarchy under construction. Front ensures that its nodes are always sorted
 	 * in hierarchy's width and that nodes can be inserted in a multithreaded environment. The nodes must be inserted in
-	 * iterations. For a given iteration, the insertion threads can in parallel insert nodes of a continuous front segment,
+	 * iterations. For a given iteration, the insertion threads can parallely insert nodes of a continuous front segment,
 	 * given that these segments are disjoint and that all nodes inserted by all threads also form a continuous segment.
 	 * Also, a given thread should insert nodes in hierarchy's width-order. In order to ensure this ordering, an API for
 	 * defining node placeholders is also available. Placeholders are temporary nodes in the deepest hierarchy level that
@@ -139,6 +139,11 @@ namespace model
 		/** Synchronized. Notifies that all threads have finished an insertion iteration.
 		 * @param dispatchedThreads is the number of dispatched thread in the creation iteration. */
 		void notifyInsertionEnd( uint dispatchedThreads );
+		
+		/** THIS IS A HACK FOR TESTING PURPOSES. Inserts the root of the hierarchy into the front. In other words, makes
+		 * the classic front initialization and ignores the bottom-up insertion capability provided in this class. Obviously,
+		 * the hierarchy should be constructed beforehand and this should be the only insertion needed into the front. */
+		void insertRoot( Node& root );
 		
 		/** Checks if the front is in release mode. */
 		bool isReleasing();
@@ -451,6 +456,15 @@ namespace model
 				}
 			}
 		}
+	}
+	
+	template< typename Morton >
+	inline void Front< Morton >::insertRoot( Node& root )
+	{
+		assert( m_front.empty() && "Front should be empty before inserting root." );
+		
+		Morton rootCode; rootCode.build( 0x1 );
+		m_front.push_back( FrontNode( root, rootCode ) );
 	}
 	
 	template< typename Morton >

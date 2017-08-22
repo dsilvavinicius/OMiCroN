@@ -3,7 +3,10 @@
 
 #include <utils/qtfreecamerawidget.hpp>
 #include <utils/path.hpp>
+#include "MortonCode.h"
 #include "FastParallelOctree.h"
+// #include "FrontOctree.h"
+#include "RuntimeSetup.h"
 #include "renderers/StreamingRenderer.h"
 #include "global_malloc.h"
 #include <QApplication>
@@ -21,6 +24,7 @@ public:
 	
 	using Point = model::Point;
 	using Octree = FastParallelOctree< MortonCode >;
+// 	using Octree = FrontOctree< MortonCode >;
 	using NodeLoader = typename Octree::NodeLoader;
 	using Renderer = SplatRenderer;
 
@@ -58,21 +62,8 @@ protected:
 	
 signals:
 public slots:
-	/** @brief Toggle write output to image */
-	void toggleWriteFrames( void );
-	
-	/** @brief Toggles mean filter flag */
-	void toggleEffect( int id );
-	
-	/** @brief Reload effect shaders. */
-	void reloadShaders( void );
-
 	/** @brief Sets the desired frame rate hint. */
 	void setFrameRate( const unsigned int& frameRate );
-	
-	/** @brief Modifies the SSAO global intensity value.
-	* @param value New intensity value. */
-	void setJFPBRFirstMaxDistance( double value );
 
 	/** @brief Toggle draw trackball flag. */
 	void toggleDrawTrackball( void );
@@ -85,9 +76,6 @@ public slots:
 	
 	/** Opens a new point cloud. */
 	virtual void openMesh( const string& filename );
-	
-	/** Sets the jump flooding effect frameskip. */
-	void setJfpbrFrameskip( const int& value );
 	
 	/** Sets the rendering time tolerance in order to verify if projection threshold adaptation is needed. In ms. */
 	void setRenderingTimeTolerance( const int& tolerance );
@@ -103,6 +91,9 @@ public slots:
 	
 	/** Loads the camera matrix for a screenshot. */
 	void saveScreenshotCamera();
+	
+	/** Saves a completed octree in a file. If the hierarchy construction is not finished yet, it does nothing. */
+	void saveOctree();
 	
 signals:
 	/** Signals that the per-frame debug info is generated and should be presented. */
@@ -156,6 +147,9 @@ private:
 	
 	/** Camera path for making automatic videos.*/
 	Tucano::Path m_cameraPath;
+	
+	/** Future to know when the operation of saving an octree is finished. The future result is the duration of the save operation. */
+	future< int > m_octSaveFuture;
 };
 
 #endif // PointRendererWidget

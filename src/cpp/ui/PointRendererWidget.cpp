@@ -1,5 +1,6 @@
 #include "PointRendererWidget.h"
 #include "renderers/TucanoDebugRenderer.h"
+#include <OctreeFile.h>
 #include <QDebug>
 #include <QTimer>
 
@@ -285,6 +286,10 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 {
 	m_octree->waitCreation();
 	
+	cout << "Waiting for possible pending save octree operation." << endl << endl;
+	m_octSaveFuture.get();
+	cout << "No pending save octree operation." << endl << endl;
+	
 	time_t now = time(NULL);
 	char the_date[ 50 ];
 	the_date[0] = '\0';
@@ -384,25 +389,9 @@ void PointRendererWidget::updateFromKeyInput()
 	}
 }
 
-void PointRendererWidget::toggleWriteFrames()
-{
-}
-
-void PointRendererWidget::toggleEffect( int id )
-{
-}
-
-void PointRendererWidget::reloadShaders( void )
-{
-}
-
 void PointRendererWidget::setFrameRate( const unsigned int& frameRate )
 {
 	m_desiredRenderTime = 1000.f / ( float ) frameRate;
-}
-
-void PointRendererWidget::setJFPBRFirstMaxDistance( double value )
-{
 }
 
 void PointRendererWidget::toggleDrawTrackball( void )
@@ -421,10 +410,6 @@ void PointRendererWidget::toggleNodeDebugDraw( const int& value )
 {
 	updateGL();
 }
-
-void PointRendererWidget::setJfpbrFrameskip( const int& value )
-{
-}
 	
 void PointRendererWidget::setRenderingTimeTolerance( const int& tolerance )
 {
@@ -438,7 +423,7 @@ void PointRendererWidget::openMesh( const string& filename )
 		delete m_octree;
 	}
 	
-	Octree::RuntimeSetup runtime( HIERARCHY_CREATION_THREADS, WORK_LIST_SIZE, 1024ul * 1024ul * 1024ul * 7ul, true );
+	RuntimeSetup runtime( HIERARCHY_CREATION_THREADS, WORK_LIST_SIZE, 1024ul * 1024ul * 1024ul * 7ul );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{
@@ -551,4 +536,32 @@ void PointRendererWidget::saveScreenshotCamera()
 	#elif MODEL == DUOMO
 		m_cameraPath.writeToFile("../../screenshot_cameras/Duomo");
 	#endif
+}
+
+void PointRendererWidget::saveOctree()
+{
+	if( m_octree->isCreationFinished() )
+	{
+		if( m_octSaveFuture.valid() )
+		{
+			cout << "Save octree operation pending. Wait for previous one to finish." << endl << endl;
+		}
+		else
+		{
+			packaged_task< int () > task(
+				[ & ]
+				{
+					auto now = Profiler::now( "Save octree operation" );
+					
+					stringstream ss; ss << m_statistics.m_datasetName << ".boc";
+					OctreeFile::write( ss.str(), m_octree->root() );
+					
+					return Profiler::elapsedTime( now, "Save octree operation" );
+				}
+			);
+			m_octSaveFuture = task.get_future();
+			std::thread t( std::move( task ) );
+			t.detach();
+		}
+	}
 }

@@ -31,7 +31,7 @@ namespace model
 				NodeLoader< Point > loader( &loaderThread, 1 );
 				
 				Octree octree( param.m_plyFilename, param.m_hierarchyLvl, loader,
-							   Octree::RuntimeSetup( param.m_nThreads, param.m_workItemSize, param.m_memoryQuota ) );
+							   RuntimeSetup( param.m_nThreads, param.m_workItemSize, param.m_memoryQuota ) );
 				
 				Profiler::elapsedTime( start, "Octree construction", m_log );
 				
