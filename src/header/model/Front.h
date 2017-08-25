@@ -465,6 +465,7 @@ namespace model
 		
 		Morton rootCode; rootCode.build( 0x1 );
 		m_front.push_back( FrontNode( root, rootCode ) );
+		root.loadInGpu();
 	}
 	
 	template< typename Morton >
@@ -525,7 +526,7 @@ namespace model
 				renderer.resetIterator();
 			}
 			
-			nNodesPerFrame = float( m_front.size() ) / float( SEGMENTS_PER_FRONT );
+			nNodesPerFrame = max( float( m_front.size() ) / float( SEGMENTS_PER_FRONT ), 1.f );
 			
 			for( int i = 0; m_frontIter != m_front.end() && i < nNodesPerFrame; ++i )
 			{
@@ -540,7 +541,7 @@ namespace model
 				#ifdef ORDERING_DEBUG
 					assertFrontIterator( m_frontIter, front );
 				#endif
-				
+					
 				trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
 			}
 			

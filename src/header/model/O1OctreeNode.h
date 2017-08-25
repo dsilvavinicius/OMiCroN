@@ -105,12 +105,19 @@ namespace model
 			return *this;
 		}
 		
+		/** Ctor to init from stream. Parent data */
 		O1OctreeNode( ifstream& input )
-		: O1OctreeNode()
+		: m_cloud( nullptr ),
+		m_parent( nullptr )
 		{
 			input.read( reinterpret_cast< char* >( &m_isLeaf ), sizeof( bool ) );
 			m_contents = ContentsArray( input );
 			m_children = NodeArray( input );
+			
+			for( O1OctreeNode& child : m_children )
+			{
+				child.setParent( this );
+			}
 		}
 		
 		void* operator new( size_t size );
@@ -235,12 +242,12 @@ namespace model
 		{
 			stringstream ss;
 			ss
-	// 			<< "Addr: " << &node << endl
-	// 			<< "Points: " << node.m_contents << endl
-	// 			<< "First point: " << node.m_contents[ 0 ] << endl
-	// 			<< "Parent: " << node.m_parent << endl
-	// 			<< "Children: " << node.m_children << endl
-	// 			<< "Is leaf? " << node.m_isLeaf << endl
+				<< "Addr: " << this << endl
+				<< "Points: " << m_contents.size() << endl
+				<< "First point: " << m_contents[ 0 ] << endl
+				<< "Parent: " << m_parent << endl
+				<< "Children: " << m_children.size() << endl
+				<< "Is leaf? " << m_isLeaf << endl
 				<< "Load state: " << isLoaded() << endl
 	// 			<< "Cloud: " << endl << node.m_cloud
 				;

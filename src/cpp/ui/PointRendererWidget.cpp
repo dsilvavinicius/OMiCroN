@@ -286,9 +286,11 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 {
 	m_octree->waitCreation();
 	
-	cout << "Waiting for possible pending save octree operation." << endl << endl;
-	m_octSaveFuture.get();
-	cout << "No pending save octree operation." << endl << endl;
+	if( m_octSaveFuture.valid() )
+	{
+		cout << "Waiting for pending save octree operation." << endl << endl;
+		m_octSaveFuture.get();
+	}
 	
 	time_t now = time(NULL);
 	char the_date[ 50 ];

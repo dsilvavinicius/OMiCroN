@@ -51,6 +51,7 @@ namespace model
 			
 			NodePtr rootPtr = OctreeFile::read( "test_octree.boc" );
 			
+			ASSERT_EQ( rootPtr->parent(), nullptr );
 			ASSERT_EQ( rootPtr->getContents().size(), 1 );
 			ASSERT_EQ( rootPtr->getContents()[ 0 ], rootSurfel );
 			ASSERT_EQ( rootPtr->isLeaf(), false );
@@ -58,6 +59,7 @@ namespace model
 			
 			Node& child = rootPtr->child()[ 0 ];
 			
+			ASSERT_EQ( child.parent(), rootPtr.get() );
 			ASSERT_EQ( child.getContents().size(), 2 );
 			ASSERT_EQ( child.getContents()[ 0 ], childSurfel0 );
 			ASSERT_EQ( child.getContents()[ 1 ], childSurfel1 );
@@ -66,6 +68,7 @@ namespace model
 			
 			Node& grandChild = child.child()[ 0 ];
 			
+			ASSERT_EQ( grandChild.parent(), &child );
 			ASSERT_EQ( grandChild.getContents().size(), 2 );
 			ASSERT_EQ( grandChild.getContents()[ 0 ], grandChildSurfel0 );
 			ASSERT_EQ( grandChild.getContents()[ 1 ], grandChildSurfel1 );

@@ -169,7 +169,7 @@ namespace model
 				#endif
 			}
 		
-			return Vector2f( 0.f, 0.f );
+			return Vector2f( 1.f, 1.f );
 		}
 	};
 			

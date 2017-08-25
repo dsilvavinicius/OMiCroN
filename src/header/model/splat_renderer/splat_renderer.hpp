@@ -556,6 +556,10 @@ inline void SplatRenderer::render_frame()
 
 inline ulong SplatRenderer::end_frame()
 {
+	#if !defined TUCANO_RENDERER && !defined PROGRAM_ATTRIBUTE_DEBUG
+		m_fbo.unbind();
+	#endif
+	
 	ulong renderedSplats = m_renderedSplats;
 	m_renderedSplats = 0ul;
 	
