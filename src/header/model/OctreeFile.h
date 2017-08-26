@@ -25,6 +25,8 @@ namespace model
 	
 	inline void OctreeFile::write( const string& filename, const OctreeFile::Node& root )
 	{
+		cout << "Saving binary octree to " << filename << endl << endl;
+		
 		ofstream file( filename, ofstream::out | ofstream::binary );
 		
 		if( file.fail() )
@@ -38,6 +40,8 @@ namespace model
 
 	inline OctreeFile::NodePtr OctreeFile::read( const string& filename )
 	{
+		cout << "Loading binary octree from " << filename << endl << endl;
+		
 		ifstream file( filename, ofstream::in | ofstream::binary );
 		
 		if( file.fail() )

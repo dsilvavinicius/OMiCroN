@@ -555,8 +555,33 @@ void PointRendererWidget::saveOctree()
 				{
 					auto now = Profiler::now( "Save octree operation" );
 					
-					stringstream ss; ss << m_statistics.m_datasetName << ".boc";
-					OctreeFile::write( ss.str(), m_octree->root() );
+					#if MODEL == DAVID
+						#ifdef LAB
+							string filename = "/home/vinicius/Datasets/David/Shallow/David.oct";
+						#else
+							string filename = "/media/vinicius/Expansion Drive3/Datasets/David/David.boc";
+						#endif
+					#elif MODEL == ST_MATHEW
+						#ifdef LAB
+							string filename = "/home/vinicius/Datasets/StMathew/Shallow/StMathew.oct";
+						#else
+							string filename = "/media/vinicius/Expansion Drive3/Datasets/StMathew/StMathew.boc";
+						#endif
+					#elif MODEL == ATLAS
+						#ifdef LAB
+							string filename = "/home/vinicius/Datasets/Atlas/Shallow/Atlas.oct";
+						#else
+							string filename = "/media/vinicius/Expansion Drive3/Datasets/Atlas/Atlas.boc";
+						#endif		
+					#elif MODEL == DUOMO
+						#ifdef LAB
+							string filename = "/home/vinicius/Datasets/Duomo/Shallow/Duomo.oct";
+						#else
+							string filename = "/media/vinicius/Expansion Drive3/Datasets/Duomo/Duomo.boc";
+						#endif	
+					#endif
+					
+					OctreeFile::write( filename, m_octree->root() );
 					
 					return Profiler::elapsedTime( now, "Save octree operation" );
 				}

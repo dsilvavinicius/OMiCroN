@@ -92,7 +92,8 @@ public slots:
 	/** Loads the camera matrix for a screenshot. */
 	void saveScreenshotCamera();
 	
-	/** Saves a completed octree in a file. If the hierarchy construction is not finished yet, it does nothing. */
+	/** Saves a completed octree in a file. If the hierarchy construction is not finished yet or there is another save
+	 * operation pending, it does nothing. */
 	void saveOctree();
 	
 signals:

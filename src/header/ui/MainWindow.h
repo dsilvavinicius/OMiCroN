@@ -20,6 +20,7 @@ public:
 
 public slots:
 	void on_bt_open_cloud_clicked();
+	void on_bt_save_octree_clicked();
 
 protected:
     void keyPressEvent( QKeyEvent *ke );

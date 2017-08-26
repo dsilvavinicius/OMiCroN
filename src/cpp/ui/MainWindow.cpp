@@ -35,8 +35,6 @@ void MainWindow::initialize()
 {
     m_pointRenderWidget->initialize( ui->sld_frame_rate->value(), ui->sld_frame_tolerance->value() );
     
-	connect( ui->bt_save_octree, &QPushButton::clicked, m_pointRenderWidget, &PointRendererWidget::saveOctree );
-    
 	connect( ui->sld_frame_rate, &QSlider::valueChanged, m_pointRenderWidget, &PointRendererWidget::setFrameRate );
 	
 	connect( ui->sld_frame_tolerance, &QSlider::valueChanged, m_pointRenderWidget,
@@ -63,8 +61,13 @@ void MainWindow::on_bt_open_cloud_clicked()
 	if( dialog.exec() )
 	{
 		QString filename = dialog.selectedFiles().first();
-		m_pointRenderWidget->openMesh( filename.toStdString() );
+		m_pointRenderWidget->openMesh( filename.toLocal8Bit().data() );
 	}
+}
+
+void MainWindow::on_bt_save_octree_clicked()
+{
+	m_pointRenderWidget->saveOctree();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *ke)
