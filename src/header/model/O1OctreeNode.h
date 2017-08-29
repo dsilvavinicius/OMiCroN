@@ -238,6 +238,12 @@ namespace model
 			}
 		}
 		
+		/** @returns the number of nodes in the subtree rooted by this node. */
+		uint nNodesInSubtree() const;
+		
+		/** @returns the sum of the number of nodes in the subtrees rooted by the children of node. */
+		uint nNodesInChildrenSubtrees( const O1OctreeNode& node ) const;
+		
 		string toString() const
 		{
 			stringstream ss;
@@ -320,6 +326,26 @@ namespace model
 	inline void O1OctreeNode< Contents, ContentsAlloc >::operator delete[]( void* p )
 	{
 		NodeAlloc().deallocate( static_cast< typename NodeAlloc::pointer >( p ), 2 );
+	}
+	
+	template< typename Contents, typename ContentsAlloc >
+	uint O1OctreeNode< Contents, ContentsAlloc >::nNodesInSubtree() const
+	{
+		uint nNodes = 1u + nNodesInChildrenSubtrees( *this );
+		return nNodes;
+	}
+	
+	template< typename Contents, typename ContentsAlloc >
+	uint O1OctreeNode< Contents, ContentsAlloc >::nNodesInChildrenSubtrees( const O1OctreeNode& node ) const
+	{
+		uint nNodes = m_children.size();
+		
+		for( const O1OctreeNode& child : m_children )
+		{
+			nNodes += nNodesInChildrenSubtrees( child );
+		}
+		
+		return nNodes;
 	}
 	
 	template< typename Contents, typename ContentsAlloc >

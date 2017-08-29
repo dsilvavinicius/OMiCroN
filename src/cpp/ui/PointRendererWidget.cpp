@@ -46,25 +46,25 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	
 	#if MODEL == DAVID
 		#ifdef LAB
-			openMesh( "/home/vinicius/Datasets/David/Shallow/David.oct" );
+			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
 		#else
 			openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
 		#endif
 	#elif MODEL == ST_MATHEW
 		#ifdef LAB
-			openMesh( "/home/vinicius/Datasets/StMathew/Shallow/StMathew.oct" );
+			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/Shallow/StMathew_lab.oct" );
 		#else
 			openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
 		#endif
 	#elif MODEL == ATLAS
 		#ifdef LAB
-			openMesh( "/home/vinicius/Datasets/Atlas/Shallow/Atlas.oct" );
+			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/Shallow/Atlas_lab.oct" );
 		#else
 			openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
 		#endif		
 	#elif MODEL == DUOMO
 		#ifdef LAB
-			openMesh( "/home/vinicius/Datasets/Duomo/Shallow/Duomo.oct" );
+			openMesh( "/media/viniciusdasilva/Expansion Drive/Duomo/Shallow/Duomo_lab.oct" );
 		#else
 			openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
 		#endif	
@@ -306,7 +306,8 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 	
 	ostringstream statsString; statsString << m_statistics << endl << "Time to create hierarchy: "
 		<< m_octree->hierarchyCreationDuration() << "ms" << endl
-		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl << endl;
+		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl
+		<< "Number of nodes in hierarchy: " << m_octree->numberOfNodes() << endl << endl;
 	statsFile << statsString.str();
 	
 	statsFile.close();
@@ -557,25 +558,25 @@ void PointRendererWidget::saveOctree()
 					
 					#if MODEL == DAVID
 						#ifdef LAB
-							string filename = "/home/vinicius/Datasets/David/Shallow/David.oct";
+							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/David/David.boc";
 						#else
 							string filename = "/media/vinicius/Expansion Drive3/Datasets/David/David.boc";
 						#endif
 					#elif MODEL == ST_MATHEW
 						#ifdef LAB
-							string filename = "/home/vinicius/Datasets/StMathew/Shallow/StMathew.oct";
+							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/StMathew.boc";
 						#else
 							string filename = "/media/vinicius/Expansion Drive3/Datasets/StMathew/StMathew.boc";
 						#endif
 					#elif MODEL == ATLAS
 						#ifdef LAB
-							string filename = "/home/vinicius/Datasets/Atlas/Shallow/Atlas.oct";
+							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/Atlas.boc";
 						#else
 							string filename = "/media/vinicius/Expansion Drive3/Datasets/Atlas/Atlas.boc";
 						#endif		
 					#elif MODEL == DUOMO
 						#ifdef LAB
-							string filename = "/home/vinicius/Datasets/Duomo/Shallow/Duomo.oct";
+							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/Duomo/Duomo.oct";
 						#else
 							string filename = "/media/vinicius/Expansion Drive3/Datasets/Duomo/Duomo.boc";
 						#endif	

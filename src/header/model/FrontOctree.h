@@ -34,6 +34,10 @@ namespace model
 		
 		bool isCreationFinished() { return true; }
 		
+		/** Traverses the hierarchy to calculate its number of nodes. Hierarchy creation must be finished beforehand. 
+		 * @returns the number of nodes in the hierarchy if the hierarchy is already finished or 0 otherwise. */
+		uint numberOfNodes() const;
+		
 		/** Just here to fit FastParallelOctree interface. */
 		int hierarchyCreationDuration() const { return 0; }
 		
@@ -84,6 +88,12 @@ namespace model
 	inline FrontOctree< Morton >::FrontOctree( const string&, const int, NodeLoader&, const RuntimeSetup& )
 	{
 		throw logic_error( "FrontOctree creation from point file is unsuported." );
+	}
+	
+	template< typename Morton >
+	uint FrontOctree< Morton >::numberOfNodes() const
+	{
+		return m_root->nNodesInSubtree();
 	}
 }
 

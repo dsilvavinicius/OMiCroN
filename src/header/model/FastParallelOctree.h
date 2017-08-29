@@ -57,6 +57,10 @@ namespace model
 		/** Get the time needed to create the hierarchy in ms. If the hierarchy is not created yet, it returns 0. */
 		int hierarchyCreationDuration() { return m_hierarchyCreationDuration; }
 		
+		/** Traverses the hierarchy to calculate its number of nodes. Hierarchy creation must be finished beforehand. 
+		 * @returns the number of nodes in the hierarchy if the hierarchy is already finished or 0 otherwise. */
+		uint numberOfNodes() const;
+		
 		#ifdef HIERARCHY_STATS
 			atomic_ulong m_processedNodes;
 		#endif
@@ -232,6 +236,12 @@ namespace model
 				m_processedNodes = m_hierarchyCreator.m_processedNodes;
 			#endif
 		}
+	}
+	
+	template< typename Morton >
+	uint FastParallelOctree< Morton >::numberOfNodes() const
+	{
+		return m_root->nNodesInSubtree();
 	}
 	
 	template< typename Morton >
