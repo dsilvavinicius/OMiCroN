@@ -238,11 +238,11 @@ namespace model
 			}
 		}
 		
-		/** @returns the number of nodes in the subtree rooted by this node. */
-		uint nNodesInSubtree() const;
+		/** @returns the number of nodes and the number of contents in the subtree rooted by this node. */
+		pair< uint, uint > subtreeStatistics() const;
 		
-		/** @returns the sum of the number of nodes in the subtrees rooted by the children of node. */
-		uint nNodesInChildrenSubtrees( const O1OctreeNode& node ) const;
+		/** @returns the number of nodes and the number of contents in the subtree rooted by the children of this node. */
+		void childrenStatistics( const O1OctreeNode& node, pair< uint, uint >& stats ) const;
 		
 		string toString() const
 		{
@@ -329,23 +329,24 @@ namespace model
 	}
 	
 	template< typename Contents, typename ContentsAlloc >
-	uint O1OctreeNode< Contents, ContentsAlloc >::nNodesInSubtree() const
+	pair< uint, uint > O1OctreeNode< Contents, ContentsAlloc >::subtreeStatistics() const
 	{
-		uint nNodes = 1u + nNodesInChildrenSubtrees( *this );
-		return nNodes;
+		pair< uint, uint > subtreeStats( 1u, m_contents.size() );
+		childrenStatistics( *this, subtreeStats );
+		
+		return subtreeStats;
 	}
 	
 	template< typename Contents, typename ContentsAlloc >
-	uint O1OctreeNode< Contents, ContentsAlloc >::nNodesInChildrenSubtrees( const O1OctreeNode& node ) const
+	void O1OctreeNode< Contents, ContentsAlloc >::childrenStatistics( const O1OctreeNode& node, pair< uint, uint >& stats ) const
 	{
-		uint nNodes = m_children.size();
+		stats.first += node.m_children.size();
 		
-		for( const O1OctreeNode& child : m_children )
+		for( const O1OctreeNode& child : node.m_children )
 		{
-			nNodes += nNodesInChildrenSubtrees( child );
+			stats.second += child.m_contents.size();
+			childrenStatistics( child, stats );
 		}
-		
-		return nNodes;
 	}
 	
 	template< typename Contents, typename ContentsAlloc >

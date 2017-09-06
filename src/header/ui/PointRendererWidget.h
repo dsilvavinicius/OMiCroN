@@ -4,11 +4,18 @@
 #include <utils/qtfreecamerawidget.hpp>
 #include <utils/path.hpp>
 #include "MortonCode.h"
-// #include "FastParallelOctree.h"
-#include "FrontOctree.h"
+
 #include "RuntimeSetup.h"
 #include "renderers/StreamingRenderer.h"
 #include "global_malloc.h"
+#include "ReconstructionParams.h"
+
+#ifdef BINARY_OCTREE_FILE
+	#include "FrontOctree.h"
+#else
+	#include "FastParallelOctree.h"
+#endif
+
 #include <QApplication>
 
 using namespace std;
@@ -23,8 +30,13 @@ public:
 	using MortonCode = MediumMortonCode;
 	
 	using Point = model::Point;
-// 	using Octree = FastParallelOctree< MortonCode >;
-	using Octree = FrontOctree< MortonCode >;
+	
+	#ifdef BINARY_OCTREE_FILE
+		using Octree = FrontOctree< MortonCode >;
+	#else
+		using Octree = FastParallelOctree< MortonCode >;
+	#endif
+	
 	using NodeLoader = typename Octree::NodeLoader;
 	using Renderer = SplatRenderer;
 

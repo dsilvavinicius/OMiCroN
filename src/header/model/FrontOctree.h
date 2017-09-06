@@ -34,9 +34,10 @@ namespace model
 		
 		bool isCreationFinished() { return true; }
 		
-		/** Traverses the hierarchy to calculate its number of nodes. Hierarchy creation must be finished beforehand. 
-		 * @returns the number of nodes in the hierarchy if the hierarchy is already finished or 0 otherwise. */
-		uint numberOfNodes() const;
+		/** Traverses the hierarchy to calculate its number of nodes and node contents.
+		 * @return If the hierarchy is already finished, a pair with first value equals to the number of nodes in the
+		 * hierarchy and second values equals to the the number of contents in all nodes. */
+		pair< uint, uint > nodeStatistics() const;
 		
 		/** Just here to fit FastParallelOctree interface. */
 		int hierarchyCreationDuration() const { return 0; }
@@ -91,9 +92,9 @@ namespace model
 	}
 	
 	template< typename Morton >
-	uint FrontOctree< Morton >::numberOfNodes() const
+	pair< uint, uint > FrontOctree< Morton >::nodeStatistics() const
 	{
-		return m_root->nNodesInSubtree();
+		return m_root->subtreeStatistics();
 	}
 }
 

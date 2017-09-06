@@ -14,6 +14,7 @@
 #include "HierarchyCreationLog.h"
 #include "global_malloc.h"
 #include "ReconstructionParams.h"
+#include "PlyPointReader.h"
 
 // #define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG
@@ -54,8 +55,11 @@ namespace model
 		 * @param expectedLoadPerThread is the size of the NodeList that will be passed to each thread in the
 		 * hierarchy creation loop iterations.
 		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
-		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, Front& front,
-						  ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
+		HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim,
+							#ifdef HIERARCHY_CREATION_RENDERING
+								Front& front,
+							#endif
+							ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
 		
 		/** Creates the hierarchy asychronously.
 		 * @return a future that will contain the hierarchy's root node and the duration of the creation in ms when done.
@@ -89,14 +93,16 @@ namespace model
 		 * @param threadIdx is the index of the front's thread buffer which the node belongs to. */
 		void setParent( Node& node, const int threadIdx ) /*const*/;
 		
-		/** Sets the parent pointer for all children of a given node, inserting them into front's thread buffer if they
-		 * are leaves. In this version, an iterator to the thread buffer indicates where the node should be inserted into.
-		 * The thread index should be to the same front segment of the iterator.
-		 * @param node is the node which children will have the parent pointer set.
-		 * @param threadIdx is the index of the thread front segment which the node belongs to.
-		 * @param frontIter is the iterator to the segment index threadIdx. The node will be inserted before the iterator
-		 * (the same way as STL). */
-		void setParent( Node& node, const int threadIdx, typename Front::FrontListIter& frontIter ) /*const*/;
+		#ifdef HIERARCHY_CREATION_RENDERING
+			/** Sets the parent pointer for all children of a given node, inserting them into front's thread buffer if they
+				* are leaves. In this version, an iterator to the thread buffer indicates where the node should be inserted into.
+				* The thread index should be to the same front segment of the iterator.
+				* @param node is the node which children will have the parent pointer set.
+				* @param threadIdx is the index of the thread front segment which the node belongs to.
+				* @param frontIter is the iterator to the segment index threadIdx. The node will be inserted before the iterator
+				* (the same way as STL). */
+			void setParent( Node& node, const int threadIdx, typename Front::FrontListIter& frontIter ) /*const*/;
+		#endif
 		
 	#ifdef NODE_COLAPSE
 		/** Collapses (turn into leaf) a node if it has only one child. */
@@ -178,23 +184,31 @@ namespace model
 		
 		ulong m_expectedLoadPerThread;
 		
-		Front& m_front;
+		#ifdef HIERARCHY_CREATION_RENDERING
+			Front& m_front;
+		#endif
 		
 		int m_nThreads;
 	};
 	
 	template< typename Morton >
 	HierarchyCreator< Morton >
-	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim, Front& front, ulong expectedLoadPerThread,
-						const ulong memoryLimit, int nThreads )
+	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim,
+						#ifdef HIERARCHY_CREATION_RENDERING
+							Front& front,
+						#endif
+						ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads )
 	: m_plyFilename( sortedPlyFilename ), 
 	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
 	m_leafLvlDim( dim ),
 	m_nThreads( nThreads ),
 	m_expectedLoadPerThread( expectedLoadPerThread ),
 	//m_dbs( nThreads ),
-	m_memoryLimit( memoryLimit ),
-	m_front( front )
+	m_memoryLimit( memoryLimit )
+	
+	#ifdef HIERARCHY_CREATION_RENDERING
+		, m_front( front )
+	#endif
 	
 	#ifdef HIERARCHY_STATS
 		, m_processedNodes( 0 )
@@ -349,7 +363,10 @@ namespace model
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
-				m_front.notifyLeafLvlLoaded();
+				
+				#ifdef HIERARCHY_CREATION_RENDERING
+					m_front.notifyLeafLvlLoaded();
+				#endif
 				
 				cout << "===== Leaf lvl loaded =====" << endl << endl;
 			}
@@ -364,7 +381,11 @@ namespace model
 			int lvl = m_leafLvlDim.m_nodeLvl;
 			bool nextPassFlag = false; // Indicates that the current algorithm pass should end and a new one should be issued.
 			
-			if( isReleasing && !m_front.isReleasing() )
+			if( isReleasing
+				#ifdef HIERARCHY_CREATION_RENDERING
+					&& !m_front.isReleasing()
+				#endif
+			)
 			{
 				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
 			}
@@ -560,11 +581,18 @@ namespace model
 							
 							// Setup the parent for the first node in thread[ 0 ] output. This is
 							// necessary because it won't be merged with a previous workList.
-							Node& firstNode = iterOutput[ 0 ].front();							
-							auto iter = m_front.getIteratorToBufferBegin( 0 );
+							Node& firstNode = iterOutput[ 0 ].front();
+							
+							#ifdef HIERARCHY_CREATION_RENDERING
+								auto iter = m_front.getIteratorToBufferBegin( 0 );
+							#endif
 							for( Node& child : firstNode.child() )
 							{
-								setParent( child, 0, iter );
+								setParent( child, 0
+									#ifdef HIERARCHY_CREATION_RENDERING
+										, iter
+									#endif
+								);
 							}
 						}
 					}
@@ -593,7 +621,9 @@ namespace model
 						nextLvlWorkList.push_back( std::move( iterOutput[ lastThreadIdx ] ) );
 					}
 					
-					m_front.notifyInsertionEnd( dispatchedThreads );
+					#ifdef HIERARCHY_CREATION_RENDERING
+						m_front.notifyInsertionEnd( dispatchedThreads );
+					#endif
 					// END LOAD BALANCE.
 					
 					// BEGIN NODE RELEASE MANAGEMENT.
@@ -648,7 +678,9 @@ namespace model
 							setParent( child, 0 );
 						}
 						
-						m_front.notifyInsertionEnd( 1 );
+						#ifdef HIERARCHY_CREATION_RENDERING
+							m_front.notifyInsertionEnd( 1 );
+						#endif
 					}
 					
 					--lvl;
@@ -667,17 +699,22 @@ namespace model
 		{
 			setParent( child, 0 );
 		}
-		m_front.notifyInsertionEnd( 1 );
+		#ifdef HIERARCHY_CREATION_RENDERING
+			m_front.notifyInsertionEnd( 1 );
+		#endif
 		
 		setParent( *root, 0 );
-		m_front.notifyInsertionEnd( 1 );
 		
-		if( root->isLeaf() )
-		{
-			Morton rootCode; rootCode.build( 0x1 );
-			m_front.insertIntoBufferEnd( *root, rootCode, 0 );
+		#ifdef HIERARCHY_CREATION_RENDERING
 			m_front.notifyInsertionEnd( 1 );
-		}
+		
+			if( root->isLeaf() )
+			{
+				Morton rootCode; rootCode.build( 0x1 );
+				m_front.insertIntoBufferEnd( *root, rootCode, 0 );
+				m_front.notifyInsertionEnd( 1 );
+			}
+		#endif
 		
 		return root;
 	}
@@ -745,14 +782,17 @@ namespace model
 			{
 				child.setParent( &node );
 				
-				if( child.isLeaf() )
-				{
-					m_front.insertIntoBufferEnd( child, childDim.calcMorton( child ), threadIdx );
-				}
+				#ifdef HIERARCHY_CREATION_RENDERING
+					if( child.isLeaf() )
+					{
+						m_front.insertIntoBufferEnd( child, childDim.calcMorton( child ), threadIdx );
+					}
+				#endif
 			}
 		}
 	}
 	
+#ifdef HIERARCHY_CREATION_RENDERING
 	template< typename Morton >
 	void HierarchyCreator< Morton >::setParent( Node& node, const int threadIdx,
 												typename Front::FrontListIter& frontIter )
@@ -787,6 +827,7 @@ namespace model
 			}
 		}
 	}
+#endif
 	
 #ifdef NODE_COLAPSE
 	template< typename Morton >
@@ -830,7 +871,9 @@ namespace model
 			typename Front::FrontListIter it;
 			if( previousIdx == -1 )
 			{
-				it = m_front.getIteratorToBufferBegin( 0 );
+				#ifdef HIERARCHY_CREATION_RENDERING
+					it = m_front.getIteratorToBufferBegin( 0 );
+				#endif
 			}
 			
 			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
@@ -851,7 +894,11 @@ namespace model
 					
 					if( previousIdx == -1 )
 					{
-						setParent( child, 0, it );
+						setParent( child, 0
+							#ifdef HIERARCHY_CREATION_RENDERING
+								, it
+							#endif
+						);
 					}
 					else
 					{
@@ -871,7 +918,11 @@ namespace model
 					
 					if( previousIdx == -1 )
 					{
-						setParent( child, 0, it );
+						setParent( child, 0
+							#ifdef HIERARCHY_CREATION_RENDERING
+								, it
+							#endif
+						);
 					}
 					else
 					{
@@ -892,7 +943,11 @@ namespace model
 				{
 					if( previousIdx == -1 )
 					{
-						setParent( child, 0, it );
+						setParent( child, 0
+							#ifdef HIERARCHY_CREATION_RENDERING
+								, it
+							#endif
+						);
 					}
 					else
 					{
@@ -904,7 +959,11 @@ namespace model
 				{
 					if( previousIdx == -1 )
 					{
-						setParent( child, 0, it );
+						setParent( child, 0
+							#ifdef HIERARCHY_CREATION_RENDERING
+								, it
+							#endif
+						);
 					}
 					else
 					{
@@ -1003,7 +1062,9 @@ namespace model
 		Morton childMorton = m_octreeDim.calcMorton( child );
 		if( childMorton.getLevel() == m_leafLvlDim.m_nodeLvl )
 		{
-			m_front.insertPlaceholder( childMorton, threadIdx );
+			#ifdef HIERARCHY_CREATION_RENDERING
+				m_front.insertPlaceholder( childMorton, threadIdx );
+			#endif
 		}
 		
 		const PointArray& childPoints = child.getContents();
@@ -1063,7 +1124,9 @@ namespace model
 				
 				if( frontPlaceholdersOn )
 				{
-					m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
+					#ifdef HIERARCHY_CREATION_RENDERING
+						m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
+					#endif
 				}
 				
 				Node& child = children[ i ];

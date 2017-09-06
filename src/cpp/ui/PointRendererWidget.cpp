@@ -48,25 +48,25 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/Expansion Drive3/Datasets/David/Shallow/David.oct" );
+			openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.oct" );
 		#endif
 	#elif MODEL == ST_MATHEW
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/Shallow/StMathew_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/Expansion Drive3/Datasets/StMathew/Shallow/StMathew.oct" );
+			openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct" );
 		#endif
 	#elif MODEL == ATLAS
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/Shallow/Atlas_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/Expansion Drive3/Datasets/Atlas/Shallow/Atlas.oct" );
+			openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.oct" );
 		#endif		
 	#elif MODEL == DUOMO
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Duomo/Shallow/Duomo_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/Expansion Drive3/Datasets/Duomo/Shallow/Duomo.oct" );
+			openMesh( "/media/vinicius/data/Datasets/Atlas/Duomo/DuomoWithFaces_sorted7.oct" );
 		#endif	
 	#endif
 	
@@ -301,13 +301,18 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		strftime( the_date, 50, "%d_%m_%Y-%H_%M", localtime( &now ) );
 	}
 	
+	cout << "Generating statistics..." << endl << endl;
+	
 	ostringstream statsFilename; statsFilename << "../../statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
 	ofstream statsFile( statsFilename.str() );
+	
+	pair< uint, uint > nodeStats = m_octree->nodeStatistics();
 	
 	ostringstream statsString; statsString << m_statistics << endl << "Time to create hierarchy: "
 		<< m_octree->hierarchyCreationDuration() << "ms" << endl
 		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl
-		<< "Number of nodes in hierarchy: " << m_octree->numberOfNodes() << endl << endl;
+		<< "Number of nodes in hierarchy: " << nodeStats.first << endl 
+		<< "Number of splats in hierarchy: " << nodeStats.second << endl << endl;
 	statsFile << statsString.str();
 	
 	statsFile.close();
@@ -426,7 +431,7 @@ void PointRendererWidget::openMesh( const string& filename )
 		delete m_octree;
 	}
 	
-	RuntimeSetup runtime( HIERARCHY_CREATION_THREADS, WORK_LIST_SIZE, 1024ul * 1024ul * 1024ul * 7ul );
+	RuntimeSetup runtime( HIERARCHY_CREATION_THREADS, WORK_LIST_SIZE, RAM_QUOTA );
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{
@@ -560,25 +565,25 @@ void PointRendererWidget::saveOctree()
 						#ifdef LAB
 							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/David/David.boc";
 						#else
-							string filename = "/media/vinicius/Expansion Drive3/Datasets/David/David.boc";
+							string filename = "/media/vinicius/data/Datasets/David/David.boc";
 						#endif
 					#elif MODEL == ST_MATHEW
 						#ifdef LAB
 							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/StMathew.boc";
 						#else
-							string filename = "/media/vinicius/Expansion Drive3/Datasets/StMathew/StMathew.boc";
+							string filename = "/media/vinicius/data/Datasets/StMathew/StMathew.boc";
 						#endif
 					#elif MODEL == ATLAS
 						#ifdef LAB
 							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/Atlas.boc";
 						#else
-							string filename = "/media/vinicius/Expansion Drive3/Datasets/Atlas/Atlas.boc";
+							string filename = "/media/vinicius/data/Datasets/Atlas/Atlas.boc";
 						#endif		
 					#elif MODEL == DUOMO
 						#ifdef LAB
 							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/Duomo/Duomo.oct";
 						#else
-							string filename = "/media/vinicius/Expansion Drive3/Datasets/Duomo/Duomo.boc";
+							string filename = "/media/vinicius/data/Datasets/Duomo/Duomo.boc";
 						#endif	
 					#endif
 					

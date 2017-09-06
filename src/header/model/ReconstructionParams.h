@@ -28,7 +28,7 @@ enum ReconstructionAlgorithm
 #define MODEL DAVID
 
 // Define to indicates that the system will be run in the laboratory.
-#define LAB
+// #define LAB
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 8
@@ -37,6 +37,14 @@ enum ReconstructionAlgorithm
 // Work list size for hierarchy creation. 
 #define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
+
+#define RAM_QUOTA 1024ul * 1024ul * 1024ul * 7ul
+
+// Activates rendering in parallel with hierarchy creation.
+#define HIERARCHY_CREATION_RENDERING
+
+// Activates de loading of binary octree files instead of hierarchy creation.
+#define BINARY_OCTREE_FILE
 
 #define PARENT_POINTS_RATIO_ONE_FOURTH
 // #define PARENT_POINTS_RATIO_ONE_FIFTH

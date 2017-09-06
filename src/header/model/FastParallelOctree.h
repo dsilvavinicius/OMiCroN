@@ -57,9 +57,11 @@ namespace model
 		/** Get the time needed to create the hierarchy in ms. If the hierarchy is not created yet, it returns 0. */
 		int hierarchyCreationDuration() { return m_hierarchyCreationDuration; }
 		
-		/** Traverses the hierarchy to calculate its number of nodes. Hierarchy creation must be finished beforehand. 
-		 * @returns the number of nodes in the hierarchy if the hierarchy is already finished or 0 otherwise. */
-		uint numberOfNodes() const;
+		/** Traverses the hierarchy to calculate its number of nodes and node contents. Hierarchy creation must be finished
+		 * beforehand. 
+		 * @return If the hierarchy is already finished, a pair with first value equals to the number of nodes in the
+		 * hierarchy and second values equals to the the number of contents in all nodes. Returns 0 otherwise. */
+		pair< uint, uint > nodeStatistics() const;
 		
 		#ifdef HIERARCHY_STATS
 			atomic_ulong m_processedNodes;
@@ -190,7 +192,10 @@ namespace model
 // 			);
 // 		}
 		
-		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim, *m_front,
+		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim,
+													#ifdef HIERARCHY_CREATION_RENDERING
+														*m_front,
+													#endif
 												   runtime.m_loadPerThread, runtime.m_memoryQuota, runtime.m_nThreads );
 		
 		m_creationFuture = m_hierarchyCreator->createAsync();
@@ -239,9 +244,9 @@ namespace model
 	}
 	
 	template< typename Morton >
-	uint FastParallelOctree< Morton >::numberOfNodes() const
+	pair< uint, uint > FastParallelOctree< Morton >::nodeStatistics() const
 	{
-		return m_root->nNodesInSubtree();
+		return m_root->subtreeStatistics();
 	}
 	
 	template< typename Morton >

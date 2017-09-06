@@ -120,10 +120,10 @@ namespace model
 			using M = ShallowMortonCode;
 			using PointSorter = model::PointSorter< M >;
 			
-			int sortLevel = 9;
+			int sortLevel = 7;
 			
-			PointSorter sorter( "/media/viniciusdasilva/Expansion Drive/Datasets/David/PlyPointMergerTest/DavidWithFaces.ply",
-								"/media/viniciusdasilva/Expansion Drive/Datasets/David/PlyPointMergerTest/DavidWithFaces_sorted9.ply", sortLevel );
+			PointSorter sorter( "/media/vinicius/data/Datasets/David/DavidWithFaces.ply",
+								"/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.ply", sortLevel );
 			sorter.sort();
 		}
 		
@@ -132,10 +132,10 @@ namespace model
 			using M = ShallowMortonCode;
 			using PointSorter = model::PointSorter< M >;
 			
-			int sortLevel = 9;
+			int sortLevel = 7;
 			
-			PointSorter sorter( "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/PlyPointMergerTest/AtlasWithFaces.ply",
-								"/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/PlyPointMergerTest/AtlasWithFaces_sorted9.ply", sortLevel );
+			PointSorter sorter( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces.ply",
+								"/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.ply", sortLevel );
 			sorter.sort();
 		}
 		
@@ -144,10 +144,10 @@ namespace model
 			using M = ShallowMortonCode;
 			using PointSorter = model::PointSorter< M >;
 			
-			int sortLevel = 9;
+			int sortLevel = 7;
 			
-			PointSorter sorter( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/PlyPointMergerTest/StMathewWithFaces.ply",
-								"/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/PlyPointMergerTest/StMathewWithFaces_sorted9.ply", sortLevel );
+			PointSorter sorter( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply",
+								"/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply", sortLevel );
 			sorter.sort();
 		}
 	}
