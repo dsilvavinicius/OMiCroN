@@ -25,7 +25,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL ST_MATHEW
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -41,7 +41,7 @@ enum ReconstructionAlgorithm
 #define RAM_QUOTA 1024ul * 1024ul * 1024ul * 7ul
 
 // Activates rendering in parallel with hierarchy creation.
-#define HIERARCHY_CREATION_RENDERING
+// #define HIERARCHY_CREATION_RENDERING
 
 // Activates de loading of binary octree files instead of hierarchy creation.
 #define BINARY_OCTREE_FILE
