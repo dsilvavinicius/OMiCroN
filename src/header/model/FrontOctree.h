@@ -46,6 +46,8 @@ namespace model
 		
 		Node& root() { return *m_root; }
 		
+		uint substitutedPlaceholders() const{ return 0u; }
+		
 	private:
 		unique_ptr< Front > m_front;
 		OctreeFile::NodePtr m_root;

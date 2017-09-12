@@ -5,9 +5,11 @@
 #include <Eigen/Dense>
 #include "Stream.h"
 #include "ReconstructionParams.h"
+#include "Profiler.h"
 
 using namespace std;
 using namespace Eigen;
+using namespace util;
 
 namespace model
 {
@@ -123,6 +125,17 @@ namespace model
 			m_avgGpuOverhead = octreeStats.calcIncrementalAvg( m_gpuOverhead, m_avgGpuOverhead, octreeStats.m_nFrames );
 		}
 		
+		/** Reports the time stamp when the given percentage of the hierarchy is complete. */
+		void addCompletionPercent( float percentage )
+		{
+			m_completionPercent.push_back( pair< float, chrono::system_clock::time_point >( percentage, Profiler::now() ) );
+		}
+		
+		float currentCompletion()
+		{
+				return ( m_completionPercent.empty() ) ? 0.f : m_completionPercent.back().first;
+		}
+		
 		friend ostream& operator<<( ostream& out, const CumulusStats& cumulusStats )
 		{
 			out << "Dataset: " << cumulusStats.m_datasetName << endl << endl
@@ -150,8 +163,15 @@ namespace model
 				<< "Level 7 : " << endl << ReconstructionParams::calcMultipliers( 7 ) << endl
 				<< "Level 8 : " << endl << ReconstructionParams::calcMultipliers( 8 ) << endl << endl
 				<< "Reconstruction algorithm: " << RECONSTRUCTION_ALG << endl << endl
-				<< cumulusStats.m_octreeStats << endl << endl
-				<< "=== GPU STATS === " << endl << "GPU Overhead: " << cumulusStats.m_gpuOverhead << endl
+				<< cumulusStats.m_octreeStats << endl;
+			
+			for( const pair< float, chrono::system_clock::time_point > completionPercent : cumulusStats.m_completionPercent )
+			{
+				std::time_t now = chrono::high_resolution_clock::to_time_t( completionPercent.second );
+				out << completionPercent.first * 100 << "% completed at " << ctime( &now ) << endl;
+			}
+				
+			out	<< "=== GPU STATS === " << endl << "GPU Overhead: " << cumulusStats.m_gpuOverhead << endl
 				<< "Average GPU Overhead: " << cumulusStats.m_avgGpuOverhead;
 			return out;
 		}
@@ -163,6 +183,8 @@ namespace model
 		uint m_hierarchyDepth;
 		
 		OctreeStats m_octreeStats;
+		
+		vector< pair< float, chrono::system_clock::time_point > > m_completionPercent;
 		
 		float m_gpuOverhead;
 		float m_avgGpuOverhead;

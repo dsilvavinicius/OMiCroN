@@ -30,7 +30,7 @@
 // Cut rendering methods.
 #define RENDER_ENTIRE_CUT 0 // Renders the entire cut. The default and correct method to visualize the point cloud.
 #define RENDER_OLD_CUT_ONLY 1 // Debug. Renders only nodes that were in cuts rendered already.
-#define RENDER_NEW_CUT_ONLY 2 // Debug. Renders only nodes at the end of the front that were added to the cut recently
+#define RENDER_NEW_CUT_ONLY 2 // Debug. Renders only nodes at the end of thesubstitutePlaceholder front that were added to the cut recently
 							  // and were not rendered yet.
 
 // Choosen cut rendering method
@@ -155,6 +155,9 @@ namespace model
 		 * @param renderer is the responsible of rendering the points of the tracked front.
 		 * @param projThresh is the projection threashold */
 		OctreeStats trackFront( Renderer& renderer, const Float projThresh );
+		
+		/** @returns the number of placeholders substituted in front evaluation until now. */
+		uint substitutedPlaceholders() const;
 		
 	private:
 		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
@@ -326,6 +329,7 @@ namespace model
 		// Statistics related data.
 		chrono::system_clock::time_point m_lastInsertionTime;
 		OctreeStats m_octreeStats;
+		uint m_substitutedPlaceholders; // Number of placeholders substituted.
 		
 		#ifdef NODE_ID_TEXT
 			TextEffect m_textEffect;
@@ -348,7 +352,8 @@ namespace model
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_leafLvlLoadedFlag( false ),
 	m_nodeLoader( loader ),
-	m_lastInsertionTime( Profiler::now() )
+	m_lastInsertionTime( Profiler::now() ),
+	m_substitutedPlaceholders( 0u )
 	{
 		m_frontIter = m_front.end();
 		
@@ -684,6 +689,7 @@ namespace model
 						HierarchyCreationLog::logDebugMsg( ss.str() );
 					#endif
 					
+					++m_substitutedPlaceholders;
 					node = substituteCandidate;
 					
 					#ifdef ASYNC_LOAD
@@ -1043,6 +1049,12 @@ namespace model
 		}
 		
 		node.unloadInGpu();
+	}
+	
+	template< typename Morton >
+	inline uint Front< Morton >::substitutedPlaceholders() const
+	{
+		return m_substitutedPlaceholders;
 	}
 }
 

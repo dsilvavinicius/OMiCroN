@@ -141,6 +141,14 @@ void PointRendererWidget::paintGL (void)
 	
 	int frontTrackingTime = Profiler::elapsedTime( frontTrackingStart );
 	
+	{
+		float currentCompletion = m_statistics.currentCompletion();
+		if( m_octree->substitutedPlaceholders() > EXPECTED_SUBSTITUTED_PLACEHOLDERS * ( currentCompletion + 0.1f ) )
+		{
+			m_statistics.addCompletionPercent( m_statistics.currentCompletion() + 0.1f );
+		}
+	}
+	
 	// Render debug data.
 	stringstream debugSS;
 	debugSS /*<< "Desired render time: " << m_desiredRenderTime << " ms" << endl
@@ -312,7 +320,8 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		<< m_octree->hierarchyCreationDuration() << "ms" << endl
 		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl
 		<< "Number of nodes in hierarchy: " << nodeStats.first << endl 
-		<< "Number of splats in hierarchy: " << nodeStats.second << endl << endl;
+		<< "Number of splats in hierarchy: " << nodeStats.second << endl
+		<< "Number of substituted placeholders: " << m_octree->substitutedPlaceholders() << endl << endl;
 	statsFile << statsString.str();
 	
 	statsFile.close();
