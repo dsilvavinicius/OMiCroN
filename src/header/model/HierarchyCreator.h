@@ -382,12 +382,13 @@ namespace model
 					}
 				);
 				
+				// Releasing memory in reader.
+				m_reader = nullptr;
+				
 				nodeList.push_back( Node( std::move( points ), true ) );
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
-				
-				m_reader = nullptr;
 				
 				#ifdef HIERARCHY_CREATION_RENDERING
 					m_front.notifyLeafLvlLoaded();

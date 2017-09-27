@@ -25,7 +25,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL ST_MATHEW
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
