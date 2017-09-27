@@ -34,10 +34,6 @@ namespace model
 							   RuntimeSetup( param.m_nThreads, param.m_workItemSize, param.m_memoryQuota ) );
 				
 				Profiler::elapsedTime( start, "Octree construction", m_log );
-				
-				#ifdef HIERARCHY_STATS
-					m_log << "Processed nodes: " << octree.m_processedNodes << endl << endl;
-				#endif
 			}
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );

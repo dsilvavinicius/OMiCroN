@@ -48,25 +48,37 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.oct" );
+			#ifdef UNSORTED
+				openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces.ply" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.oct" );
+			#endif
 		#endif
 	#elif MODEL == ST_MATHEW
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/Shallow/StMathew_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct" );
+			#ifdef UNSORTED
+				openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct" );
+			#endif
 		#endif
 	#elif MODEL == ATLAS
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/Shallow/Atlas_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.oct" );
+			#ifdef UNSORTED
+				openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces.ply" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.oct" );
+			#endif
 		#endif		
 	#elif MODEL == DUOMO
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Duomo/Shallow/Duomo_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/Atlas/Duomo/DuomoWithFaces_sorted7.oct" );
+			openMesh( "/media/vinicius/data/Datasets/Duomo/DuomoWithFaces_sorted7.oct" );
 		#endif	
 	#endif
 	
@@ -143,7 +155,8 @@ void PointRendererWidget::paintGL (void)
 	
 	{
 		float currentCompletion = m_statistics.currentCompletion();
-		if( m_octree->substitutedPlaceholders() > EXPECTED_SUBSTITUTED_PLACEHOLDERS * ( currentCompletion + 0.1f ) )
+		if( m_octree->substitutedPlaceholders() >= EXPECTED_SUBSTITUTED_PLACEHOLDERS * ( currentCompletion + 0.1f )
+			|| ( m_octree->substitutedPlaceholders() == EXPECTED_SUBSTITUTED_PLACEHOLDERS && m_statistics.currentCompletion() < 1.f ) )
 		{
 			m_statistics.addCompletionPercent( m_statistics.currentCompletion() + 0.1f );
 		}
@@ -461,7 +474,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	else if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".ply" ) )
 	{
-		m_octree = new Octree( filename, 5, m_loader, runtime );
+		m_octree = new Octree( filename, 7, m_loader, runtime );
 	}
 	else
 	{

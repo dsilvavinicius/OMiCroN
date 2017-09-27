@@ -31,13 +31,13 @@ namespace model
 			Json::Value octreeJson;
 			
 			{
-				PointSorter sorter( inputFilename, outputFilename, lvl );
+				PointSorter sorter( inputFilename, lvl );
 				
 				cout << "Sorting." << endl << endl;
 				
 				auto start = Profiler::now();
 				
-				octreeJson = sorter.sort();
+				octreeJson = sorter.sortToFile( outputFilename );
 				
 				cout << "Total sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 			}
@@ -122,9 +122,8 @@ namespace model
 			
 			int sortLevel = 7;
 			
-			PointSorter sorter( "/media/vinicius/data/Datasets/David/DavidWithFaces.ply",
-								"/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.ply", sortLevel );
-			sorter.sort();
+			PointSorter sorter( "/media/vinicius/data/Datasets/David/DavidWithFaces.ply", sortLevel );
+			sorter.sortToFile( "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.ply" );
 		}
 		
 		TEST_F( PointSorterTest, Atlas )
@@ -134,9 +133,8 @@ namespace model
 			
 			int sortLevel = 7;
 			
-			PointSorter sorter( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces.ply",
-								"/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.ply", sortLevel );
-			sorter.sort();
+			PointSorter sorter( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces.ply", sortLevel );
+			sorter.sortToFile( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.ply" );
 		}
 		
 		TEST_F( PointSorterTest, StMathew )
@@ -146,9 +144,8 @@ namespace model
 			
 			int sortLevel = 7;
 			
-			PointSorter sorter( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply",
-								"/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply", sortLevel );
-			sorter.sort();
+			PointSorter sorter( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply", sortLevel );
+			sorter.sortToFile( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply" );
 		}
 	}
 }

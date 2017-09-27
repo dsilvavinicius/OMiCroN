@@ -1,0 +1,95 @@
+Dataset: DavidWithFaces_sorted7
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.25
+
+Leaf collapse: true
+
+Leaf tangent sizes: 
+{ 3.7e-05, 3e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+2
+Level 4 : 
+2
+2
+Level 5 : 
+2
+2
+Level 6 : 
+2.5
+  2
+Level 7 : 
+4.2
+4.2
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 44
+Render queue time: 0
+CPU overhead: 44
+Rendered points: 19987
+Front insertion delay: 0
+Front size: 329
+Front segments: 5
+Front segment size: 65
+
+=== AVERAGE STATS === 
+Traversal time: 14.561
+Render queue time: 0.0166667
+CPU overhead: 14.5776
+Rendered points: 309213
+Front insertion delay: 87.8083
+Front size: 297.287
+Front segments: 5
+Front segment size: 59.9515
+10% completed at Wed Sep 13 15:54:00 2017
+
+20% completed at Wed Sep 13 15:54:22 2017
+
+30% completed at Wed Sep 13 15:54:42 2017
+
+40% completed at Wed Sep 13 15:55:01 2017
+
+50% completed at Wed Sep 13 15:55:20 2017
+
+60% completed at Wed Sep 13 15:55:41 2017
+
+70% completed at Wed Sep 13 15:56:04 2017
+
+80% completed at Wed Sep 13 15:56:25 2017
+
+90% completed at Wed Sep 13 15:56:46 2017
+
+100% completed at Wed Sep 13 15:57:09 2017
+
+=== GPU STATS === 
+GPU Overhead: 19
+Average GPU Overhead: 33.016
+Time to create hierarchy: 206911ms
+Dynamic memory allocated: 9872293692 bytes
+Number of nodes in hierarchy: 31013
+Number of splats in hierarchy: 274136632
+Number of substituted placeholders: 19895
+

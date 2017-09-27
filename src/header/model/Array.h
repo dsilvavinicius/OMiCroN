@@ -151,7 +151,7 @@ namespace model
 		}
 		
 		/** Ctor to init from stream.
-		 @param input is expected to be binary and writen with operator<<( ostream&, const Array< Type, Alloc >& ) */
+		 @param input is expected to be binary and writen with persist() */
 		Array( ifstream& input )
 		{
 			input.read( reinterpret_cast< char* >( &m_size ), sizeof( uint ) );

@@ -43,6 +43,9 @@ enum ReconstructionAlgorithm
 // Activates rendering in parallel with hierarchy creation.
 #define HIERARCHY_CREATION_RENDERING
 
+// The input is not sorted. The preprocessing step must be performed.
+#define UNSORTED
+
 // Activates de loading of binary octree files instead of hierarchy creation.
 // #define BINARY_OCTREE_FILE
 
@@ -60,10 +63,13 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 5
 
 // Enables node colapse when leaves do not have siblings.
-// #define NODE_COLAPSE
+#define NODE_COLAPSE
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
-#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u
+// #define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u // David + no leaf collapse
+#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19895u // David + leaf collapse
+// #define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
+// #define EXPECTED_SUBSTITUTED_PLACEHOLDERS 23711u // StMathew + no leaf collapse
 
 #ifdef LAB
 	#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul

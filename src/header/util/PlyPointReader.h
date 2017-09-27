@@ -6,6 +6,7 @@
 #include <rply.h>
 #include "Point.h"
 #include "renderers/RenderingState.h"
+#include "PointReader.h"
 
 using namespace std;
 using namespace model;
@@ -15,7 +16,8 @@ namespace util
 	class PlyPointWritter;
 
 	/** Reader for a point .ply file. The file is opened at constructor and closed at destructor. */
-	class PlyPointReader 
+	class PlyPointReader
+	: public PointReader
 	{
 	public:
 		friend PlyPointWritter;
@@ -30,7 +32,7 @@ namespace util
 		p_ply copyHeader( const string& outFilename );
 		
 		/** Reads a .ply file. */
-		void read( const function< void( const Point& ) >& onPointDone );
+		void read( const function< void( const Point& ) >& onPointDone ) override;
 	
 		long getNumPoints() { return m_numPoints; }
 	

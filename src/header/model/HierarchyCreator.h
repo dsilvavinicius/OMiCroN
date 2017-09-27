@@ -14,7 +14,9 @@
 #include "HierarchyCreationLog.h"
 #include "global_malloc.h"
 #include "ReconstructionParams.h"
+#include "SortedPointSet.h"
 #include "PlyPointReader.h"
+#include "InMemPointReader.h"
 
 // #define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG
@@ -39,7 +41,7 @@ namespace model
 		
 		using OctreeDim = OctreeDimensions< Morton >;
 		using Front = model::Front< Morton >;
-		using Reader = PlyPointReader;
+		using Reader = PointReader;
 		//using Sql = SQLiteManager< Point, Morton, Node >;
 		
 		/** List of nodes that can be processed parallel by one thread. */
@@ -48,6 +50,12 @@ namespace model
 		using WorkList = list< NodeList, ManagedAllocator< Node > >;
 		// Array with lists that will be processed in a given creation loop iteration.
 		using IterArray = Array< NodeList >;
+		
+		HierarchyCreator( const SortedPointSet< Morton >& points,
+							#ifdef HIERARCHY_CREATION_RENDERING
+								Front& front,
+							#endif
+							ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
 		
 		/** Ctor.
 		 * @param sortedPlyFilename is a sorted .ply point filename.
@@ -66,10 +74,6 @@ namespace model
 		 * The node pointer ownership is caller's.
 		 */
 		future< pair< Node*, int > > createAsync();
-		
-		#ifdef HIERARCHY_STATS
-			atomic_ulong m_processedNodes;
-		#endif
 		
 	private:
 		/** Map type used to perform a prefix-sum in nodes of a sibling group. */
@@ -176,7 +180,8 @@ namespace model
 		/** Octree dimensions of the leaf level in this octree. */
 		OctreeDim m_leafLvlDim;
 		
-		string m_plyFilename;
+		/** The point reader. */
+		unique_ptr< Reader > m_reader;
 		
 		mutex m_listMutex;
 		
@@ -193,12 +198,35 @@ namespace model
 	
 	template< typename Morton >
 	HierarchyCreator< Morton >
+	::HierarchyCreator( const SortedPointSet< Morton >& points,
+						#ifdef HIERARCHY_CREATION_RENDERING
+							Front& front,
+						#endif
+						ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads )
+	: m_reader( new InMemPointReader( points.m_points ) ),
+	m_lvlWorkLists( points.m_dim.m_nodeLvl + 1 ),
+	m_leafLvlDim( points.m_dim ),
+	m_nThreads( nThreads ),
+	m_expectedLoadPerThread( expectedLoadPerThread ),
+	//m_dbs( nThreads ),
+	m_memoryLimit( memoryLimit )
+	
+	#ifdef HIERARCHY_CREATION_RENDERING
+		, m_front( front )
+	#endif
+	{
+		srand( 1 );
+		omp_set_num_threads( m_nThreads );
+	}
+	
+	template< typename Morton >
+	HierarchyCreator< Morton >
 	::HierarchyCreator( const string& sortedPlyFilename, const OctreeDim& dim,
 						#ifdef HIERARCHY_CREATION_RENDERING
 							Front& front,
 						#endif
 						ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads )
-	: m_plyFilename( sortedPlyFilename ), 
+	: m_reader( new PlyPointReader( sortedPlyFilename ) ), 
 	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
 	m_leafLvlDim( dim ),
 	m_nThreads( nThreads ),
@@ -208,10 +236,6 @@ namespace model
 	
 	#ifdef HIERARCHY_CREATION_RENDERING
 		, m_front( front )
-	#endif
-	
-	#ifdef HIERARCHY_STATS
-		, m_processedNodes( 0 )
 	#endif
 	{
 		srand( 1 );
@@ -266,8 +290,7 @@ namespace model
 				PointVector points;
 				
 				Morton currentParent;
-				Reader reader( m_plyFilename );
-				reader.read(
+				m_reader->read(
 					[ & ]( const Point& p )
 					{
 // 						Point p( point );
@@ -363,6 +386,8 @@ namespace model
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
+				
+				m_reader = nullptr;
 				
 				#ifdef HIERARCHY_CREATION_RENDERING
 					m_front.notifyLeafLvlLoaded();

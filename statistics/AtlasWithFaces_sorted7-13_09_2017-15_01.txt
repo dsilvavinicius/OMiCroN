@@ -1,0 +1,1011 @@
+Dataset: AtlasWithFaces_sorted7
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.25
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 8e-05, 7e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+2
+Level 4 : 
+2
+2
+Level 5 : 
+2
+2
+Level 6 : 
+2.5
+  2
+Level 7 : 
+3.8
+3.5
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 31
+Render queue time: 0
+CPU overhead: 31
+Rendered points: 259416
+Front insertion delay: 0
+Front size: 357
+Front segments: 5
+Front segment size: 71
+
+=== AVERAGE STATS === 
+Traversal time: 25.3996
+Render queue time: 0.0105917
+CPU overhead: 25.4102
+Rendered points: 252157
+Front insertion delay: 62.5261
+Front size: 387.454
+Front segments: 5
+Front segment size: 78.6187
+10% completed at Wed Sep 13 14:58:45 2017
+
+20% completed at Wed Sep 13 14:58:58 2017
+
+30% completed at Wed Sep 13 14:59:09 2017
+
+40% completed at Wed Sep 13 14:59:20 2017
+
+50% completed at Wed Sep 13 14:59:32 2017
+
+60% completed at Wed Sep 13 14:59:44 2017
+
+70% completed at Wed Sep 13 14:59:58 2017
+
+80% completed at Wed Sep 13 15:00:10 2017
+
+90% completed at Wed Sep 13 15:00:22 2017
+
+100% completed at Wed Sep 13 15:00:34 2017
+
+110% completed at Wed Sep 13 15:00:34 2017
+
+120% completed at Wed Sep 13 15:00:34 2017
+
+130% completed at Wed Sep 13 15:00:34 2017
+
+140% completed at Wed Sep 13 15:00:34 2017
+
+150% completed at Wed Sep 13 15:00:34 2017
+
+160% completed at Wed Sep 13 15:00:34 2017
+
+170% completed at Wed Sep 13 15:00:34 2017
+
+180% completed at Wed Sep 13 15:00:34 2017
+
+190% completed at Wed Sep 13 15:00:34 2017
+
+200% completed at Wed Sep 13 15:00:34 2017
+
+210% completed at Wed Sep 13 15:00:34 2017
+
+220% completed at Wed Sep 13 15:00:34 2017
+
+230% completed at Wed Sep 13 15:00:34 2017
+
+240% completed at Wed Sep 13 15:00:34 2017
+
+250% completed at Wed Sep 13 15:00:34 2017
+
+260% completed at Wed Sep 13 15:00:34 2017
+
+270% completed at Wed Sep 13 15:00:34 2017
+
+280% completed at Wed Sep 13 15:00:35 2017
+
+290% completed at Wed Sep 13 15:00:35 2017
+
+300% completed at Wed Sep 13 15:00:35 2017
+
+310% completed at Wed Sep 13 15:00:35 2017
+
+320% completed at Wed Sep 13 15:00:35 2017
+
+330% completed at Wed Sep 13 15:00:35 2017
+
+340% completed at Wed Sep 13 15:00:35 2017
+
+350% completed at Wed Sep 13 15:00:35 2017
+
+360% completed at Wed Sep 13 15:00:35 2017
+
+370% completed at Wed Sep 13 15:00:35 2017
+
+380% completed at Wed Sep 13 15:00:35 2017
+
+390% completed at Wed Sep 13 15:00:35 2017
+
+400% completed at Wed Sep 13 15:00:35 2017
+
+410% completed at Wed Sep 13 15:00:35 2017
+
+420% completed at Wed Sep 13 15:00:35 2017
+
+430% completed at Wed Sep 13 15:00:36 2017
+
+440% completed at Wed Sep 13 15:00:36 2017
+
+450% completed at Wed Sep 13 15:00:36 2017
+
+460% completed at Wed Sep 13 15:00:36 2017
+
+470% completed at Wed Sep 13 15:00:36 2017
+
+480% completed at Wed Sep 13 15:00:36 2017
+
+490% completed at Wed Sep 13 15:00:36 2017
+
+500% completed at Wed Sep 13 15:00:36 2017
+
+510% completed at Wed Sep 13 15:00:36 2017
+
+520% completed at Wed Sep 13 15:00:36 2017
+
+530% completed at Wed Sep 13 15:00:36 2017
+
+540% completed at Wed Sep 13 15:00:36 2017
+
+550% completed at Wed Sep 13 15:00:36 2017
+
+560% completed at Wed Sep 13 15:00:36 2017
+
+570% completed at Wed Sep 13 15:00:36 2017
+
+580% completed at Wed Sep 13 15:00:36 2017
+
+590% completed at Wed Sep 13 15:00:37 2017
+
+600% completed at Wed Sep 13 15:00:37 2017
+
+610% completed at Wed Sep 13 15:00:37 2017
+
+620% completed at Wed Sep 13 15:00:37 2017
+
+630% completed at Wed Sep 13 15:00:37 2017
+
+640% completed at Wed Sep 13 15:00:37 2017
+
+650% completed at Wed Sep 13 15:00:37 2017
+
+660% completed at Wed Sep 13 15:00:37 2017
+
+670% completed at Wed Sep 13 15:00:37 2017
+
+680% completed at Wed Sep 13 15:00:37 2017
+
+690% completed at Wed Sep 13 15:00:37 2017
+
+700% completed at Wed Sep 13 15:00:37 2017
+
+710% completed at Wed Sep 13 15:00:37 2017
+
+720% completed at Wed Sep 13 15:00:37 2017
+
+730% completed at Wed Sep 13 15:00:37 2017
+
+740% completed at Wed Sep 13 15:00:38 2017
+
+750% completed at Wed Sep 13 15:00:38 2017
+
+760% completed at Wed Sep 13 15:00:38 2017
+
+770% completed at Wed Sep 13 15:00:38 2017
+
+780% completed at Wed Sep 13 15:00:38 2017
+
+790% completed at Wed Sep 13 15:00:38 2017
+
+799.999% completed at Wed Sep 13 15:00:38 2017
+
+809.999% completed at Wed Sep 13 15:00:38 2017
+
+820% completed at Wed Sep 13 15:00:38 2017
+
+830% completed at Wed Sep 13 15:00:38 2017
+
+840% completed at Wed Sep 13 15:00:38 2017
+
+850% completed at Wed Sep 13 15:00:38 2017
+
+860% completed at Wed Sep 13 15:00:38 2017
+
+870% completed at Wed Sep 13 15:00:38 2017
+
+880% completed at Wed Sep 13 15:00:38 2017
+
+890% completed at Wed Sep 13 15:00:38 2017
+
+900% completed at Wed Sep 13 15:00:39 2017
+
+910% completed at Wed Sep 13 15:00:39 2017
+
+920% completed at Wed Sep 13 15:00:39 2017
+
+930% completed at Wed Sep 13 15:00:39 2017
+
+940% completed at Wed Sep 13 15:00:39 2017
+
+950% completed at Wed Sep 13 15:00:39 2017
+
+960% completed at Wed Sep 13 15:00:39 2017
+
+970% completed at Wed Sep 13 15:00:39 2017
+
+980% completed at Wed Sep 13 15:00:39 2017
+
+990% completed at Wed Sep 13 15:00:39 2017
+
+1000% completed at Wed Sep 13 15:00:39 2017
+
+1010% completed at Wed Sep 13 15:00:39 2017
+
+1020% completed at Wed Sep 13 15:00:39 2017
+
+1030% completed at Wed Sep 13 15:00:39 2017
+
+1040% completed at Wed Sep 13 15:00:39 2017
+
+1050% completed at Wed Sep 13 15:00:39 2017
+
+1060% completed at Wed Sep 13 15:00:40 2017
+
+1070% completed at Wed Sep 13 15:00:40 2017
+
+1080% completed at Wed Sep 13 15:00:40 2017
+
+1090% completed at Wed Sep 13 15:00:40 2017
+
+1100% completed at Wed Sep 13 15:00:40 2017
+
+1110% completed at Wed Sep 13 15:00:40 2017
+
+1120% completed at Wed Sep 13 15:00:40 2017
+
+1130% completed at Wed Sep 13 15:00:40 2017
+
+1140% completed at Wed Sep 13 15:00:40 2017
+
+1150% completed at Wed Sep 13 15:00:40 2017
+
+1160% completed at Wed Sep 13 15:00:40 2017
+
+1170% completed at Wed Sep 13 15:00:40 2017
+
+1180% completed at Wed Sep 13 15:00:40 2017
+
+1190% completed at Wed Sep 13 15:00:40 2017
+
+1200% completed at Wed Sep 13 15:00:40 2017
+
+1210% completed at Wed Sep 13 15:00:41 2017
+
+1220% completed at Wed Sep 13 15:00:41 2017
+
+1230% completed at Wed Sep 13 15:00:41 2017
+
+1240% completed at Wed Sep 13 15:00:41 2017
+
+1250% completed at Wed Sep 13 15:00:41 2017
+
+1260% completed at Wed Sep 13 15:00:41 2017
+
+1270% completed at Wed Sep 13 15:00:41 2017
+
+1280% completed at Wed Sep 13 15:00:41 2017
+
+1290% completed at Wed Sep 13 15:00:41 2017
+
+1300% completed at Wed Sep 13 15:00:41 2017
+
+1310% completed at Wed Sep 13 15:00:41 2017
+
+1320% completed at Wed Sep 13 15:00:41 2017
+
+1330% completed at Wed Sep 13 15:00:41 2017
+
+1340% completed at Wed Sep 13 15:00:42 2017
+
+1350% completed at Wed Sep 13 15:00:42 2017
+
+1360% completed at Wed Sep 13 15:00:42 2017
+
+1370% completed at Wed Sep 13 15:00:42 2017
+
+1380% completed at Wed Sep 13 15:00:42 2017
+
+1390% completed at Wed Sep 13 15:00:42 2017
+
+1400% completed at Wed Sep 13 15:00:42 2017
+
+1410% completed at Wed Sep 13 15:00:42 2017
+
+1420% completed at Wed Sep 13 15:00:42 2017
+
+1430% completed at Wed Sep 13 15:00:42 2017
+
+1440% completed at Wed Sep 13 15:00:42 2017
+
+1450% completed at Wed Sep 13 15:00:42 2017
+
+1460% completed at Wed Sep 13 15:00:42 2017
+
+1470% completed at Wed Sep 13 15:00:42 2017
+
+1480% completed at Wed Sep 13 15:00:43 2017
+
+1490% completed at Wed Sep 13 15:00:43 2017
+
+1500% completed at Wed Sep 13 15:00:43 2017
+
+1510% completed at Wed Sep 13 15:00:43 2017
+
+1520% completed at Wed Sep 13 15:00:43 2017
+
+1530% completed at Wed Sep 13 15:00:43 2017
+
+1540% completed at Wed Sep 13 15:00:43 2017
+
+1550% completed at Wed Sep 13 15:00:43 2017
+
+1560% completed at Wed Sep 13 15:00:43 2017
+
+1570% completed at Wed Sep 13 15:00:43 2017
+
+1580% completed at Wed Sep 13 15:00:43 2017
+
+1590% completed at Wed Sep 13 15:00:43 2017
+
+1600% completed at Wed Sep 13 15:00:43 2017
+
+1610% completed at Wed Sep 13 15:00:43 2017
+
+1620% completed at Wed Sep 13 15:00:43 2017
+
+1630% completed at Wed Sep 13 15:00:44 2017
+
+1640% completed at Wed Sep 13 15:00:44 2017
+
+1650% completed at Wed Sep 13 15:00:44 2017
+
+1660% completed at Wed Sep 13 15:00:44 2017
+
+1670% completed at Wed Sep 13 15:00:44 2017
+
+1680% completed at Wed Sep 13 15:00:44 2017
+
+1690% completed at Wed Sep 13 15:00:44 2017
+
+1700% completed at Wed Sep 13 15:00:44 2017
+
+1710% completed at Wed Sep 13 15:00:44 2017
+
+1720% completed at Wed Sep 13 15:00:44 2017
+
+1730% completed at Wed Sep 13 15:00:44 2017
+
+1740% completed at Wed Sep 13 15:00:44 2017
+
+1750% completed at Wed Sep 13 15:00:44 2017
+
+1760% completed at Wed Sep 13 15:00:44 2017
+
+1770% completed at Wed Sep 13 15:00:45 2017
+
+1780% completed at Wed Sep 13 15:00:45 2017
+
+1790% completed at Wed Sep 13 15:00:45 2017
+
+1800% completed at Wed Sep 13 15:00:45 2017
+
+1810% completed at Wed Sep 13 15:00:45 2017
+
+1820% completed at Wed Sep 13 15:00:45 2017
+
+1830% completed at Wed Sep 13 15:00:45 2017
+
+1840% completed at Wed Sep 13 15:00:45 2017
+
+1850% completed at Wed Sep 13 15:00:45 2017
+
+1860% completed at Wed Sep 13 15:00:45 2017
+
+1870% completed at Wed Sep 13 15:00:45 2017
+
+1880% completed at Wed Sep 13 15:00:45 2017
+
+1890% completed at Wed Sep 13 15:00:45 2017
+
+1900% completed at Wed Sep 13 15:00:45 2017
+
+1910% completed at Wed Sep 13 15:00:45 2017
+
+1920% completed at Wed Sep 13 15:00:46 2017
+
+1930% completed at Wed Sep 13 15:00:46 2017
+
+1940% completed at Wed Sep 13 15:00:46 2017
+
+1950% completed at Wed Sep 13 15:00:46 2017
+
+1960% completed at Wed Sep 13 15:00:46 2017
+
+1970% completed at Wed Sep 13 15:00:46 2017
+
+1980% completed at Wed Sep 13 15:00:46 2017
+
+1990% completed at Wed Sep 13 15:00:46 2017
+
+2000% completed at Wed Sep 13 15:00:46 2017
+
+2010% completed at Wed Sep 13 15:00:46 2017
+
+2020% completed at Wed Sep 13 15:00:46 2017
+
+2030% completed at Wed Sep 13 15:00:46 2017
+
+2040% completed at Wed Sep 13 15:00:46 2017
+
+2050% completed at Wed Sep 13 15:00:46 2017
+
+2060% completed at Wed Sep 13 15:00:46 2017
+
+2070% completed at Wed Sep 13 15:00:46 2017
+
+2080% completed at Wed Sep 13 15:00:46 2017
+
+2090% completed at Wed Sep 13 15:00:47 2017
+
+2100% completed at Wed Sep 13 15:00:47 2017
+
+2110% completed at Wed Sep 13 15:00:47 2017
+
+2120% completed at Wed Sep 13 15:00:47 2017
+
+2130% completed at Wed Sep 13 15:00:47 2017
+
+2140% completed at Wed Sep 13 15:00:47 2017
+
+2150% completed at Wed Sep 13 15:00:47 2017
+
+2160% completed at Wed Sep 13 15:00:47 2017
+
+2170% completed at Wed Sep 13 15:00:47 2017
+
+2180% completed at Wed Sep 13 15:00:47 2017
+
+2190% completed at Wed Sep 13 15:00:47 2017
+
+2200% completed at Wed Sep 13 15:00:47 2017
+
+2210% completed at Wed Sep 13 15:00:47 2017
+
+2220% completed at Wed Sep 13 15:00:47 2017
+
+2230% completed at Wed Sep 13 15:00:47 2017
+
+2240% completed at Wed Sep 13 15:00:48 2017
+
+2250% completed at Wed Sep 13 15:00:48 2017
+
+2260% completed at Wed Sep 13 15:00:48 2017
+
+2270.01% completed at Wed Sep 13 15:00:48 2017
+
+2280.01% completed at Wed Sep 13 15:00:48 2017
+
+2290.01% completed at Wed Sep 13 15:00:48 2017
+
+2300.01% completed at Wed Sep 13 15:00:48 2017
+
+2310.01% completed at Wed Sep 13 15:00:48 2017
+
+2320.01% completed at Wed Sep 13 15:00:48 2017
+
+2330.01% completed at Wed Sep 13 15:00:48 2017
+
+2340.01% completed at Wed Sep 13 15:00:48 2017
+
+2350.01% completed at Wed Sep 13 15:00:48 2017
+
+2360.01% completed at Wed Sep 13 15:00:48 2017
+
+2370.01% completed at Wed Sep 13 15:00:48 2017
+
+2380.01% completed at Wed Sep 13 15:00:48 2017
+
+2390.01% completed at Wed Sep 13 15:00:48 2017
+
+2400.01% completed at Wed Sep 13 15:00:49 2017
+
+2410.01% completed at Wed Sep 13 15:00:49 2017
+
+2420.01% completed at Wed Sep 13 15:00:49 2017
+
+2430.01% completed at Wed Sep 13 15:00:49 2017
+
+2440.01% completed at Wed Sep 13 15:00:49 2017
+
+2450.01% completed at Wed Sep 13 15:00:49 2017
+
+2460.01% completed at Wed Sep 13 15:00:49 2017
+
+2470.01% completed at Wed Sep 13 15:00:49 2017
+
+2480.01% completed at Wed Sep 13 15:00:49 2017
+
+2490.01% completed at Wed Sep 13 15:00:49 2017
+
+2500.01% completed at Wed Sep 13 15:00:49 2017
+
+2510.01% completed at Wed Sep 13 15:00:49 2017
+
+2520.01% completed at Wed Sep 13 15:00:49 2017
+
+2530.01% completed at Wed Sep 13 15:00:49 2017
+
+2540.01% completed at Wed Sep 13 15:00:50 2017
+
+2550.01% completed at Wed Sep 13 15:00:50 2017
+
+2560.01% completed at Wed Sep 13 15:00:50 2017
+
+2570.01% completed at Wed Sep 13 15:00:50 2017
+
+2580.01% completed at Wed Sep 13 15:00:50 2017
+
+2590.01% completed at Wed Sep 13 15:00:50 2017
+
+2600.01% completed at Wed Sep 13 15:00:50 2017
+
+2610.01% completed at Wed Sep 13 15:00:50 2017
+
+2620.01% completed at Wed Sep 13 15:00:50 2017
+
+2630.01% completed at Wed Sep 13 15:00:50 2017
+
+2640.01% completed at Wed Sep 13 15:00:50 2017
+
+2650.01% completed at Wed Sep 13 15:00:50 2017
+
+2660.01% completed at Wed Sep 13 15:00:50 2017
+
+2670.01% completed at Wed Sep 13 15:00:50 2017
+
+2680.01% completed at Wed Sep 13 15:00:50 2017
+
+2690.01% completed at Wed Sep 13 15:00:51 2017
+
+2700.01% completed at Wed Sep 13 15:00:51 2017
+
+2710.01% completed at Wed Sep 13 15:00:51 2017
+
+2720.01% completed at Wed Sep 13 15:00:51 2017
+
+2730.01% completed at Wed Sep 13 15:00:51 2017
+
+2740.01% completed at Wed Sep 13 15:00:51 2017
+
+2750.01% completed at Wed Sep 13 15:00:51 2017
+
+2760.01% completed at Wed Sep 13 15:00:51 2017
+
+2770.01% completed at Wed Sep 13 15:00:51 2017
+
+2780.01% completed at Wed Sep 13 15:00:51 2017
+
+2790.01% completed at Wed Sep 13 15:00:51 2017
+
+2800.01% completed at Wed Sep 13 15:00:51 2017
+
+2810.01% completed at Wed Sep 13 15:00:51 2017
+
+2820.01% completed at Wed Sep 13 15:00:51 2017
+
+2830.01% completed at Wed Sep 13 15:00:51 2017
+
+2840.01% completed at Wed Sep 13 15:00:51 2017
+
+2850.01% completed at Wed Sep 13 15:00:52 2017
+
+2860.01% completed at Wed Sep 13 15:00:52 2017
+
+2870.01% completed at Wed Sep 13 15:00:52 2017
+
+2880.01% completed at Wed Sep 13 15:00:52 2017
+
+2890.01% completed at Wed Sep 13 15:00:52 2017
+
+2900.01% completed at Wed Sep 13 15:00:52 2017
+
+2910.01% completed at Wed Sep 13 15:00:52 2017
+
+2920.01% completed at Wed Sep 13 15:00:52 2017
+
+2930.01% completed at Wed Sep 13 15:00:52 2017
+
+2940.01% completed at Wed Sep 13 15:00:52 2017
+
+2950.01% completed at Wed Sep 13 15:00:52 2017
+
+2960.01% completed at Wed Sep 13 15:00:52 2017
+
+2970.01% completed at Wed Sep 13 15:00:52 2017
+
+2980.01% completed at Wed Sep 13 15:00:52 2017
+
+2990.01% completed at Wed Sep 13 15:00:52 2017
+
+3000.01% completed at Wed Sep 13 15:00:53 2017
+
+3010.01% completed at Wed Sep 13 15:00:53 2017
+
+3020.01% completed at Wed Sep 13 15:00:53 2017
+
+3030.01% completed at Wed Sep 13 15:00:53 2017
+
+3040.01% completed at Wed Sep 13 15:00:53 2017
+
+3050.01% completed at Wed Sep 13 15:00:53 2017
+
+3060.01% completed at Wed Sep 13 15:00:53 2017
+
+3070.01% completed at Wed Sep 13 15:00:53 2017
+
+3080.01% completed at Wed Sep 13 15:00:53 2017
+
+3090.01% completed at Wed Sep 13 15:00:53 2017
+
+3100.01% completed at Wed Sep 13 15:00:53 2017
+
+3110.01% completed at Wed Sep 13 15:00:53 2017
+
+3120.01% completed at Wed Sep 13 15:00:53 2017
+
+3130.01% completed at Wed Sep 13 15:00:53 2017
+
+3140.01% completed at Wed Sep 13 15:00:54 2017
+
+3150.01% completed at Wed Sep 13 15:00:54 2017
+
+3160.01% completed at Wed Sep 13 15:00:54 2017
+
+3170.01% completed at Wed Sep 13 15:00:54 2017
+
+3180.01% completed at Wed Sep 13 15:00:54 2017
+
+3190.01% completed at Wed Sep 13 15:00:54 2017
+
+3200.01% completed at Wed Sep 13 15:00:54 2017
+
+3210.01% completed at Wed Sep 13 15:00:54 2017
+
+3220.01% completed at Wed Sep 13 15:00:54 2017
+
+3230.01% completed at Wed Sep 13 15:00:54 2017
+
+3240.01% completed at Wed Sep 13 15:00:54 2017
+
+3250.01% completed at Wed Sep 13 15:00:54 2017
+
+3260.01% completed at Wed Sep 13 15:00:54 2017
+
+3270.01% completed at Wed Sep 13 15:00:54 2017
+
+3280.01% completed at Wed Sep 13 15:00:54 2017
+
+3290.01% completed at Wed Sep 13 15:00:54 2017
+
+3300.01% completed at Wed Sep 13 15:00:55 2017
+
+3310.01% completed at Wed Sep 13 15:00:55 2017
+
+3320.01% completed at Wed Sep 13 15:00:55 2017
+
+3330.01% completed at Wed Sep 13 15:00:55 2017
+
+3340.01% completed at Wed Sep 13 15:00:55 2017
+
+3350.01% completed at Wed Sep 13 15:00:55 2017
+
+3360.01% completed at Wed Sep 13 15:00:55 2017
+
+3370.01% completed at Wed Sep 13 15:00:55 2017
+
+3380.01% completed at Wed Sep 13 15:00:55 2017
+
+3390.01% completed at Wed Sep 13 15:00:55 2017
+
+3400.01% completed at Wed Sep 13 15:00:55 2017
+
+3410.01% completed at Wed Sep 13 15:00:55 2017
+
+3420.01% completed at Wed Sep 13 15:00:55 2017
+
+3430% completed at Wed Sep 13 15:00:55 2017
+
+3440% completed at Wed Sep 13 15:00:55 2017
+
+3450% completed at Wed Sep 13 15:00:55 2017
+
+3460% completed at Wed Sep 13 15:00:56 2017
+
+3470% completed at Wed Sep 13 15:00:56 2017
+
+3480% completed at Wed Sep 13 15:00:56 2017
+
+3490% completed at Wed Sep 13 15:00:56 2017
+
+3500% completed at Wed Sep 13 15:00:56 2017
+
+3510% completed at Wed Sep 13 15:00:56 2017
+
+3520% completed at Wed Sep 13 15:00:56 2017
+
+3530% completed at Wed Sep 13 15:00:56 2017
+
+3540% completed at Wed Sep 13 15:00:56 2017
+
+3550% completed at Wed Sep 13 15:00:56 2017
+
+3560% completed at Wed Sep 13 15:00:56 2017
+
+3570% completed at Wed Sep 13 15:00:56 2017
+
+3580% completed at Wed Sep 13 15:00:56 2017
+
+3590% completed at Wed Sep 13 15:00:56 2017
+
+3600% completed at Wed Sep 13 15:00:56 2017
+
+3610% completed at Wed Sep 13 15:00:56 2017
+
+3620% completed at Wed Sep 13 15:00:57 2017
+
+3630% completed at Wed Sep 13 15:00:57 2017
+
+3640% completed at Wed Sep 13 15:00:57 2017
+
+3650% completed at Wed Sep 13 15:00:57 2017
+
+3660% completed at Wed Sep 13 15:00:57 2017
+
+3670% completed at Wed Sep 13 15:00:57 2017
+
+3680% completed at Wed Sep 13 15:00:57 2017
+
+3690% completed at Wed Sep 13 15:00:57 2017
+
+3700% completed at Wed Sep 13 15:00:57 2017
+
+3710% completed at Wed Sep 13 15:00:57 2017
+
+3720% completed at Wed Sep 13 15:00:57 2017
+
+3730% completed at Wed Sep 13 15:00:57 2017
+
+3740% completed at Wed Sep 13 15:00:57 2017
+
+3750% completed at Wed Sep 13 15:00:57 2017
+
+3760% completed at Wed Sep 13 15:00:57 2017
+
+3770% completed at Wed Sep 13 15:00:57 2017
+
+3780% completed at Wed Sep 13 15:00:57 2017
+
+3790% completed at Wed Sep 13 15:00:57 2017
+
+3800% completed at Wed Sep 13 15:00:58 2017
+
+3810% completed at Wed Sep 13 15:00:58 2017
+
+3820% completed at Wed Sep 13 15:00:58 2017
+
+3830% completed at Wed Sep 13 15:00:58 2017
+
+3840% completed at Wed Sep 13 15:00:58 2017
+
+3850% completed at Wed Sep 13 15:00:58 2017
+
+3860% completed at Wed Sep 13 15:00:58 2017
+
+3870% completed at Wed Sep 13 15:00:58 2017
+
+3880% completed at Wed Sep 13 15:00:58 2017
+
+3890% completed at Wed Sep 13 15:00:58 2017
+
+3900% completed at Wed Sep 13 15:00:58 2017
+
+3910% completed at Wed Sep 13 15:00:58 2017
+
+3920% completed at Wed Sep 13 15:00:58 2017
+
+3930% completed at Wed Sep 13 15:00:58 2017
+
+3940% completed at Wed Sep 13 15:00:58 2017
+
+3950% completed at Wed Sep 13 15:00:58 2017
+
+3960% completed at Wed Sep 13 15:00:58 2017
+
+3970% completed at Wed Sep 13 15:00:58 2017
+
+3980% completed at Wed Sep 13 15:00:59 2017
+
+3990% completed at Wed Sep 13 15:00:59 2017
+
+4000% completed at Wed Sep 13 15:00:59 2017
+
+4010% completed at Wed Sep 13 15:00:59 2017
+
+4020% completed at Wed Sep 13 15:00:59 2017
+
+4030% completed at Wed Sep 13 15:00:59 2017
+
+4040% completed at Wed Sep 13 15:00:59 2017
+
+4050% completed at Wed Sep 13 15:00:59 2017
+
+4060% completed at Wed Sep 13 15:00:59 2017
+
+4070% completed at Wed Sep 13 15:00:59 2017
+
+4079.99% completed at Wed Sep 13 15:00:59 2017
+
+4089.99% completed at Wed Sep 13 15:00:59 2017
+
+4099.99% completed at Wed Sep 13 15:00:59 2017
+
+4109.99% completed at Wed Sep 13 15:00:59 2017
+
+4119.99% completed at Wed Sep 13 15:00:59 2017
+
+4129.99% completed at Wed Sep 13 15:00:59 2017
+
+4139.99% completed at Wed Sep 13 15:00:59 2017
+
+4149.99% completed at Wed Sep 13 15:00:59 2017
+
+4159.99% completed at Wed Sep 13 15:01:00 2017
+
+4169.99% completed at Wed Sep 13 15:01:00 2017
+
+4179.99% completed at Wed Sep 13 15:01:00 2017
+
+4189.99% completed at Wed Sep 13 15:01:00 2017
+
+4199.99% completed at Wed Sep 13 15:01:00 2017
+
+4209.99% completed at Wed Sep 13 15:01:00 2017
+
+4219.99% completed at Wed Sep 13 15:01:00 2017
+
+4229.99% completed at Wed Sep 13 15:01:00 2017
+
+4239.99% completed at Wed Sep 13 15:01:00 2017
+
+4249.99% completed at Wed Sep 13 15:01:00 2017
+
+4259.99% completed at Wed Sep 13 15:01:00 2017
+
+4269.99% completed at Wed Sep 13 15:01:00 2017
+
+4279.99% completed at Wed Sep 13 15:01:00 2017
+
+4289.99% completed at Wed Sep 13 15:01:00 2017
+
+4299.99% completed at Wed Sep 13 15:01:00 2017
+
+4309.99% completed at Wed Sep 13 15:01:01 2017
+
+4319.99% completed at Wed Sep 13 15:01:01 2017
+
+4329.99% completed at Wed Sep 13 15:01:01 2017
+
+4339.99% completed at Wed Sep 13 15:01:01 2017
+
+4349.99% completed at Wed Sep 13 15:01:01 2017
+
+4359.99% completed at Wed Sep 13 15:01:01 2017
+
+4369.99% completed at Wed Sep 13 15:01:01 2017
+
+4379.99% completed at Wed Sep 13 15:01:01 2017
+
+4389.99% completed at Wed Sep 13 15:01:01 2017
+
+4399.99% completed at Wed Sep 13 15:01:01 2017
+
+4409.99% completed at Wed Sep 13 15:01:01 2017
+
+4419.99% completed at Wed Sep 13 15:01:01 2017
+
+4429.99% completed at Wed Sep 13 15:01:01 2017
+
+4439.99% completed at Wed Sep 13 15:01:01 2017
+
+4449.99% completed at Wed Sep 13 15:01:01 2017
+
+4459.99% completed at Wed Sep 13 15:01:01 2017
+
+4469.99% completed at Wed Sep 13 15:01:02 2017
+
+4479.99% completed at Wed Sep 13 15:01:02 2017
+
+4489.99% completed at Wed Sep 13 15:01:02 2017
+
+4499.99% completed at Wed Sep 13 15:01:02 2017
+
+4509.99% completed at Wed Sep 13 15:01:02 2017
+
+4519.99% completed at Wed Sep 13 15:01:02 2017
+
+4529.99% completed at Wed Sep 13 15:01:02 2017
+
+4539.99% completed at Wed Sep 13 15:01:02 2017
+
+4549.99% completed at Wed Sep 13 15:01:02 2017
+
+4559.99% completed at Wed Sep 13 15:01:02 2017
+
+4569.99% completed at Wed Sep 13 15:01:02 2017
+
+4579.99% completed at Wed Sep 13 15:01:02 2017
+
+4589.99% completed at Wed Sep 13 15:01:02 2017
+
+4599.99% completed at Wed Sep 13 15:01:02 2017
+
+4609.99% completed at Wed Sep 13 15:01:02 2017
+
+4619.99% completed at Wed Sep 13 15:01:02 2017
+
+4629.99% completed at Wed Sep 13 15:01:02 2017
+
+4639.99% completed at Wed Sep 13 15:01:03 2017
+
+4649.99% completed at Wed Sep 13 15:01:03 2017
+
+4659.99% completed at Wed Sep 13 15:01:03 2017
+
+4669.99% completed at Wed Sep 13 15:01:03 2017
+
+4679.99% completed at Wed Sep 13 15:01:03 2017
+
+=== GPU STATS === 
+GPU Overhead: 19
+Average GPU Overhead: 28.89
+Time to create hierarchy: 120767ms
+Dynamic memory allocated: 12246644080 bytes
+Number of nodes in hierarchy: 49186
+Number of splats in hierarchy: 340027885
+Number of substituted placeholders: 21187
+

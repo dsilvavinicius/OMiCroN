@@ -1,0 +1,95 @@
+Dataset: StMathewWithFaces_sorted7
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.25
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 8.5e-05, 5.5e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+2
+Level 4 : 
+2
+2
+Level 5 : 
+2
+2
+Level 6 : 
+2.3
+  2
+Level 7 : 
+4.2
+  4
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 34
+Render queue time: 0
+CPU overhead: 34
+Rendered points: 306531
+Front insertion delay: 0
+Front size: 835
+Front segments: 5
+Front segment size: 167
+
+=== AVERAGE STATS === 
+Traversal time: 32.648
+Render queue time: 0.000657896
+CPU overhead: 32.6487
+Rendered points: 365820
+Front insertion delay: 63.0051
+Front size: 780.262
+Front segments: 5
+Front segment size: 158.678
+10% completed at Wed Sep 13 15:37:46 2017
+
+20% completed at Wed Sep 13 15:37:55 2017
+
+30% completed at Wed Sep 13 15:38:05 2017
+
+40% completed at Wed Sep 13 15:38:14 2017
+
+50% completed at Wed Sep 13 15:38:22 2017
+
+60% completed at Wed Sep 13 15:38:30 2017
+
+70% completed at Wed Sep 13 15:38:37 2017
+
+80% completed at Wed Sep 13 15:38:45 2017
+
+90% completed at Wed Sep 13 15:38:53 2017
+
+100% completed at Wed Sep 13 15:39:02 2017
+
+=== GPU STATS === 
+GPU Overhead: 19
+Average GPU Overhead: 26.8921
+Time to create hierarchy: 86361ms
+Dynamic memory allocated: 8981442868 bytes
+Number of nodes in hierarchy: 54788
+Number of splats in hierarchy: 249293312
+Number of substituted placeholders: 23711
+
