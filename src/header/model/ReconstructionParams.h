@@ -25,7 +25,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL ST_MATHEW
+#define MODEL DAVID
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -45,6 +45,9 @@ enum ReconstructionAlgorithm
 
 // The input is not sorted. The preprocessing step must be performed.
 #define UNSORTED
+
+// Uses a min-heap sort to sort points incrementally. 
+#define HEAP_SORT
 
 // Activates de loading of binary octree files instead of hierarchy creation.
 // #define BINARY_OCTREE_FILE

@@ -22,6 +22,7 @@ add_subdirectory (gtest/)
 # Adds the executable
 add_executable (Tests
 	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
+	${CPP_DIR}/${UTIL_DIR}/HeapPointReaderTest.cpp
 	
 	${CPP_DIR}/${MODEL_DIR}/ArrayTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/PointSorterTest.cpp

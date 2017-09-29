@@ -2,6 +2,7 @@
 #define POINT_READER_H
 
 #include "Point.h"
+#include <OctreeDimensions.h>
 
 using namespace model;
 

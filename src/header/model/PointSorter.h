@@ -9,7 +9,7 @@
 #include "OctreeDimensions.h"
 #include "Profiler.h"
 #include "global_malloc.h"
-#include "SortedPointSet.h"
+#include "PointSet.h"
 
 using namespace std;
 using namespace util;
@@ -25,7 +25,7 @@ namespace model
 		using Reader = PlyPointReader;
 		using Writter = PlyPointWritter;
 		using OctreeDim = model::OctreeDimensions< M >;
-		using SorterPointSet = model::SortedPointSet< M >;
+		using SorterPointSet = model::PointSet< M >;
 		
 		PointSorter( const string& input, uint leafLvl );
 		PointSorter( const string& input, const OctreeDim& dim );
@@ -34,13 +34,16 @@ namespace model
 		Json::Value sortToFile( const string& outFilename );
 		OctreeDim& comp() { return m_comp; }
 		
+		/** @returns the points. If sort() was called before, the points are sorted. They will be in an unknown order otherwise. */
+		PointSet< M > points();
+		
 	private:
 		M calcMorton( const Point& point );
 		void write( const Point& p );
 		
 		Reader m_reader;
 		
-		typename SorterPointSet::PointVectorPtr m_points;
+		typename SorterPointSet::PointDequePtr m_points;
 		
 		OctreeDim m_comp;
 	};
@@ -51,7 +54,7 @@ namespace model
 	{
 		cout << "Setup sorting of " << input << endl << endl;
 		
-		m_points = typename SorterPointSet::PointVectorPtr( new typename SorterPointSet::PointVector( m_reader.getNumPoints() ) );
+		m_points = typename SorterPointSet::PointDequePtr( new typename SorterPointSet::PointDeque( m_reader.getNumPoints() ) );
 		
 		Float negInf = -numeric_limits< Float >::max();
 		Float posInf = numeric_limits< Float >::max();
@@ -120,7 +123,7 @@ namespace model
 	}
 	
 	template< typename M >
-	SortedPointSet< M > PointSorter< M >::sort()
+	PointSet< M > PointSorter< M >::sort()
 	{
 		cout << "Starting sort." << endl << endl;
 		
@@ -134,7 +137,7 @@ namespace model
 		
 		cout << "Sorting time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
-		return SortedPointSet< M >( m_points, m_comp );
+		return PointSet< M >( m_points, m_comp );
 	}
 	
 	template< typename M >
@@ -176,6 +179,12 @@ namespace model
 		cout << "Writing time (ms): " << Profiler::elapsedTime( start ) << endl << endl;
 		
 		return octreeJson;
+	}
+	
+	template< typename M >
+	PointSet< M > PointSorter< M >::points()
+	{
+		return PointSet< M >( m_points, m_comp );
 	}
 }
 

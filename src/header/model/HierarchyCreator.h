@@ -14,7 +14,7 @@
 #include "HierarchyCreationLog.h"
 #include "global_malloc.h"
 #include "ReconstructionParams.h"
-#include "SortedPointSet.h"
+#include "PointSet.h"
 #include "PlyPointReader.h"
 #include "InMemPointReader.h"
 
@@ -42,6 +42,7 @@ namespace model
 		using OctreeDim = OctreeDimensions< Morton >;
 		using Front = model::Front< Morton >;
 		using Reader = PointReader;
+		using ReaderPtr = unique_ptr< PointReader >;
 		//using Sql = SQLiteManager< Point, Morton, Node >;
 		
 		/** List of nodes that can be processed parallel by one thread. */
@@ -51,7 +52,12 @@ namespace model
 		// Array with lists that will be processed in a given creation loop iteration.
 		using IterArray = Array< NodeList >;
 		
-		HierarchyCreator( const SortedPointSet< Morton >& points,
+		/** Ctor to init from a sorted PointSet.
+		 * @param reader has the role to read the points for which the hierarchy will be created for.
+		 * @param expectedLoadPerThread is the size of the NodeList that will be passed to each thread in the
+		 * hierarchy creation loop iterations.
+		 * @param memoryLimit is the allowed soft limit of memory consumption by the creation algorithm. */
+		HierarchyCreator( 	ReaderPtr&& reader, const OctreeDim& dim,
 							#ifdef HIERARCHY_CREATION_RENDERING
 								Front& front,
 							#endif
@@ -181,7 +187,7 @@ namespace model
 		OctreeDim m_leafLvlDim;
 		
 		/** The point reader. */
-		unique_ptr< Reader > m_reader;
+		ReaderPtr m_reader;
 		
 		mutex m_listMutex;
 		
@@ -198,14 +204,14 @@ namespace model
 	
 	template< typename Morton >
 	HierarchyCreator< Morton >
-	::HierarchyCreator( const SortedPointSet< Morton >& points,
+	::HierarchyCreator( ReaderPtr&& reader, const OctreeDim& dim,
 						#ifdef HIERARCHY_CREATION_RENDERING
 							Front& front,
 						#endif
 						ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads )
-	: m_reader( new InMemPointReader( points.m_points ) ),
-	m_lvlWorkLists( points.m_dim.m_nodeLvl + 1 ),
-	m_leafLvlDim( points.m_dim ),
+	: m_reader( std::move( reader ) ),
+	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
+	m_leafLvlDim( dim ),
 	m_nThreads( nThreads ),
 	m_expectedLoadPerThread( expectedLoadPerThread ),
 	//m_dbs( nThreads ),

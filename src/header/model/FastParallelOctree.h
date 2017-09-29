@@ -3,6 +3,7 @@
 
 #include <forward_list>
 #include "PointSorter.h"
+#include "HeapPointReader.h"
 #include "O1OctreeNode.h"
 #include "HierarchyCreator.h"
 #include "Front.h"
@@ -69,8 +70,8 @@ namespace model
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M >& octree );
 		
 	private:
-		/** Builds from a sorted point set in memory. */
-		void buildFromSortedPoints( const SortedPointSet< Morton >& points, NodeLoader& loader, const RuntimeSetup& runtime );
+		/** Builds from a point set in memory. */
+		void buildFromPoints( typename HierarchyCreator::ReaderPtr reader, const Dim& dim, NodeLoader& nodeLoader, const RuntimeSetup& runtime );
 		
 		/** Builds from a octree file json. */
 		void buildFromSortedFile( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& runtime );
@@ -111,13 +112,15 @@ namespace model
 		
 		omp_set_num_threads( 8 );
 		
-		SortedPointSet< Morton > sortedPoints;
-		{
+		#ifdef HEAP_SORT
+			HeapPointReader< Morton >* reader = new HeapPointReader< Morton >( plyFilename, maxLvl );
+		#else
 			PointSorter< Morton > sorter( plyFilename, maxLvl );
-			sortedPoints = sorter.sort();
-		}
+			PointSet< Morton > points = sorter.sort();
+			InMemPointReader< Morton >* reader = new InMemPointReader< Morton >( points.m_points, points.m_dim );
+		#endif
 		
-		buildFromSortedPoints( sortedPoints, loader, runtime );
+		buildFromPoints( typename HierarchyCreator::ReaderPtr( reader ), reader->dimensions(), loader, runtime );
 	}
 	
 	template< typename Morton >
@@ -147,20 +150,20 @@ namespace model
 	
 	template< typename Morton >
 	void FastParallelOctree< Morton >
-	::buildFromSortedPoints( const SortedPointSet< Morton >& points, NodeLoader& loader, const RuntimeSetup& runtime )
+	::buildFromPoints( typename HierarchyCreator::ReaderPtr reader, const Dim& dim, NodeLoader& loader, const RuntimeSetup& runtime )
 	{
 		omp_set_num_threads( 8 );
 		
-		m_dim = points.m_dim;
+		m_dim = dim;
 		
 		// Debug
 		{
-			cout << "Dim from sorted set: " << points.m_dim << endl;
+			cout << "Dim from sorted set: " << m_dim << endl;
 		}
 		
 		m_front = new Front( "", m_dim, runtime.m_nThreads, loader, runtime.m_memoryQuota );
 		
-		m_hierarchyCreator = new HierarchyCreator( 	points,
+		m_hierarchyCreator = new HierarchyCreator( 	std::move( reader ), m_dim,
 													#ifdef HIERARCHY_CREATION_RENDERING
 														*m_front,
 													#endif

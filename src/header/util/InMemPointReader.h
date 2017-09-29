@@ -2,35 +2,63 @@
 #define IN_MEM_POINT_READER_H
 
 #include "PointReader.h"
+#include <OctreeDimensions.h>
+#include <deque>
 
 namespace util
 {
+	template< typename Morton >
 	class InMemPointReader
 	: public PointReader
 	{
 	public:
-		using PointVector = vector< Point, TbbAllocator< Point > >;
-		using PointVectorPtr = shared_ptr< PointVector >;
+		using PointDeque = deque< Point >;
+		using PointDequePtr = shared_ptr< PointDeque >;
+		using Dim = OctreeDimensions< Morton >;
 		
-		InMemPointReader( PointVectorPtr points );
+		InMemPointReader( PointDequePtr points, const Dim& dim );
 		void read( const function< void( const Point& ) >& onPointDone ) override;
 	
+		const Dim& dimensions() { return m_dim; }
+		
 	private:
-		PointVectorPtr m_points;
-		PointVector::iterator m_it;
+		PointDequePtr m_points;
+		Dim m_dim;
 	};
 	
-	inline InMemPointReader::InMemPointReader( PointVectorPtr points )
+	template< typename Morton >
+	inline InMemPointReader< Morton >::InMemPointReader( PointDequePtr points, const Dim& dim )
 	: m_points( points ),
-	m_it( m_points->begin() )
+	m_dim( dim )
 	{}
 	
-	inline void InMemPointReader::read( const function< void( const Point& ) >& onPointDone )
+	template< typename Morton >
+	inline void InMemPointReader< Morton >::read( const function< void( const Point& ) >& onPointDone )
 	{
-		for( const Point& p : ( *m_points ) )
+		while( !m_points->empty() )
 		{
-			onPointDone( p );
+			onPointDone( m_points->front() );
+			m_points->pop_front();
 		}
+		
+// 		for( const Point& p : *m_points )
+// 		{
+// 			onPointDone( p );
+// 		}
+		
+// 		ulong readBeforeShrink = m_points->size() / 10;
+// 		
+// 		while( !m_points->empty() )
+// 		{
+// 			typename PointVector::iterator it = m_points->begin();
+// 			
+// 			for( int i = 0; i < readBeforeShrink && it != m_points->end(); ++i, it++ )
+// 			{
+// 				onPointDone( *it );
+// 			}
+// 			
+// 			m_points->erase( m_points->begin(), it );
+// 		}
 	}
 }
 
