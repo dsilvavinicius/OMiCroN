@@ -12,14 +12,14 @@ namespace util
 	: public PointReader
 	{
 	public:
-		using PointDeque = deque< Point >;
+		using PointDeque = deque< Point, TbbAllocator< Point > >;
 		using PointDequePtr = shared_ptr< PointDeque >;
 		using Dim = OctreeDimensions< Morton >;
 		
 		InMemPointReader( PointDequePtr points, const Dim& dim );
 		void read( const function< void( const Point& ) >& onPointDone ) override;
 	
-		const Dim& dimensions() { return m_dim; }
+		const Dim& dimensions() const { return m_dim; }
 		
 	private:
 		PointDequePtr m_points;

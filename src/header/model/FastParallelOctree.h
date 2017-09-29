@@ -4,6 +4,7 @@
 #include <forward_list>
 #include "PointSorter.h"
 #include "HeapPointReader.h"
+#include <PartialSortPointReader.h>
 #include "O1OctreeNode.h"
 #include "HierarchyCreator.h"
 #include "Front.h"
@@ -112,9 +113,11 @@ namespace model
 		
 		omp_set_num_threads( 8 );
 		
-		#ifdef HEAP_SORT
+		#if SORTING == HEAP_SORT
 			HeapPointReader< Morton >* reader = new HeapPointReader< Morton >( plyFilename, maxLvl );
-		#else
+		#elif SORTING == PARTIAL_SORT
+			PartialSortPointReader< Morton >* reader = new PartialSortPointReader< Morton >( plyFilename, maxLvl );
+		#elif SORTING == FULL_SORT
 			PointSorter< Morton > sorter( plyFilename, maxLvl );
 			PointSet< Morton > points = sorter.sort();
 			InMemPointReader< Morton >* reader = new InMemPointReader< Morton >( points.m_points, points.m_dim );

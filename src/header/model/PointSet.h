@@ -10,7 +10,7 @@ namespace model
 	template< typename Morton >
 	struct PointSet
 	{
-		using PointDeque = deque< Point >;
+		using PointDeque = deque< Point, TbbAllocator< Point > >;
 		using PointDequePtr = shared_ptr< PointDeque >;
 		using OctreeDim = OctreeDimensions< Morton >;
 		

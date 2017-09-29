@@ -14,6 +14,10 @@ using namespace std;
 #define ATLAS 2
 #define DUOMO 3
 
+#define HEAP_SORT 0
+#define PARTIAL_SORT 1
+#define FULL_SORT 2
+
 enum ReconstructionAlgorithm
 {
 	ZPBG01 = 0,
@@ -46,8 +50,11 @@ enum ReconstructionAlgorithm
 // The input is not sorted. The preprocessing step must be performed.
 #define UNSORTED
 
-// Uses a min-heap sort to sort points incrementally. 
-#define HEAP_SORT
+// Selects the sorting algorithm. 
+#define SORTING PARTIAL_SORT
+
+// Number of segments for partial sorting.
+#define SORTING_SEGMENTS 10
 
 // Activates de loading of binary octree files instead of hierarchy creation.
 // #define BINARY_OCTREE_FILE

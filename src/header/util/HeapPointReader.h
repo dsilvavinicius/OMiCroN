@@ -34,14 +34,14 @@ namespace util
 			Dim m_dim;
 		} Comparator;
 		
-		using Heap = priority_queue< Point, deque< Point >, Comparator >;
+		using Heap = priority_queue< Point, deque< Point, TbbAllocator< Point > >, Comparator >;
 		using HeapPtr = unique_ptr< Heap >;
 		
 		HeapPointReader( const string& filename, uint leafLvl );
 		
 		void read( const function< void( const Point& ) >& onPointDone ) override;
 	
-		const Dim& dimensions() { return m_dim; }
+		const Dim& dimensions() const { return m_dim; }
 		
 	private:
 		HeapPtr m_heap;
