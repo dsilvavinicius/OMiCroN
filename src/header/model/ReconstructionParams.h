@@ -14,9 +14,16 @@ using namespace std;
 #define ATLAS 2
 #define DUOMO 3
 
-#define HEAP_SORT 0
-#define PARTIAL_SORT 1
-#define FULL_SORT 2
+#define HEAP_SORT_D 0
+#define PARTIAL_SORT_D 1
+#define FULL_SORT_D 2
+
+enum Sorting
+{
+	HEAP_SORT = 0, // Min-heap sorting.
+	PARTIAL_SORT = 1, // std::partial_sort().
+	FULL_SORT = 2, // std::sort().
+};
 
 enum ReconstructionAlgorithm
 {
@@ -29,7 +36,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL ST_MATHEW
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -47,11 +54,12 @@ enum ReconstructionAlgorithm
 // Activates rendering in parallel with hierarchy creation.
 #define HIERARCHY_CREATION_RENDERING
 
-// The input is not sorted. The preprocessing step must be performed.
-#define UNSORTED
+// Indicates that the input is not sorted.
+// #define NO_SORT true
+#define NO_SORT false
 
-// Selects the sorting algorithm. 
-#define SORTING PARTIAL_SORT
+// Selects the sorting algorithm for the case of unsorted input. 
+#define SORTING PARTIAL_SORT_D
 
 // Number of segments for partial sorting.
 #define SORTING_SEGMENTS 10
@@ -210,6 +218,18 @@ inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )
 		case BHZK05 : out << "BHZK05"; break;
 		case WHA07 : out << "WHA07"; break;
 		case ZRB04 : out << "ZRB04"; break;
+	}
+	
+	return out;
+}
+
+inline ostream& operator<<( ostream& out, const Sorting sorting )
+{
+	switch( sorting )
+	{
+		case HEAP_SORT : out << "Heap sort"; break;
+		case PARTIAL_SORT : out << "Partial sort"; break;
+		case FULL_SORT : out << "Full sort"; break;
 	}
 	
 	return out;

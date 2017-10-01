@@ -59,6 +59,10 @@ namespace model
 		/** Get the time needed to create the hierarchy in ms. If the hierarchy is not created yet, it returns 0. */
 		int hierarchyCreationDuration() { return m_hierarchyCreationDuration; }
 		
+		uint readerInTime() { return m_readerInTime; }
+		uint readerInitTime() { return m_readerInitTime; }
+		uint readerOutTime() { return m_readerOutTime; }
+		
 		/** Traverses the hierarchy to calculate its number of nodes and node contents. Hierarchy creation must be finished
 		 * beforehand. 
 		 * @return If the hierarchy is already finished, a pair with first value equals to the number of nodes in the
@@ -99,6 +103,12 @@ namespace model
 		
 		/** Duration of the hierarchy creation procedure. */
 		int m_hierarchyCreationDuration;
+		
+		uint m_readerInTime;
+		
+		uint m_readerInitTime;
+		
+		uint m_readerOutTime;
 	};
 	
 	template< typename Morton >
@@ -113,15 +123,17 @@ namespace model
 		
 		omp_set_num_threads( 8 );
 		
-		#if SORTING == HEAP_SORT
+		#if SORTING == HEAP_SORT_D
 			HeapPointReader< Morton >* reader = new HeapPointReader< Morton >( plyFilename, maxLvl );
-		#elif SORTING == PARTIAL_SORT
+		#elif SORTING == PARTIAL_SORT_D
 			PartialSortPointReader< Morton >* reader = new PartialSortPointReader< Morton >( plyFilename, maxLvl );
-		#elif SORTING == FULL_SORT
-			PointSorter< Morton > sorter( plyFilename, maxLvl );
-			PointSet< Morton > points = sorter.sort();
-			InMemPointReader< Morton >* reader = new InMemPointReader< Morton >( points.m_points, points.m_dim );
+		#elif SORTING == FULL_SORT_D
+			SortPointReader< Morton >* reader = new SortPointReader< Morton >( plyFilename, maxLvl );
 		#endif
+		
+		m_readerInTime = reader->inputTime();
+		m_readerInitTime = reader->initTime();
+		m_readerOutTime = reader->outputTime();
 		
 		buildFromPoints( typename HierarchyCreator::ReaderPtr( reader ), reader->dimensions(), loader, runtime );
 	}
@@ -131,7 +143,10 @@ namespace model
 	::FastParallelOctree( const Json::Value& octreeJson, NodeLoader& loader, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
-	m_root( nullptr )
+	m_root( nullptr ),
+	m_readerInTime( 0u ),
+	m_readerInitTime( 0u ),
+	m_readerOutTime( 0u )
 	{
 		buildFromSortedFile( octreeJson, loader, runtime );
 	}

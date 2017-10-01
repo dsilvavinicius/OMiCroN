@@ -16,7 +16,7 @@
 #include "ReconstructionParams.h"
 #include "PointSet.h"
 #include "PlyPointReader.h"
-#include "InMemPointReader.h"
+#include "SortPointReader.h"
 
 // #define LEAF_CREATION_DEBUG
 // #define INNER_CREATION_DEBUG

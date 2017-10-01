@@ -29,10 +29,12 @@ namespace util
 	};
 	
 	template< typename Morton >
-	PartialSortPointReader< Morton >::PartialSortPointReader(const string& filename, uint leafLvl)
+	PartialSortPointReader< Morton >::PartialSortPointReader( const string& filename, uint leafLvl )
 	{
 		PointSorter< Morton > sorter( filename, leafLvl );
 		m_pointSet = sorter.points();
+		
+		m_inputTime = sorter.inputTime();
 		
 		typename PointSet::PointDeque& points = *m_pointSet.m_points;
 		m_sortedPerIter = points.size() / SORTING_SEGMENTS;
@@ -42,7 +44,7 @@ namespace util
 		// The first partial sort is done now so points are ready to be loaded at rendering starting time.
 		std::partial_sort( points.begin(), points.begin() + m_sortedPerIter, points.end(), m_pointSet.m_dim );
 		
-		Profiler::elapsedTime( now, "Initial partial sort" );
+		m_initTime = Profiler::elapsedTime( now, "Initial partial sort" );
 	}
 
 	template< typename Morton >

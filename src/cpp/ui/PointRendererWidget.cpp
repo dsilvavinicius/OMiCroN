@@ -48,30 +48,30 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
 		#else
-			#ifdef UNSORTED
-				openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces.ply" );
-			#else
+			#if NO_SORT == true
 				openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.oct" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces.ply" );
 			#endif
 		#endif
 	#elif MODEL == ST_MATHEW
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/Shallow/StMathew_lab.oct" );
 		#else
-			#ifdef UNSORTED
-				openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply" );
-			#else
+			#if NO_SORT == true
 				openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply" );
 			#endif
 		#endif
 	#elif MODEL == ATLAS
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/Atlas/Shallow/Atlas_lab.oct" );
 		#else
-			#ifdef UNSORTED
-				openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces.ply" );
-			#else
+			#if NO_SORT == true
 				openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.oct" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces.ply" );
 			#endif
 		#endif		
 	#elif MODEL == DUOMO
@@ -329,8 +329,13 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 	
 	pair< uint, uint > nodeStats = m_octree->nodeStatistics();
 	
-	ostringstream statsString; statsString << m_statistics << endl << "Time to create hierarchy: "
-		<< m_octree->hierarchyCreationDuration() << "ms" << endl
+	ostringstream statsString; statsString << m_statistics << endl
+		<< "No sort? " << ( ( NO_SORT ) ? "true" : "false" ) << endl
+		<< "Sorting flag: " << Sorting( SORTING ) << endl
+		<< "Time for reader input: " << m_octree->readerInTime() << "ms" << endl
+		<< "Time for reader init: " << m_octree->readerInitTime() << "ms" << endl
+		<< "Time for reader output: " << m_octree->readerOutTime() << "ms" << endl
+		<< "Time to create hierarchy: " << m_octree->hierarchyCreationDuration() << "ms" << endl
 		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl
 		<< "Number of nodes in hierarchy: " << nodeStats.first << endl 
 		<< "Number of splats in hierarchy: " << nodeStats.second << endl

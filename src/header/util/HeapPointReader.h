@@ -55,7 +55,13 @@ namespace util
 		PointSet< Morton > points = sorter.points();
 		m_dim = points.m_dim;
 		
+		m_inputTime = sorter.inputTime();
+		
+		auto now = Profiler::now( "Min-heap creation" );
+		
 		m_heap = HeapPtr( new Heap( Comparator( points.m_dim ), std::move( *points.m_points ) ) );
+		
+		m_initTime = Profiler::elapsedTime( now, "Min-heap creation" );
 		
 		// DEBUG
 		{

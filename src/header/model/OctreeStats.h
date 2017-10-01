@@ -30,11 +30,11 @@ namespace model
 		
 		friend ostream& operator<<( ostream& out, const FrameStats& frame )
 		{
-			out << "Traversal time: " << frame.m_traversalTime << endl
-				<< "Render queue time: " << frame.m_renderQueueTime << endl
-				<< "CPU overhead: " << frame.m_cpuOverhead << endl
+			out << "Traversal time: " << frame.m_traversalTime << "ms" << endl
+				<< "Render queue time: " << frame.m_renderQueueTime << "ms" << endl
+				<< "CPU overhead: " << frame.m_cpuOverhead << "ms" << endl
 				<< "Rendered points: " << frame.m_nRenderedPoints << endl
-				<< "Front insertion delay: " << frame.m_frontInsertionDelay << endl
+				<< "Front insertion delay: " << frame.m_frontInsertionDelay << "ms" << endl
 				<< "Front size: " << frame.m_frontSize << endl
 				<< "Front segments: " << SEGMENTS_PER_FRONT << endl
 				<< "Front segment size: " << frame.m_frontSegmentSize;
@@ -116,7 +116,9 @@ namespace model
 		m_hierarchyDepth( 0 ),
 		m_gpuOverhead( 0.f ),
 		m_avgGpuOverhead( 0.f )
-		{}
+		{
+			addCompletionPercent( 0.f );
+		}
 		
 		void addFrame( const OctreeStats& octreeStats, const float gpuOverhead )
 		{
