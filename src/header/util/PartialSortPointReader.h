@@ -52,7 +52,7 @@ namespace util
 	{
 		// DEBUG
 		{
-			cout << "PARTIAL SORTER: START READING." << endl << endl;
+			cout << "PARTIAL SORT READER: START READING." << endl << endl;
 		}
 		
 		typename PointSet::PointDeque& points = *m_pointSet.m_points;

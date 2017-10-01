@@ -59,7 +59,7 @@ enum ReconstructionAlgorithm
 #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
-#define SORTING PARTIAL_SORT_D
+#define SORTING FULL_SORT_D
 
 // Number of segments for partial sorting.
 #define SORTING_SEGMENTS 10
