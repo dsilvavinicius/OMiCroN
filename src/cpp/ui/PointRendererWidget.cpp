@@ -46,7 +46,11 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	
 	#if MODEL == DAVID
 		#ifdef LAB
-			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
+			#if NO_SORT == true
+				openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
+			#else
+				openMesh( "/home/vinicius/Datasets/David/David.ply" );
+			#endif
 		#else
 			#if NO_SORT == true
 				openMesh( "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.oct" );
