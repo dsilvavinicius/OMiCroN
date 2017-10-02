@@ -332,6 +332,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 	ostringstream statsString; statsString << m_statistics << endl
 		<< "No sort? " << ( ( NO_SORT ) ? "true" : "false" ) << endl
 		<< "Sorting flag: " << Sorting( SORTING ) << endl
+		<< "Sorting chunks: " << SORTING_SEGMENTS << endl
 		<< "Time for reader input: " << m_octree->readerInTime() << "ms" << endl
 		<< "Time for reader init: " << m_octree->readerInitTime() << "ms" << endl
 		<< "Time for reader output: " << m_octree->readerOutTime() << "ms" << endl

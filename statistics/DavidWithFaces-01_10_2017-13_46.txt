@@ -91,6 +91,7 @@ GPU Overhead: 28
 Average GPU Overhead: 34.7166
 No sort? false
 Sorting flag: Partial sort
+Sort chunks: 6
 Time for reader input: 122200ms
 Time for reader init: 25270ms
 Time for reader output: 0ms
