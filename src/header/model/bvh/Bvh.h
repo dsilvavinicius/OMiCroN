@@ -3,6 +3,7 @@
 
 #include "BasicTypes.h"
 #include "Point.h"
+#include "PlyPointReader.h"
 
 namespace model
 {
@@ -10,18 +11,27 @@ namespace model
 	class Aabb
 	{
 	public:
-		using AabbPtr = shared_ptr< Aabb >;
+		struct Boundaries
+		{
+			Boundaries()
+			: m_origin( 0.f, 0.f, 0.f ),
+			m_extension( 0.f, 0.f, 0.f )
+			{}
+			
+			Vec3 m_origin;
+			Vec3 m_extension;
+		};
 		
-		Aabb();
+		using AabbPtr = shared_ptr< Aabb >;
 		
 		/** Indicates if the node is leaf. */
 		virtual bool isLeaf() const = 0;
 		
 		/** Recursively and hierarchically inserts a point into this Aabb. Changes origin and extension if needed. */
-		void traserveAndInsert( const Point& point ) = 0;
+		virtual void traverseAndInsert( const Point& point ) = 0;
 		
 		/** Shrinks used memory to fit inserted points and children. */
-		void shrink() = 0;
+		virtual void shrink() = 0;
 		
 		/** Inserts a point into the Aabb. Changes origin and extension if needed. */
 		virtual void insert( const Point& point );
@@ -30,7 +40,7 @@ namespace model
 		void insert( const Vec3& point );
 		
 		/** Calculates the surface area for SAH. */
-		float sahSurfaceArea( const Boundaries& boundaries = m_boundaries ) const;
+		float sahSurfaceArea( const Boundaries& boundaries ) const;
 		
 		/** Calculates the maximum position this Aabb occupies. */
 		Vec3 maxPoint() const;
@@ -38,15 +48,11 @@ namespace model
 		/** Calculates the center of this Aabb. */
 		Vec3 center() const;
 		
-	protected:
-		struct Boundaries
-		{
-			Vec3 m_origin;
-			Vec3 m_extension;
-		};
+		const Boundaries& boundaries() { return m_boundaries; }
 		
+	protected:
 		/** Calculates the new boundaries of this Aabb when a point is inserted. */
-		Boundaries calcNewBoundaries ( const Point& point ) const;
+		Boundaries calcNewBoundaries ( const Vec3& point ) const;
 		
 		Boundaries m_boundaries;
 	};
@@ -64,9 +70,11 @@ namespace model
 		/** Hierarchical point insertion. Traverses the current node, fixing this Aabb's boundaries and recursively inserting the point in the best child, according to the SAH. */
 		void traverseAndInsert( const Point& point ) override;
 		
-		void shrink() override { m_children.shrink_to_fit(); }
+		void shrink() override;
 		
 		bool isLeaf() const override { return false; }
+		
+		const ChildrenVector& children() const { return m_children; }
 		
 	private:
 		ChildrenVector m_children;
@@ -87,6 +95,8 @@ namespace model
 		
 		bool isLeaf() const override { true; }
 		
+		const vector< Point >& points() const { return m_points; }
+		
 	private:
 		vector< Point > m_points;
 	};
@@ -95,22 +105,39 @@ namespace model
 	class Bvh
 	{
 	public:
-		Bvh();
+		struct Statistics
+		{
+			Statistics()
+			: m_nNodes( 0ul ),
+			m_nPoints( 0ul ),
+			m_recursionCount( 0ul ),
+			m_maxDepth( 0ul )
+			{}
+			
+			ulong m_nNodes;
+			ulong m_nPoints;
+			ulong m_recursionCount;
+			ulong m_maxDepth;
+			Aabb::Boundaries m_boundaries;
+		};
 		
+		/** @param plyFilename the path for a .ply file with the input. */
+		Bvh( const string& plyFilename );
+		
+		const Aabb& root() const { return *m_root; }
+		
+		Statistics statistics() const;
+		
+	private:
 		/** Inserts the point into the Bvh, selecting the insertion path in the hierarchy using SAH. Internal nodes' Aabbs are fixed and geometry is inserted at leaves. New nodes can be created in the process. */
 		void insert( const Point& point );
 		
-	private:
+		void statistics( const Aabb& aabb, Statistics& stats ) const;
+		
 		typename Aabb::AabbPtr m_root;
 	};
 	
 	// ==== Aabb implementation ====
-	
-	Aabb::Aabb()
-	{
-		m_boundaries.m_origin = Vec3( 0.f, 0.f, 0.f );
-		m_boundaries.m_extension = Vec3( 0.f, 0.f, 0.f );
-	}
 	
 	void Aabb::insert( const Point& point )
 	{
@@ -122,7 +149,7 @@ namespace model
 		m_boundaries = calcNewBoundaries( point );
 	}
 	
-	Aabb::Boundaries Aabb::calcNewBoundaries( const Point& point ) const
+	Aabb::Boundaries Aabb::calcNewBoundaries( const Vec3& point ) const
 	{
 		Boundaries newBoundaries;
 		
@@ -161,9 +188,9 @@ namespace model
 		m_children.push_back( rightChild );
 		
 		// Set boundaries.
-		insert( m_children[ 0 ]->m_boundaries.m_origin );
+		insert( m_children[ 0 ]->boundaries().m_origin );
 		insert( m_children[ 0 ]->maxPoint() );
-		insert( m_children[ 1 ]->m_boundaries.m_origin );
+		insert( m_children[ 1 ]->boundaries().m_origin );
 		insert( m_children[ 1 ]->maxPoint() );
 	}
 
@@ -183,7 +210,7 @@ namespace model
 				{
 					// Create a new inner node to pair the new leaf and the child node in order to simumlate case 1.
 					AabbPtr newNode( new InnerAabb( *child, newLeaf ) );
-					float cost = 2 * newNode->sahSurfaceArea();
+					float cost = 2 * newNode->sahSurfaceArea( newNode->boundaries() );
 					
 					if( cost < cost1 )
 					{
@@ -196,8 +223,8 @@ namespace model
 		}
 		
 		// Case 2: The object is added as a new child to an existing node
-		float oldArea = sahSurfaceArea();
-		float newArea = sahSurfaceArea( calcNewBoundaries( point ) );
+		float oldArea = sahSurfaceArea( m_boundaries );
+		float newArea = sahSurfaceArea( calcNewBoundaries( point.getPos() ) );
 		
 		float cost2 = m_children.size() * ( newArea - oldArea ) + newArea;
 		
@@ -215,10 +242,10 @@ namespace model
 			
 			for( AabbPtr child : m_children )
 			{
-				Vec3 distance = point.getPos() - child()->center();
+				Vec3 distance = point.getPos() - child->center();
 				if( distance.squaredNorm() < minDistance.squaredNorm() )
 				{
-					minDistance = distace;
+					minDistance = distance;
 					AabbPtr closerChild = child;
 				}
 			}
@@ -233,6 +260,16 @@ namespace model
 		{
 			// Case 2 is better
 			m_children.push_back( newLeaf );
+		}
+	}
+
+	void InnerAabb::shrink()
+	{
+		m_children.shrink_to_fit();
+		
+		for( AabbPtr child : m_children )
+		{
+			child->shrink();
 		}
 	}
 
@@ -256,10 +293,21 @@ namespace model
 
 	// ==== Bvh implementation ====
 	
-	Bvh::Bvh()
+	Bvh::Bvh( const string& plyFilename )
 	: m_root( nullptr )
-	{}
-
+	{
+		using namespace util;
+		
+		PlyPointReader reader( plyFilename );
+		reader.read(
+			[ & ]( const Point& p )
+			{
+				insert( p );
+			}
+		);
+		
+		m_root->shrink();
+	}
 	
 	void Bvh::insert( const Point& point )
 	{
@@ -274,10 +322,45 @@ namespace model
 		}
 		else
 		{
-			m_root->traserveAndInsert( point );
+			m_root->traverseAndInsert( point );
 		}
 	}
+	
+	Bvh::Statistics Bvh::statistics() const
+	{
+		Statistics stats;
+		stats.m_boundaries = m_root->boundaries();
+		statistics( *m_root, stats );
+		
+		return stats;
+	}
 
+	void Bvh::statistics( const Aabb& aabb, Statistics& stats ) const
+	{
+		++stats.m_nNodes;
+		++stats.m_recursionCount;
+		
+		if( stats.m_recursionCount > stats.m_maxDepth )
+		{
+			stats.m_maxDepth = stats.m_recursionCount;
+		}
+		
+		if( aabb.isLeaf() )
+		{
+			auto leafAabb = dynamic_cast< const LeafAabb* >( &aabb );
+			stats.m_nPoints += leafAabb->points().size();
+		}
+		else
+		{
+			auto innerAabb = dynamic_cast< const InnerAabb* >( &aabb );
+			for( const Aabb::AabbPtr child : innerAabb->children() )
+			{
+				statistics( *child, stats );
+			}
+		}
+		
+		--stats.m_recursionCount;
+	}
 }
 
 #endif
