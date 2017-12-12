@@ -81,6 +81,8 @@ namespace model
 		 */
 		future< pair< Node*, int > > createAsync();
 		
+		const Reader& reader() const { return *m_reader; }
+		
 	private:
 		/** Map type used to perform a prefix-sum in nodes of a sibling group. */
 		using SiblingPointsPrefixMap = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
@@ -387,9 +389,6 @@ namespace model
 						points.push_back( Surfel( pos, u, v ) );
 					}
 				);
-				
-				// Releasing memory in reader.
-				m_reader = nullptr;
 				
 				nodeList.push_back( Node( std::move( points ), true ) );
 				pushWork( std::move( nodeList ) );

@@ -30,22 +30,20 @@ namespace util
 	
 	template< typename Morton >
 	inline SortPointReader< Morton >::SortPointReader( const string& filename, uint leafLvl )
+	: PointReader()
 	{
 		Sorter sorter( filename, leafLvl );
 		m_pointSet = sorter.sort();
 		
 		m_inputTime = sorter.inputTime();
 		m_initTime = sorter.sortTime();
-		m_outputTime = sorter.outputTime();
+		m_readTime = sorter.outputTime();
 	}
 	
 	template< typename Morton >
 	inline void SortPointReader< Morton >::read( const function< void( const Point& ) >& onPointDone )
 	{
-		// DEBUG
-		{
-			cout << "SORT READER: START READING." << endl << endl;
-		}
+		auto now = Profiler::now( "Full sorter point reading" );
 		
 		typename PointSet::PointDeque& points = *m_pointSet.m_points;
 		
@@ -54,6 +52,8 @@ namespace util
 			onPointDone( points.front() );
 			points.pop_front();
 		}
+		
+		m_readTime = Profiler::elapsedTime( now, "Full sorter point reading" );
 	}
 }
 

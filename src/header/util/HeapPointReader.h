@@ -50,6 +50,7 @@ namespace util
 	
 	template< typename Morton >
 	HeapPointReader< Morton >::HeapPointReader( const string& filename, uint leafLvl )
+	: PointReader()
 	{
 		Sorter sorter( filename, leafLvl );
 		PointSet< Morton > points = sorter.points();
@@ -72,10 +73,7 @@ namespace util
 	template< typename Morton >
 	void HeapPointReader< Morton >::read( const function< void( const Point& ) >& onPointDone )
 	{
-		// DEBUG
-		{
-			cout << "START READING." << endl << endl;
-		}
+		auto now = Profiler::now( "Heap sorter point reading" );
 		
 		while( !m_heap->empty() )
 		{
@@ -88,6 +86,8 @@ namespace util
 			
 			m_heap->pop();
 		}
+		
+		m_readTime = Profiler::elapsedTime( now, "Heap sorter point reading" );
 	}
 }
 

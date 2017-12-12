@@ -339,7 +339,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		<< "Sorting chunks: " << SORTING_SEGMENTS << endl
 		<< "Time for reader input: " << m_octree->readerInTime() << "ms" << endl
 		<< "Time for reader init: " << m_octree->readerInitTime() << "ms" << endl
-		<< "Time for reader output: " << m_octree->readerOutTime() << "ms" << endl
+		<< "Time for reader reading: " << m_octree->readerReadTime() << "ms" << endl
 		<< "Time to create hierarchy: " << m_octree->hierarchyCreationDuration() << "ms" << endl
 		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl
 		<< "Number of nodes in hierarchy: " << nodeStats.first << endl 

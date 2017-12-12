@@ -7,6 +7,7 @@
 #include "Point.h"
 #include "renderers/RenderingState.h"
 #include "PointReader.h"
+#include "Profiler.h"
 
 using namespace std;
 using namespace model;
@@ -63,8 +64,11 @@ namespace util
 	};
 	
 	inline PlyPointReader::PlyPointReader( const string& fileName )
-	: m_filename( fileName )
+	: PointReader(),
+	m_filename( fileName )
 	{
+		auto now = Profiler::now( "PlyPointReader init" );
+		
 		cout << "Setup read of " << m_filename << endl << endl;
 		
 		// Open ply.
@@ -108,10 +112,14 @@ namespace util
 			
 			element = ply_get_next_element( m_ply, element );
 		}
+		
+		m_initTime = Profiler::elapsedTime( now, "PlyPointReader init" );
 	}
 	
 	inline void PlyPointReader::read( const function< void( const Point& ) >& onPointDone )
 	{
+		auto now = Profiler::now( "PlyPointReader read" );
+		
 		m_onPointDone = onPointDone;
 		
 		/* Save application locale */
@@ -130,6 +138,8 @@ namespace util
 		
 		/* Restore application locale when done */
 // 		setlocale( LC_NUMERIC, old_locale );
+
+		m_readTime = Profiler::elapsedTime( now, "PlyPointReader read" );
 	}
 	
 	inline int PlyPointReader::doRead( p_ply& ply )

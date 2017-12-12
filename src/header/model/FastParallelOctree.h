@@ -61,7 +61,7 @@ namespace model
 		
 		uint readerInTime() { return m_readerInTime; }
 		uint readerInitTime() { return m_readerInitTime; }
-		uint readerOutTime() { return m_readerOutTime; }
+		uint readerReadTime() { return m_readerReadTime; }
 		
 		/** Traverses the hierarchy to calculate its number of nodes and node contents. Hierarchy creation must be finished
 		 * beforehand. 
@@ -108,7 +108,7 @@ namespace model
 		
 		uint m_readerInitTime;
 		
-		uint m_readerOutTime;
+		uint m_readerReadTime;
 	};
 	
 	template< typename Morton >
@@ -117,7 +117,8 @@ namespace model
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
 	m_root( nullptr ),
-	m_hierarchyCreationDuration( 0 )
+	m_hierarchyCreationDuration( 0 ),
+	m_readerReadTime( 0u )
 	{
 		assert( maxLvl <= Morton::maxLvl() );
 		
@@ -133,7 +134,6 @@ namespace model
 		
 		m_readerInTime = reader->inputTime();
 		m_readerInitTime = reader->initTime();
-		m_readerOutTime = reader->outputTime();
 		
 		buildFromPoints( typename HierarchyCreator::ReaderPtr( reader ), reader->dimensions(), loader, runtime );
 	}
@@ -146,7 +146,7 @@ namespace model
 	m_root( nullptr ),
 	m_readerInTime( 0u ),
 	m_readerInitTime( 0u ),
-	m_readerOutTime( 0u )
+	m_readerReadTime( 0u )
 	{
 		buildFromSortedFile( octreeJson, loader, runtime );
 	}
@@ -255,8 +255,9 @@ namespace model
 			
 			pair< Node*, int > creationResult = m_creationFuture.get();
 			
-			m_root = creationResult.first;			
+			m_root = creationResult.first;
 			m_hierarchyCreationDuration = creationResult.second;
+			m_readerReadTime = m_hierarchyCreator->reader().readTime();
 			
 			cout << "Hierarchy creation finished. Duration: " << m_hierarchyCreationDuration << endl << endl;
 		}

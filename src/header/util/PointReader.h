@@ -15,7 +15,7 @@ namespace util
 		PointReader()
 		: m_inputTime( 0u ),
 		m_initTime( 0u ),
-		m_outputTime( 0u )
+		m_readTime( 0u )
 		{};
 		
 		/** Read all points using the callback for all read point. */
@@ -27,13 +27,13 @@ namespace util
 		/** @returns the time needed to init the reader (a partial or full sort for example) (in ms). */
 		uint initTime() const { return m_initTime; }
 		
-		/** @returns the time needed to output points to output file (if needed) (in ms). */
-		uint outputTime() const { return m_outputTime; }
+		/** @returns the time needed to read the points after init (in ms). */
+		uint readTime() const { return m_readTime; }
 	
 	protected:
 		uint m_inputTime; // Time needed to read points from input file (in ms).
 		uint m_initTime; // Time needed to init the reader (a partial or full sort for example) (in ms).
-		uint m_outputTime; // Time needed to output points to output file (if needed) (in ms).
+		uint m_readTime; // Time needed to output points to output file (if needed) (in ms).
 	};
 }
 

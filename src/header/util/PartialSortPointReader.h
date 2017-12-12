@@ -30,6 +30,7 @@ namespace util
 	
 	template< typename Morton >
 	PartialSortPointReader< Morton >::PartialSortPointReader( const string& filename, uint leafLvl )
+	: PointReader()
 	{
 		PointSorter< Morton > sorter( filename, leafLvl );
 		m_pointSet = sorter.points();
@@ -50,10 +51,7 @@ namespace util
 	template< typename Morton >
 	void PartialSortPointReader< Morton >::read( const function< void( const Point& ) >& onPointDone )
 	{
-		// DEBUG
-		{
-			cout << "PARTIAL SORT READER: START READING." << endl << endl;
-		}
+		auto now = Profiler::now( "Partial sorter point reading" );
 		
 		typename PointSet::PointDeque& points = *m_pointSet.m_points;
 		typename PointSet::PointDeque::iterator endIter = points.begin() + m_sortedPerIter;
@@ -71,6 +69,8 @@ namespace util
 			endIter = ( points.size() <= m_sortedPerIter ) ? points.end() : points.begin() + m_sortedPerIter;
 			std::partial_sort( points.begin(), endIter, points.end(), m_pointSet.m_dim );
 		}
+		
+		m_readTime = Profiler::elapsedTime( now, "Partial sorter point reading" );
 	}
 	
 }

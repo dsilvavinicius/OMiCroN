@@ -39,7 +39,7 @@ enum ReconstructionAlgorithm
 #define MODEL DAVID
 
 // Define to indicates that the system will be run in the laboratory.
-#define LAB
+// #define LAB
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 8
@@ -59,10 +59,10 @@ enum ReconstructionAlgorithm
 #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
-#define SORTING PARTIAL_SORT_D
+#define SORTING FULL_SORT_D
 
 // Number of segments for partial sorting.
-#define SORTING_SEGMENTS 10
+#define SORTING_SEGMENTS 1
 
 // Activates de loading of binary octree files instead of hierarchy creation.
 // #define BINARY_OCTREE_FILE
@@ -84,10 +84,17 @@ enum ReconstructionAlgorithm
 #define NODE_COLAPSE
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
-// #define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u // David + no leaf collapse
-#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19895u // David + leaf collapse
-// #define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
-// #define EXPECTED_SUBSTITUTED_PLACEHOLDERS 23711u // StMathew + no leaf collapse
+#if MODEL == DAVID
+	#ifdef NODE_COLAPSE
+		#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19895u // David + leaf collapse
+	#else
+		#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u // David + no leaf collapse
+	#endif
+#elif MODEL == ATLAS
+	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
+#elif MODEL == ST_MATHEW
+	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 23711u // StMathew + no leaf collapse
+#endif
 
 #ifdef LAB
 	#define GPU_MEMORY 7ul * 1024ul * 1024ul * 1024ul
