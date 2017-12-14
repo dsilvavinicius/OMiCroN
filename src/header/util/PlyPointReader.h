@@ -51,8 +51,11 @@ namespace util
 		/** Internal method that calculates the property flag for each invocation of the reading vertex callback. */
 		static unsigned int getPropFlag( const unsigned int& propIndex );
 		
-		/** Method used as RPly vertex callback. */
-		static int vertexCB( p_ply_argument argument );
+		/** Method used as RPly vertex callback when normals are present. */
+		static int vertexCBNormals( p_ply_argument argument );
+		
+		/** Method used as RPly vertex callback when normals are not present. */
+		static int vertexCBPosOnly( p_ply_argument argument );
 		
 		long m_numPoints;
 		
@@ -61,11 +64,14 @@ namespace util
 		p_ply m_ply;
 		
 		string m_filename;
+		
+		bool m_hasNormals;
 	};
 	
 	inline PlyPointReader::PlyPointReader( const string& fileName )
 	: PointReader(),
-	m_filename( fileName )
+	m_filename( fileName ),
+	m_hasNormals( false )
 	{
 		auto now = Profiler::now( "PlyPointReader init" );
 		
@@ -105,6 +111,12 @@ namespace util
 				const char* name;
 				ply_get_property_info( property, &name, NULL, NULL, NULL );
 				cout << "Prop name: " << name << endl;
+				
+				if( strcmp( name, "nx" ) == 0 )
+				{
+					m_hasNormals = true;
+				}
+				
 				property = ply_get_next_property( element, property );
 			}
 			
@@ -148,63 +160,23 @@ namespace util
 		Point tempPoint;
 		pair< Point*, function< void( const Point& ) >* > cbNeededData( &tempPoint, &m_onPointDone );
 		
-		ply_set_read_cb( ply, "vertex", "x", PlyPointReader::vertexCB, &cbNeededData, 0 );
-		ply_set_read_cb( ply, "vertex", "y", PlyPointReader::vertexCB, &cbNeededData, 1 );
-		ply_set_read_cb( ply, "vertex", "z", PlyPointReader::vertexCB, &cbNeededData, 2 );
+		p_ply_read_cb callback = ( m_hasNormals ) ? PlyPointReader::vertexCBNormals : PlyPointReader::vertexCBPosOnly;
 		
-		ply_set_read_cb( ply, "vertex", "nx", PlyPointReader::vertexCB, &cbNeededData, 3 );
-		ply_set_read_cb( ply, "vertex", "ny", PlyPointReader::vertexCB, &cbNeededData, 4 );
-		ply_set_read_cb( ply, "vertex", "nz", PlyPointReader::vertexCB, &cbNeededData, 5 );
+		ply_set_read_cb( ply, "vertex", "x", callback, &cbNeededData, 0 );
+		ply_set_read_cb( ply, "vertex", "y", callback, &cbNeededData, 1 );
+		ply_set_read_cb( ply, "vertex", "z", callback, &cbNeededData, 2 );
+		
+		if( m_hasNormals )
+		{
+			ply_set_read_cb( ply, "vertex", "nx", callback, &cbNeededData, 3 );
+			ply_set_read_cb( ply, "vertex", "ny", callback, &cbNeededData, 4 );
+			ply_set_read_cb( ply, "vertex", "nz", callback, &cbNeededData, 5 );
+		}
 		
 		return ply_read( ply );
 	}
 	
-	/** Struct to handle callback data. Agnostic to point type. */
-	struct CBDataHandler
-	{
-		void operator()( const unsigned int& index, const float& value,
-						 pair< Point*, function< void( const Point& ) >* >* readingData )
-		{
-			Point* tempPoint = readingData->first;
-			
-			switch( index )
-			{
-				case 0: case 1: case 2:
-				{
-					tempPoint->getPos()[ index ] = value;
-					break;
-				}
-				case 3: case 4:
-				{
-					// Normal case.
-					tempPoint->getNormal()[ index % 3 ] = value;
-					break;
-				}
-				case 5:
-				{
-					// Last point component. Send complete point to vector.
-					tempPoint->getNormal()[ index % 3 ] = ( float ) value;
-					( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getPos() ) );
-					break;
-				}
-				case 6: case 7:
-				{
-					// Flat color case.
-					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
-					break;
-				}
-				case 8:
-				{
-					// Last point component. Send complete point to vector.
-					tempPoint->getNormal()[ index % 3 ] = ( float ) value / 255;
-					( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getPos() ) );
-					break;
-				}
-			}
-		}
-	};
-	
-	inline int PlyPointReader::vertexCB( p_ply_argument argument )
+	inline int PlyPointReader::vertexCBNormals( p_ply_argument argument )
 	{
 		long index;
 		void *rawReadingData;
@@ -214,8 +186,60 @@ namespace util
 		
 		float value = ply_get_argument_value( argument );
 		
-		CBDataHandler dataHandler;
-		dataHandler( index, value, readingData );
+		Point* tempPoint = readingData->first;
+		
+		switch( index )
+		{
+			case 0: case 1: case 2:
+			{
+				tempPoint->getPos()[ index ] = value;
+				break;
+			}
+			case 3: case 4:
+			{
+				// Normal case.
+				tempPoint->getNormal()[ index % 3 ] = value;
+				break;
+			}
+			case 5:
+			{
+				// Last point component. Send complete point to vector.
+				tempPoint->getNormal()[ index % 3 ] = ( float ) value;
+				( *readingData->second )( Point( tempPoint->getNormal(), tempPoint->getPos() ) );
+				break;
+			}
+		}
+		
+		return 1;
+	}
+	
+	inline int PlyPointReader::vertexCBPosOnly( p_ply_argument argument )
+	{
+		long index;
+		void *rawReadingData;
+		ply_get_argument_user_data( argument, &rawReadingData, &index );
+		
+		auto readingData = ( pair< Point*, function< void( const Point& ) >* >* ) rawReadingData;
+		
+		float value = ply_get_argument_value( argument );
+		
+		Point* tempPoint = readingData->first;
+		
+		switch( index )
+		{
+			case 0: case 1:
+			{
+				tempPoint->getPos()[ index ] = value;
+				break;
+			}
+			case 2:
+			{
+				// Last point component. Send complete point to vector.
+				tempPoint->getPos()[ index ] = value;
+				( *readingData->second )( Point( Vec3( 1.f, 0.f, 0.f ), tempPoint->getPos() ) );
+				break;
+			}
+		}
 		
 		return 1;
 	}

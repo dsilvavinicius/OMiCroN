@@ -42,13 +42,16 @@ namespace model
 		/** Calculates the surface area for SAH. */
 		float sahSurfaceArea( const Boundaries& boundaries ) const;
 		
+		/** Min point of this Aabb. */
+		Vec3 origin() const { return m_boundaries.m_origin; }
+		
 		/** Calculates the maximum position this Aabb occupies. */
 		Vec3 maxPoint() const;
 		
 		/** Calculates the center of this Aabb. */
 		Vec3 center() const;
 		
-		const Boundaries& boundaries() { return m_boundaries; }
+		const Boundaries& boundaries() const { return m_boundaries; }
 		
 	protected:
 		/** Calculates the new boundaries of this Aabb when a point is inserted. */
@@ -110,14 +113,23 @@ namespace model
 			Statistics()
 			: m_nNodes( 0ul ),
 			m_nPoints( 0ul ),
+			m_nLeaves( 0ul ),
+			m_avgPointsPerLeaf( 0ul ),
+			m_maxPointsPerLeaf( 0ul ),
+			m_minPointsPerLeaf( 0ul ),
 			m_recursionCount( 0ul ),
 			m_maxDepth( 0ul )
 			{}
 			
 			ulong m_nNodes;
 			ulong m_nPoints;
+			ulong m_nLeaves;
+			ulong m_avgPointsPerLeaf;
+			ulong m_maxPointsPerLeaf;
+			ulong m_minPointsPerLeaf;
 			ulong m_recursionCount;
 			ulong m_maxDepth;
+			
 			Aabb::Boundaries m_boundaries;
 		};
 		
@@ -153,10 +165,13 @@ namespace model
 	{
 		Boundaries newBoundaries;
 		
+		Vec3 prevMax = maxPoint();
+		
 		for( int i = 0; i < 3; ++i )
 		{
 			newBoundaries.m_origin[ i ] = min( m_boundaries.m_origin[ i ], point[ i ] );
-			newBoundaries.m_extension[ i ] = max( m_boundaries.m_extension[ i ], point[ i ] - m_boundaries.m_origin[ i ] );
+			float newMaxCoord = max( prevMax[ i ], point[ i ] );
+			newBoundaries.m_extension[ i ] = newMaxCoord - newBoundaries.m_origin[ i ];
 		}
 		
 		return newBoundaries; 
@@ -235,6 +250,11 @@ namespace model
 		
 		if( abs( cost1 - cost2 ) < epsilon )
 		{
+			// Debug 
+// 			{
+// 				cout << "t" << endl;
+// 			}
+			
 			// Cost tie. Insertion is done into the child with nearest center.
 			AabbPtr closerChild;
 			float inf = std::numeric_limits<float>::max();
@@ -253,11 +273,21 @@ namespace model
 		}
 		else if( cost1 < cost2 )
 		{
+			// Debug 
+// 			{
+// 				cout << "c1" << endl;
+// 			}
+			
 			// Case 1 is better
 			*itToPairedLeaf = bestCase1NewChild;
 		}
 		else
 		{
+			// Debug 
+// 			{
+// 				cout << "c2" << endl;
+// 			}
+			
 			// Case 2 is better
 			m_children.push_back( newLeaf );
 		}
@@ -330,7 +360,12 @@ namespace model
 	{
 		Statistics stats;
 		stats.m_boundaries = m_root->boundaries();
+		stats.m_maxPointsPerLeaf = numeric_limits< ulong >::min();
+		stats.m_minPointsPerLeaf = numeric_limits< ulong >::max();
+		
 		statistics( *m_root, stats );
+		
+		stats.m_avgPointsPerLeaf = stats.m_nPoints / stats.m_nLeaves;
 		
 		return stats;
 	}
@@ -348,7 +383,18 @@ namespace model
 		if( aabb.isLeaf() )
 		{
 			auto leafAabb = dynamic_cast< const LeafAabb* >( &aabb );
-			stats.m_nPoints += leafAabb->points().size();
+			ulong pointsInLeaf = leafAabb->points().size();
+			stats.m_nPoints += pointsInLeaf;
+			++stats.m_nLeaves;
+		
+			if( pointsInLeaf > stats.m_maxPointsPerLeaf )
+			{
+				stats.m_maxPointsPerLeaf = pointsInLeaf;
+			}
+			if( pointsInLeaf < stats.m_minPointsPerLeaf )
+			{
+				stats.m_minPointsPerLeaf = pointsInLeaf;
+			}
 		}
 		else
 		{

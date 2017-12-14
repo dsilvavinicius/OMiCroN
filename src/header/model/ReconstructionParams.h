@@ -54,9 +54,9 @@ enum ReconstructionAlgorithm
 // Activates rendering in parallel with hierarchy creation.
 #define HIERARCHY_CREATION_RENDERING
 
-// Indicates that the input is not sorted.
-// #define NO_SORT true
-#define NO_SORT false
+// Indicates that the input will not be sorted.
+#define NO_SORT true
+// #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING FULL_SORT_D
