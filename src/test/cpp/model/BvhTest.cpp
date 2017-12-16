@@ -98,5 +98,23 @@ namespace model
 				 << "Max points in a leaf: " << stats.m_maxPointsPerLeaf << endl
 				 << "Recursion count: " << stats.m_recursionCount << endl << endl;
 		}
+		
+		TEST_F( BvhTest, Aabb )
+		{
+			// insert()
+			Point p0( Vec3( 1.f, 1.f, 1.f ), Vec3( 1.f, 1.f, 1.f ) );
+			
+			LeafAabb aabb( p0);
+			
+			Point p1( Vec3( 1.f, 1.f, 1.f ), Vec3( 2.f, -1.f, 3.f ) );
+			aabb.insert( p1 );
+			
+			const Aabb::Boundaries& boundaries = aabb.boundaries();
+			
+			cout << "Boundaries: " << endl << boundaries << endl << endl;
+			
+			ASSERT_TRUE( boundaries.m_origin.isApprox( Vec3( 1.f, -1.f, 1.f ) ) );
+			ASSERT_TRUE( boundaries.m_extension.isApprox( Vec3( 1.f, 2.f, 2.f ) ) );
+		}
 	}
 }

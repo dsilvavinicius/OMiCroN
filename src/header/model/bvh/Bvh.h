@@ -13,16 +13,24 @@ namespace model
 	public:
 		struct Boundaries
 		{
-			Boundaries()
-			: m_origin( 0.f, 0.f, 0.f ),
-			m_extension( 0.f, 0.f, 0.f )
+			Boundaries( const Vec3& origin, const Vec3& extension )
+			: m_origin( origin ),
+			m_extension( extension )
 			{}
 			
 			Vec3 m_origin;
 			Vec3 m_extension;
+			
+			friend ostream& operator<<( ostream& out, const Boundaries& boundaries )
+			{
+				out << "Origin: " << endl << boundaries.m_origin << endl << "Extension: " << endl << boundaries.m_extension;
+				return out;
+			}
 		};
 		
 		using AabbPtr = shared_ptr< Aabb >;
+		
+		Aabb( const Vec3& p );
 		
 		/** Indicates if the node is leaf. */
 		virtual bool isLeaf() const = 0;
@@ -110,8 +118,9 @@ namespace model
 	public:
 		struct Statistics
 		{
-			Statistics()
-			: m_nNodes( 0ul ),
+			Statistics( const Aabb::Boundaries& boundaries )
+			: m_boundaries( boundaries ),
+			m_nNodes( 0ul ),
 			m_nPoints( 0ul ),
 			m_nLeaves( 0ul ),
 			m_avgPointsPerLeaf( 0ul ),
@@ -151,6 +160,10 @@ namespace model
 	
 	// ==== Aabb implementation ====
 	
+	Aabb::Aabb( const Vec3& p )
+	: m_boundaries( p, Vec3( 0.f, 0.f, 0.f ) )
+	{}
+	
 	void Aabb::insert( const Point& point )
 	{
 		insert( point.getPos() );
@@ -163,18 +176,19 @@ namespace model
 	
 	Aabb::Boundaries Aabb::calcNewBoundaries( const Vec3& point ) const
 	{
-		Boundaries newBoundaries;
+		Vec3 newOrigin;
+		Vec3 newExtension;
 		
 		Vec3 prevMax = maxPoint();
 		
 		for( int i = 0; i < 3; ++i )
 		{
-			newBoundaries.m_origin[ i ] = min( m_boundaries.m_origin[ i ], point[ i ] );
+			newOrigin[ i ] = min( m_boundaries.m_origin[ i ], point[ i ] );
 			float newMaxCoord = max( prevMax[ i ], point[ i ] );
-			newBoundaries.m_extension[ i ] = newMaxCoord - newBoundaries.m_origin[ i ];
+			newExtension[ i ] = newMaxCoord - newOrigin[ i ];
 		}
 		
-		return newBoundaries; 
+		return Boundaries( newOrigin, newExtension ); 
 	}
 	
 	float Aabb::sahSurfaceArea( const Boundaries& boundaries ) const
@@ -198,12 +212,12 @@ namespace model
 	// ==== InnerAabb implementation ====
 	
 	InnerAabb::InnerAabb( Aabb::AabbPtr leftChild, Aabb::AabbPtr rightChild )
+	: Aabb::Aabb( leftChild->boundaries().m_origin )
 	{
 		m_children.push_back( leftChild );
 		m_children.push_back( rightChild );
 		
 		// Set boundaries.
-		insert( m_children[ 0 ]->boundaries().m_origin );
 		insert( m_children[ 0 ]->maxPoint() );
 		insert( m_children[ 1 ]->boundaries().m_origin );
 		insert( m_children[ 1 ]->maxPoint() );
@@ -306,8 +320,9 @@ namespace model
 	
 	// ==== LeafAabb implementation ====
 	LeafAabb::LeafAabb( const Point& point )
+	: Aabb::Aabb( point.getPos() )
 	{
-		insert( point );
+		m_points.push_back( point );
 	}
 	
 	void LeafAabb::insert( const Point& point )
@@ -358,8 +373,7 @@ namespace model
 	
 	Bvh::Statistics Bvh::statistics() const
 	{
-		Statistics stats;
-		stats.m_boundaries = m_root->boundaries();
+		Statistics stats( m_root->boundaries() );
 		stats.m_maxPointsPerLeaf = numeric_limits< ulong >::min();
 		stats.m_minPointsPerLeaf = numeric_limits< ulong >::max();
 		
