@@ -12,75 +12,13 @@ namespace model
 		protected:
 			void SetUp() {}
 		};
-
-		void testAabb( const Aabb& aabb )
-		{
-			if( !aabb.isLeaf() )
-			{
-				using ChildrenVector = InnerAabb::ChildrenVector;
-				
-				const ChildrenVector& children = dynamic_cast< const InnerAabb* >( &aabb )->children();
-				
-				float sah = aabb.sahSurfaceArea( aabb.boundaries() );
-				
-				for( ChildrenVector::const_iterator it = children.begin(); it != children.end(); it++ )
-				{
-					const Aabb& child = ( **it );
-					
-					// Checking surface area.
-					ASSERT_LT( child.sahSurfaceArea( child.boundaries() ), sah );
-					
-					// Checking inclusion.
-					for( int i = 0; i < 3; ++i )
-					{
-						ASSERT_GE( child.origin()[ i ], aabb.origin()[ i ]  );
-						ASSERT_LE( child.maxPoint()[ i ], aabb.maxPoint()[ i ]  );
-					}
-					
-					for( ChildrenVector::const_iterator it2 = std::next( it, 1 ); it2 != children.end(); it2++ )
-					{
-						const Aabb& sibling = ( **it2 );
-						
-						// Checking no intersection between children.
-						bool intersecting = true;
-						
-						for( int i = 0; i < 3; ++i )
-						{
-							if( child.origin()[ i ] < sibling.origin()[ i ]  )
-							{
-								if( child.maxPoint()[ i ] < sibling.origin()[ i ] )
-								{
-									intersecting = false;
-									break;
-								}
-							}
-							else
-							{
-								if( child.origin()[ i ] > sibling.maxPoint()[ i ] )
-								{
-									intersecting = false;
-									break;
-								}
-							}
-						}
-						
-						// Test
-						if( intersecting )
-						{
-							ASSERT_FALSE( intersecting );
-						}
-					}
-					
-				}
-			}
-		}
 		
 		/** Tests the entire LeafAabb's API. */
 		TEST_F( BvhTest, LeafAabb )
 		{
 			Point p0( Vec3( 1.f, 1.f, 1.f ), Vec3( 1.f, 1.f, 1.f ) );
 			
-			LeafAabb aabb( p0);
+			LeafAabb aabb( p0 );
 			
 			ASSERT_TRUE( aabb.isLeaf() );
 			
@@ -132,10 +70,9 @@ namespace model
 			
 			ASSERT_TRUE( parent.origin().isApprox( Vec3( -1.f, -1.f, -1.f ) ) );
 			ASSERT_TRUE( parent.extension().isApprox( Vec3( 2.f, 2.f, 2.f ) ) );
-			
 		}
 		
-		TEST_F( BvhTest, BvhInsertion )
+		TEST_F( BvhTest, BvhInsertion0 )
 		{
 			Point p0( Vec3( 0.f, 0.f, 0.f ), Vec3( -1.f, -1.f, -1.f ) );
 			Point p1( Vec3( 1.f, 1.f, 1.f ), Vec3( 1.f, 1.f, 1.f ) );
@@ -177,9 +114,141 @@ namespace model
 			ASSERT_TRUE( expectedP2.isLeaf() );
 			ASSERT_TRUE( expectedP2.origin().isApprox( p2.getPos() ) );
 			ASSERT_TRUE( expectedP2.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			ASSERT_NO_THROW( bvh.isSane() );
 		}
 		
-		TEST_F( BvhTest, Bvh )
+		TEST_F( BvhTest, BvhInsertion1 )
+		{
+			Point p0( Vec3( 0.f, 0.f, 0.f ), Vec3( -1.f, -1.f, -1.f ) );
+			Point p1( Vec3( 1.f, 1.f, 1.f ), Vec3( 1.f, 1.f, 1.f ) );
+			Point p2( Vec3( 2.f, 2.f, 2.f ), Vec3( 2.f, 2.f, 0.5f ) );
+			
+			Bvh bvh;
+			bvh.insert( p0 );
+			bvh.insert( p1 );
+			bvh.insert( p2 );
+			
+			const Aabb& root = bvh.root();
+			
+			ASSERT_TRUE( root.origin().isApprox( Vec3( -1.f, -1.f, -1.f ) ) );
+			ASSERT_TRUE( root.extension().isApprox( Vec3( 3.f, 3.f, 2.f ) ) );
+			ASSERT_FALSE( root.isLeaf() );
+			
+			const InnerAabb::ChildrenVector& rootsChildren = dynamic_cast< const InnerAabb& >( root ).children();
+			ASSERT_EQ( rootsChildren.size(), 2 );
+			
+			const Aabb& expectedP0 = *rootsChildren[ 0 ];
+			ASSERT_TRUE( expectedP0.isLeaf() );
+			ASSERT_TRUE( expectedP0.origin().isApprox( p0.getPos() ) );
+			ASSERT_TRUE( expectedP0.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			const Aabb& expectedP1P2Parent = *rootsChildren[ 1 ];
+			ASSERT_FALSE( expectedP1P2Parent.isLeaf() );
+			ASSERT_TRUE( expectedP1P2Parent.origin().isApprox( Vec3( 1.f, 1.f, 0.5f ) ) );
+			ASSERT_TRUE( expectedP1P2Parent.extension().isApprox( Vec3( 1.f, 1.f, 0.5f ) ) );
+			
+			const InnerAabb::ChildrenVector& p1P2ParentsChildren = dynamic_cast< const InnerAabb& >( expectedP1P2Parent ).children();
+			ASSERT_EQ( p1P2ParentsChildren.size(), 2 );
+			
+			const Aabb& expectedP1 = *p1P2ParentsChildren[ 0 ];
+			ASSERT_TRUE( expectedP1.isLeaf() );
+			ASSERT_TRUE( expectedP1.origin().isApprox( p1.getPos() ) );
+			ASSERT_TRUE( expectedP1.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			const Aabb& expectedP2 = *p1P2ParentsChildren[ 1 ];
+			ASSERT_TRUE( expectedP2.isLeaf() );
+			ASSERT_TRUE( expectedP2.origin().isApprox( p2.getPos() ) );
+			ASSERT_TRUE( expectedP2.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			ASSERT_NO_THROW( bvh.isSane() );
+		}
+		
+		TEST_F( BvhTest, BvhInsertion2 )
+		{
+			Point p0( Vec3( 0.f, 0.f, 0.f ), Vec3( -1.f, -1.f, 0.f ) );
+			Point p1( Vec3( 2.f, 2.f, 2.f ), Vec3( 2.f, 2.f, -1.0f ) );
+			Point p2( Vec3( 1.f, 1.f, 1.f ), Vec3( 0.f, 0.f, 1.f ) );
+			
+			Bvh bvh;
+			bvh.insert( p0 );
+			bvh.insert( p1 );
+			bvh.insert( p2 );
+			
+			const Aabb& root = bvh.root();
+			
+			ASSERT_TRUE( root.origin().isApprox( Vec3( -1.f, -1.f, -1.f ) ) );
+			ASSERT_TRUE( root.extension().isApprox( Vec3( 3.f, 3.f, 2.f ) ) );
+			ASSERT_FALSE( root.isLeaf() );
+			
+			const InnerAabb::ChildrenVector& rootsChildren = dynamic_cast< const InnerAabb& >( root ).children();
+			ASSERT_EQ( rootsChildren.size(), 2 );
+			
+			const Aabb& expectedP0P2Parent = *rootsChildren[ 0 ];
+			ASSERT_FALSE( expectedP0P2Parent.isLeaf() );
+			ASSERT_TRUE( expectedP0P2Parent.origin().isApprox( Vec3( -1.f, -1.f, 0.f ) ) );
+			ASSERT_TRUE( expectedP0P2Parent.extension().isApprox( Vec3( 1.f, 1.f, 1.f ) ) );
+			
+			const Aabb& expectedP1 = *rootsChildren[ 1 ];
+			ASSERT_TRUE( expectedP1.isLeaf() );
+			ASSERT_TRUE( expectedP1.origin().isApprox( p1.getPos() ) );
+			ASSERT_TRUE( expectedP1.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			const InnerAabb::ChildrenVector& p0P2ParentsChildren = dynamic_cast< const InnerAabb& >( expectedP0P2Parent ).children();
+			ASSERT_EQ( p0P2ParentsChildren.size(), 2 );
+			
+			const Aabb& expectedP0 = *p0P2ParentsChildren[ 0 ];
+			ASSERT_TRUE( expectedP0.isLeaf() );
+			ASSERT_TRUE( expectedP0.origin().isApprox( p0.getPos() ) );
+			ASSERT_TRUE( expectedP0.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			const Aabb& expectedP2 = *p0P2ParentsChildren[ 1 ];
+			ASSERT_TRUE( expectedP2.isLeaf() );
+			ASSERT_TRUE( expectedP2.origin().isApprox( p2.getPos() ) );
+			ASSERT_TRUE( expectedP2.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+			
+			ASSERT_NO_THROW( bvh.isSane() );
+		}
+		
+// 		TEST_F( BvhTest, BvhInsertion3 )
+// 		{
+// 			Point p0( Vec3( 0.f, 0.f, 0.f ), Vec3( -1.f, -1.f, -1.f ) );
+// 			Point p1( Vec3( 2.f, 2.f, 2.f ), Vec3( 2.f, 2.f, 1.f ) );
+// 			Point p2( Vec3( 1.f, 1.f, 1.f ), Vec3( 0.f, 0.f, 0.5f ) );
+// 			
+// 			Bvh bvh;
+// 			bvh.insert( p0 );
+// 			bvh.insert( p1 );
+// 			bvh.insert( p2 );
+// 			
+// 			const Aabb& root = bvh.root();
+// 			
+// 			ASSERT_TRUE( root.origin().isApprox( Vec3( -1.f, -1.f, -1.f ) ) );
+// 			ASSERT_TRUE( root.extension().isApprox( Vec3( 3.f, 3.f, 2.f ) ) );
+// 			ASSERT_FALSE( root.isLeaf() );
+// 			
+// 			const InnerAabb::ChildrenVector& rootsChildren = dynamic_cast< const InnerAabb& >( root ).children();
+// 			ASSERT_EQ( rootsChildren.size(), 3 );
+// 			
+// 			const Aabb& expectedP0 = *rootsChildren[ 0 ];
+// 			ASSERT_TRUE( expectedP0.isLeaf() );
+// 			ASSERT_TRUE( expectedP0.origin().isApprox( p0.getPos() ) );
+// 			ASSERT_TRUE( expectedP0.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+// 			
+// 			const Aabb& expectedP1 = *rootsChildren[ 1 ];
+// 			ASSERT_TRUE( expectedP1.isLeaf() );
+// 			ASSERT_TRUE( expectedP1.origin().isApprox( p1.getPos() ) );
+// 			ASSERT_TRUE( expectedP1.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+// 			
+// 			const Aabb& expectedP2 = *rootsChildren[ 2 ];
+// 			ASSERT_TRUE( expectedP2.isLeaf() );
+// 			ASSERT_TRUE( expectedP2.origin().isApprox( p2.getPos() ) );
+// 			ASSERT_TRUE( expectedP2.extension().isApprox( Vec3( 0.f, 0.f, 0.f ) ) );
+// 			
+// 			testAabb( root );
+// 		}
+		
+		TEST_F( BvhTest, BvhReal )
 		{
 // 			Bvh bvh( "../data/example/staypuff.ply" );
 // 			Bvh bvh( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/data/real/prova5M.ply" );
@@ -187,7 +256,7 @@ namespace model
 			
 			const Aabb& root = bvh.root();
 			
-			testAabb( root );
+			ASSERT_NO_THROW( bvh.isSane() );
 			
 			Bvh::Statistics stats = bvh.statistics();
 			
