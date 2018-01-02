@@ -53,6 +53,8 @@ namespace model
 		/** Min point of this Aabb. */
 		Vec3 origin() const { return m_boundaries.m_origin; }
 		
+		Vec3 extension() const { return m_boundaries.m_extension; }
+		
 		/** Calculates the maximum position this Aabb occupies. */
 		Vec3 maxPoint() const;
 		
@@ -142,16 +144,22 @@ namespace model
 			Aabb::Boundaries m_boundaries;
 		};
 		
+		/** Ctor for an empty Bvh. Points can be inserted using insert(). */
+		Bvh();
+		
 		/** @param plyFilename the path for a .ply file with the input. */
 		Bvh( const string& plyFilename );
 		
 		const Aabb& root() const { return *m_root; }
 		
-		Statistics statistics() const;
-		
-	private:
 		/** Inserts the point into the Bvh, selecting the insertion path in the hierarchy using SAH. Internal nodes' Aabbs are fixed and geometry is inserted at leaves. New nodes can be created in the process. */
 		void insert( const Point& point );
+		
+		Statistics statistics() const;
+		
+		void shrink();
+		
+	private:
 		
 		void statistics( const Aabb& aabb, Statistics& stats ) const;
 		
@@ -195,7 +203,7 @@ namespace model
 	{
 		const Vec3& extension = boundaries.m_extension;
 		
-		return extension.x() * ( extension.y() + extension.z() ) + extension.y() * extension.z();
+		return extension.z() * ( extension.x() + extension.y() ) + extension.x() * extension.y();
 	}
 	
 	Vec3 Aabb::maxPoint() const
@@ -338,6 +346,10 @@ namespace model
 
 	// ==== Bvh implementation ====
 	
+	Bvh::Bvh()
+	: m_root( nullptr )
+	{}
+	
 	Bvh::Bvh( const string& plyFilename )
 	: m_root( nullptr )
 	{
@@ -351,7 +363,7 @@ namespace model
 			}
 		);
 		
-		m_root->shrink();
+		shrink();
 	}
 	
 	void Bvh::insert( const Point& point )
@@ -370,6 +382,12 @@ namespace model
 			m_root->traverseAndInsert( point );
 		}
 	}
+	
+	void Bvh::shrink()
+	{
+		m_root->shrink();
+	}
+
 	
 	Bvh::Statistics Bvh::statistics() const
 	{

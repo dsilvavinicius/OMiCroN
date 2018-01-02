@@ -43,7 +43,7 @@ namespace model
 		const Vec3& getPos() const;
 		
 		// Comparison operators.
-		bool equal( const Point& other, const Float& epsilon ) const;
+		bool equal( const Point& other, const Float& epsilon = 0.f ) const;
 		
 		// Arithmetic operators.
 		Point multiply( const Float& multiplier ) const;
