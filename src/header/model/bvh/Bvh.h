@@ -191,17 +191,17 @@ namespace model
 	void Aabb::insert( const Point& point )
 	{
 		// Debug
-		{
-			cout << "Before: " << *this << endl << endl;
-		}
+// 		{
+// 			cout << "Before: " << *this << endl << endl;
+// 		}
 		//
 		
 		insert( point.getPos() );
 		
 		// Debug
-		{
-			cout << "After: " << *this << endl << endl;
-		}
+// 		{
+// 			cout << "After: " << *this << endl << endl;
+// 		}
 		//
 	}
 	
@@ -231,7 +231,7 @@ namespace model
 	{
 		const Vec3& extension = boundaries.m_extension;
 		
-		return extension.z() * ( extension.x() + extension.y() ) + extension.x() * extension.y();
+		return extension.x() * ( extension.y() + extension.z() ) + extension.y() * extension.z();
 	}
 	
 	Vec3 Aabb::maxPoint() const
@@ -280,9 +280,9 @@ namespace model
 		bool hasInnerChild = false;
 		
 		// Debug
-		{
-			cout << "Traversing:" << endl << *this << endl << endl;
-		}
+// 		{
+// 			cout << "Traversing:" << endl << *this << endl << endl;
+// 		}
 		
 		AabbPtr newLeaf( new LeafAabb( point ) );
 		
@@ -321,25 +321,26 @@ namespace model
 			}
 			
 			// Debug
-			{
-				if( itToPairedLeaf != m_children.end() )
-				{
-					cout << "Best leaf:" << endl << **itToPairedLeaf << endl << endl;
-				}
-				else
-				{
-					cout << "No leaves." << endl << endl;
-				}
-				
-				if( bestCase3Inner != nullptr )
-				{
-					cout << "Best inner:" << endl << *bestCase3Inner << endl << endl;
-				}
-				else
-				{
-					cout << "No inners." << endl << endl;
-				}
-			}
+// 			{
+// 				if( itToPairedLeaf != m_children.end() )
+// 				{
+// 					cout << "Best leaf:" << endl << **itToPairedLeaf << endl << endl;
+// 				}
+// 				else
+// 				{
+// 					cout << "No leaves." << endl << endl;
+// 				}
+// 				
+// 				if( bestCase3Inner != nullptr )
+// 				{
+// 					cout << "Best inner:" << endl << *bestCase3Inner << endl << endl;
+// 				}
+// 				else
+// 				{
+// 					cout << "No inners." << endl << endl;
+// 				}
+// 			}
+			//
 		}
 		
 		// Case 2 cost.
@@ -356,9 +357,9 @@ namespace model
 		float epsilon = 1.e-8;
 		
 		// Debug
-		{
-			cout << "cost 1: " << cost1 << endl << "cost 2: " << cost2 << endl << "cost 3: " << cost3 << endl << endl;
-		}
+// 		{
+// 			cout << "cost 1: " << cost1 << endl << "cost 2: " << cost2 << endl << "cost 3: " << cost3 << endl << endl;
+// 		}
 		//
 		
 		// Fix bounding box.
@@ -367,9 +368,9 @@ namespace model
 		if( abs( bestCost - cost1 ) < epsilon )
 		{
 			// Debug 
-			{
-				cout << "Case: paired with best child" << endl << endl;
-			}
+// 			{
+// 				cout << "Case: paired with best child" << endl << endl;
+// 			}
 			
 			// Case 1 is better
 			*itToPairedLeaf = bestCase1NewChild;
@@ -377,9 +378,9 @@ namespace model
 		else if( abs( bestCost - cost2 ) < epsilon )
 		{
 			// Debug 
-			{
-				cout << "Case: added as new child" << endl << endl;
-			}
+// 			{
+// 				cout << "Case: added as new child" << endl << endl;
+// 			}
 			
 			// Case 2 is better
 			m_children.push_back( newLeaf );
@@ -387,9 +388,9 @@ namespace model
 		else
 		{
 			// Debug 
-			{
-				cout << "Case: recursion" << endl << endl;
-			}
+// 			{
+// 				cout << "Case: recursion" << endl << endl;
+// 			}
 			
 			// Case 3 is better
 			bestCase3Inner->traverseAndInsert( point );
@@ -475,9 +476,9 @@ namespace model
 				insert( p );
 				
 				// DEBUG
-				{
-					isSane();
-				}
+// 				{
+// 					isSane();
+// 				}
 				//
 			}
 		);
@@ -488,9 +489,9 @@ namespace model
 	void Bvh::insert( const Point& point )
 	{
 		// Debug
-		{
-			cout << "===== INSERTING =====" << endl << point << endl;
-		}
+// 		{
+// 			cout << "===== INSERTING =====" << endl << point << endl;
+// 		}
 		//
 		
 		if( m_root == nullptr )
@@ -524,20 +525,24 @@ namespace model
 		{
 			using ChildrenVector = InnerAabb::ChildrenVector;
 			
-			const ChildrenVector& children = dynamic_cast< const InnerAabb* >( &aabb )->children();
+			const ChildrenVector& children = aabb.children();
 			
 			float sah = aabb.sahSurfaceArea( aabb.boundaries() );
 			
 			for( ChildrenVector::const_iterator it = children.begin(); it != children.end(); it++ )
 			{
 				const Aabb& child = ( **it );
+				float childSah = child.sahSurfaceArea( child.boundaries() );
 				
-				// Checking surface area.
-				if( child.sahSurfaceArea( child.boundaries() ) >= sah )
 				{
-					stringstream ss; ss << "Child surface area is expected to be less than parent." << endl << endl
-					<< "Parent:" << endl << aabb << endl << endl << "Child:" << endl << child << endl << endl; 
-					throw runtime_error( ss.str() );
+					float epsilon = 1.e-5;
+					// Checking surface area.
+					if( childSah >= sah + epsilon )
+					{
+						stringstream ss; ss << "Child surface area is expected to be less than parent." << "Parents SA: " << sah << " Child SA: " << childSah << endl << endl
+						<< "Parent:" << endl << aabb << endl << endl << "Child:" << endl << child << endl << endl; 
+						throw runtime_error( ss.str() );
+					}
 				}
 				
 				// Checking inclusion.
@@ -552,28 +557,31 @@ namespace model
 				
 				for( ChildrenVector::const_iterator it2 = std::next( it, 1 ); it2 != children.end(); it2++ )
 				{
+					float epsilon = 0.09f;
+					
 					const Aabb& sibling = ( **it2 );
 					
 					// Checking no intersection between children.
 					bool intersecting = true;
 					
+					// Debug
+// 					{
+// 						cout << "Intersection test: " << endl << child << endl << " XXX " << endl << sibling << endl << endl;
+// 					}
+					//
+					
 					for( int i = 0; i < 3; ++i )
 					{
-						if( child.origin()[ i ] < sibling.origin()[ i ]  )
+						if( child.origin()[ i ] > sibling.maxPoint()[ i ] - epsilon || sibling.origin()[ i ] > child.maxPoint()[ i ] - epsilon )
 						{
-							if( child.maxPoint()[ i ] < sibling.origin()[ i ] )
-							{
-								intersecting = false;
-								break;
-							}
-						}
-						else
-						{
-							if( child.origin()[ i ] > sibling.maxPoint()[ i ] )
-							{
-								intersecting = false;
-								break;
-							}
+							// Debug
+// 							{
+// 								cout << "Not intersecting at " << i << endl << endl;
+// 							}
+							//
+							
+							intersecting = false;
+							break;
 						}
 					}
 					
@@ -584,11 +592,11 @@ namespace model
 						throw runtime_error( ss.str() );
 					}
 				}
-				
-				for( const Aabb::AabbPtr child : children )
-				{
-						isSane( *child );
-				}
+			}
+			
+			for( const Aabb::AabbPtr child : children )
+			{
+					isSane( *child );
 			}
 		}
 	}

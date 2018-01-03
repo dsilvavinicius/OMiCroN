@@ -256,7 +256,7 @@ namespace model
 			
 			const Aabb& root = bvh.root();
 			
-			ASSERT_NO_THROW( bvh.isSane() );
+			bvh.isSane();
 			
 			Bvh::Statistics stats = bvh.statistics();
 			
