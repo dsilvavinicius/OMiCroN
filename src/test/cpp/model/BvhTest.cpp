@@ -26,7 +26,9 @@ namespace model
 			aabb.insert( p1 );
 			
 			Point p2( Vec3( 3.f, 3.f, 3.f ), Vec3( 1.5, 0.f, 2.f ) );
-			aabb.traverseAndInsert( p2 );
+			
+			int currentLevel = 0;
+			aabb.traverseAndInsert( p2, currentLevel, std::numeric_limits< int >::max() );
 			
 			const Aabb::Boundaries& boundaries = aabb.boundaries();
 			
@@ -252,24 +254,15 @@ namespace model
 		{
 // 			Bvh bvh( "../data/example/staypuff.ply" );
 // 			Bvh bvh( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/data/real/prova5M.ply" );
-			Bvh bvh( "/media/vinicius/Expansion Drive3/Datasets/bunny/bunny/reconstruction/bun_zipper_normals_bin.ply" );
+			Bvh bvh( "/media/vinicius/Expansion Drive3/Datasets/bunny/bunny/reconstruction/bun_zipper_normals_bin.ply", 7 );
 			
 			const Aabb& root = bvh.root();
 			
-			bvh.isSane();
+			bvh.isSane( true );
 			
 			Bvh::Statistics stats = bvh.statistics();
 			
-			cout << "BVH Statistics: " << endl
-				 << "Boundaries: " << endl << "origin: " << endl << stats.m_boundaries.m_origin << endl << "extension" << endl << stats.m_boundaries.m_extension << endl
-				 << "Max depth: " << stats.m_maxDepth << endl
-				 << "Number of nodes: " << stats.m_nNodes << endl
-				 << "Number of points: " << stats.m_nPoints << endl
-				 << "Number of leaves: " << stats.m_nLeaves << endl
-				 << "Avg points per leaf: " << stats.m_avgPointsPerLeaf << endl
-				 << "Min points in a leaf: " << stats.m_minPointsPerLeaf << endl
-				 << "Max points in a leaf: " << stats.m_maxPointsPerLeaf << endl
-				 << "Recursion count: " << stats.m_recursionCount << endl << endl;
+			cout << "BVH Statistics: " << endl << stats << endl << endl;
 		}
 	}
 }

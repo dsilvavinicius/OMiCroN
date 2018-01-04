@@ -37,7 +37,7 @@ namespace model
 		virtual bool isLeaf() const = 0;
 		
 		/** Recursively and hierarchically inserts a point into this Aabb. Changes origin and extension if needed. */
-		virtual void traverseAndInsert( const Point& point ) = 0;
+		virtual void traverseAndInsert( const Point& point, int level, int maxLevel ) = 0;
 		
 		/** Shrinks used memory to fit inserted points and children. */
 		virtual void shrink() = 0;
@@ -53,7 +53,7 @@ namespace model
 		void insert( const Vec3& point );
 		
 		/** Calculates the surface area for SAH. */
-		float sahSurfaceArea( const Boundaries& boundaries ) const;
+		static float sahSurfaceArea( const Boundaries& boundaries );
 		
 		/** Calculates the new boundaries of this Aabb when a point is inserted. */
 		Boundaries calcNewBoundaries ( const Vec3& point ) const;
@@ -87,7 +87,7 @@ namespace model
 		InnerAabb( AabbPtr leftChild, AabbPtr rightChild );
 		
 		/** Hierarchical point insertion. Traverses the current node, fixing this Aabb's boundaries and recursively inserting the point in the best child, according to the SAH. */
-		void traverseAndInsert( const Point& point ) override;
+		void traverseAndInsert( const Point& point, int level, int maxLevel ) override;
 		
 		void shrink() override;
 		
@@ -110,7 +110,7 @@ namespace model
 		
 		void insert( const Point& point ) override;
 		
-		void traverseAndInsert( const Point& point ) override;
+		void traverseAndInsert( const Point& point, int level, int maxLevel ) override;
 		
 		void shrink() override { m_points.shrink_to_fit(); }
 		
@@ -154,13 +154,15 @@ namespace model
 			ulong m_maxDepth;
 			
 			Aabb::Boundaries m_boundaries;
+			
+			friend ostream& operator<<( ostream& out, const Statistics& stats );
 		};
 		
 		/** Ctor for an empty Bvh. Points can be inserted using insert(). */
-		Bvh();
+		Bvh( int maxLevel );
 		
 		/** @param plyFilename the path for a .ply file with the input. */
-		Bvh( const string& plyFilename );
+		Bvh( const string& plyFilename, int maxLevel );
 		
 		const Aabb& root() const { return *m_root; }
 		
@@ -172,14 +174,15 @@ namespace model
 		void shrink();
 		
 		/** Sanity test. Throws exceptions when insane.*/
-		void isSane() const;
+		void isSane( bool print = false ) const;
 		
 	private:
-		void isSane( const Aabb& aabb ) const;
+		void isSane( const Aabb& aabb, int level, bool print ) const;
 		
 		void statistics( const Aabb& aabb, Statistics& stats ) const;
 		
 		typename Aabb::AabbPtr m_root;
+		int m_maxLevel;
 	};
 	
 	// ==== Aabb implementation ====
@@ -227,7 +230,7 @@ namespace model
 		return Boundaries( newOrigin, newExtension ); 
 	}
 	
-	float Aabb::sahSurfaceArea( const Boundaries& boundaries ) const
+	float Aabb::sahSurfaceArea( const Boundaries& boundaries )
 	{
 		const Vec3& extension = boundaries.m_extension;
 		
@@ -259,16 +262,18 @@ namespace model
 		m_children.push_back( rightChild );
 		
 		// Set boundaries.
+		insert( m_children[ 0 ]->origin() );
 		insert( m_children[ 0 ]->maxPoint() );
-		insert( m_children[ 1 ]->boundaries().m_origin );
+		insert( m_children[ 1 ]->origin() );
 		insert( m_children[ 1 ]->maxPoint() );
 	}
 
-	void InnerAabb::traverseAndInsert( const Point& point )
+	void InnerAabb::traverseAndInsert( const Point& point, int level, int maxLevel )
 	{
 		// Case 1: The object and a leaf node are paired under a new node.
 		// Case 2: The object is added as a new child to an existing node.
 		// Case 3: The object is added lower in the tree by means of recursing into a child volume.
+		float epsilon = 1.e-10;
 		
 		// Case 1 cost.
 		float cost1 = std::numeric_limits< float >::max();
@@ -280,9 +285,9 @@ namespace model
 		bool hasInnerChild = false;
 		
 		// Debug
-// 		{
-// 			cout << "Traversing:" << endl << *this << endl << endl;
-// 		}
+		{
+			cout << "Traversing:" << endl << *this << endl << endl;
+		}
 		
 		AabbPtr newLeaf( new LeafAabb( point ) );
 		
@@ -293,11 +298,26 @@ namespace model
 			{
 				if( ( *child )->isLeaf() )
 				{
-					// Select the best leaf node to pair with the a new leaf node in case 1.
+					// Select the best leaf node to pair with a new leaf node in case 1.
 					AabbPtr newNode( new InnerAabb( *child, newLeaf ) );
 					float cost = 2 * newNode->sahSurfaceArea( newNode->boundaries() );
 					
-					if( cost < cost1 )
+					bool currentIsBetterInTie = false;
+					
+					if( abs( cost - cost1 ) < epsilon )
+					{
+						// Cost tie. Choose the Aabb with nearest center.
+						Vec3 distanceToCurrent = point.getPos() - newNode->center();
+						Vec3 distanceToBest = point.getPos() - bestCase1NewChild->center();
+						
+						if( distanceToCurrent.squaredNorm() < distanceToBest.squaredNorm() )
+						{
+							cost1 = cost;
+							bestCase1NewChild = newNode;
+							itToPairedLeaf = child;
+						}
+					}
+					else if( cost < cost1 )
 					{
 						cost1 = cost;
 						bestCase1NewChild = newNode;
@@ -312,7 +332,20 @@ namespace model
 					float childOldArea = sahSurfaceArea( ( *child )->boundaries() );
 					float childNewArea = sahSurfaceArea( ( *child )->calcNewBoundaries( point.getPos() ) );
 					float cost = ( ( ( *child )->isLeaf() ) ? 0 : ( *child )->children().size() ) * ( childNewArea - childOldArea );
-					if( cost < bestCase3InnerCost )
+					
+					if( abs( cost - bestCase3InnerCost ) < epsilon )
+					{
+						// Cost tie. Choose the Aabb with nearest center.
+						Vec3 distanceToCurrent = point.getPos() - ( *child )->center();
+						Vec3 distanceToBest = point.getPos() - bestCase3Inner->center();
+						
+						if( distanceToCurrent.squaredNorm() < distanceToBest.squaredNorm() )
+						{
+							bestCase3InnerCost = cost;
+							bestCase3Inner = *child;
+						}
+					}
+					else if( cost < bestCase3InnerCost )
 					{
 						bestCase3InnerCost = cost;
 						bestCase3Inner = *child;
@@ -354,8 +387,6 @@ namespace model
 		
 		float bestCost = min( min( cost1, cost2 ), cost3 );
 		
-		float epsilon = 1.e-8;
-		
 		// Debug
 // 		{
 // 			cout << "cost 1: " << cost1 << endl << "cost 2: " << cost2 << endl << "cost 3: " << cost3 << endl << endl;
@@ -367,20 +398,33 @@ namespace model
 		
 		if( abs( bestCost - cost1 ) < epsilon )
 		{
-			// Debug 
-// 			{
-// 				cout << "Case: paired with best child" << endl << endl;
-// 			}
-			
-			// Case 1 is better
-			*itToPairedLeaf = bestCase1NewChild;
+			if( level == maxLevel - 1 )
+			{
+				// Debug 
+				{
+					cout << "Case: max level. Inserting at best leaf." << endl << endl;
+				}
+				
+				// Cannot increase level, so creating a new inner node is not allowed. Inserting directly at leaf instead.
+				( *itToPairedLeaf )->insert( point );
+			}
+			else
+			{
+				// Debug 
+				{
+					cout << "Case: paired with best child" << endl << endl;
+				}
+				
+				// Case 1 is better
+				*itToPairedLeaf = bestCase1NewChild;
+			}
 		}
 		else if( abs( bestCost - cost2 ) < epsilon )
 		{
 			// Debug 
-// 			{
-// 				cout << "Case: added as new child" << endl << endl;
-// 			}
+			{
+				cout << "Case: added as new child" << endl << endl;
+			}
 			
 			// Case 2 is better
 			m_children.push_back( newLeaf );
@@ -388,44 +432,13 @@ namespace model
 		else
 		{
 			// Debug 
-// 			{
-// 				cout << "Case: recursion" << endl << endl;
-// 			}
+			{
+				cout << "Case: recursion" << endl << endl;
+			}
 			
 			// Case 3 is better
-			bestCase3Inner->traverseAndInsert( point );
+			bestCase3Inner->traverseAndInsert( point, level + 1, maxLevel );
 		}
-		
-// 		if( abs( secondBestCost - bestCost ) < epsilon )
-// 		{
-// 			// Debug 
-// 			{
-// 				cout << "tie" << endl;
-// 			}
-// 			
-// 			// Cost tie. Insertion is done into the child with nearest center.
-// 			AabbPtr closerChild;
-// 			float inf = std::numeric_limits<float>::max();
-// 			Vec3 minDistance( inf, inf, inf );
-// 			
-// 			for( AabbPtr child : m_children )
-// 			{
-// 				Vec3 distance = point.getPos() - child->center();
-// 				if( distance.squaredNorm() < minDistance.squaredNorm() )
-// 				{
-// 					minDistance = distance;
-// 					AabbPtr closerChild = child;
-// 				}
-// 			}
-// 			closerChild->traverseAndInsert( point );
-// 		}
-// 		else if( cost1 < cost2 )
-// 		{
-// 			
-// 		}
-// 		else
-// 		{
-// 		}
 	}
 
 	void InnerAabb::shrink()
@@ -453,19 +466,21 @@ namespace model
 		m_points.push_back( point );
 	}
 
-	void LeafAabb::traverseAndInsert( const Point& point )
+	void LeafAabb::traverseAndInsert( const Point& point, int level, int maxLevel )
 	{
 		insert( point );
 	}
 
 	// ==== Bvh implementation ====
 	
-	Bvh::Bvh()
-	: m_root( nullptr )
+	Bvh::Bvh( int maxLevel = std::numeric_limits< int >::max() )
+	: m_root( nullptr ),
+	m_maxLevel( maxLevel )
 	{}
 	
-	Bvh::Bvh( const string& plyFilename )
-	: m_root( nullptr )
+	Bvh::Bvh( const string& plyFilename, int maxLevel = std::numeric_limits< int >::max() )
+	: m_root( nullptr ),
+	m_maxLevel( maxLevel )
 	{
 		using namespace util;
 		
@@ -489,9 +504,9 @@ namespace model
 	void Bvh::insert( const Point& point )
 	{
 		// Debug
-// 		{
-// 			cout << "===== INSERTING =====" << endl << point << endl;
-// 		}
+		{
+			cout << "===== INSERTING =====" << endl << point << endl;
+		}
 		//
 		
 		if( m_root == nullptr )
@@ -505,8 +520,10 @@ namespace model
 		}
 		else
 		{
-			m_root->traverseAndInsert( point );
+			m_root->traverseAndInsert( point, 1, m_maxLevel );
 		}
+		
+		isSane();
 	}
 	
 	void Bvh::shrink()
@@ -514,13 +531,18 @@ namespace model
 		m_root->shrink();
 	}
 	
-	void Bvh::isSane() const
+	void Bvh::isSane( bool print ) const
 	{
-		isSane( *m_root );
+		isSane( *m_root, 1, print );
 	}
 	
-	void Bvh::isSane( const Aabb& aabb ) const
+	void Bvh::isSane( const Aabb& aabb, int level, bool print ) const
 	{
+		if( print )
+		{
+			cout << "Level: " << level << "." << endl << aabb << endl << endl;
+		}
+		
 		if( !aabb.isLeaf() )
 		{
 			using ChildrenVector = InnerAabb::ChildrenVector;
@@ -552,51 +574,54 @@ namespace model
 					{
 						stringstream ss; ss << "Child is expected to be contained in parent." << endl << endl
 						<< "Parent:" << endl << aabb << endl << endl << "Child:" << endl << child << endl << endl;
-					}
-				}
-				
-				for( ChildrenVector::const_iterator it2 = std::next( it, 1 ); it2 != children.end(); it2++ )
-				{
-					float epsilon = 0.09f;
-					
-					const Aabb& sibling = ( **it2 );
-					
-					// Checking no intersection between children.
-					bool intersecting = true;
-					
-					// Debug
-// 					{
-// 						cout << "Intersection test: " << endl << child << endl << " XXX " << endl << sibling << endl << endl;
-// 					}
-					//
-					
-					for( int i = 0; i < 3; ++i )
-					{
-						if( child.origin()[ i ] > sibling.maxPoint()[ i ] - epsilon || sibling.origin()[ i ] > child.maxPoint()[ i ] - epsilon )
-						{
-							// Debug
-// 							{
-// 								cout << "Not intersecting at " << i << endl << endl;
-// 							}
-							//
-							
-							intersecting = false;
-							break;
-						}
-					}
-					
-					// Test
-					if( intersecting )
-					{
-						stringstream ss; ss << "Intersecting: " << endl << child << endl << "AND " << endl << sibling << endl << endl;
 						throw runtime_error( ss.str() );
 					}
 				}
+				
+// 				for( ChildrenVector::const_iterator it2 = std::next( it, 1 ); it2 != children.end(); it2++ )
+// 				{
+// 					float collisionPercentage = 0.9f;
+// 					
+// 					const Aabb& sibling = ( **it2 );
+// 					
+// 					// Checking no intersection between children.
+// 					bool intersecting = true;
+// 					
+// 					// Debug
+// // 					{
+// // 						cout << "Intersection test: " << endl << child << endl << " XXX " << endl << sibling << endl << endl;
+// // 					}
+// 					//
+// 					
+// 					for( int i = 0; i < 3; ++i )
+// 					{
+// 						
+// 						if( child.origin()[ i ] > sibling.maxPoint()[ i ] - ( sibling.extension()[ i ] * collisionPercentage )
+// 							|| sibling.origin()[ i ] > child.maxPoint()[ i ] - ( child.extension()[ i ] * collisionPercentage ) )
+// 						{
+// 							// Debug
+// // 							{
+// // 								cout << "Not intersecting at " << i << endl << endl;
+// // 							}
+// 							//
+// 							
+// 							intersecting = false;
+// 							break;
+// 						}
+// 					}
+// 					
+// 					// Test
+// 					if( intersecting )
+// 					{
+// 						stringstream ss; ss << "Intersecting: " << endl << child << endl << "AND " << endl << sibling << endl << endl;
+// 						throw runtime_error( ss.str() );
+// 					}
+// 				}
 			}
 			
 			for( const Aabb::AabbPtr child : children )
 			{
-					isSane( *child );
+					isSane( *child, level + 1, print );
 			}
 		}
 	}
@@ -650,6 +675,21 @@ namespace model
 		}
 		
 		--stats.m_recursionCount;
+	}
+	
+	ostream& operator<<( ostream& out, const Bvh::Statistics& stats )
+	{
+		out << "Boundaries: " << endl << "origin: " << endl << stats.m_boundaries.m_origin << endl << "extension" << endl << stats.m_boundaries.m_extension << endl
+			<< "Max depth: " << stats.m_maxDepth << endl
+			<< "Number of nodes: " << stats.m_nNodes << endl
+			<< "Number of points: " << stats.m_nPoints << endl
+			<< "Number of leaves: " << stats.m_nLeaves << endl
+			<< "Avg points per leaf: " << stats.m_avgPointsPerLeaf << endl
+			<< "Min points in a leaf: " << stats.m_minPointsPerLeaf << endl
+			<< "Max points in a leaf: " << stats.m_maxPointsPerLeaf << endl
+			<< "Recursion count: " << stats.m_recursionCount;
+			
+		return out;
 	}
 }
 
