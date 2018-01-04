@@ -253,12 +253,12 @@ namespace model
 		TEST_F( BvhTest, BvhReal )
 		{
 // 			Bvh bvh( "../data/example/staypuff.ply" );
-// 			Bvh bvh( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/data/real/prova5M.ply" );
-			Bvh bvh( "/media/vinicius/Expansion Drive3/Datasets/bunny/bunny/reconstruction/bun_zipper_normals_bin.ply", 7 );
+			Bvh bvh( "/home/vinicius/Projects/PointBasedGraphics/Cumulus/src/data/real/prova5M.ply", 500 );
+// 			Bvh bvh( "/media/vinicius/Expansion Drive3/Datasets/bunny/bunny/reconstruction/bun_zipper_normals_bin.ply", 7 );
 			
 			const Aabb& root = bvh.root();
 			
-			bvh.isSane( true );
+			bvh.isSane();
 			
 			Bvh::Statistics stats = bvh.statistics();
 			

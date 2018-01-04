@@ -285,9 +285,9 @@ namespace model
 		bool hasInnerChild = false;
 		
 		// Debug
-		{
-			cout << "Traversing:" << endl << *this << endl << endl;
-		}
+// 		{
+// 			cout << "Traversing:" << endl << *this << endl << endl;
+// 		}
 		
 		AabbPtr newLeaf( new LeafAabb( point ) );
 		
@@ -357,7 +357,8 @@ namespace model
 // 			{
 // 				if( itToPairedLeaf != m_children.end() )
 // 				{
-// 					cout << "Best leaf:" << endl << **itToPairedLeaf << endl << endl;
+// 					cout << "Best leaf:" << endl << **itToPairedLeaf << endl << endl
+// 						 << "New paired inner:" << endl << *bestCase1NewChild << endl << endl;
 // 				}
 // 				else
 // 				{
@@ -396,14 +397,20 @@ namespace model
 		// Fix bounding box.
 		insert( point );
 		
+		// Debug
+// 		{
+// 			cout << "Fixed: " << *this << endl << endl;
+// 		}
+		//
+		
 		if( abs( bestCost - cost1 ) < epsilon )
 		{
 			if( level == maxLevel - 1 )
 			{
 				// Debug 
-				{
-					cout << "Case: max level. Inserting at best leaf." << endl << endl;
-				}
+// 				{
+// 					cout << "Case: max level. Inserting at best leaf." << endl << endl;
+// 				}
 				
 				// Cannot increase level, so creating a new inner node is not allowed. Inserting directly at leaf instead.
 				( *itToPairedLeaf )->insert( point );
@@ -411,9 +418,9 @@ namespace model
 			else
 			{
 				// Debug 
-				{
-					cout << "Case: paired with best child" << endl << endl;
-				}
+// 				{
+// 					cout << "Case: paired with best child" << endl << endl;
+// 				}
 				
 				// Case 1 is better
 				*itToPairedLeaf = bestCase1NewChild;
@@ -422,9 +429,9 @@ namespace model
 		else if( abs( bestCost - cost2 ) < epsilon )
 		{
 			// Debug 
-			{
-				cout << "Case: added as new child" << endl << endl;
-			}
+// 			{
+// 				cout << "Case: added as new child" << endl << endl;
+// 			}
 			
 			// Case 2 is better
 			m_children.push_back( newLeaf );
@@ -432,9 +439,9 @@ namespace model
 		else
 		{
 			// Debug 
-			{
-				cout << "Case: recursion" << endl << endl;
-			}
+// 			{
+// 				cout << "Case: recursion" << endl << endl;
+// 			}
 			
 			// Case 3 is better
 			bestCase3Inner->traverseAndInsert( point, level + 1, maxLevel );
@@ -504,9 +511,9 @@ namespace model
 	void Bvh::insert( const Point& point )
 	{
 		// Debug
-		{
-			cout << "===== INSERTING =====" << endl << point << endl;
-		}
+// 		{
+// 			cout << "===== INSERTING =====" << endl << point << endl;
+// 		}
 		//
 		
 		if( m_root == nullptr )
@@ -522,8 +529,6 @@ namespace model
 		{
 			m_root->traverseAndInsert( point, 1, m_maxLevel );
 		}
-		
-		isSane();
 	}
 	
 	void Bvh::shrink()
@@ -556,6 +561,7 @@ namespace model
 				const Aabb& child = ( **it );
 				float childSah = child.sahSurfaceArea( child.boundaries() );
 				
+				
 				{
 					float epsilon = 1.e-5;
 					// Checking surface area.
@@ -565,16 +571,16 @@ namespace model
 						<< "Parent:" << endl << aabb << endl << endl << "Child:" << endl << child << endl << endl; 
 						throw runtime_error( ss.str() );
 					}
-				}
-				
-				// Checking inclusion.
-				for( int i = 0; i < 3; ++i )
-				{
-					if( child.origin()[ i ] < aabb.origin()[ i ] || child.maxPoint()[ i ] > aabb.maxPoint()[ i ] )
+					
+					// Checking inclusion.
+					for( int i = 0; i < 3; ++i )
 					{
-						stringstream ss; ss << "Child is expected to be contained in parent." << endl << endl
-						<< "Parent:" << endl << aabb << endl << endl << "Child:" << endl << child << endl << endl;
-						throw runtime_error( ss.str() );
+						if( child.origin()[ i ] < aabb.origin()[ i ] - epsilon || child.maxPoint()[ i ] > aabb.maxPoint()[ i ] + epsilon )
+						{
+							stringstream ss; ss << "Child is expected to be contained in parent." << endl << endl
+							<< "Parent:" << endl << aabb << endl << endl << "Child:" << endl << child << endl << endl;
+							throw runtime_error( ss.str() );
+						}
 					}
 				}
 				
