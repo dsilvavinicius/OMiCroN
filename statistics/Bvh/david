@@ -1,0 +1,71 @@
+Iniciando: /home/vinicius/Projects/PointBasedGraphics/Cumulus/bin/Release/test/Tests --gtest_filter=BvhTest.BvhReal
+Note: Google Test filter = BvhTest.BvhReal
+[==========] Running 1 test from 1 test case.
+[----------] Global test environment set-up.
+[----------] 1 test from BvhTest
+[ RUN      ] BvhTest.BvhReal
+Bvh creation started at: Mon Jan  8 13:04:50 2018
+
+PlyPointReader init started at: Mon Jan  8 13:04:50 2018
+
+Setup read of /media/vinicius/data/Datasets/David/DavidWithFaces.ply
+
+Vertices in file: 468640353
+
+=== Elements in header ===
+
+vertex: 468640353 instances
+Prop name: x
+Prop name: y
+Prop name: z
+Prop name: nx
+Prop name: ny
+Prop name: nz
+
+face: 933378464 instances
+Prop name: vertex_indices
+
+PlyPointReader init finished at: Mon Jan  8 13:04:50 2018
+
+Duration: 0 ms.
+
+PlyPointReader read started at: Mon Jan  8 13:04:50 2018
+
+PlyPointReader read finished at: Mon Jan  8 14:26:34 2018
+
+Duration: 4903638 ms.
+
+Bvh creation finished at: Mon Jan  8 14:27:41 2018
+
+Duration: 4971127 ms.
+
+BVH Statistics: 
+Boundaries: 
+origin: 
+ -343.75
+-959.835
+-4425.86
+extension
+2162.29
+1256.84
+5412.61
+Max depth: 24
+Number of nodes: 40932
+Number of points: 468640353
+Number of leaves: 22874
+Avg points per leaf: 20487
+Min points in a leaf: 1
+Max points in a leaf: 32723790
+Recursion count: 0
+
+[       OK ] BvhTest.BvhReal (4971707 ms)
+[----------] 1 test from BvhTest (4971707 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test case ran. (4971707 ms total)
+[  PASSED  ] 1 test.
+
+  YOU HAVE 7 DISABLED TESTS
+
+*** Saiu normalmente ***
+

@@ -138,6 +138,7 @@ namespace model
 			m_nPoints( 0ul ),
 			m_nLeaves( 0ul ),
 			m_avgPointsPerLeaf( 0ul ),
+			m_avgChildrenPerInner( 0ul ),
 			m_maxPointsPerLeaf( 0ul ),
 			m_minPointsPerLeaf( 0ul ),
 			m_recursionCount( 0ul ),
@@ -148,6 +149,7 @@ namespace model
 			ulong m_nPoints;
 			ulong m_nLeaves;
 			ulong m_avgPointsPerLeaf;
+			ulong m_avgChildrenPerInner;
 			ulong m_maxPointsPerLeaf;
 			ulong m_minPointsPerLeaf;
 			ulong m_recursionCount;
@@ -489,6 +491,8 @@ namespace model
 	: m_root( nullptr ),
 	m_maxLevel( maxLevel )
 	{
+		auto start = util::Profiler::now( "Bvh creation" );
+		
 		using namespace util;
 		
 		PlyPointReader reader( plyFilename );
@@ -506,6 +510,8 @@ namespace model
 		);
 		
 		shrink();
+		
+		util::Profiler::elapsedTime( start, "Bvh creation" );
 	}
 	
 	void Bvh::insert( const Point& point )
@@ -641,6 +647,8 @@ namespace model
 		statistics( *m_root, stats );
 		
 		stats.m_avgPointsPerLeaf = stats.m_nPoints / stats.m_nLeaves;
+		stats.m_avgChildrenPerInner = abs( stats.m_avgChildrenPerInner /  ( stats.m_nNodes - stats.m_nLeaves ) );
+		
 		
 		return stats;
 	}
@@ -674,6 +682,7 @@ namespace model
 		else
 		{
 			auto innerAabb = dynamic_cast< const InnerAabb* >( &aabb );
+			stats.m_avgChildrenPerInner += innerAabb->children().size();
 			for( const Aabb::AabbPtr child : innerAabb->children() )
 			{
 				statistics( *child, stats );
@@ -691,6 +700,7 @@ namespace model
 			<< "Number of points: " << stats.m_nPoints << endl
 			<< "Number of leaves: " << stats.m_nLeaves << endl
 			<< "Avg points per leaf: " << stats.m_avgPointsPerLeaf << endl
+			<< "Avg children per inner: " << stats.m_avgChildrenPerInner << endl
 			<< "Min points in a leaf: " << stats.m_minPointsPerLeaf << endl
 			<< "Max points in a leaf: " << stats.m_maxPointsPerLeaf << endl
 			<< "Recursion count: " << stats.m_recursionCount;
