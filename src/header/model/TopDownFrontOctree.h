@@ -1,17 +1,17 @@
-#ifndef FRONT_OCTREE_H
-#define FRONT_OCTREE_H
+#ifndef TOP_DOWN_FRONT_OCTREE_H
+#define TOP_DOWN_FRONT_OCTREE_H
 
 #include <jsoncpp/json/json.h>
 #include "Front.h"
 #include "OctreeDimensions.h"
-#include "OctreeFile.h"
 #include "RuntimeSetup.h"
+#include "PointSorter.h"
 
 namespace model
 {
-	/** A simple octree with front tracking capability. Used to replace FastParallelOctree in tests. */
+	/** A simple octree created top-down. The heuristic is to subdivide everytime a node contains K points.. */
 	template< typename Morton >
-	class FrontOctree
+	class TopDownFrontOctree
 	{
 	public:
 		using Dim = OctreeDimensions< Morton >;
@@ -50,51 +50,41 @@ namespace model
 		
 	private:
 		unique_ptr< Front > m_front;
-		OctreeFile::NodePtr m_root;
+		Node* m_root;
 		Dim m_dim;
 	};
 	
-	template< typename Morton >
-	inline FrontOctree< Morton >::FrontOctree( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& )
+	template< typename Morton >FrontOctree
+	inline TopDownFrontOctree< Morton >::FrontOctree( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& )
 	{
-		Vec3 octreeSize( octreeJson[ "size" ][ "x" ].asFloat(),
-						 octreeJson[ "size" ][ "y" ].asFloat(),
-						 octreeJson[ "size" ][ "z" ].asFloat() );
-		Vec3 octreeOrigin( octreeJson[ "origin" ][ "x" ].asFloat(),
-						   octreeJson[ "origin" ][ "y" ].asFloat(),
-						   octreeJson[ "origin" ][ "z" ].asFloat() );
-		
-		m_dim = Dim( octreeOrigin, octreeSize, octreeJson[ "depth" ].asUInt() );
-		
-		// Debug
-		{
-			cout << "Dim from Json: " << m_dim << endl;
-		}
-		
+		throw logic_error( "TopDownFrontOctree creation from octree file is unsuported." );
+	}
+	
+	template< typename Morton >
+	inline TopDownFrontOctree< Morton >::FrontOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& setup )
+	{
 		auto now = Profiler::now( "Binary octree file reading" );
 		
-		m_root = OctreeFile::read( octreeJson[ "nodes" ].asString() );
+		PointSorter< Morton > sorter( plyFilename, maxLvl );
+		PointSet< Morton > pointSet = sorter.points();
+		m_dim = pointSet.m_dim;
+		
+		// PUT LOGIC HERE!
 		
 		Profiler::elapsedTime( now, "Binary octree file reading" );
 		
-		m_front = unique_ptr< Front >( new Front( octreeJson[ "database" ].asString(), m_dim, 1, nodeLoader, 8ul * 1024ul * 1024ul * 1024ul ) );
+		m_front = unique_ptr< Front >( new Front( "", m_dim, 1, loader, 8ul * 1024ul * 1024ul * 1024ul ) );
 		m_front->insertRoot( *m_root );
 	}
 	
 	template< typename Morton >
-	inline OctreeStats FrontOctree< Morton >::trackFront( Renderer& renderer, const Float projThresh )
+	inline OctreeStats TopDownFrontOctree< Morton >::trackFront( Renderer& renderer, const Float projThresh )
 	{
 		m_front->trackFront( renderer, projThresh );
 	}
 	
 	template< typename Morton >
-	inline FrontOctree< Morton >::FrontOctree( const string&, const int, NodeLoader&, const RuntimeSetup& )
-	{
-		throw logic_error( "FrontOctree creation from point file is unsuported." );
-	}
-	
-	template< typename Morton >
-	pair< uint, uint > FrontOctree< Morton >::nodeStatistics() const
+	pair< uint, uint > TopDownFrontOctree< Morton >::nodeStatistics() const
 	{
 		return m_root->subtreeStatistics();
 	}
