@@ -40,6 +40,25 @@ namespace model
 		m_cloud( nullptr )
 		{}
 		
+		/** Ctor to build a leaf O1OctreeNode totally init except for the gpu cloud. */
+		O1OctreeNode( ContentsArray&& contents, O1OctreeNode& parent )
+		: m_contents( std::move( contents ) ),
+		m_children(),
+		m_parent( parent ),
+		m_cloud( nullptr ),
+		m_isLeaf( true )
+		{}
+		
+		/** Ctor to build an inner O1OctreeNode totally init except for the gpu cloud. */
+		O1OctreeNode( ContentsArray&& contents, O1OctreeNode& parent, NodeArray&& children )
+		: m_contents( std::move( contents ) ),
+		m_children( std::move( children ) ),
+		m_parent( parent ),
+		m_cloud( nullptr ),
+		m_isLeaf( false )
+		{}
+		
+		/** Ctor to build an O1OctreeNode when child and parent info are not known yet. */
 		O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
 		: m_contents( contents ),
 		m_isLeaf( isLeaf ),
@@ -48,6 +67,7 @@ namespace model
 		m_cloud( nullptr )
 		{}
 		
+		/** Ctor to build an O1OctreeNode when child and parent info are not known yet. */
 		O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
 		: m_contents( std::move( contents ) ),
 		m_isLeaf( isLeaf ),
@@ -55,7 +75,7 @@ namespace model
 		m_children(),
 		m_cloud( nullptr )
 		{}
-
+		
 		O1OctreeNode( const O1OctreeNode& other ) = delete;
 		
 		~O1OctreeNode();
@@ -183,6 +203,8 @@ namespace model
 			m_isLeaf = true;
 			releaseChildren();
 		}
+		
+		bool isEmpty() { return m_contents.size() == 0; }
 		
 		const SurfelCloud& cloud() const { return *m_cloud; }
 		

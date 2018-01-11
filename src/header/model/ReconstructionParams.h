@@ -104,6 +104,9 @@ enum ReconstructionAlgorithm
 
 #define RECONSTRUCTION_ALG WHA07
 
+// Maximum number of nodes before subdivision in the top-down octree.
+#define TOP_DOWN_OCTREE_K 400000
+
 // ===== Dependent parameters =====
 #ifdef PARENT_POINTS_RATIO_ONE_FOURTH
 	#define PARENT_POINTS_RATIO_VALUE 0.25f
@@ -213,8 +216,21 @@ namespace model
 		
 			return Vector2f( 1.f, 1.f );
 		}
+		
+		static Vector2f calcAcummulatedMultipliers( int startingLevel, int endingLevel )
+	{
+		Vector2f multipliers( 1.f, 1.f );
+		
+		for( int level = startingLevel; level < endingLevel + 1; ++level )
+		{
+			Vector2f levelMult = calcMultipliers( level );
+			multipliers.x() *= levelMult.x();
+			multipliers.y() *= levelMult.y();
+		}
+		
+		return multipliers;
+	}
 	};
-			
 }
 
 inline ostream& operator<<( ostream& out, const ReconstructionAlgorithm alg )

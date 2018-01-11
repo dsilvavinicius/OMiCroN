@@ -84,6 +84,9 @@ namespace model
 		 * with the bitmask 111. */
 		MortonCodePtr< T > getLastChild() const;
 		
+		/** @returns the index of this MortonCode related to its parent. Ranges from 0 to 7. */
+		int getChildIdx() const;
+		
 		/** Returns the children code closed interval [ a, b ] for this morton code.
 		 * @returns a pair with first element being a and second element being b. */
 		pair< MortonCodePtr< T >, MortonCodePtr< T > > getChildInterval() const;
@@ -288,6 +291,13 @@ namespace model
 		lastChild->build( ( m_bits << 3 ) | ( T ) 0x7 );
 		return lastChild;
 	}
+	
+	template <typename T>
+	inline int MortonCode< T >::getChildIdx() const
+	{
+		return m_bits & 7;
+	}
+
 	
 	template <typename T>
 	inline pair< MortonCodePtr< T >, MortonCodePtr< T > > MortonCode< T >::getChildInterval() const

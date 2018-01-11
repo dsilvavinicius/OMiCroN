@@ -1,0 +1,103 @@
+Dataset: DavidWithFaces_sorted7
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.25
+
+Leaf collapse: true
+
+Leaf tangent sizes: 
+{ 3.7e-05, 3e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+2
+Level 4 : 
+2
+2
+Level 5 : 
+2
+2
+Level 6 : 
+2.5
+  2
+Level 7 : 
+4.2
+4.2
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 36ms
+Render queue time: 0ms
+CPU overhead: 36ms
+Rendered points: 2.37401e+06
+Front insertion delay: 0ms
+Front size: 1764
+Front segments: 5
+Front segment size: 352
+
+=== AVERAGE STATS === 
+Traversal time: 21.7377ms
+Render queue time: 0.0145307ms
+CPU overhead: 21.7522ms
+Rendered points: 647171
+Front insertion delay: 88.9626ms
+Front size: 662.074
+Front segments: 5
+Front segment size: 132.878
+0% completed at Thu Jan 11 14:07:30 2018
+
+10% completed at Thu Jan 11 14:07:48 2018
+
+20% completed at Thu Jan 11 14:08:10 2018
+
+30% completed at Thu Jan 11 14:08:28 2018
+
+40% completed at Thu Jan 11 14:08:47 2018
+
+50% completed at Thu Jan 11 14:09:06 2018
+
+60% completed at Thu Jan 11 14:09:27 2018
+
+70% completed at Thu Jan 11 14:09:50 2018
+
+80% completed at Thu Jan 11 14:10:10 2018
+
+90% completed at Thu Jan 11 14:10:31 2018
+
+100% completed at Thu Jan 11 14:10:54 2018
+
+=== GPU STATS === 
+GPU Overhead: 72
+Average GPU Overhead: 37.5746
+No sort? true
+Sorting flag: Full sort
+Sorting chunks: 1
+Time for reader input: 0ms
+Time for reader init: 0ms
+Time for reader reading: 203103ms
+Time to create hierarchy: 203148ms
+Dynamic memory allocated: 9872563816 bytes
+Number of nodes in hierarchy: 31013
+Number of splats in hierarchy: 274137087
+Number of substituted placeholders: 19895
+
