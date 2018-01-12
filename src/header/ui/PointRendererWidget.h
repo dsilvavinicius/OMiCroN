@@ -10,8 +10,10 @@
 #include "global_malloc.h"
 #include "ReconstructionParams.h"
 
-#ifdef BINARY_OCTREE_FILE
+#if OCTREE_CONSTRUCTION == BINARY_OCTREE_FILE
 	#include "FrontOctree.h"
+#elif OCTREE_CONSTRUCTION == TOP_DOWN_OCTREE
+	#include "TopDownFrontOctree.h"
 #else
 	#include "FastParallelOctree.h"
 #endif
@@ -31,8 +33,10 @@ public:
 	
 	using Point = model::Point;
 	
-	#ifdef BINARY_OCTREE_FILE
+	#if OCTREE_CONSTRUCTION == BINARY_OCTREE_FILE
 		using Octree = FrontOctree< MortonCode >;
+	#elif OCTREE_CONSTRUCTION == TOP_DOWN_OCTREE
+		using Octree = TopDownFrontOctree< MortonCode >;
 	#else
 		using Octree = FastParallelOctree< MortonCode >;
 	#endif

@@ -337,6 +337,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		<< "No sort? " << ( ( NO_SORT ) ? "true" : "false" ) << endl
 		<< "Sorting flag: " << Sorting( SORTING ) << endl
 		<< "Sorting chunks: " << SORTING_SEGMENTS << endl
+		<< "Hierarchy construction method: " << OCTREE_CONSTRUCTION << endl
 		<< "Time for reader input: " << m_octree->readerInTime() << "ms" << endl
 		<< "Time for reader init: " << m_octree->readerInitTime() << "ms" << endl
 		<< "Time for reader reading: " << m_octree->readerReadTime() << "ms" << endl

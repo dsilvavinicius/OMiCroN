@@ -40,7 +40,7 @@ namespace model
 		pair< uint, uint > nodeStatistics() const;
 		
 		/** Just here to fit FastParallelOctree interface. */
-		int hierarchyCreationDuration() const { return 0; }
+		int hierarchyCreationDuration() const { return m_hierarchyConstructionTime; }
 		
 		const Dim& dim() const { return m_dim; }
 		
@@ -48,34 +48,42 @@ namespace model
 		
 		uint substitutedPlaceholders() const{ return 0u; }
 		
+		uint readerInTime() { return m_inTime; }
+		uint readerInitTime() { return 0; }
+		uint readerReadTime() { return 0; }
+		
 	private:
 		void insert( const Point& p, Node& node, const Dim& currentLvlDim );
 		
 		/** Post-process the octree in order to eliminate empty nodes and shrink buffers. */
 		void postProcess( Node& node );
 		
-		static float& getOffsetReference( const Node::ContentsArray& contents ) { return ( contents.end() - 1 )->c[ 0 ]; }
-		static float& getOffsetReference( const Node& node ) { return getOffsetReference( node.getContents() ); }
+		static float& getOffsetReference( typename Node::ContentsArray& contents ) { return ( contents.end() - 1 )->c[ 0 ]; }
+		static float& getOffsetReference( Node& node ) { return getOffsetReference( node.getContents() ); }
 		
 		unique_ptr< Front > m_front;
 		unique_ptr< Node > m_root;
 		Dim m_dim;
+		uint m_inTime;
+		uint m_hierarchyConstructionTime;
 	};
 	
-	template< typename Morton >FrontOctree
-	inline TopDownFrontOctree< Morton >::FrontOctree( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& )
+	template< typename Morton >
+	inline TopDownFrontOctree< Morton >::TopDownFrontOctree( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& )
 	{
 		throw logic_error( "TopDownFrontOctree creation from octree file is unsuported." );
 	}
 	
 	template< typename Morton >
-	inline TopDownFrontOctree< Morton >::FrontOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& setup )
+	inline TopDownFrontOctree< Morton >::TopDownFrontOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& setup )
 	{
-		auto now = Profiler::now( "Top-down octree creation" );
-		
 		PointSorter< Morton > sorter( plyFilename, maxLvl );
 		PointSet< Morton > pointSet = sorter.points();
 		m_dim = pointSet.m_dim;
+		
+		m_inTime = sorter.inputTime();
+		
+		auto now = Profiler::now( "Hierarchy construction" );
 		
 		typename Node::ContentsArray surfels( TOP_DOWN_OCTREE_K );
 		
@@ -87,7 +95,7 @@ namespace model
 			insert( p, *m_root, Dim( m_dim, 0 ) );
 		}
 		
-		Profiler::elapsedTime( now, "Top-down octree creation" );
+		m_hierarchyConstructionTime = Profiler::elapsedTime( now, "Hierarchy construction" );
 		
 		m_front = unique_ptr< Front >( new Front( "", m_dim, 1, loader, 8ul * 1024ul * 1024ul * 1024ul ) );
 		m_front->insertRoot( *m_root );
@@ -96,7 +104,7 @@ namespace model
 	}
 	
 	template< typename Morton >
-	inline void TopDownFrontOctree::insert( const Point& p, Node& node, const Dim& currentLvlDim )
+	inline void TopDownFrontOctree< Morton >::insert( const Point& p, Node& node, const Dim& currentLvlDim )
 	{
 		if( node.isLeaf() )
 		{
@@ -116,7 +124,7 @@ namespace model
 				
 				int movedToInner = 0;
 				
-				Node newInner( Node::ContentsArray( TOP_DOWN_OCTREE_K / 8 ), node.parent(), Node::NodeArray( 8 ) );
+				Node newInner( typename Node::ContentsArray( TOP_DOWN_OCTREE_K / 8 ), node.parent(), typename Node::NodeArray( 8 ) );
 				
 				// Calc the multipliers needed to reverse the tangent multiplication done for the current lvl.
 				Vector2f reverseMultipliers = ReconstructionParams::calcMultipliers( currentLvlDim.level() );
@@ -137,9 +145,9 @@ namespace model
 					int childIdx = nextLvlDim.calcMorton( surfel.c ).getChildIdx();
 					Node& child = newInner.child()[ childIdx ]; 
 					
-					if( child.isEmpty() )
+					if( child.empty() )
 					{
-						Node::ContentsArray newChildSurfels( TOP_DOWN_OCTREE_K );
+						typename Node::ContentsArray newChildSurfels( TOP_DOWN_OCTREE_K );
 						newChildSurfels[ 0 ] = nextLvlSurfel;
 						getOffsetReference( newChildSurfels ) = 1;
 						
@@ -173,7 +181,7 @@ namespace model
 				throw logic_error( "All inner nodes are expected to have TOP_DOWN_OCTREE_K / 8 surfels." );
 			}
 			
-			Node::ContentsArray newSurfelArray( contentsSize );
+			typename Node::ContentsArray newSurfelArray( contentsSize );
 			auto iter = newSurfelArray.begin();
 			for( const Surfel& surfel : node.getContents() )
 			{
@@ -186,7 +194,7 @@ namespace model
 		if( !node.isLeaf() )
 		{
 			int nonEmptyChildren = 0;
-			for( const Node& child : node.child )
+			for( const Node& child : node.child() )
 			{
 				if( !child.empty() )
 				{
@@ -197,9 +205,9 @@ namespace model
 			if( nonEmptyChildren < 8 )
 			{
 				// Empty removal needed.
-				Node::NodeArray newChildren( nonEmptyChildren );
+				typename Node::NodeArray newChildren( nonEmptyChildren );
 				auto iter = newChildren.begin();
-				for( Node& child : node.child )
+				for( Node& child : node.child() )
 				{
 					if( !child.empty() )
 					{

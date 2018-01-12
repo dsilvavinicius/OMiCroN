@@ -9,14 +9,21 @@ using namespace std;
 
 // ===== Identifiers =====
 
+// Models
 #define DAVID 0
 #define ST_MATHEW 1
 #define ATLAS 2
 #define DUOMO 3
 
+// Sort type
 #define HEAP_SORT_D 0
 #define PARTIAL_SORT_D 1
 #define FULL_SORT_D 2
+
+// Octree construction method
+#define OMICRON 0
+#define BINARY_OCTREE_FILE 1
+#define TOP_DOWN_OCTREE 2
 
 enum Sorting
 {
@@ -65,7 +72,8 @@ enum ReconstructionAlgorithm
 #define SORTING_SEGMENTS 1
 
 // Activates de loading of binary octree files instead of hierarchy creation.
-// #define BINARY_OCTREE_FILE
+#define OCTREE_CONSTRUCTION TOP_DOWN_OCTREE
+// #define OCTREE_CONSTRUCTION OMICRON
 
 #define PARENT_POINTS_RATIO_ONE_FOURTH
 // #define PARENT_POINTS_RATIO_ONE_FIFTH
