@@ -55,6 +55,9 @@ namespace model
 	private:
 		void insert( const Point& p, Node& node, const Dim& currentLvlDim );
 		
+		/** Finds the child of node where p should be inserted. If the node does not exist yet, it is created. */
+		Node& findInsertionChild( const Point& p, Node& node, const Dim& childLvlDim );
+		
 		/** Post-process the octree in order to eliminate empty nodes and shrink buffers. */
 		void postProcess( Node& node );
 		
@@ -104,119 +107,159 @@ namespace model
 	}
 	
 	template< typename Morton >
+	inline typename TopDownFrontOctree<Morton>::Node& TopDownFrontOctree< Morton >::findInsertionChild( const Point& p, Node& node, const Dim& childLvlDim )
+	{
+		Node* insertionChild = nullptr;
+		
+		for( Node& child : node.child() )
+		{
+			// Debug
+// 			{
+// 				cout << "Child: " << childLvlDim.calcMorton( child ).getPathToRoot() << " size: " << getOffsetReference( child ) << endl << endl ;
+// 			}
+			//
+			
+			if( childLvlDim.calcMorton( p ) == childLvlDim.calcMorton( child ) )
+			{
+				insertionChild = &child;
+			}
+			break;
+		}
+		
+		if( insertionChild == nullptr )
+		{
+			// Debug
+// 			{
+// 				cout << "Creating new node" << endl << endl;
+// 			}
+			
+			typename Node::NodeArray newChildArray( node.child().size() + 1 );
+			for( int i = 0; i < node.child().size(); ++i )
+			{
+				newChildArray[ i ] = std::move( node.child()[ i ] );
+			}
+			newChildArray[ newChildArray.size() - 1 ] = Node( typename Node::ContentsArray( TOP_DOWN_OCTREE_K ), &node );
+			getOffsetReference( newChildArray[ newChildArray.size() - 1 ] ) = 0;
+			
+			node.setChildren( std::move( newChildArray ) );
+			
+			insertionChild = node.child().end() - 1;
+		}
+		
+		return *insertionChild;
+	}
+
+	
+	template< typename Morton >
 	inline void TopDownFrontOctree< Morton >::insert( const Point& p, Node& node, const Dim& currentLvlDim )
 	{
 		if( node.isLeaf() )
 		{
+			// Debug 
+// 			{
+// 				if( getOffsetReference( node ) == 0 )
+// 				{
+// 					cout << "Inserting at empty node" << endl << endl;
+// 				}
+// 				else
+// 				{
+// 					cout << "Inserting at " << currentLvlDim.calcMorton( node ).getPathToRoot() << endl << endl;
+// 				}
+// 			}
+			//
+			
 			int offset = getOffsetReference( node )++;
+			
+			// Debug
+// 			{
+// 				cout << "offset: " << offset << endl << endl;
+// 			}
 			
 			Surfel surfel( p );
 			
-			Vector2f multipliers = ReconstructionParams::calcAcummulatedMultipliers( currentLvlDim.level(), m_dim.level() - 1 );
-			surfel.multiplyTangents( multipliers );
+// 			Vector2f multipliers = ReconstructionParams::calcAcummulatedMultipliers( currentLvlDim.level(), m_dim.level() - 1 );
+// 			surfel.multiplyTangents( multipliers );
 			
 			node.getContents()[ offset ] = surfel;
 			
-			if( offset == TOP_DOWN_OCTREE_K )
+			if( offset == TOP_DOWN_OCTREE_K - 1 )
 			{
 				// Subdivision.
+				
+				// Debug
+// 				{
+// 					cout << "Subdiv" << endl << endl;
+// 				}
+				//
+				
 				Dim nextLvlDim = currentLvlDim.levelBellow();
 				
 				int movedToInner = 0;
 				
-				Node newInner( typename Node::ContentsArray( TOP_DOWN_OCTREE_K / 8 ), node.parent(), typename Node::NodeArray( 8 ) );
+				typename Node::ContentsArray prevContents( std::move( node.getContents() ) );
+				
+				node = Node( typename Node::ContentsArray( TOP_DOWN_OCTREE_K / 8 ), node.parent(), typename Node::NodeArray() );
 				
 				// Calc the multipliers needed to reverse the tangent multiplication done for the current lvl.
-				Vector2f reverseMultipliers = ReconstructionParams::calcMultipliers( currentLvlDim.level() );
-				reverseMultipliers.x() = 1.f / reverseMultipliers.x();
-				reverseMultipliers.y() = 1.f / reverseMultipliers.y();
+// 				Vector2f reverseMultipliers = ReconstructionParams::calcMultipliers( currentLvlDim.level() );
+// 				reverseMultipliers.x() = 1.f / reverseMultipliers.x();
+// 				reverseMultipliers.y() = 1.f / reverseMultipliers.y();
 				
-				for( const Surfel& surfel : node.getContents() )
+				for( const Surfel& surfel : prevContents )
 				{
-					if( movedToInner < newInner.getContents().size() )
+					if( movedToInner < node.getContents().size() )
 					{
-						newInner.getContents()[ movedToInner++ ] = surfel;
+						node.getContents()[ movedToInner++ ] = surfel;
 					}
 					
 					// Fix multipliers for the next level.
 					Surfel nextLvlSurfel = surfel;
-					nextLvlSurfel.multiplyTangents( reverseMultipliers );
+// 					nextLvlSurfel.multiplyTangents( reverseMultipliers );
 					
-					int childIdx = nextLvlDim.calcMorton( surfel.c ).getChildIdx();
-					Node& child = newInner.child()[ childIdx ]; 
-					
-					if( child.empty() )
-					{
-						typename Node::ContentsArray newChildSurfels( TOP_DOWN_OCTREE_K );
-						newChildSurfels[ 0 ] = nextLvlSurfel;
-						getOffsetReference( newChildSurfels ) = 1;
-						
-						Node newChild( std::move( newChildSurfels ), &node );
-						
-						newInner.child()[ childIdx ] = std::move( newChild );
-					}
+					Node& child = findInsertionChild( p, node, nextLvlDim );
+					insert( p, child, nextLvlDim );
 				}
-				
-				node = std::move( newInner );
 			}
 		}
 		else
 		{
 			Dim nextLvlDim = currentLvlDim.levelBellow();
-			Morton morton = nextLvlDim.calcMorton( p );
 			
-			insert( p, node.child()[ morton.getChildIdx() ], nextLvlDim );
+			Node& child = findInsertionChild( p, node, nextLvlDim );
+			
+			// Debug 
+// 			{
+// 				cout << "Traversing " << currentLvlDim.calcMorton( node ).getPathToRoot() << endl << endl;
+// 			}
+			//
+			
+			insert( p, child, nextLvlDim );
 		}
 	}
 	
 	template< typename Morton >
 	void TopDownFrontOctree< Morton >::postProcess( Node& node )
 	{
-		int contentsSize = getOffsetReference( node );
-		if( contentsSize < TOP_DOWN_OCTREE_K / 8 )
+		if( node.isLeaf() )
 		{
-			// Shrink.
-			if( !node.isLeaf() )
+			int contentsSize = getOffsetReference( node );
+			if( contentsSize < TOP_DOWN_OCTREE_K )
 			{
-				throw logic_error( "All inner nodes are expected to have TOP_DOWN_OCTREE_K / 8 surfels." );
-			}
-			
-			typename Node::ContentsArray newSurfelArray( contentsSize );
-			auto iter = newSurfelArray.begin();
-			for( const Surfel& surfel : node.getContents() )
-			{
-				*iter = surfel;
-				iter++;
+				typename Node::ContentsArray newSurfelArray( contentsSize );
+				auto iter = newSurfelArray.begin();
+				for( const Surfel& surfel : node.getContents() )
+				{
+					*iter = surfel;
+					iter++;
+				}
+				node.setContents( std::move( newSurfelArray ) );
 			}
 		}
-		
-		// Check for empty children.
-		if( !node.isLeaf() )
+		else
 		{
-			int nonEmptyChildren = 0;
-			for( const Node& child : node.child() )
+			for( Node& child : node.child() )
 			{
-				if( !child.empty() )
-				{
-					nonEmptyChildren++;
-				}
-			}
-			
-			if( nonEmptyChildren < 8 )
-			{
-				// Empty removal needed.
-				typename Node::NodeArray newChildren( nonEmptyChildren );
-				auto iter = newChildren.begin();
-				for( Node& child : node.child() )
-				{
-					if( !child.empty() )
-					{
-						*iter = std::move( child );
-						iter++;
-					}
-				}
-				
-				node.setChildren( std::move( newChildren ) ); 
+				postProcess( child );
 			}
 		}
 	}

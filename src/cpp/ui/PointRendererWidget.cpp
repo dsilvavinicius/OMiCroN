@@ -83,7 +83,13 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Duomo/Shallow/Duomo_lab.oct" );
 		#else
 			openMesh( "/media/vinicius/data/Datasets/Duomo/DuomoWithFaces_sorted7.oct" );
-		#endif	
+		#endif
+	#elif MODEL == BUNNY
+		#if NO_SORT == true
+			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted7.oct" );
+		#else
+			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny.ply" );
+		#endif
 	#endif
 	
 	m_timer = new QTimer( this );
@@ -617,7 +623,9 @@ void PointRendererWidget::saveOctree()
 							string filename = "/media/viniciusdasilva/Expansion Drive/Datasets/Duomo/Duomo.oct";
 						#else
 							string filename = "/media/vinicius/data/Datasets/Duomo/Duomo.boc";
-						#endif	
+						#endif
+					#elif MODEL == BUNNY
+						string filename = "/media/vinicius/data/Datasets/Bunny/bunny.boc";
 					#endif
 					
 					OctreeFile::write( filename, m_octree->root() );

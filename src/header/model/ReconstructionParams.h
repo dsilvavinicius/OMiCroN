@@ -14,6 +14,7 @@ using namespace std;
 #define ST_MATHEW 1
 #define ATLAS 2
 #define DUOMO 3
+#define BUNNY 4
 
 // Sort type
 #define HEAP_SORT_D 0
@@ -43,7 +44,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL BUNNY
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -62,8 +63,8 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-#define NO_SORT true
-// #define NO_SORT false
+// #define NO_SORT true
+#define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING FULL_SORT_D
@@ -100,7 +101,7 @@ enum ReconstructionAlgorithm
 	#endif
 #elif MODEL == ATLAS
 	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
-#elif MODEL == ST_MATHEW
+#elif MODEL == ST_MATHEW || MODEL == BUNNY
 	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 23711u // StMathew + no leaf collapse
 #endif
 
@@ -113,7 +114,7 @@ enum ReconstructionAlgorithm
 #define RECONSTRUCTION_ALG WHA07
 
 // Maximum number of nodes before subdivision in the top-down octree.
-#define TOP_DOWN_OCTREE_K 400000
+#define TOP_DOWN_OCTREE_K 10000
 
 // ===== Dependent parameters =====
 #ifdef PARENT_POINTS_RATIO_ONE_FOURTH
@@ -136,6 +137,9 @@ enum ReconstructionAlgorithm
 #elif MODEL ==  DUOMO
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00002f
+#elif MODEL ==  BUNNY
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.015f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.015f
 #endif
 
 #if MODEL == DAVID
@@ -144,7 +148,7 @@ enum ReconstructionAlgorithm
 	#define CAMERA_PATH_SPEED 0.004
 #elif MODEL == ST_MATHEW
 	#define CAMERA_PATH_SPEED 0.002
-#elif MODEL ==  DUOMO
+#elif MODEL ==  DUOMO || MODEL == BUNNY
 	#define CAMERA_PATH_SPEED 0.001
 #endif
 
