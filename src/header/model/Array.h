@@ -78,7 +78,8 @@ namespace model
 		{}
 		
 		/** Moves each vector element to the array, clearing up v afterwards. */
-		Array( vector< T, ManagedAllocator< T > >&& v )
+		template< template< typename , typename > class container >
+		Array( container< T, ManagedAllocator< T > >&& v )
 		: Array( v.size() )
 		{
 			for( int i = 0; i < v.size(); ++i )

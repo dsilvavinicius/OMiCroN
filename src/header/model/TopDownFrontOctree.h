@@ -53,16 +53,10 @@ namespace model
 		uint readerReadTime() { return 0; }
 		
 	private:
-		void insert( const Point& p, Node& node, const Dim& currentLvlDim );
+		using SurfelVector = vector< Surfel, TbbAllocator< Surfel > >;
+		using ChildVector = vector< Node, typename Node::NodeAlloc >;
 		
-		/** Finds the child of node where p should be inserted. If the node does not exist yet, it is created. */
-		Node& findInsertionChild( const Point& p, Node& node, const Dim& childLvlDim );
-		
-		/** Post-process the octree in order to eliminate empty nodes and shrink buffers. */
-		void postProcess( Node& node );
-		
-		static float& getOffsetReference( typename Node::ContentsArray& contents ) { return ( contents.end() - 1 )->c[ 0 ]; }
-		static float& getOffsetReference( Node& node ) { return getOffsetReference( node.getContents() ); }
+		void subdivide( Node& node, const Dim& dim );
 		
 		unique_ptr< Front > m_front;
 		unique_ptr< Node > m_root;
@@ -87,184 +81,61 @@ namespace model
 		m_inTime = sorter.inputTime();
 		
 		auto now = Profiler::now( "Hierarchy construction" );
-		
-		typename Node::ContentsArray surfels( TOP_DOWN_OCTREE_K );
-		
-		m_root = unique_ptr< Node >( new Node( surfels, true ) );
-		getOffsetReference( *m_root ) = 0.f;
+
+		SurfelVector surfelVector;
 		
 		for( const Point& p : *pointSet.m_points )
 		{
-			insert( p, *m_root, Dim( m_dim, 0 ) );
+			surfelVector.push_back( Surfel( p ) );
 		}
 		
-		m_hierarchyConstructionTime = Profiler::elapsedTime( now, "Hierarchy construction" );
+		m_root = unique_ptr< Node >( new Node( typename Node::ContentsArray( std::move( surfelVector ) ), true ) );
+		
+		subdivide( *m_root, Dim( m_dim, 0 ) );
 		
 		m_front = unique_ptr< Front >( new Front( "", m_dim, 1, loader, 8ul * 1024ul * 1024ul * 1024ul ) );
 		m_front->insertRoot( *m_root );
 		
-		postProcess( *m_root );
+		m_hierarchyConstructionTime = Profiler::elapsedTime( now, "Hierarchy construction" );
 	}
 	
 	template< typename Morton >
-	inline typename TopDownFrontOctree<Morton>::Node& TopDownFrontOctree< Morton >::findInsertionChild( const Point& p, Node& node, const Dim& childLvlDim )
+	void TopDownFrontOctree< Morton >::subdivide( Node& node, const Dim& dim )
 	{
-		Node* insertionChild = nullptr;
-		
-		for( Node& child : node.child() )
+		if( node.getContents().size() > TOP_DOWN_OCTREE_K )
 		{
-			// Debug
-// 			{
-// 				cout << "Child: " << childLvlDim.calcMorton( child ).getPathToRoot() << " size: " << getOffsetReference( child ) << endl << endl ;
-// 			}
-			//
+			SurfelVector surfelsPerChild[ 8 ];
 			
-			if( childLvlDim.calcMorton( p ) == childLvlDim.calcMorton( child ) )
+			Dim nextLvlDim = dim.levelBellow();
+			
+			SurfelVector innerContents;
+			for( const Surfel& surfel : node.getContents() )
 			{
-				insertionChild = &child;
-			}
-			break;
-		}
-		
-		if( insertionChild == nullptr )
-		{
-			// Debug
-// 			{
-// 				cout << "Creating new node" << endl << endl;
-// 			}
-			
-			typename Node::NodeArray newChildArray( node.child().size() + 1 );
-			for( int i = 0; i < node.child().size(); ++i )
-			{
-				newChildArray[ i ] = std::move( node.child()[ i ] );
-			}
-			newChildArray[ newChildArray.size() - 1 ] = Node( typename Node::ContentsArray( TOP_DOWN_OCTREE_K ), &node );
-			getOffsetReference( newChildArray[ newChildArray.size() - 1 ] ) = 0;
-			
-			node.setChildren( std::move( newChildArray ) );
-			
-			insertionChild = node.child().end() - 1;
-		}
-		
-		return *insertionChild;
-	}
-
-	
-	template< typename Morton >
-	inline void TopDownFrontOctree< Morton >::insert( const Point& p, Node& node, const Dim& currentLvlDim )
-	{
-		if( node.isLeaf() )
-		{
-			// Debug 
-// 			{
-// 				if( getOffsetReference( node ) == 0 )
-// 				{
-// 					cout << "Inserting at empty node" << endl << endl;
-// 				}
-// 				else
-// 				{
-// 					cout << "Inserting at " << currentLvlDim.calcMorton( node ).getPathToRoot() << endl << endl;
-// 				}
-// 			}
-			//
-			
-			int offset = getOffsetReference( node )++;
-			
-			// Debug
-// 			{
-// 				cout << "offset: " << offset << endl << endl;
-// 			}
-			
-			Surfel surfel( p );
-			
-// 			Vector2f multipliers = ReconstructionParams::calcAcummulatedMultipliers( currentLvlDim.level(), m_dim.level() - 1 );
-// 			surfel.multiplyTangents( multipliers );
-			
-			node.getContents()[ offset ] = surfel;
-			
-			if( offset == TOP_DOWN_OCTREE_K - 1 )
-			{
-				// Subdivision.
-				
-				// Debug
-// 				{
-// 					cout << "Subdiv" << endl << endl;
-// 				}
-				//
-				
-				Dim nextLvlDim = currentLvlDim.levelBellow();
-				
-				int movedToInner = 0;
-				
-				typename Node::ContentsArray prevContents( std::move( node.getContents() ) );
-				
-				node = Node( typename Node::ContentsArray( TOP_DOWN_OCTREE_K / 8 ), node.parent(), typename Node::NodeArray() );
-				
-				// Calc the multipliers needed to reverse the tangent multiplication done for the current lvl.
-// 				Vector2f reverseMultipliers = ReconstructionParams::calcMultipliers( currentLvlDim.level() );
-// 				reverseMultipliers.x() = 1.f / reverseMultipliers.x();
-// 				reverseMultipliers.y() = 1.f / reverseMultipliers.y();
-				
-				for( const Surfel& surfel : prevContents )
+				if( innerContents.size() < TOP_DOWN_OCTREE_K )
 				{
-					if( movedToInner < node.getContents().size() )
-					{
-						node.getContents()[ movedToInner++ ] = surfel;
-					}
-					
-					// Fix multipliers for the next level.
-					Surfel nextLvlSurfel = surfel;
-// 					nextLvlSurfel.multiplyTangents( reverseMultipliers );
-					
-					Node& child = findInsertionChild( p, node, nextLvlDim );
-					insert( p, child, nextLvlDim );
+					innerContents.push_back( surfel );
+				}
+				surfelsPerChild[ nextLvlDim.calcMorton( surfel ).getChildIdx() ].push_back( surfel );
+			}
+			
+			ChildVector newChildren;
+			for( SurfelVector surfelVector: surfelsPerChild )
+			{
+				if( !surfelVector.empty() )
+				{
+					newChildren.push_back( Node( typename Node::ContentsArray( std::move( surfelVector ) ), &node ) );
 				}
 			}
-		}
-		else
-		{
-			Dim nextLvlDim = currentLvlDim.levelBellow();
 			
-			Node& child = findInsertionChild( p, node, nextLvlDim );
+			node = Node( typename Node::ContentsArray( std::move( innerContents ) ), node.parent(), typename Node::NodeArray( std::move( newChildren ) ) );
 			
-			// Debug 
-// 			{
-// 				cout << "Traversing " << currentLvlDim.calcMorton( node ).getPathToRoot() << endl << endl;
-// 			}
-			//
-			
-			insert( p, child, nextLvlDim );
-		}
-	}
-	
-	template< typename Morton >
-	void TopDownFrontOctree< Morton >::postProcess( Node& node )
-	{
-		if( node.isLeaf() )
-		{
-			int contentsSize = getOffsetReference( node );
-			if( contentsSize < TOP_DOWN_OCTREE_K )
-			{
-				typename Node::ContentsArray newSurfelArray( contentsSize );
-				auto iter = newSurfelArray.begin();
-				for( const Surfel& surfel : node.getContents() )
-				{
-					*iter = surfel;
-					iter++;
-				}
-				node.setContents( std::move( newSurfelArray ) );
-			}
-		}
-		else
-		{
 			for( Node& child : node.child() )
 			{
-				postProcess( child );
+				subdivide( child, nextLvlDim );
 			}
 		}
 	}
 
-	
 	template< typename Morton >
 	inline OctreeStats TopDownFrontOctree< Morton >::trackFront( Renderer& renderer, const Float projThresh )
 	{
