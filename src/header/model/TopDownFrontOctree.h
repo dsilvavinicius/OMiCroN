@@ -25,7 +25,7 @@ namespace model
 		TopDownFrontOctree( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& );
 		
 		/** Unsuported. Just here to fit FastParallelOctree interface. */
-		TopDownFrontOctree( const string&, const int, NodeLoader&, const RuntimeSetup& );
+		TopDownFrontOctree( const string&, const int maxLvl, NodeLoader&, const RuntimeSetup& );
 		
 		OctreeStats trackFront( Renderer& renderer, const Float projThresh );
 	
@@ -63,6 +63,7 @@ namespace model
 		Dim m_dim;
 		uint m_inTime;
 		uint m_hierarchyConstructionTime;
+		int m_maxLvl;
 	};
 	
 	template< typename Morton >
@@ -73,20 +74,28 @@ namespace model
 	
 	template< typename Morton >
 	inline TopDownFrontOctree< Morton >::TopDownFrontOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& setup )
+	: m_maxLvl( maxLvl )
 	{
-		PointSorter< Morton > sorter( plyFilename, maxLvl );
-		PointSet< Morton > pointSet = sorter.points();
-		m_dim = pointSet.m_dim;
+		srand( 1 );
 		
-		m_inTime = sorter.inputTime();
-		
-		auto now = Profiler::now( "Hierarchy construction" );
-
 		SurfelVector surfelVector;
 		
-		for( const Point& p : *pointSet.m_points )
+		chrono::system_clock::time_point now;
+		
 		{
-			surfelVector.push_back( Surfel( p ) );
+			PointSorter< Morton > sorter( plyFilename, maxLvl );
+			PointSet< Morton > pointSet = sorter.points();
+			m_dim = pointSet.m_dim;
+			
+			m_inTime = sorter.inputTime();
+			
+			now = Profiler::now( "Hierarchy construction" );
+			
+			while( !pointSet.m_points->empty() ) for( const Point& p : *pointSet.m_points )
+			{
+				surfelVector.push_back( Surfel( pointSet.m_points->front() ) );
+				pointSet.m_points->pop_front();
+			}
 		}
 		
 		m_root = unique_ptr< Node >( new Node( typename Node::ContentsArray( std::move( surfelVector ) ), true ) );
@@ -102,28 +111,31 @@ namespace model
 	template< typename Morton >
 	void TopDownFrontOctree< Morton >::subdivide( Node& node, const Dim& dim )
 	{
-		if( node.getContents().size() > TOP_DOWN_OCTREE_K )
+		if( node.getContents().size() > TOP_DOWN_OCTREE_K && dim.level() < m_maxLvl )
 		{
-			SurfelVector surfelsPerChild[ 8 ];
-			
 			Dim nextLvlDim = dim.levelBellow();
-			
 			SurfelVector innerContents;
-			for( const Surfel& surfel : node.getContents() )
-			{
-				if( innerContents.size() < TOP_DOWN_OCTREE_K )
-				{
-					innerContents.push_back( surfel );
-				}
-				surfelsPerChild[ nextLvlDim.calcMorton( surfel ).getChildIdx() ].push_back( surfel );
-			}
-			
 			ChildVector newChildren;
-			for( SurfelVector surfelVector: surfelsPerChild )
+			
 			{
-				if( !surfelVector.empty() )
+				SurfelVector surfelsPerChild[ 8 ];
+				
+				while( innerContents.size() < TOP_DOWN_OCTREE_K )
 				{
-					newChildren.push_back( Node( typename Node::ContentsArray( std::move( surfelVector ) ), &node ) );
+					innerContents.push_back( node.getContents()[ rand() % node.getContents().size() ] );
+				}
+				
+				for( const Surfel& surfel : node.getContents() )
+				{
+					surfelsPerChild[ nextLvlDim.calcMorton( surfel ).getChildIdx() ].push_back( surfel );
+				}
+				
+				for( SurfelVector surfelVector: surfelsPerChild )
+				{
+					if( !surfelVector.empty() )
+					{
+						newChildren.push_back( Node( typename Node::ContentsArray( std::move( surfelVector ) ), &node ) );
+					}
 				}
 			}
 			

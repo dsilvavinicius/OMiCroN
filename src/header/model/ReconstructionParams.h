@@ -44,7 +44,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL ST_MATHEW
+#define MODEL ATLAS
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -114,7 +114,7 @@ enum ReconstructionAlgorithm
 #define RECONSTRUCTION_ALG WHA07
 
 // Maximum number of nodes before subdivision in the top-down octree.
-#define TOP_DOWN_OCTREE_K 100000
+#define TOP_DOWN_OCTREE_K 1000
 
 // ===== Dependent parameters =====
 #ifdef PARENT_POINTS_RATIO_ONE_FOURTH
