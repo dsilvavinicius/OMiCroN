@@ -78,7 +78,7 @@ namespace model
 	{
 		srand( 1 );
 		
-		SurfelVector surfelVector;
+		typename Node::ContentsArray surfels;
 		
 		chrono::system_clock::time_point now;
 		
@@ -91,14 +91,17 @@ namespace model
 			
 			now = Profiler::now( "Hierarchy construction" );
 			
-			while( !pointSet.m_points->empty() ) for( const Point& p : *pointSet.m_points )
+			surfels = typename Node::ContentsArray( pointSet.m_points->size() );
+			auto iter = surfels.begin();
+			while( !pointSet.m_points->empty() )
 			{
-				surfelVector.push_back( Surfel( pointSet.m_points->front() ) );
+				*iter = Surfel( pointSet.m_points->front() );
+				iter++;
 				pointSet.m_points->pop_front();
 			}
 		}
 		
-		m_root = unique_ptr< Node >( new Node( typename Node::ContentsArray( std::move( surfelVector ) ), true ) );
+		m_root = unique_ptr< Node >( new Node( std::move( surfels ), true ) );
 		
 		subdivide( *m_root, Dim( m_dim, 0 ) );
 		
@@ -114,21 +117,21 @@ namespace model
 		if( node.getContents().size() > TOP_DOWN_OCTREE_K && dim.level() < m_maxLvl )
 		{
 			Dim nextLvlDim = dim.levelBellow();
-			SurfelVector innerContents;
-			ChildVector newChildren;
+			typename Node::ContentsArray innerContents( TOP_DOWN_OCTREE_K );
 			
 			{
+				ChildVector newChildren;
 				SurfelVector surfelsPerChild[ 8 ];
 				
-				while( innerContents.size() < TOP_DOWN_OCTREE_K )
+				for( int i = 0; i < TOP_DOWN_OCTREE_K; ++i )
 				{
-					innerContents.push_back( node.getContents()[ rand() % node.getContents().size() ] );
+					innerContents[ i ] = node.getContents()[ rand() % node.getContents().size() ];
 				}
 				
 				for( const Surfel& surfel : node.getContents() )
 				{
 					surfelsPerChild[ nextLvlDim.calcMorton( surfel ).getChildIdx() ].push_back( surfel );
-				}
+				}																																												
 				
 				for( SurfelVector surfelVector: surfelsPerChild )
 				{
@@ -137,9 +140,9 @@ namespace model
 						newChildren.push_back( Node( typename Node::ContentsArray( std::move( surfelVector ) ), &node ) );
 					}
 				}
+				
+				node = Node( std::move( innerContents ), node.parent(), typename Node::NodeArray( std::move( newChildren ) ) );
 			}
-			
-			node = Node( typename Node::ContentsArray( std::move( innerContents ) ), node.parent(), typename Node::NodeArray( std::move( newChildren ) ) );
 			
 			for( Node& child : node.child() )
 			{

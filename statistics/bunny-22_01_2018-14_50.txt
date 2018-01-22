@@ -1,0 +1,84 @@
+Dataset: bunny
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 0
+
+Parent point ratio: 0.25
+
+Leaf collapse: true
+
+Leaf tangent sizes: 
+{ 0.015, 0.015 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+1
+1
+Level 4 : 
+1
+1
+Level 5 : 
+1
+1
+Level 6 : 
+1
+1
+Level 7 : 
+1
+1
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 30ms
+Render queue time: 0ms
+CPU overhead: 30ms
+Rendered points: 7732
+Front insertion delay: 0ms
+Front size: 115
+Front segments: 5
+Front segment size: 23
+
+=== AVERAGE STATS === 
+Traversal time: 38.0711ms
+Render queue time: 0ms
+CPU overhead: 38.0711ms
+Rendered points: 5044.13
+Front insertion delay: 0ms
+Front size: 97.3848
+Front segments: 5
+Front segment size: 19.1029
+0% completed at Mon Jan 22 14:50:23 2018
+
+=== GPU STATS === 
+GPU Overhead: 23
+Average GPU Overhead: 23.8333
+No sort? false
+Sorting flag: Full sort
+Sorting chunks: 1
+Hierarchy construction method: 2
+Time for reader input: 12ms
+Time for reader init: 0ms
+Time for reader reading: 0ms
+Time to create hierarchy: 8ms
+Dynamic memory allocated: 2471136 bytes
+Number of nodes in hierarchy: 136
+Number of splats in hierarchy: 56947
+Number of substituted placeholders: 0
+
