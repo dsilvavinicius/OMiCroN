@@ -82,7 +82,11 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#ifdef LAB
 			openMesh( "/media/viniciusdasilva/Expansion Drive/Duomo/Shallow/Duomo_lab.oct" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/Duomo/DuomoWithFaces_sorted7.oct" );
+			#if NO_SORT == true
+				openMesh( "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.oct" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/Duomo/Duomo.ply" );
+			#endif
 		#endif
 	#elif MODEL == BUNNY
 		#if NO_SORT == true
@@ -426,7 +430,7 @@ void PointRendererWidget::updateFromKeyInput()
 	
 	if( m_keys[ Qt::Key_Enter ] )
 	{
-		m_renderer->toggleModelMatrixUse();
+// 		m_renderer->toggleModelMatrixUse();
 		m_renderer->toggleFboSave();
 		m_keys[ Qt::Key_Enter ] = false;
 	}

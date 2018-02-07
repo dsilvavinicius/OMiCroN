@@ -1,0 +1,70 @@
+Iniciando: /home/vinicius/Projects/PointBasedGraphics/Cumulus/bin/Release/Point_Based_Renderer
+PlyPointReader init started at: Wed Jan 31 17:28:10 2018
+
+Setup read of /media/vinicius/data/Datasets/Duomo/Duomo.ply
+
+Vertices in file: 99665840
+
+=== Elements in header ===
+
+vertex: 99665840 instances
+Prop name: x
+Prop name: y
+Prop name: z
+Prop name: nx
+Prop name: ny
+Prop name: nz
+
+face: 0 instances
+Prop name: vertex_indices
+
+PlyPointReader init finished at: Wed Jan 31 17:28:10 2018
+
+Duration: 0 ms.
+
+Setup sorting of /media/vinicius/data/Datasets/Duomo/Duomo.ply
+
+Reading 99665840 points.
+
+PlyPointReader read started at: Wed Jan 31 17:28:11 2018
+
+PlyPointReader read finished at: Wed Jan 31 17:28:26 2018
+
+Duration: 14748 ms.
+
+Reading time (ms): 14748
+
+Normalizing time (ms): 193
+
+Scale: 0.00850148
+Octree dim: origin: 0
+0
+0
+octree size:        1
+0.738492
+0.453886
+node lvl size: 0.0078125
+0.00576947
+0.00354598
+node lvl:7
+
+Hierarchy construction started at: Wed Jan 31 17:28:26 2018
+
+Hierarchy construction finished at: Wed Jan 31 17:29:02 2018
+
+Duration: 36395 ms.
+
+Octree built.
+Model centroid:      0.5
+0.369246
+0.226943
+Model origin: 0
+0
+0
+
+Renderer built.
+Generating statistics...
+
+Statistics saved into ../../statistics/Duomo-31_01_2018-17_30.txt
+
+*** Saiu normalmente ***

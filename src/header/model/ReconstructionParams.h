@@ -63,8 +63,8 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-// #define NO_SORT true
-#define NO_SORT false
+#define NO_SORT true
+// #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING FULL_SORT_D
@@ -73,11 +73,11 @@ enum ReconstructionAlgorithm
 #define SORTING_SEGMENTS 1
 
 // Activates de loading of binary octree files instead of hierarchy creation.
-#define OCTREE_CONSTRUCTION TOP_DOWN_OCTREE
-// #define OCTREE_CONSTRUCTION OMICRON
+// #define OCTREE_CONSTRUCTION TOP_DOWN_OCTREE
+#define OCTREE_CONSTRUCTION OMICRON
 
-#define PARENT_POINTS_RATIO_ONE_FOURTH
-// #define PARENT_POINTS_RATIO_ONE_FIFTH
+// #define PARENT_POINTS_RATIO_ONE_FOURTH
+#define PARENT_POINTS_RATIO_ONE_FIFTH
 // #define PARENT_POINTS_RATIO_ONE_TENTH
 
 // #define PROJ_THRESHOLD 0.2f
@@ -87,10 +87,10 @@ enum ReconstructionAlgorithm
 // Number of expected front segments.
 // #define SEGMENTS_PER_FRONT 2
 // #define SEGMENTS_PER_FRONT 10
-#define SEGMENTS_PER_FRONT 5
+#define SEGMENTS_PER_FRONT 1
 
 // Enables node colapse when leaves do not have siblings.
-#define NODE_COLAPSE
+// #define NODE_COLAPSE
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
 #if MODEL == DAVID
@@ -101,7 +101,7 @@ enum ReconstructionAlgorithm
 	#endif
 #elif MODEL == ATLAS
 	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
-#elif MODEL == ST_MATHEW || MODEL == BUNNY
+#elif MODEL == ST_MATHEW || MODEL == BUNNY || MODEL == DUOMO
 	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 23711u // StMathew + no leaf collapse
 #endif
 
@@ -114,7 +114,7 @@ enum ReconstructionAlgorithm
 #define RECONSTRUCTION_ALG WHA07
 
 // Maximum number of nodes before subdivision in the top-down octree.
-#define TOP_DOWN_OCTREE_K 10
+#define TOP_DOWN_OCTREE_K 10000
 
 // ===== Dependent parameters =====
 #ifdef PARENT_POINTS_RATIO_ONE_FOURTH

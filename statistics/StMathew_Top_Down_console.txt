@@ -1,0 +1,70 @@
+Iniciando: /home/vinicius/Projects/PointBasedGraphics/Cumulus/bin/Release/Point_Based_Renderer
+PlyPointReader init started at: Wed Jan 31 17:16:01 2018
+
+Setup read of /media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply
+
+Vertices in file: 186984410
+
+=== Elements in header ===
+
+vertex: 186984410 instances
+Prop name: x
+Prop name: y
+Prop name: z
+Prop name: nx
+Prop name: ny
+Prop name: nz
+
+face: 372767445 instances
+Prop name: vertex_indices
+
+PlyPointReader init finished at: Wed Jan 31 17:16:01 2018
+
+Duration: 1 ms.
+
+Setup sorting of /media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply
+
+Reading 186984410 points.
+
+PlyPointReader read started at: Wed Jan 31 17:16:04 2018
+
+PlyPointReader read finished at: Wed Jan 31 17:16:53 2018
+
+Duration: 49136 ms.
+
+Reading time (ms): 49136
+
+Normalizing time (ms): 329
+
+Scale: 0.000367511
+Octree dim: origin: 0
+0
+0
+octree size: 0.354233
+       1
+0.322363
+node lvl size:0.00276744
+ 0.0078125
+0.00251846
+node lvl:7
+
+Hierarchy construction started at: Wed Jan 31 17:16:53 2018
+
+Hierarchy construction finished at: Wed Jan 31 17:19:25 2018
+
+Duration: 151985 ms.
+
+Octree built.
+Model centroid: 0.177116
+     0.5
+0.161182
+Model origin: 0
+0
+0
+
+Renderer built.
+Generating statistics...
+
+Statistics saved into ../../statistics/StMathewWithFaces-31_01_2018-17_19.txt
+
+*** Saiu normalmente ***

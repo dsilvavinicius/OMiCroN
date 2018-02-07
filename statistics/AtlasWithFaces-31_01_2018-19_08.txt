@@ -1,0 +1,84 @@
+Dataset: AtlasWithFaces
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 0
+
+Parent point ratio: 0.25
+
+Leaf collapse: true
+
+Leaf tangent sizes: 
+{ 8e-05, 7e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+2
+Level 4 : 
+2
+2
+Level 5 : 
+2
+2
+Level 6 : 
+2.5
+  2
+Level 7 : 
+3.8
+3.5
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 220ms
+Render queue time: 0ms
+CPU overhead: 220ms
+Rendered points: 4.43923e+06
+Front insertion delay: 0ms
+Front size: 614
+Front segments: 5
+Front segment size: 122
+
+=== AVERAGE STATS === 
+Traversal time: 63.3514ms
+Render queue time: 0ms
+CPU overhead: 63.3514ms
+Rendered points: 1.1625e+06
+Front insertion delay: 0ms
+Front size: 223.359
+Front segments: 5
+Front segment size: 43.6564
+0% completed at Wed Jan 31 18:59:39 2018
+
+=== GPU STATS === 
+GPU Overhead: 6
+Average GPU Overhead: 68.2934
+No sort? false
+Sorting flag: Full sort
+Sorting chunks: 1
+Hierarchy construction method: 2
+Time for reader input: 66215ms
+Time for reader init: 0ms
+Time for reader reading: 0ms
+Time to create hierarchy: 452753ms
+Dynamic memory allocated: 15447476012 bytes
+Number of nodes in hierarchy: 22356
+Number of splats in hierarchy: 429035497
+Number of substituted placeholders: 0
+

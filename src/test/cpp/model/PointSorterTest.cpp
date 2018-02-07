@@ -147,5 +147,16 @@ namespace model
 			PointSorter sorter( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces.ply", sortLevel );
 			sorter.sortToFile( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply" );
 		}
+		
+		TEST_F( PointSorterTest, Duomo )
+		{
+			using M = ShallowMortonCode;
+			using PointSorter = model::PointSorter< M >;
+			
+			int sortLevel = 7;
+			
+			PointSorter sorter( "/media/vinicius/data/Datasets/Duomo/Duomo.ply", sortLevel );
+			sorter.sortToFile( "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.ply" );
+		}
 	}
 }
