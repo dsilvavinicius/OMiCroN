@@ -44,7 +44,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL ST_MATHEW
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -129,11 +129,15 @@ enum ReconstructionAlgorithm
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000037f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00003f
 #elif MODEL == ATLAS
-	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
-	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00007f
+// 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
+// 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00007f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.0003f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.0002f
 #elif MODEL == ST_MATHEW
-	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000085f
-	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000055f
+// 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.000085f
+// 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.000055f
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.0003f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.0002f
 #elif MODEL ==  DUOMO
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00002f
@@ -189,7 +193,8 @@ namespace model
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH || defined PARENT_POINTS_RATIO_ONE_TENTH
-						case 7: return Vector2f( 4.2f, 4.2f );
+// 						case 7: return Vector2f( 4.2f, 4.2f );
+						case 7: return Vector2f( 2.0f, 2.0f );
 						case 6: return Vector2f( 2.5f, 2.0f );
 						case 5: return Vector2f( 2.3f, 2.3f );
 						case 4: return Vector2f( 2.3f, 2.3f );
@@ -203,7 +208,8 @@ namespace model
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 2.0f );
 					#elif defined PARENT_POINTS_RATIO_ONE_FIFTH || defined PARENT_POINTS_RATIO_ONE_TENTH
-						case 7: return Vector2f( 4.7, 4.5f );
+// 						case 7: return Vector2f( 4.7, 4.5f );
+						case 7: return Vector2f( 2.0f, 2.0f );
 						case 6: return Vector2f( 2.6f, 2.3f );
 						case 5: return Vector2f( 2.2f, 2.2f );
 						case 4: return Vector2f( 2.5f, 2.5f );
