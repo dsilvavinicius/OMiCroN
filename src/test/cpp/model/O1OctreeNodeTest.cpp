@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "O1OctreeNode.h"
-#include "SQLiteManager.h"
+// #include "SQLiteManager.h"
 
 using namespace std;
 using namespace util;
@@ -122,44 +122,44 @@ namespace model
 			}
 		}
 		
-		TYPED_TEST( O1OctreeNodeTest, Serialization )
-		{
-			using PointPtr = shared_ptr< TypeParam >;
-			using PointArray = Array< PointPtr >;
-			using Node = O1OctreeNode< PointPtr >;
-			using Morton = ShallowMortonCode;
-			using SqlManager = SQLiteManager< TypeParam, Morton, Node >;
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-			
-			{
-				int nPoints = 1000;
-				
-				PointArray points0( nPoints ); initPoints( points0, 0 );
-				Node node0( points0, true );
-				Morton code0; code0.build( 0x1000 );
-				
-				PointArray points1( nPoints ); initPoints( points1, nPoints );
-				Node node1( points0, true );
-				Morton code1; code1.build( 0x1001 );
-				
-				SqlManager sql( "Octree.db" );
-				sql.insertNode( code0, node0 );
-				sql.insertNode( code1, node1 );
-				
-				pair< bool, Node > queried = sql.getNode( code0 );
-				ASSERT_TRUE( queried.first );
-				
-				assertNode( node0, queried.second );
-				
-				Array< Node > queriedNodes = sql.getNodes( code0, code1 );
-				
-				ASSERT_EQ( 2, queriedNodes.size() );
-				assertNode( node0, queriedNodes[ 0 ] );
-				assertNode( node1, queriedNodes[ 1 ] );
-			}
-			
-			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-		}
+// 		TYPED_TEST( O1OctreeNodeTest, Serialization )
+// 		{
+// 			using PointPtr = shared_ptr< TypeParam >;
+// 			using PointArray = Array< PointPtr >;
+// 			using Node = O1OctreeNode< PointPtr >;
+// 			using Morton = ShallowMortonCode;
+// 			using SqlManager = SQLiteManager< TypeParam, Morton, Node >;
+// 			
+// 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+// 			
+// 			{
+// 				int nPoints = 1000;
+// 				
+// 				PointArray points0( nPoints ); initPoints( points0, 0 );
+// 				Node node0( points0, true );
+// 				Morton code0; code0.build( 0x1000 );
+// 				
+// 				PointArray points1( nPoints ); initPoints( points1, nPoints );
+// 				Node node1( points0, true );
+// 				Morton code1; code1.build( 0x1001 );
+// 				
+// 				SqlManager sql( "Octree.db" );
+// 				sql.insertNode( code0, node0 );
+// 				sql.insertNode( code1, node1 );
+// 				
+// 				pair< bool, Node > queried = sql.getNode( code0 );
+// 				ASSERT_TRUE( queried.first );
+// 				
+// 				assertNode( node0, queried.second );
+// 				
+// 				Array< Node > queriedNodes = sql.getNodes( code0, code1 );
+// 				
+// 				ASSERT_EQ( 2, queriedNodes.size() );
+// 				assertNode( node0, queriedNodes[ 0 ] );
+// 				assertNode( node1, queriedNodes[ 1 ] );
+// 			}
+// 			
+// 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
+// 		}
 	}
 }

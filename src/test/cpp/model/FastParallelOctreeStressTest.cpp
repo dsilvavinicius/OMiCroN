@@ -14,8 +14,8 @@ namespace model
 			using Morton = MediumMortonCode;
 			using Octree = FastParallelOctree< Morton >;
 			using OctreeDim = Octree::Dim;
-			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
-			using NodeArray = typename Sql::NodeArray;
+// 			using Sql = SQLiteManager< Point, Morton, Octree::Node >;
+// 			using NodeArray = typename Sql::NodeArray;
 			
 			ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
 			

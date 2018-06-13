@@ -10,7 +10,7 @@
 #include "O1OctreeNode.h"
 #include "OctreeDimensions.h"
 #include "Front.h"
-#include "SQLiteManager.h"
+// #include "SQLiteManager.h"
 #include "HierarchyCreationLog.h"
 #include "global_malloc.h"
 #include "ReconstructionParams.h"

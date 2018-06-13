@@ -36,7 +36,7 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/MortonIntervalTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/O1OctreeNodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
+# 	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeStressTest.cpp
@@ -73,13 +73,13 @@ target_link_libraries (Tests Point_Based_Renderer_Lib
 
 # .ply files copy target.
 add_custom_target( TestsCopy )
-get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
-get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
+# get_target_property( Renderer_Location Point_Based_Renderer $<TARGET_FILE> )
+# get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
 add_custom_command( TARGET TestsCopy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data
-	${Renderer_Dir}/test/data )
+	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/test/data )
 add_custom_command( TARGET TestsCopy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/StressTest.bash
-	${Renderer_Dir}/test/StressTest.bash )
+	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/test/StressTest.bash )
 	
 add_dependencies( Tests TestsCopy )

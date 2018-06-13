@@ -3,8 +3,8 @@
 # Path: src/
 ##############################
 
-cmake_minimum_required (VERSION 2.8.12)
-project (Point_Based_Renderer)
+cmake_minimum_required (VERSION 3.5)
+project (OMiCroN VERSION 0.0.1)
 
 # Setups the given package, trying to find it and sets includes and linking directories.
 macro (setup_package package)
@@ -34,7 +34,7 @@ macro (create_source_groups ui_dir model_dir util_dir)
 	source_group (util FILES ${UTIL})
 endmacro (create_source_groups)
 
-cmake_policy (SET CMP0026 OLD)
+# cmake_policy (SET CMP0026 OLD)
 
 # Adding package finders directory.
 set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -63,7 +63,7 @@ create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 setup_package(OpenGL)
 setup_package(GLEW)
 setup_package(Eigen3)
-setup_package(SQLite3)
+# setup_package(SQLite3)
 setup_package(Freetype)
 setup_package(Jsoncpp)
 
@@ -75,7 +75,7 @@ find_package (Qt5OpenGL REQUIRED)
 find_package (Qt5Sql REQUIRED)
 
 set (RPLY_DIR "lib/rply")
-set (TLSF_DIR "lib/tlsf")
+# set (TLSF_DIR "lib/tlsf")
 
 include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	${Qt5Gui_INCLUDE_DIRS}
@@ -89,7 +89,7 @@ include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	include/tucano/tucano/effects/
 	${RPLY_DIR}
 	${JUMP_FLOODING_DIR}
-	${TLSF_DIR}
+# 	${TLSF_DIR}
 	
 	${HEADER_DIR}/${UI_DIR}/
 	${HEADER_DIR}/${MODEL_DIR}/
@@ -177,14 +177,14 @@ target_link_libraries (Point_Based_Renderer_Lib
 	Qt5::Widgets
 	Qt5::OpenGL
 	Qt5::Sql
-	${SQLITE3_LIBRARIES}
+# 	${SQLITE3_LIBRARIES}
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
 	"libtbbmalloc.so"
 	${JSONCPP_LIBRARIES}
 	RPly
-	Tlsf
+# 	Tlsf
 	shader)
 
 # Creates renderer program and links with the renderer library.
@@ -196,17 +196,18 @@ target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)
 
 # Shader files copy target.
 add_custom_target( Copy )
-get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
-get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
+# get_target_property( Renderer_Location Point_Based_Renderer LOCATION )
+# get_target_property( Renderer_Location Point_Based_Renderer $<TARGET_FILE> )
+# get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
 
 # Project shaders.
 add_custom_command( TARGET Copy PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders ${Renderer_Dir}/shaders )
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/shaders $<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/shaders )
 
 # Tucano shaders.
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/tucano/tucano/effects/shaders
-	${Renderer_Dir}/shaders/tucano )
+	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/shaders/tucano )
 	
 # # Jump-flooding shaders.
 # add_custom_command( TARGET Copy PRE_BUILD
@@ -216,7 +217,7 @@ add_custom_command( TARGET Copy PRE_BUILD
 # Example point cloud.
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/data/example/staypuff.ply
-	${Renderer_Dir}/data/example/staypuff.ply )
+	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/data/example/staypuff.ply )
 	
 add_dependencies( Point_Based_Renderer Copy )
 
