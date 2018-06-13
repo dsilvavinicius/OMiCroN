@@ -75,7 +75,6 @@ find_package (Qt5OpenGL REQUIRED)
 find_package (Qt5Sql REQUIRED)
 
 set (RPLY_DIR "lib/rply")
-set (JUMP_FLOODING_DIR "lib/jf-pbr")
 set (TLSF_DIR "lib/tlsf")
 
 include_directories ( ${Qt5Core_INCLUDE_DIRS}
@@ -85,8 +84,9 @@ include_directories ( ${Qt5Core_INCLUDE_DIRS}
 	${Qt5Sql_INCLUDE_DIRS}
 	${EIGEN3_INCLUDE_DIR}
 	include/
-	include/tucano/src/
-	include/tucano/effects/
+	include/tucano/
+	include/tucano/tucano/
+	include/tucano/tucano/effects/
 	${RPLY_DIR}
 	${JUMP_FLOODING_DIR}
 	${TLSF_DIR}
@@ -159,13 +159,8 @@ add_library (Point_Based_Renderer_Lib
 	${HEADER_DIR}/${MODEL_DIR}/GpuAllocStatistics.h			${CPP_DIR}/${MODEL_DIR}/GpuAllocStatistics.cpp
 	
 	# Tucano related code ( ugly hacks to use qmake in these files ).
-	include/tucano/src/utils/qtflycamerawidget.hpp
-	include/tucano/src/utils/qtplainwidget.hpp 
-	
-	# Jump-flooding related code.
-	${JUMP_FLOODING_DIR}/imgSpacePBR.hpp	${JUMP_FLOODING_DIR}/imgSpacePBR.cpp
-    ${JUMP_FLOODING_DIR}/point_model.hpp	${JUMP_FLOODING_DIR}/point_model.cpp 
-    ${JUMP_FLOODING_DIR}/bin.cpp
+	include/tucano/tucano/utils/qtflycamerawidget.hpp
+	include/tucano/tucano/utils/qtplainwidget.hpp 
     
     ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/surfel_cloud.cpp)
 
@@ -210,13 +205,13 @@ add_custom_command( TARGET Copy PRE_BUILD
 
 # Tucano shaders.
 add_custom_command( TARGET Copy PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/tucano/effects/shaders
+	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/include/tucano/tucano/effects/shaders
 	${Renderer_Dir}/shaders/tucano )
 	
-# Jump-flooding shaders.
-add_custom_command( TARGET Copy PRE_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/jf-pbr/shaders
-	${Renderer_Dir}/shaders/tucano )
+# # Jump-flooding shaders.
+# add_custom_command( TARGET Copy PRE_BUILD
+# 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/lib/jf-pbr/shaders
+# 	${Renderer_Dir}/shaders/tucano )
 
 # Example point cloud.
 add_custom_command( TARGET Copy PRE_BUILD

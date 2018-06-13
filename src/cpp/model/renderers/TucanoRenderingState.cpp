@@ -23,16 +23,16 @@ namespace model
 		glVertexAttrib4f( 2, 0.7f, 0.7f, 0.7f, 1.f );
 		
 		Vector2i viewportSize = m_camera->getViewportSize();
-		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
-		m_jfpbr->setShadersDir( shaderPath );
-		m_jfpbr->initialize();
+// 		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
+// 		m_jfpbr->setShadersDir( shaderPath );
+// 		m_jfpbr->initialize();
 		
 		m_textEffect.initialize( shaderPath + "/../Inconsolata.otf" );
 	}
 	
 	TucanoRenderingState::~TucanoRenderingState()
 	{
-		delete m_jfpbr;
+// 		delete m_jfpbr;
 		delete m_phong;
 		delete m_frustum;
 	}
@@ -102,7 +102,7 @@ namespace model
 			case JUMP_FLOODING:
 			{
 				bool newFrame = m_nFrames % m_jfpbrFrameskip == 0;
-				m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
+// 				m_jfpbr->render( m_mesh, m_camera, m_lightCamera, newFrame );
 				
 				break;
 			}

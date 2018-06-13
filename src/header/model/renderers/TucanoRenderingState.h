@@ -3,7 +3,7 @@
 
 #include <tucano.hpp>
 #include <phongshader.hpp>
-#include <imgSpacePBR.hpp>
+// #include <imgSpacePBR.hpp>
 #include "RenderingState.h"
 #include "TextEffect.h"
 #include <utils/frustum.hpp>
@@ -48,7 +48,7 @@ namespace model
 		virtual void renderText( const Vec3& pos, const string& str );
 		
 		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
-		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
+// 		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
 		
 		/** Gets the phong effect. The caller is reponsable for the correct usage.*/
 		Phong& getPhong() { return *m_phong; }
@@ -56,7 +56,7 @@ namespace model
 		/** Changes the effect used to render the points. */
 		void selectEffect( const Effect& effect ) { m_effect = effect; }
 		
-		void setJfpbrFrameskip( const int& value ) { m_jfpbrFrameskip = value; }
+// 		void setJfpbrFrameskip( const int& value ) { m_jfpbrFrameskip = value; }
 		
 		void clearAttribs()
 		{
@@ -80,7 +80,7 @@ namespace model
 		
 		Mesh* m_mesh;
 		Phong* m_phong;
-		ImgSpacePBR *m_jfpbr;
+// 		ImgSpacePBR *m_jfpbr;
 		
 		Effect m_effect;
 		

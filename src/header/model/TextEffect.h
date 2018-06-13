@@ -149,7 +149,7 @@ namespace model
 		~Atlas()
 		{
 			tex.unbind();
-			tex.destroy();
+// 			tex.destroy();
 		}
 	};
 	

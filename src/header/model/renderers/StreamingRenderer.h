@@ -62,7 +62,7 @@ namespace model
 		bool isRenderable( const AlignedBox3f& box, const Float projThresh ) const;
 		
 		/** Gets the image space pbr effect. The caller is reponsable for the correct usage.*/
-		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
+// 		ImgSpacePBR& getJumpFlooding() { return *m_jfpbr; }
 		
 		/** Gets the phong effect. The caller is reponsable for the correct usage.*/
 		Phong& getPhong() { return *m_phong; }
@@ -87,7 +87,7 @@ namespace model
 		Matrix4f m_viewProj;
 		
 		Phong* m_phong;
-		ImgSpacePBR *m_jfpbr;
+// 		ImgSpacePBR *m_jfpbr;
 		
 		Effect m_effect;
 		
@@ -122,16 +122,16 @@ namespace model
 		glVertexAttrib4f( 2, 0.7f, 0.7f, 0.7f, 1.f );
 		
 		Vector2i viewportSize = m_camera->getViewportSize();
-		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
-		m_jfpbr->setShadersDir( shaderPath );
-		m_jfpbr->initialize();
-		m_jfpbr->setFirstMaxDistance( 0.002f );
+// 		m_jfpbr = new ImgSpacePBR( viewportSize.x(), viewportSize.y() );
+// 		m_jfpbr->setShadersDir( shaderPath );
+// 		m_jfpbr->initialize();
+// 		m_jfpbr->setFirstMaxDistance( 0.002f );
 	}
 	
 	template< typename Point >
 	inline StreamingRenderer< Point >::~StreamingRenderer()
 	{
-		delete m_jfpbr;
+// 		delete m_jfpbr;
 		delete m_phong;
 		delete m_frustum;
 	}

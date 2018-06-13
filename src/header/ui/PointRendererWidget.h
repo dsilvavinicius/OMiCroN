@@ -136,7 +136,7 @@ private:
 	/** Draws auxiliary viewports flag. */
 	bool m_drawAuxViewports;
 	
-	PointModel mesh;
+// 	PointModel mesh;
 	Renderer* m_renderer;
 	NodeLoader& m_loader;
 	Octree* m_octree;

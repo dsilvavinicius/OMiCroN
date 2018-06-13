@@ -44,7 +44,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL ST_MATHEW
+#define MODEL DAVID
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB
@@ -63,14 +63,14 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-#define NO_SORT true
-// #define NO_SORT false
+// #define NO_SORT true
+#define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
-#define SORTING FULL_SORT_D
+#define SORTING PARTIAL_SORT_D
 
 // Number of segments for partial sorting.
-#define SORTING_SEGMENTS 1
+#define SORTING_SEGMENTS 10
 
 // Activates de loading of binary octree files instead of hierarchy creation.
 // #define OCTREE_CONSTRUCTION TOP_DOWN_OCTREE
@@ -90,7 +90,7 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 1
 
 // Enables node colapse when leaves do not have siblings.
-// #define NODE_COLAPSE
+#define NODE_COLAPSE
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
 #if MODEL == DAVID
