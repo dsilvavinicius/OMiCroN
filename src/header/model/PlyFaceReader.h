@@ -1,7 +1,7 @@
 #ifndef PLY_FACE_READER_H
 #define PLY_FACE_READER_H
 
-#include <rply.h>
+#include <rply/rply.h>
 #include <iostream>
 #include "BasicTypes.h"
 

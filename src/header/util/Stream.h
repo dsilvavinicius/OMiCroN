@@ -7,7 +7,7 @@
 #include <QPoint>
 #include <QRect>
 #include <QSize>
-#include <Eigen/Geometry>
+#include <eigen3/Eigen/Geometry>
 #include "Point.h"
 
 using namespace std;

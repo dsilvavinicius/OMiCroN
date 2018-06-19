@@ -3,7 +3,7 @@
 # Path: src/test
 ##############################
 
-create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
+# create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
 
 #OpenMP thread number environment variable.
 set (ENV{OMP_NUM_THREADS} 8)

@@ -2,7 +2,7 @@
 #define BASIC_TYPES_H
 
 #include <memory>
-#include <Eigen/Dense>
+#include <eigen3/Eigen/Dense>
 #include "global_malloc.h"
 
 using namespace std;

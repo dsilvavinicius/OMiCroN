@@ -1,7 +1,7 @@
 #ifndef PLY_POINT_AND_FACE_WRITER
 #define PLY_POINT_AND_FACE_WRITER
 
-#include <rply.h>
+#include <rply/rply.h>
 #include "BasicTypes.h"
 #include "Point.h"
 

@@ -3,7 +3,7 @@
 
 #include <locale.h>
 #include <string>
-#include <rply.h>
+#include <rply/rply.h>
 #include "Point.h"
 #include "renderers/RenderingState.h"
 #include "PointReader.h"

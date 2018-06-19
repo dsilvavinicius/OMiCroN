@@ -1,7 +1,7 @@
 #ifndef POINT_RENDERER_WIDGET_H
 #define POINT_RENDERER_WIDGET_H
 
-#include <utils/qtfreecamerawidget.hpp>
+#include <tucano/tucano/utils/qtfreecamerawidget.hpp>
 #include <utils/path.hpp>
 #include "MortonCode.h"
 
