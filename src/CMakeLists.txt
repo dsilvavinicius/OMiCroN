@@ -28,8 +28,6 @@ set (UI_DIR "ui")
 set (MODEL_DIR "model")
 set (UTIL_DIR "util")
 
-# create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
-
 #======== Find libs ============
 
 find_package (OpenGL REQUIRED)
@@ -47,14 +45,15 @@ find_package (Qt5Sql REQUIRED)
 # Compiles libraries
 add_subdirectory(lib)
 
+#============= Shader compilation ===================
+# TODO: maybe this solution using GLOB is just too ugly to keep existing...
+
 include(shader_wrap_cpp)
 
 # GLviz shader.
 file(GLOB OPENGL_SHADERS ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader/*)
 
 shader_wrap_cpp(SOURCES_OPENGL_SHADERS "${OPENGL_SHADERS}")
-
-source_group("Shader Files" FILES ${OPENGL_SHADERS})
 
 add_library(shader
     ${SOURCES_OPENGL_SHADERS}
@@ -65,8 +64,19 @@ add_dependencies(shader
     embed_resource
 )
 
+#====================================================
+
 QT5_WRAP_UI( UI_HDRS
     ${HEADER_DIR}/${UI_DIR}/mainwindow.ui
+)
+
+# Set TBB target
+add_library(Tbb::Tbb UNKNOWN IMPORTED)
+
+set_target_properties(Tbb::Tbb
+	PROPERTIES
+		INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include/tbb
+		IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/tbb/libtbbmalloc.so
 )
 
 # Creates the renderer library.
@@ -128,11 +138,6 @@ target_include_directories(Point_Based_Renderer_Lib
 		${CMAKE_CURRENT_SOURCE_DIR}/header/model
 		${CMAKE_CURRENT_SOURCE_DIR}/header/util
 )
-
-# Set TBB variables
-
-include_directories ("include/tbb")
-link_directories("lib/tbb")
     
 # Link all necessary libs.
 target_link_libraries (Point_Based_Renderer_Lib
@@ -144,7 +149,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${OPENGL_LIBRARIES}
 	${GLEW_LIBRARIES}
 	${FREETYPE_LIBRARIES}
-	"libtbbmalloc.so"
+	Tbb::Tbb
 	${JSONCPP_LIBRARIES}
 	RPly
 	shader)
