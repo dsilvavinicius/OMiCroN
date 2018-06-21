@@ -29,7 +29,7 @@
 //
 // Author: wan@google.com (Zhanyong Wan)
 //
-// The Google C++ Testing Framework (Google Test)
+// The Google C++ Testing and Mocking Framework (Google Test)
 //
 // This header file defines the public API for death tests.  It is
 // #included by gtest.h so a user doesn't need to include this
@@ -50,6 +50,17 @@ namespace testing {
 GTEST_DECLARE_string_(death_test_style);
 
 #if GTEST_HAS_DEATH_TEST
+
+namespace internal {
+
+// Returns a Boolean value indicating whether the caller is currently
+// executing in the context of the death test child process.  Tools such as
+// Valgrind heap checkers may need this to modify their behavior in death
+// tests.  IMPORTANT: This is an internal utility.  Using it may break the
+// implementation of death tests.  User code MUST NOT use it.
+GTEST_API_ bool InDeathTestChild();
+
+}  // namespace internal
 
 // The following macros are useful for writing death tests.
 
@@ -75,7 +86,7 @@ GTEST_DECLARE_string_(death_test_style);
 //   for (int i = 0; i < 5; i++) {
 //     EXPECT_DEATH(server.ProcessRequest(i),
 //                  "Invalid request .* in ProcessRequest()")
-//         << "Failed to die on request " << i);
+//                  << "Failed to die on request " << i;
 //   }
 //
 //   ASSERT_EXIT(server.ExitNow(), ::testing::ExitedWithCode(0), "Exiting");
@@ -91,7 +102,7 @@ GTEST_DECLARE_string_(death_test_style);
 //   On POSIX-compliant systems (*nix), we use the <regex.h> library,
 //   which uses the POSIX extended regex syntax.
 //
-//   On other platforms (e.g. Windows), we only support a simple regex
+//   On other platforms (e.g. Windows or Mac), we only support a simple regex
 //   syntax implemented as part of Google Test.  This limited
 //   implementation should be enough most of the time when writing
 //   death tests; though it lacks many features you can find in PCRE
@@ -187,7 +198,7 @@ class GTEST_API_ ExitedWithCode {
   const int exit_code_;
 };
 
-# if !GTEST_OS_WINDOWS
+# if !GTEST_OS_WINDOWS && !GTEST_OS_FUCHSIA
 // Tests that an exit code describes an exit due to termination by a
 // given signal.
 class GTEST_API_ KilledBySignal {
@@ -245,10 +256,10 @@ class GTEST_API_ KilledBySignal {
 # ifdef NDEBUG
 
 #  define EXPECT_DEBUG_DEATH(statement, regex) \
-  do { statement; } while (::testing::internal::AlwaysFalse())
+  GTEST_EXECUTE_STATEMENT_(statement, regex)
 
 #  define ASSERT_DEBUG_DEATH(statement, regex) \
-  do { statement; } while (::testing::internal::AlwaysFalse())
+  GTEST_EXECUTE_STATEMENT_(statement, regex)
 
 # else
 
@@ -260,6 +271,54 @@ class GTEST_API_ KilledBySignal {
 
 # endif  // NDEBUG for EXPECT_DEBUG_DEATH
 #endif  // GTEST_HAS_DEATH_TEST
+
+// This macro is used for implementing macros such as
+// EXPECT_DEATH_IF_SUPPORTED and ASSERT_DEATH_IF_SUPPORTED on systems where
+// death tests are not supported. Those macros must compile on such systems
+// iff EXPECT_DEATH and ASSERT_DEATH compile with the same parameters on
+// systems that support death tests. This allows one to write such a macro
+// on a system that does not support death tests and be sure that it will
+// compile on a death-test supporting system. It is exposed publicly so that
+// systems that have death-tests with stricter requirements than
+// GTEST_HAS_DEATH_TEST can write their own equivalent of
+// EXPECT_DEATH_IF_SUPPORTED and ASSERT_DEATH_IF_SUPPORTED.
+//
+// Parameters:
+//   statement -  A statement that a macro such as EXPECT_DEATH would test
+//                for program termination. This macro has to make sure this
+//                statement is compiled but not executed, to ensure that
+//                EXPECT_DEATH_IF_SUPPORTED compiles with a certain
+//                parameter iff EXPECT_DEATH compiles with it.
+//   regex     -  A regex that a macro such as EXPECT_DEATH would use to test
+//                the output of statement.  This parameter has to be
+//                compiled but not evaluated by this macro, to ensure that
+//                this macro only accepts expressions that a macro such as
+//                EXPECT_DEATH would accept.
+//   terminator - Must be an empty statement for EXPECT_DEATH_IF_SUPPORTED
+//                and a return statement for ASSERT_DEATH_IF_SUPPORTED.
+//                This ensures that ASSERT_DEATH_IF_SUPPORTED will not
+//                compile inside functions where ASSERT_DEATH doesn't
+//                compile.
+//
+//  The branch that has an always false condition is used to ensure that
+//  statement and regex are compiled (and thus syntactically correct) but
+//  never executed. The unreachable code macro protects the terminator
+//  statement from generating an 'unreachable code' warning in case
+//  statement unconditionally returns or throws. The Message constructor at
+//  the end allows the syntax of streaming additional messages into the
+//  macro, for compilational compatibility with EXPECT_DEATH/ASSERT_DEATH.
+# define GTEST_UNSUPPORTED_DEATH_TEST(statement, regex, terminator) \
+    GTEST_AMBIGUOUS_ELSE_BLOCKER_ \
+    if (::testing::internal::AlwaysTrue()) { \
+      GTEST_LOG_(WARNING) \
+          << "Death tests are not supported on this platform.\n" \
+          << "Statement '" #statement "' cannot be verified."; \
+    } else if (::testing::internal::AlwaysFalse()) { \
+      ::testing::internal::RE::PartialMatch(".*", (regex)); \
+      GTEST_SUPPRESS_UNREACHABLE_CODE_WARNING_BELOW_(statement); \
+      terminator; \
+    } else \
+      ::testing::Message()
 
 // EXPECT_DEATH_IF_SUPPORTED(statement, regex) and
 // ASSERT_DEATH_IF_SUPPORTED(statement, regex) expand to real death tests if
@@ -273,9 +332,9 @@ class GTEST_API_ KilledBySignal {
     ASSERT_DEATH(statement, regex)
 #else
 # define EXPECT_DEATH_IF_SUPPORTED(statement, regex) \
-    GTEST_UNSUPPORTED_DEATH_TEST_(statement, regex, )
+    GTEST_UNSUPPORTED_DEATH_TEST(statement, regex, )
 # define ASSERT_DEATH_IF_SUPPORTED(statement, regex) \
-    GTEST_UNSUPPORTED_DEATH_TEST_(statement, regex, return)
+    GTEST_UNSUPPORTED_DEATH_TEST(statement, regex, return)
 #endif
 
 }  // namespace testing

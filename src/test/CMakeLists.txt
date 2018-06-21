@@ -3,21 +3,12 @@
 # Path: src/test
 ##############################
 
-# create_source_groups (UI_DIR MODEL_DIR UTIL_DIR)
-
 #OpenMP thread number environment variable.
 set (ENV{OMP_NUM_THREADS} 8)
 
 find_package( Boost COMPONENTS program_options REQUIRED )
 
-include_directories(
-	${Boost_INCLUDE_DIR}
-	include/
-	${HEADER_DIR}/
-	${HEADER_DIR}/${MODEL_DIR}/
-)
-
-add_subdirectory (gtest/)
+add_subdirectory (gtest)
 
 # Adds the executable
 add_executable (Tests
@@ -36,7 +27,6 @@ add_executable (Tests
 	${CPP_DIR}/${MODEL_DIR}/MortonIntervalTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/O1OctreeNodeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
-# 	${CPP_DIR}/${MODEL_DIR}/SQLiteManagerTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeTest.cpp
 	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeStressTest.cpp
@@ -52,29 +42,27 @@ add_executable (Tests
 	${HEADER_DIR}/${MODEL_DIR}/Text3DTestWidget.h	${CPP_DIR}/${MODEL_DIR}/Text3DTestWidget.cpp
 	${CPP_DIR}/${MODEL_DIR}/Text3DTest.cpp
 	${HEADER_DIR}/FastParallelOctreeTestParam.h	${CPP_DIR}/FastParallelOctreeTestParam.cpp
-	
-#	The tests below are not compatible with glew and Tucano, since are using new Qt only.
 
-#	${HEADER_DIR}/${MODEL_DIR}/ScanQGLView.h		${CPP_DIR}/${MODEL_DIR}/ScanQGLView.cpp
-#	${CPP_DIR}/${MODEL_DIR}/ScanTest.cpp
-#	${HEADER_DIR}/${MODEL_DIR}/CompactionQGLView.h	${CPP_DIR}/${MODEL_DIR}/CompactionQGLView.cpp
-#	${CPP_DIR}/${MODEL_DIR}/CompactionTest.cpp
-	
 	${CPP_DIR}/main.cpp)
 
-target_include_directories (Tests PUBLIC include/)
-target_include_directories (Tests PUBLIC gtest
-	gtest_main)
-target_link_libraries (Tests Point_Based_Renderer_Lib
+target_include_directories( Tests
+	PUBLIC
+        Boost::program_options
+		include
+		${HEADER_DIR}/
+		${HEADER_DIR}/${MODEL_DIR}/
+)
+
+target_link_libraries( Tests
+	Point_Based_Renderer_Lib
 	gtest
 	gtest_main
 	pthread
-	${Boost_LIBRARIES})
+	Boost::program_options
+)
 
 # .ply files copy target.
 add_custom_target( TestsCopy )
-# get_target_property( Renderer_Location Point_Based_Renderer $<TARGET_FILE> )
-# get_filename_component( Renderer_Dir ${Renderer_Location} PATH)
 add_custom_command( TARGET TestsCopy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data
 	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/test/data )

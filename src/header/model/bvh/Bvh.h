@@ -647,7 +647,7 @@ namespace model
 		statistics( *m_root, stats );
 		
 		stats.m_avgPointsPerLeaf = stats.m_nPoints / stats.m_nLeaves;
-		stats.m_avgChildrenPerInner = abs( stats.m_avgChildrenPerInner /  ( stats.m_nNodes - stats.m_nLeaves ) );
+		stats.m_avgChildrenPerInner = stats.m_avgChildrenPerInner / ( stats.m_nNodes - stats.m_nLeaves );
 		
 		
 		return stats;

@@ -3,7 +3,7 @@
 #include "Stream.h"
 #include "TbbAllocator.h"
 #include "Serializer.h"
-#include <boost/concept_check.hpp>
+// #include <boost/concept_check.hpp>
 #include "HierarchyCreationLog.h"
 #include "global_malloc.h"
 
