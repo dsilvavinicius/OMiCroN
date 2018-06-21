@@ -3,44 +3,44 @@
 # Path: src/
 ##############################
 
-cmake_minimum_required (VERSION 3.5)
-project (OMiCroN VERSION 0.0.1)
+cmake_minimum_required( VERSION 3.5 )
+project( OMiCroN VERSION 0.0.1 )
 
 # Adding package finders directory.
-list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
+list( INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake )
 
 # Find includes in corresponding build directories.
-set (CMAKE_INCLUDE_CURRENT_DIR ON)
+set( CMAKE_INCLUDE_CURRENT_DIR ON )
 
 # Instruct CMake to run moc automatically when needed.
-set (CMAKE_AUTOMOC ON)
+set( CMAKE_AUTOMOC ON )
 
 #OpenMP thread number environment variable.
-set (ENV{OMP_NUM_THREADS} 8)
+set( ENV{OMP_NUM_THREADS} 8 )
 
 # Necessary flags for C++11, linkage to Qt5, OpenMP and Eigen setup.
-set (CMAKE_CXX_FLAGS "-std=c++11 -fPIC -fopenmp -D_GLIBCXX_PARALLEL -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
+set (CMAKE_CXX_FLAGS "-std=c++17 -fPIC -fopenmp -D_GLIBCXX_PARALLEL -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 
-set (HEADER_DIR "header")
-set (CPP_DIR "cpp")
+set( HEADER_DIR "header" )
+set( CPP_DIR "cpp" )
 
-set (UI_DIR "ui")
-set (MODEL_DIR "model")
-set (UTIL_DIR "util")
+set( UI_DIR "ui" )
+set( MODEL_DIR "model" )
+set( UTIL_DIR "util" )
 
 #======== Find libs ============
 
-find_package (OpenGL REQUIRED)
-find_package (GLEW REQUIRED)
-find_package (Eigen3 REQUIRED NO_MODULE)
-find_package (Freetype REQUIRED)
-find_package (Jsoncpp REQUIRED)
+find_package( OpenGL REQUIRED )
+find_package( GLEW REQUIRED )
+find_package( Eigen3 REQUIRED NO_MODULE )
+find_package( Freetype REQUIRED )
+find_package( Jsoncpp REQUIRED )
 
-find_package (Qt5Core REQUIRED)
-find_package (Qt5Gui REQUIRED)
-find_package (Qt5Widgets REQUIRED)
-find_package (Qt5OpenGL REQUIRED)
-find_package (Qt5Sql REQUIRED)
+find_package( Qt5Core REQUIRED )
+find_package( Qt5Gui REQUIRED )
+find_package( Qt5Widgets REQUIRED )
+find_package( Qt5OpenGL REQUIRED )
+find_package( Qt5Sql REQUIRED )
 
 # Compiles libraries
 add_subdirectory(lib)
@@ -48,19 +48,19 @@ add_subdirectory(lib)
 #============= Shader compilation ===================
 # TODO: maybe this solution using GLOB is just too ugly to keep existing...
 
-include(shader_wrap_cpp)
+include( shader_wrap_cpp )
 
 # GLviz shader.
-file(GLOB OPENGL_SHADERS ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader/*)
+file( GLOB OPENGL_SHADERS ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader/* )
 
-shader_wrap_cpp(SOURCES_OPENGL_SHADERS "${OPENGL_SHADERS}")
+shader_wrap_cpp( SOURCES_OPENGL_SHADERS "${OPENGL_SHADERS}" )
 
-add_library(shader
+add_library( shader
     ${SOURCES_OPENGL_SHADERS}
     ${OPENGL_SHADERS}
 )
 
-add_dependencies(shader
+add_dependencies( shader
     embed_resource
 )
 
@@ -71,16 +71,16 @@ QT5_WRAP_UI( UI_HDRS
 )
 
 # Set TBB target
-add_library(Tbb::Tbb UNKNOWN IMPORTED)
+add_library( Tbb::Tbb UNKNOWN IMPORTED )
 
-set_target_properties(Tbb::Tbb
+set_target_properties( Tbb::Tbb
 	PROPERTIES
 		INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include/tbb
 		IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/tbb/libtbbmalloc.so
 )
 
 # Creates the renderer library.
-add_library (Point_Based_Renderer_Lib
+add_library( Point_Based_Renderer_Lib
 	${CPP_DIR}/${MODEL_DIR}/global_new_delete.cpp
 	${CPP_DIR}/${MODEL_DIR}/Point.cpp
 
@@ -119,7 +119,8 @@ add_library (Point_Based_Renderer_Lib
 	include/tucano/tucano/utils/qtflycamerawidget.hpp
 	include/tucano/tucano/utils/qtplainwidget.hpp 
     
-    ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/surfel_cloud.cpp)
+    ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/surfel_cloud.cpp
+)
     
 # TODO: fix include's scope. Must use PUBLIC only for interface items.
 target_include_directories(Point_Based_Renderer_Lib
@@ -155,12 +156,16 @@ target_link_libraries (Point_Based_Renderer_Lib
 	shader)
 
 # Creates renderer program and links with the renderer library.
-add_executable (Point_Based_Renderer
-	${CPP_DIR}/main.cpp)
-target_include_directories (Point_Based_Renderer
+add_executable( Point_Based_Renderer
+	${CPP_DIR}/main.cpp
+)
+
+target_include_directories( Point_Based_Renderer
 	PUBLIC
-		Point_Based_Renderer_Lib)
-target_link_libraries (Point_Based_Renderer Point_Based_Renderer_Lib)
+		Point_Based_Renderer_Lib
+)
+
+target_link_libraries( Point_Based_Renderer Point_Based_Renderer_Lib )
 
 # Shader files copy target.
 add_custom_target( Copy )
@@ -182,4 +187,4 @@ add_custom_command( TARGET Copy PRE_BUILD
 add_dependencies( Point_Based_Renderer Copy )
 
 # Tests directory.
-add_subdirectory (test)
+add_subdirectory( test )

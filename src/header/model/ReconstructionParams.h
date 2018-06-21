@@ -63,8 +63,8 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-// #define NO_SORT true
-#define NO_SORT false
+#define NO_SORT true
+// #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING PARTIAL_SORT_D
@@ -85,9 +85,9 @@ enum ReconstructionAlgorithm
 // #define PROJ_THRESHOLD 0.005f
 
 // Number of expected front segments.
-// #define SEGMENTS_PER_FRONT 2
+#define SEGMENTS_PER_FRONT 5
 // #define SEGMENTS_PER_FRONT 10
-#define SEGMENTS_PER_FRONT 1
+// #define SEGMENTS_PER_FRONT 1
 
 // Enables node colapse when leaves do not have siblings.
 #define NODE_COLAPSE
