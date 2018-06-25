@@ -12,38 +12,38 @@ add_subdirectory (gtest)
 
 # Adds the executable
 add_executable (Tests
-	cpp/util/PlyPointReaderTest.cpp
-	cpp/util/HeapPointReaderTest.cpp
+	disk/ply_point_reader_test.cpp
+	disk/heap_point_reader_test.cpp
 	
-	cpp/model/ArrayTest.cpp
-	cpp/model/PointSorterTest.cpp
-	cpp/model/PlyPointMergerTest.cpp
-	cpp/model/OocPointSorterTest.cpp
-	cpp/model/TbbAllocatorTest.cpp
-	cpp/model/CameraTest.cpp
-	cpp/model/FrustumTest.cpp
-	cpp/model/PointTest.cpp
-	cpp/model/MortonCodeTest.cpp
-	cpp/model/MortonIntervalTest.cpp
-	cpp/model/O1OctreeNodeTest.cpp
-	cpp/model/SerializerTest.cpp
-	cpp/model/FrontTest.cpp
+	basic/array_test.cpp
+	disk/point_sorter_test.cpp
+	disk/ply_point_merger_test.cpp
+	disk/ooc_point_sorter_test.cpp
+	memory/tbb_allocator_test.cpp
+# 	cpp/model/CameraTest.cpp
+	renderer/frustum_test.cpp
+	basic/point_test.cpp
+	basic/morton_code_test.cpp
+	basic/morton_interval_test.cpp
+	hierarchy/o1_octree_node_test.cpp
+	disk/serializer_test.cpp
+	hierarchy/front_test.cpp
 # 	cpp/model/FastParallelOctreeTest.cpp
-	cpp/model/FastParallelOctreeStressTest.cpp
-	cpp/model/StreamingRendererTest.cpp
-	cpp/model/SplatRendererTest.cpp
-	cpp/model/OctreeFileTest.cpp
-	cpp/model/HierarchyCreatorNoRenderTest.cpp
-	cpp/model/BvhTest.cpp
-	cpp/tucano/MeshTest.cpp
+	hierarchy/fast_parallel_octree_stress_test.cpp
+	renderer/streaming_renderer_test.cpp
+	renderer/splat_renderer_test.cpp
+	disk/octree_file_test.cpp
+	hierarchy/hierarchy_creator_no_render_test.cpp
+	hierarchy/bvh_test.cpp
+	renderer/mesh_test.cpp
 	
-	header/model/TextTestWidget.h          cpp/model/TextTestWidget.cpp
-	cpp/model/TextTest.cpp
-	header/model/Text3DTestWidget.h        cpp/model/Text3DTestWidget.cpp
-	cpp/model/Text3DTest.cpp
-	header/FastParallelOctreeTestParam.h   cpp/FastParallelOctreeTestParam.cpp
+	ui/text_test_widget.h                          ui/text_test_widget.cpp
+	renderer/text_test.cpp
+	ui/text_3d_test_widget.h                       ui/text_3d_test_widget.cpp
+	renderer/text_3d_test.cpp
+	hierarchy/fast_parallel_octree_test_param.h    hierarchy/fast_parallel_octree_test_param.cpp
 
-	cpp/main.cpp)
+	main.cpp)
 
 target_include_directories( Tests
 	PUBLIC

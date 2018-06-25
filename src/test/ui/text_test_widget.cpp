@@ -1,7 +1,7 @@
-#include "header/model/TextTestWidget.h"
+#include "ui/text_test_widget.h"
 #include <QGuiApplication>
 
-namespace omicron::test
+namespace omicron::test::ui
 {
     TextTestWidget::TextTestWidget( QWidget *parent )
     : QtPlainWidget( parent ),

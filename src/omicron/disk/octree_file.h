@@ -3,7 +3,7 @@
 
 #include "omicron/hierarchy/o1_octree_node.h"
 
-namespace omicron::hierarchy
+namespace omicron::disk
 {
 	/** Tools for writing and reading binary octree files, which contain raw node data. */
 	class OctreeFile

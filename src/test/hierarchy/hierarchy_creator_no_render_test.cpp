@@ -1,5 +1,5 @@
 #include "omicron/hierarchy/hierarchy_creator.h"
-#include "omicron/hierarchy/octree_file.h"
+#include "omicron/disk/octree_file.h"
 
 #include <gtest/gtest.h>
 #include <iostream>
@@ -8,7 +8,7 @@
 #ifndef HIERARCHY_CREATION_RENDERING
 	using namespace std;
 
-	namespace omicron::test
+	namespace omicron::test::hierarchy
 	{
         class HierarchyCreatorNoRenderTest : public ::testing::Test
         {

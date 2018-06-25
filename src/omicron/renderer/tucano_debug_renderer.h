@@ -2,7 +2,7 @@
 #define TUCANO_DEBUG_RENDERER_H
 
 #include "omicron/renderer/tucano_rendering_state.h"
-#include "omicron/hierarchy/text_effect.h"
+#include "omicron/renderer/text_effect.h"
 
 namespace omicron::renderer
 {

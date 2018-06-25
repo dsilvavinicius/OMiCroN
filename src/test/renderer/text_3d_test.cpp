@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
-#include "header/model/Text3DTestWidget.h"
+#include "ui/text_3d_test_widget.h"
 #include <QApplication>
 
-namespace omicron::test
+namespace omicron::test::renderer
 {
+    using namespace ui;
+    
     class Text3DTest
     : public ::testing::Test
     {

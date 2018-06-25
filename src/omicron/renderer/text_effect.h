@@ -16,7 +16,7 @@
 
 #include "omicron/basic/stream.h"
 
-namespace omicron::hierarchy
+namespace omicron::renderer
 {
     using namespace Tucano;
     using namespace Eigen;

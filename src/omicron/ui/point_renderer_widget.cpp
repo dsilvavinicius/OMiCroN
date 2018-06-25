@@ -1,6 +1,6 @@
 #include "omicron/ui/point_renderer_widget.h"
 #include "omicron/renderer/tucano_debug_renderer.h"
-#include "omicron/hierarchy/octree_file.h"
+#include "omicron/disk/octree_file.h"
 #include <QDebug>
 #include <QTimer>
 

@@ -3,7 +3,7 @@
 #include <QDir>
 #include <string>
 #include <boost/program_options.hpp>
-#include "header/FastParallelOctreeTestParam.h"
+#include "hierarchy/fast_parallel_octree_test_param.h"
 
 using namespace std;
 namespace po = boost::program_options;

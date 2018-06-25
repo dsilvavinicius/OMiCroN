@@ -1,8 +1,8 @@
-#include "header/model/Text3DTestWidget.h"
+#include "ui/text_3d_test_widget.h"
 
 #include <QGuiApplication>
 
-namespace omicron::test
+namespace omicron::test::ui
 {
     Text3DTestWidget::Text3DTestWidget( QWidget *parent )
     : QtFreecameraWidget( parent ),

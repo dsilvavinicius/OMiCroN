@@ -2,11 +2,11 @@
 #define TEXT_TEST_WIDGET
 
 #include <utils/qtplainwidget.hpp>
-#include "omicron/hierarchy/text_effect.h"
+#include "omicron/renderer/text_effect.h"
 
-namespace omicron::test
+namespace omicron::test::ui
 {
-    using namespace omicron::hierarchy;
+    using namespace omicron::renderer;
     
     class TextTestWidget
     : public QtPlainWidget

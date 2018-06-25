@@ -5,7 +5,7 @@
 #include <tucano/effects/phongshader.hpp>
 // #include <imgSpacePBR.hpp>
 #include "omicron/renderer/rendering_state.h"
-#include "omicron/hierarchy/text_effect.h"
+#include "omicron/renderer/text_effect.h"
 #include <tucano/utils/frustum.hpp>
 
 namespace omicron::renderer

@@ -12,7 +12,7 @@
 #include "omicron/util/stack_trace.h"
 #include "tucano/effects/phongshader.hpp"
 #include "omicron/hierarchy/hierarchy_creation_log.h"
-#include "omicron/hierarchy/text_effect.h"
+#include "omicron/renderer/text_effect.h"
 #include "omicron/memory/global_malloc.h"
 
 // Definitions to turn on debug logging for each Front operation.

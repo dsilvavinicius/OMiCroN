@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 
-#include "header/model/TextTestWidget.h"
+#include "ui/text_test_widget.h"
 #include <QApplication>
 
-namespace omicron::test
+namespace omicron::test::renderer
 {
+    using namespace ui;
+    
     class TextTest
     : public ::testing::Test
     {

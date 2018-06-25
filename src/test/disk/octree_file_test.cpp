@@ -1,8 +1,8 @@
-#include "omicron/hierarchy/octree_file.h"
+#include "omicron/disk/octree_file.h"
 
 #include <gtest/gtest.h>
 
-namespace omicron::test
+namespace omicron::test::disk
 {
     using namespace basic;
     

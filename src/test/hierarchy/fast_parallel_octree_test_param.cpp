@@ -1,5 +1,5 @@
 #include <iostream>
-#include "header/FastParallelOctreeTestParam.h"
+#include "hierarchy/fast_parallel_octree_test_param.h"
 
 FastParallelOctreeTestParam::FastParallelOctreeTestParam()
 {}
