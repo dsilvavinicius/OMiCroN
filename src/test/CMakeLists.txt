@@ -12,45 +12,44 @@ add_subdirectory (gtest)
 
 # Adds the executable
 add_executable (Tests
-	${CPP_DIR}/${UTIL_DIR}/PlyPointReaderTest.cpp
-	${CPP_DIR}/${UTIL_DIR}/HeapPointReaderTest.cpp
+	cpp/util/PlyPointReaderTest.cpp
+	cpp/util/HeapPointReaderTest.cpp
 	
-	${CPP_DIR}/${MODEL_DIR}/ArrayTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/PointSorterTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/PlyPointMergerTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/OocPointSorterTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/TbbAllocatorTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/CameraTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/FrustumTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/PointTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/MortonCodeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/MortonIntervalTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/O1OctreeNodeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/SerializerTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/FrontTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/FastParallelOctreeStressTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/StreamingRendererTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/SplatRendererTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/OctreeFileTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/HierarchyCreatorNoRenderTest.cpp
-	${CPP_DIR}/${MODEL_DIR}/BvhTest.cpp
-	${CPP_DIR}/tucano/MeshTest.cpp
+	cpp/model/ArrayTest.cpp
+	cpp/model/PointSorterTest.cpp
+	cpp/model/PlyPointMergerTest.cpp
+	cpp/model/OocPointSorterTest.cpp
+	cpp/model/TbbAllocatorTest.cpp
+	cpp/model/CameraTest.cpp
+	cpp/model/FrustumTest.cpp
+	cpp/model/PointTest.cpp
+	cpp/model/MortonCodeTest.cpp
+	cpp/model/MortonIntervalTest.cpp
+	cpp/model/O1OctreeNodeTest.cpp
+	cpp/model/SerializerTest.cpp
+	cpp/model/FrontTest.cpp
+# 	cpp/model/FastParallelOctreeTest.cpp
+	cpp/model/FastParallelOctreeStressTest.cpp
+	cpp/model/StreamingRendererTest.cpp
+	cpp/model/SplatRendererTest.cpp
+	cpp/model/OctreeFileTest.cpp
+	cpp/model/HierarchyCreatorNoRenderTest.cpp
+	cpp/model/BvhTest.cpp
+	cpp/tucano/MeshTest.cpp
 	
-	${HEADER_DIR}/${MODEL_DIR}/TextTestWidget.h		${CPP_DIR}/${MODEL_DIR}/TextTestWidget.cpp
-	${CPP_DIR}/${MODEL_DIR}/TextTest.cpp
-	${HEADER_DIR}/${MODEL_DIR}/Text3DTestWidget.h	${CPP_DIR}/${MODEL_DIR}/Text3DTestWidget.cpp
-	${CPP_DIR}/${MODEL_DIR}/Text3DTest.cpp
-	${HEADER_DIR}/FastParallelOctreeTestParam.h	${CPP_DIR}/FastParallelOctreeTestParam.cpp
+	header/model/TextTestWidget.h          cpp/model/TextTestWidget.cpp
+	cpp/model/TextTest.cpp
+	header/model/Text3DTestWidget.h        cpp/model/Text3DTestWidget.cpp
+	cpp/model/Text3DTest.cpp
+	header/FastParallelOctreeTestParam.h   cpp/FastParallelOctreeTestParam.cpp
 
-	${CPP_DIR}/main.cpp)
+	cpp/main.cpp)
 
 target_include_directories( Tests
 	PUBLIC
         Boost::program_options
 		include
-		${HEADER_DIR}/
-		${HEADER_DIR}/${MODEL_DIR}/
+		../
 )
 
 target_link_libraries( Tests

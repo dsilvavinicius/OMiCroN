@@ -1,7 +1,7 @@
 // #include "RenderingState.h"
 // #include <StreamingRenderer.h>
 // 
-// namespace model
+// namespace omicron
 // {
 // 	namespace test
 // 	{

@@ -8,7 +8,7 @@
  * Methods to test hierarchies generated using points in test/data/simple_point_octree.ply or
  * test/data/extended_point_octree.ply. The octree can be Shallow or Medium.
  */
-namespace model
+namespace omicron
 {
 	namespace test
 	{

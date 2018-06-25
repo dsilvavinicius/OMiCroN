@@ -4,7 +4,7 @@
 #include "MortonCode.h"
 #include <O1OctreeNode.h>
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

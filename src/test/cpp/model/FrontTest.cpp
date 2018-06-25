@@ -1,25 +1,23 @@
 #include <gtest/gtest.h>
 #include <iostream>
-#include "Front.h"
-#include "MortonCode.h"
+#include "omicron/hierarchy/front.h"
+#include "omicron/basic/morton_code.h"
 
-using namespace std;
-
-namespace model
+namespace omicron::test
 {
-	namespace test
-	{
-        class FrontTest : public ::testing::Test
-		{
-		protected:
-			void SetUp()
-			{
-				setlocale( LC_NUMERIC, "C" );
-			}
-		};
-		
-		TEST_F( FrontTest, ReproduceDuplicatePlaceholderInsertion )
-		{
+    using namespace std;
+        
+    class FrontTest : public ::testing::Test
+    {
+    protected:
+        void SetUp()
+        {
+            setlocale( LC_NUMERIC, "C" );
+        }
+    };
+    
+    TEST_F( FrontTest, ReproduceDuplicatePlaceholderInsertion )
+    {
 // 			using Morton = MediumMortonCode;
 // 			using Front = model::Front< Morton, Point >;
 // 			using OctreeDim = typename Front::OctreeDim;
@@ -36,6 +34,5 @@ namespace model
 // 			
 // 			Morton morton2; morton2.build( 0x956ac16f00ul );
 // 			front.insertPlaceholder( morton2, 0 );
-		}
-	}
+    }
 }

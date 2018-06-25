@@ -1,5 +1,5 @@
 #include <iostream>
-#include "FastParallelOctreeTestParam.h"
+#include "header/FastParallelOctreeTestParam.h"
 
 FastParallelOctreeTestParam::FastParallelOctreeTestParam()
 {}

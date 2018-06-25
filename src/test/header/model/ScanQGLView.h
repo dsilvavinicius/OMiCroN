@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

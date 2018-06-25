@@ -11,7 +11,7 @@ using namespace std;
 extern "C" int g_argc;
 extern "C" char** g_argv;
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

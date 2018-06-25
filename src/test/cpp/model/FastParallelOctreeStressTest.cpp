@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
-#include "FastParallelOctree.h"
-#include <GLHiddenWidget.h>
-#include "FastParallelOctreeTestParam.h"
+#include "omicron/hierarchy/fast_parallel_octree.h"
+#include "omicron/ui/gl_hidden_widget.h"
+#include "header/FastParallelOctreeTestParam.h"
 
 extern "C" FastParallelOctreeTestParam g_fastParallelStressParam;
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

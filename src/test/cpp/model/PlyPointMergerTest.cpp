@@ -1,11 +1,11 @@
-#include "PlyPointMerger.h"
+#include "omicron/disk/ply_point_merger.h"
 
 #include <gtest/gtest.h>
 #include <iostream>
 
 using namespace std;
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

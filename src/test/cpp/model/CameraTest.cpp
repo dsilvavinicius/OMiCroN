@@ -5,7 +5,7 @@
 // 
 // using namespace glm;
 // 
-// namespace model
+// namespace omicron
 // {
 // 	namespace test
 // 	{

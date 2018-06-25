@@ -5,7 +5,7 @@
 
 #include "CompactionRenderingState.h"
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

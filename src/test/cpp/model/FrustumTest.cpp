@@ -4,7 +4,7 @@
 
 using namespace Tucano;
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

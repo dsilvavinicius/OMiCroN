@@ -1,12 +1,12 @@
 #include <gtest/gtest.h>
 #include <iostream>
-#include "MortonCode.h"
-#include "OocPointSorter.h"
+#include "omicron/basic/morton_code.h"
+#include "omicron/disk/ooc_point_sorter.h"
 
 using namespace std;
 using namespace util;
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

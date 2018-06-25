@@ -3,7 +3,7 @@
 #include <QDir>
 #include <string>
 #include <boost/program_options.hpp>
-#include "FastParallelOctreeTestParam.h"
+#include "header/FastParallelOctreeTestParam.h"
 
 using namespace std;
 namespace po = boost::program_options;

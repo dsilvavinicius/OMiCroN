@@ -4,7 +4,7 @@
 #include <QApplication>
 #include <algorithm>
 
-namespace model
+namespace omicron
 {
 	namespace test
 	{

@@ -2,28 +2,27 @@
 #define TEXT_TEST_WIDGET
 
 #include <utils/qtplainwidget.hpp>
-#include "TextEffect.h"
+#include "omicron/hierarchy/text_effect.h"
 
-namespace model
+namespace omicron::test
 {
-	namespace test
-	{
-		class TextTestWidget
-		: public QtPlainWidget
-		{
-			Q_OBJECT
-			
-		public:
-			TextTestWidget( QWidget *parent = 0 );
-			
-			void initializeGL();
-			
-			void paintGL();
-			
-		private:
-			TextEffect m_textEffect;
-		};
-	}
+    using namespace omicron::hierarchy;
+    
+    class TextTestWidget
+    : public QtPlainWidget
+    {
+        Q_OBJECT
+        
+    public:
+        TextTestWidget( QWidget *parent = 0 );
+        
+        void initializeGL();
+        
+        void paintGL();
+        
+    private:
+        TextEffect m_textEffect;
+    };
 }
 
 #endif

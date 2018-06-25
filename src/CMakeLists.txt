@@ -21,13 +21,6 @@ set( ENV{OMP_NUM_THREADS} 8 )
 # Necessary flags for C++11, linkage to Qt5, OpenMP and Eigen setup.
 set (CMAKE_CXX_FLAGS "-std=c++17 -fPIC -fopenmp -D_GLIBCXX_PARALLEL -DEIGEN_DONT_VECTORIZE -DEIGEN_DISABLE_UNALIGNED_ARRAY_ASSERT")
 
-set( HEADER_DIR "header" )
-set( CPP_DIR "cpp" )
-
-set( UI_DIR "ui" )
-set( MODEL_DIR "model" )
-set( UTIL_DIR "util" )
-
 #======== Find libs ============
 
 find_package( OpenGL REQUIRED )
@@ -51,7 +44,7 @@ add_subdirectory(lib)
 include( shader_wrap_cpp )
 
 # GLviz shader.
-file( GLOB OPENGL_SHADERS ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader/* )
+file( GLOB OPENGL_SHADERS omicron/renderer/splat_renderer/shader/* )
 
 shader_wrap_cpp( SOURCES_OPENGL_SHADERS "${OPENGL_SHADERS}" )
 
@@ -67,7 +60,7 @@ add_dependencies( shader
 #====================================================
 
 QT5_WRAP_UI( UI_HDRS
-    ${HEADER_DIR}/${UI_DIR}/mainwindow.ui
+    omicron/ui/main_window.ui
 )
 
 # Set TBB target
@@ -81,45 +74,45 @@ set_target_properties( Tbb::Tbb
 
 # Creates the renderer library.
 add_library( Point_Based_Renderer_Lib
-	${CPP_DIR}/${MODEL_DIR}/global_new_delete.cpp
-	${CPP_DIR}/${MODEL_DIR}/Point.cpp
+	omicron/memory/global_new_delete.cpp
+	omicron/basic/point.cpp
 
-	${HEADER_DIR}/${UI_DIR}/GLHiddenWidget.h ${CPP_DIR}/${UI_DIR}/GLHiddenWidget.cpp
-	${HEADER_DIR}/${UI_DIR}/PointRendererWidget.h ${CPP_DIR}/${UI_DIR}/PointRendererWidget.cpp
-	${HEADER_DIR}/${UI_DIR}/MainWindow.h ${CPP_DIR}/${UI_DIR}/MainWindow.cpp
-	${HEADER_DIR}/${UI_DIR}/mainwindow.ui
+	omicron/ui/gl_hidden_widget.h          omicron/ui/gl_hidden_widget.cpp
+	omicron/ui/point_renderer_widget.h     omicron/ui/point_renderer_widget.cpp
+	omicron/ui/main_window.h               omicron/ui/main_window.cpp
+	omicron/ui/main_window.ui
 	
 	${UI_HDRS}
 	
-	${HEADER_DIR}/${MODEL_DIR}/NodeLoaderThread.h
+	omicron/hierarchy/node_loader_thread.h
 	
-	${CPP_DIR}/${UTIL_DIR}/Stream.cpp
-	${CPP_DIR}/${MODEL_DIR}/MortonCode.cpp
-	${CPP_DIR}/${UTIL_DIR}/MemoryInfo.cpp
-	${CPP_DIR}/${UTIL_DIR}/vsGLInfoLib.cpp
-	${CPP_DIR}/${MODEL_DIR}/TbbAllocator.cpp
-	${CPP_DIR}/${MODEL_DIR}/Scan.cpp
-	${CPP_DIR}/${MODEL_DIR}/Camera.cpp
-	${CPP_DIR}/${MODEL_DIR}/HierarchyCreationLog.cpp
+	omicron/basic/stream.cpp
+	omicron/basic/morton_code.cpp
+# 	omicron/memory/memory_info.cpp
+	omicron/renderer/vsgl_info_lib.cpp
+	omicron/memory/tbb_allocator.cpp
+# 	omicron/Scan.cpp
+# 	omicron/basic/Camera.cpp
+	omicron/hierarchy/hierarchy_creation_log.cpp
 	
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/buffer.cpp
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/framebuffer.cpp
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/program.cpp
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/program_attribute.cpp
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/program_finalization.cpp
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/shader.cpp
-	${HEADER_DIR}/${MODEL_DIR}/splat_renderer/splat_renderer.cpp
+	omicron/renderer/splat_renderer/buffer.cpp
+	omicron/renderer/splat_renderer/framebuffer.cpp
+	omicron/renderer/splat_renderer/program.cpp
+	omicron/renderer/splat_renderer/program_attribute.cpp
+	omicron/renderer/splat_renderer/program_finalization.cpp
+	omicron/renderer/splat_renderer/shader.cpp
+	omicron/renderer/splat_renderer/splat_renderer.cpp
 	
-	${CPP_DIR}/${MODEL_DIR}/renderers/RenderingState.cpp
-	${CPP_DIR}/${MODEL_DIR}/renderers/TucanoRenderingState.cpp
+	omicron/renderer/rendering_state.cpp
+	omicron/renderer/tucano_rendering_state.cpp
 	
-	${CPP_DIR}/${MODEL_DIR}/GpuAllocStatistics.cpp
+	omicron/hierarchy/gpu_alloc_statistics.cpp
 	
 	# Tucano related code ( ugly hacks to use qmake in these files ).
 	include/tucano/tucano/utils/qtflycamerawidget.hpp
 	include/tucano/tucano/utils/qtplainwidget.hpp 
     
-    ${HEADER_DIR}/${MODEL_DIR}/splat_renderer/surfel_cloud.cpp
+    omicron/renderer/splat_renderer/surfel_cloud.cpp
 )
     
 # TODO: fix include's scope. Must use PUBLIC only for interface items.
@@ -134,10 +127,6 @@ target_include_directories(Point_Based_Renderer_Lib
 		
 		${EIGEN3_INCLUDE_DIRS}
 		${FREETYPE_INCLUDE_DIRS}
-		
-		${CMAKE_CURRENT_SOURCE_DIR}/header/ui
-		${CMAKE_CURRENT_SOURCE_DIR}/header/model
-		${CMAKE_CURRENT_SOURCE_DIR}/header/util
 )
     
 # Link all necessary libs.
@@ -157,7 +146,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 
 # Creates renderer program and links with the renderer library.
 add_executable( Point_Based_Renderer
-	${CPP_DIR}/main.cpp
+	omicron/main.cpp
 )
 
 target_include_directories( Point_Based_Renderer

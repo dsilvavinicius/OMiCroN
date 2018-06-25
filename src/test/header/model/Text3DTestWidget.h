@@ -2,30 +2,28 @@
 #define TEXT_3D_TEST_WIDGET
 
 #include <utils/qtfreecamerawidget.hpp>
-#include "TextEffect.h"
+#include "omicron/hierarchy/text_effect.h"
 
-using namespace Tucano;
-
-namespace model
+namespace omicron::test
 {
-	namespace test
-	{
-		class Text3DTestWidget
-		: public QtFreecameraWidget
-		{
-			Q_OBJECT
-			
-		public:
-			Text3DTestWidget( QWidget *parent = 0 );
-			
-			void initializeGL();
-			
-			void paintGL();
-		
-		private:
-			TextEffect m_textEffect;
-		};
-	}
+    using namespace Tucano;
+    using namespace omicron::hierarchy;
+    
+    class Text3DTestWidget
+    : public QtFreecameraWidget
+    {
+        Q_OBJECT
+        
+    public:
+        Text3DTestWidget( QWidget *parent = 0 );
+        
+        void initializeGL();
+        
+        void paintGL();
+    
+    private:
+        TextEffect m_textEffect;
+    };
 }
 
 #endif

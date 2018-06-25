@@ -10,7 +10,7 @@
 // using namespace std;
 // using namespace util;
 // 
-// namespace model
+// namespace omicron
 // {
 // 	namespace test
 // 	{
