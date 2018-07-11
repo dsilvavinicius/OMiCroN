@@ -47,9 +47,9 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	#if MODEL == DAVID
 		#ifdef LAB
 			#if NO_SORT == true
-				openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/David/Shallow/David_lab.oct" );
+                openMesh( "/home/dsilva.vinicius/projects/datasets/david/David.oct" );
 			#else
-				openMesh( "/home/vinicius/Datasets/David/David.ply" );
+				openMesh( "/home/dsilva.vinicius/projects/datasets/david/David.ply" );
 			#endif
 		#else
 			#if NO_SORT == true
@@ -478,13 +478,18 @@ void PointRendererWidget::openMesh( const string& filename )
 	
 	if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".oct" ) )
 	{
+        // Debug
+		{
+			cout << "Octree Json " << filename << endl;
+		}
+        
 		ifstream file( filename );
 		Json::Value octreeJson;
 		file >> octreeJson;
 		
-		// Debug
+        // Debug
 		{
-			cout << "Octree Json " << filename << endl << octreeJson << endl;
+			cout << octreeJson << endl;
 		}
 		{
 			m_statistics.m_hierarchyDepth = octreeJson[ "depth" ].asUInt();
