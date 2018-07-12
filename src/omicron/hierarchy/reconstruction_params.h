@@ -44,7 +44,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL ST_MATHEW
 
 // Define to indicates that the system will be run in the laboratory.
 #define LAB
@@ -54,6 +54,7 @@ enum ReconstructionAlgorithm
 // #define HIERARCHY_CREATION_THREADS 4
 
 // Work list size for hierarchy creation. 
+// #define WORK_LIST_SIZE 16
 #define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
 
@@ -63,8 +64,8 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-// #define NO_SORT true
-#define NO_SORT false
+#define NO_SORT true
+// #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING PARTIAL_SORT_D
@@ -90,7 +91,7 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 1
 
 // Enables node colapse when leaves do not have siblings.
-#define NODE_COLAPSE
+// #define NODE_COLAPSE
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
 #if MODEL == DAVID

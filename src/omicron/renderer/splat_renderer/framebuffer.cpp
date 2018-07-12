@@ -309,8 +309,8 @@ Framebuffer::set_multisample(bool enable)
         }
 
 #ifndef NDEBUG
-		util::OglUtils::checkFramebuffer();
-        util::OglUtils::checkOglErrors();
+		renderer::OglUtils::checkFramebuffer();
+        renderer::OglUtils::checkOglErrors();
 #endif
         unbind();
     }
@@ -381,8 +381,8 @@ Framebuffer::reshape(GLint width, GLint height)
     }
 
 #ifndef NDEBUG
-	util::OglUtils::checkFramebuffer();
-    util::OglUtils::checkOglErrors();
+	renderer::OglUtils::checkFramebuffer();
+    renderer::OglUtils::checkOglErrors();
 #endif
 
     unbind();
@@ -413,8 +413,8 @@ Framebuffer::initialize()
     glDrawBuffers(1, buffers);
 
 #ifndef NDEBUG
-	util::OglUtils::checkFramebuffer();
-	util::OglUtils::checkOglErrors();
+	renderer::OglUtils::checkFramebuffer();
+	renderer::OglUtils::checkOglErrors();
 #endif
 }
 

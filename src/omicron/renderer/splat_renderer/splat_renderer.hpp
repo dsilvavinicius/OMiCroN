@@ -460,7 +460,7 @@ inline void SplatRenderer::render_frame()
 			}
 
 			#ifndef NDEBUG
-				util::OglUtils::checkOglErrors();
+				omicron::renderer::OglUtils::checkOglErrors();
 			#endif
 			
 			#ifndef PROGRAM_ATTRIBUTE_DEBUG
@@ -471,13 +471,13 @@ inline void SplatRenderer::render_frame()
 			#endif
 
 			#ifndef NDEBUG
-				util::OglUtils::checkOglErrors();
+				omicron::renderer::OglUtils::checkOglErrors();
 			#endif
 			
 			render_pass( false );
 			
 			#ifndef NDEBUG
-				util::OglUtils::checkOglErrors();
+				omicron::renderer::OglUtils::checkOglErrors();
 			#endif
 			
 			#ifndef PROGRAM_ATTRIBUTE_DEBUG
@@ -550,7 +550,7 @@ inline void SplatRenderer::render_frame()
 	#endif
 	
 	#if defined GL_ERROR_DEBUG || !defined NDEBUG
-		util::OglUtils::checkOglErrors();
+		omicron::renderer::OglUtils::checkOglErrors();
 	#endif
 }
 

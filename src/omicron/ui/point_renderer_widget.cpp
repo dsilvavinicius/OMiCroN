@@ -18,7 +18,7 @@ m_loader( loader ),
 m_statistics( m_projThresh )
 {
 	setlocale( LC_NUMERIC, "C" );
-	
+    
 	camera->setSpeed( 0.005f );
 	m_cameraPath.initialize( "shaders/tucano/" );
 	m_cameraPath.setAnimSpeed( CAMERA_PATH_SPEED );
@@ -37,7 +37,22 @@ PointRendererWidget::~PointRendererWidget()
 void PointRendererWidget::initialize( const unsigned int& frameRate, const int& renderingTimeTolerance )
 {
 	Tucano::QtFreecameraWidget::initialize();
-	
+    
+    {
+        camera->startRotation( Vector2f( 0.f, 0.f ) );
+        camera->rotate( Vector2f( 500.f, 0.f ) );
+        
+        camera->updateViewMatrix();
+        
+        camera->setSpeed( 0.5f );
+        camera->moveBack();
+        camera->moveBack();
+        camera->moveUp();
+        camera->setSpeed( 0.005f );
+        
+        camera->updateViewMatrix();
+    }
+    
 	setFrameRate( frameRate );
 	m_renderingTimeTolerance = renderingTimeTolerance;
 	
@@ -47,7 +62,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 	#if MODEL == DAVID
 		#ifdef LAB
 			#if NO_SORT == true
-                openMesh( "/home/dsilva.vinicius/projects/datasets/david/David.oct" );
+                openMesh( "/home/dsilva.vinicius/projects/datasets/David/DavidWithFaces_sorted7.oct" );
 			#else
 				openMesh( "/home/dsilva.vinicius/projects/datasets/david/David.ply" );
 			#endif
@@ -60,7 +75,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#endif
 	#elif MODEL == ST_MATHEW
 		#ifdef LAB
-			openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/StMathew/Shallow/StMathew_lab.oct" );
+			openMesh( "/home/dsilva.vinicius/projects/datasets/StMatthew/StMathewWithFaces_sorted7.oct" );
 		#else
 			#if NO_SORT == true
 				openMesh( "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct" );
@@ -92,7 +107,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#if NO_SORT == true
 			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted7.oct" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny.ply" );
+			openMesh( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny.ply" );
 		#endif
 	#endif
 	

@@ -118,7 +118,7 @@ inline SurfelCloud::SurfelCloud(  const omicron::basic::Array< Surfel >& surfels
 	glBindVertexArray( 0 );
 	
 	#if defined GL_ERROR_DEBUG || !defined NDEBUG
-		util::OglUtils::checkOglErrors();
+		omicron::renderer::OglUtils::checkOglErrors();
 	#endif
 	
 	m_loadFuture = new future< void >(
@@ -181,7 +181,7 @@ inline void SurfelCloud::render()
 	glBindVertexArray( 0 );
 	
 	#if defined GL_ERROR_DEBUG || !defined NDEBUG
-		util::OglUtils::checkOglErrors();
+		omicron::renderer::OglUtils::checkOglErrors();
 	#endif
 }
 
@@ -219,7 +219,7 @@ inline void SurfelCloud::unmap()
 	glBindBuffer( GL_ARRAY_BUFFER, 0 );
 		
 	#if defined GL_ERROR_DEBUG || !defined NDEBUG
-		util::OglUtils::checkOglErrors();
+		omicron::renderer::OglUtils::checkOglErrors();
 	#endif
 		
 	m_bufferMap = nullptr;
