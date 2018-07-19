@@ -44,7 +44,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL ST_MATHEW
+#define MODEL DAVID
 
 // Define to indicates that the system will be run in the laboratory.
 #define LAB
@@ -91,7 +91,7 @@ enum ReconstructionAlgorithm
 #define SEGMENTS_PER_FRONT 1
 
 // Enables node colapse when leaves do not have siblings.
-// #define NODE_COLAPSE
+#define NODE_COLAPSE
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
 #if MODEL == DAVID
