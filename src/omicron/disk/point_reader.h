@@ -18,7 +18,7 @@ namespace omicron::disk
 		m_readTime( 0u )
 		{};
 		
-		/** Read all points using the callback for all read point. */
+		/** Read all points using the callback for each point. */
 		virtual void read( const function< void( const Point& ) >& onPointDone ) = 0;
 	
 		/** @returns the time needed to read points from input file (in ms). */

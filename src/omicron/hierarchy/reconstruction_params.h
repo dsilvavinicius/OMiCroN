@@ -20,6 +20,7 @@ using namespace std;
 #define HEAP_SORT_D 0
 #define PARTIAL_SORT_D 1
 #define FULL_SORT_D 2
+#define EXTERNAL_SORT_D 3
 
 // Octree construction method
 #define OMICRON 0
@@ -31,6 +32,7 @@ enum Sorting
 	HEAP_SORT = 0, // Min-heap sorting.
 	PARTIAL_SORT = 1, // std::partial_sort().
 	FULL_SORT = 2, // std::sort().
+	EXTERNAL_SORT = 3
 };
 
 enum ReconstructionAlgorithm
@@ -64,11 +66,11 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-#define NO_SORT true
-// #define NO_SORT false
+// #define NO_SORT true
+#define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
-#define SORTING PARTIAL_SORT_D
+#define SORTING EXTERNAL_SORT_D
 
 // Number of segments for partial sorting.
 #define SORTING_SEGMENTS 10
@@ -272,6 +274,7 @@ inline ostream& operator<<( ostream& out, const Sorting sorting )
 		case HEAP_SORT : out << "Heap sort"; break;
 		case PARTIAL_SORT : out << "Partial sort"; break;
 		case FULL_SORT : out << "Full sort"; break;
+        case EXTERNAL_SORT : out << "External sort"; break;
 	}
 	
 	return out;

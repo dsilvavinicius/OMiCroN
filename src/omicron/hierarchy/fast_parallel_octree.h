@@ -5,6 +5,7 @@
 #include "omicron/disk/point_sorter.h"
 #include "omicron/disk/heap_point_reader.h"
 #include "omicron/disk/partial_sort_point_reader.h"
+#include "omicron/disk/external_sort_reader.h"
 #include "omicron/hierarchy/o1_octree_node.h"
 #include "omicron/hierarchy/hierarchy_creator.h"
 #include "omicron/hierarchy/front.h"
@@ -130,6 +131,11 @@ namespace omicron::hierarchy
 			PartialSortPointReader< Morton >* reader = new PartialSortPointReader< Morton >( plyFilename, maxLvl );
 		#elif SORTING == FULL_SORT_D
 			SortPointReader< Morton >* reader = new SortPointReader< Morton >( plyFilename, maxLvl );
+        #elif SORTING == EXTERNAL_SORT_D
+            // DEBUG
+            Dim dim( Vec3( 0.f, 0.f, 0.f ), Vec3( 0.39949041604995728f, 0.23220483958721161f, 1.f ), 7 );
+            //
+			ExternalSortReader< Morton >* reader = new ExternalSortReader< Morton >( plyFilename, dim );
 		#endif
 		
 		m_readerInTime = reader->inputTime();

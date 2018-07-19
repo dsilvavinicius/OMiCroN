@@ -28,6 +28,7 @@ find_package( GLEW REQUIRED )
 find_package( Eigen3 REQUIRED NO_MODULE )
 find_package( Freetype REQUIRED )
 find_package( Jsoncpp REQUIRED )
+find_package( STXXL REQUIRED )
 
 find_package( Qt5Core REQUIRED )
 find_package( Qt5Gui REQUIRED )
@@ -127,6 +128,7 @@ target_include_directories(Point_Based_Renderer_Lib
 		
 		${EIGEN3_INCLUDE_DIRS}
 		${FREETYPE_INCLUDE_DIRS}
+		${STXXL_INCLUDE_DIR}
 )
     
 # Link all necessary libs.
@@ -141,6 +143,7 @@ target_link_libraries (Point_Based_Renderer_Lib
 	${FREETYPE_LIBRARIES}
 	Tbb::Tbb
 	${JSONCPP_LIBRARIES}
+	${STXXL_LIBRARY}
 	RPly
 	shader)
 

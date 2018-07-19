@@ -114,6 +114,17 @@ namespace omicron::hierarchy
 			return m_nodeLvl;
 		}
 		
+		/** The point with minimal morton code is at the origin. */
+        Point min_value() const
+        {
+            return Point( Vec3( 0.f, 0.f, 0.f ), m_origin );
+        }
+        
+        Point max_value() const
+        {
+            return Point( Vec3( 0.f, 0.f, 0.f ), m_origin + m_size );
+        }
+		
 		friend ostream& operator<<( ostream& out, const OctreeDimensions& dim )
 		{
 			out << "origin: " << dim.m_origin << endl
