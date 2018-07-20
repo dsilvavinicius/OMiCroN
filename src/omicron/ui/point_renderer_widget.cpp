@@ -64,7 +64,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 			#if NO_SORT == true
                 openMesh( "/home/dsilva.vinicius/projects/datasets/David/DavidWithFaces_sorted7.oct" );
 			#else
-				openMesh( "/home/dsilva.vinicius/projects/datasets/David/DavidWithFaces.ply" );
+				openMesh( "/home/dsilva.vinicius/projects/datasets/David/DavidWithFaces_sorted7.ply" );
 			#endif
 		#else
 			#if NO_SORT == true

@@ -60,7 +60,7 @@ namespace omicron::disk
         
         auto start = Profiler::now( "STXXL::runs_merger init." );
         
-        RunsMerger runsMerger( m_runsCreator.result(), m_comp, 10ul * 1024ul * 1024ul * 1024ul );
+        RunsMerger runsMerger( m_runsCreator.result(), m_comp, 5ul * 1024ul * 1024ul * 1024ul );
         
         m_initTime = Profiler::elapsedTime( start, "STXXL::runs_merger init." );
         
