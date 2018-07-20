@@ -4,6 +4,7 @@
 #include <stxxl/stream>
 #include "omicron/util/profiler.h"
 #include "omicron/disk/ply_point_reader.h"
+#include "omicron/hierarchy/octree_dim_calculator.h"
 
 namespace omicron::disk
 {
@@ -20,33 +21,54 @@ namespace omicron::disk
     {
     public:
         using OctreeDim = OctreeDimensions< Morton >;
+        using OctreeDimCalc = OctreeDimCalculator< Morton >;
+        using DimOriginScale = hierarchy::DimOriginScale< Morton >;
         
         /** Ctor. Initializes the sort and performs the input phase. */
-        ExternalSortReader( const string& inputFilename, const OctreeDim& comp );
+        ExternalSortReader( const string& inputFilename, uint maxLevel );
         
         /** Performs the second phase, calling onPointSorted for each point merged. */
         void read( const function< void( const Point& ) >& onPointSorted ) override;
     
-        const OctreeDim& dimensions() const { return m_comp; }
+        const OctreeDim& dimensions() const { return *m_comp; }
+    
     private:
         using RunsCreator = runs_creator< use_push< Point >, OctreeDim >;
         
-        RunsCreator m_runsCreator;
-        OctreeDim m_comp;
+        unique_ptr< RunsCreator > m_runsCreator;
+        unique_ptr< OctreeDim > m_comp;
     };
     
     template< typename Morton >
-    ExternalSortReader< Morton >::ExternalSortReader( const string& inputFilename, const OctreeDim& comp )
-    : m_comp( comp ),
-    m_runsCreator( comp, 10ul * 1024ul * 1024ul * 1024ul )
+    ExternalSortReader< Morton >::ExternalSortReader( const string& inputFilename, uint maxLevel )
     {
+        // Calculates the octree dimensions.
+        OctreeDimCalc dimCalc( []( const Point& p ){} );
+        
+        {
+            PlyPointReader dimCalcReader( inputFilename );
+            dimCalcReader.read(
+                [ & ]( const Point& p )
+                {
+                    dimCalc.insertPoint( p );
+                }
+            );
+        }
+        
+        DimOriginScale dimOriginScale = dimCalc.dimensions( maxLevel );
+        
+        m_comp = unique_ptr< OctreeDim >( new OctreeDim( dimOriginScale.dimensions() ) );
+        
         auto start = Profiler::now( "STXXL::runs_creator." );
+        
+        m_runsCreator = unique_ptr< RunsCreator >( new RunsCreator( *m_comp, 10ul * 1024ul * 1024ul * 1024ul ) );
         
         PlyPointReader reader( inputFilename );
         reader.read(
             [ & ]( const Point& p )
             {
-                m_runsCreator.push( p );
+                Point copy( p );
+                m_runsCreator->push( dimOriginScale.scale( copy ) );
             }
         );
         
@@ -60,7 +82,7 @@ namespace omicron::disk
         
         auto start = Profiler::now( "STXXL::runs_merger init." );
         
-        RunsMerger runsMerger( m_runsCreator.result(), m_comp, 5ul * 1024ul * 1024ul * 1024ul );
+        RunsMerger runsMerger( m_runsCreator->result(), *m_comp, 5ul * 1024ul * 1024ul * 1024ul );
         
         m_initTime = Profiler::elapsedTime( start, "STXXL::runs_merger init." );
         

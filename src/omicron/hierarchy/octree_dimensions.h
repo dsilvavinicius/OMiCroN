@@ -9,6 +9,7 @@ namespace omicron::hierarchy
 {
 	/** Contains dimensional info of an octree and utilities for Point and MortonCode octree-dimension-dependent info
 	 * acquisition and comparison. */
+    // TODO m_origin is always the zero vector in current uses. Thus it should be removed. However, it could also be used to store the origin of the dataset before scale.
 	template< typename M >
 	class OctreeDimensions
 	{

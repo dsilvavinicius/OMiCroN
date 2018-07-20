@@ -132,10 +132,7 @@ namespace omicron::hierarchy
 		#elif SORTING == FULL_SORT_D
 			SortPointReader< Morton >* reader = new SortPointReader< Morton >( plyFilename, maxLvl );
         #elif SORTING == EXTERNAL_SORT_D
-            // DEBUG
-            Dim dim( Vec3( 0.f, 0.f, 0.f ), Vec3( 0.39949041604995728f, 0.23220483958721161f, 1.f ), 7 );
-            //
-			ExternalSortReader< Morton >* reader = new ExternalSortReader< Morton >( plyFilename, dim );
+			ExternalSortReader< Morton >* reader = new ExternalSortReader< Morton >( plyFilename, maxLvl );
 		#endif
 		
 		m_readerInTime = reader->inputTime();

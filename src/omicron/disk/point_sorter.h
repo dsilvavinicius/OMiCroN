@@ -6,7 +6,7 @@
 #include "omicron/basic/morton_code.h"
 #include "omicron/disk/ply_point_reader.h"
 #include "omicron/disk/ply_point_writter.h"
-#include "omicron/hierarchy/octree_dimensions.h"
+#include "omicron/hierarchy/octree_dim_calculator.h"
 #include "omicron/util/profiler.h"
 #include "omicron/memory/global_malloc.h"
 #include "omicron/disk/point_set.h"
@@ -27,6 +27,7 @@ namespace omicron::disk
 		using Reader = PlyPointReader;
 		using Writter = PlyPointWritter;
 		using OctreeDim = OctreeDimensions< M >;
+        using DimOriginScale = hierarchy::DimOriginScale< M >;
 		using SorterPointSet = PointSet< M >;
 		
 		PointSorter( const string& input, uint leafLvl );
@@ -49,6 +50,8 @@ namespace omicron::disk
 		uint outputTime() const { return m_outputTime; }
 		
 	private:
+        using OctreeDimCalc = OctreeDimCalculator< M >;
+        
 		M calcMorton( const Point& point );
 		void write( const Point& p );
 		
@@ -73,26 +76,22 @@ namespace omicron::disk
 		
 		m_points = typename SorterPointSet::PointDequePtr( new typename SorterPointSet::PointDeque( m_reader.getNumPoints() ) );
 		
-		Float negInf = -numeric_limits< Float >::max();
-		Float posInf = numeric_limits< Float >::max();
-		Vec3 origin = Vec3( posInf, posInf, posInf );
-		Vec3 maxCoords( negInf, negInf, negInf );
-		
+        long i = 0;
+        OctreeDimCalc dimCalc(
+            [ & ]( const Point& p ) 
+            {
+                ( *m_points )[ i++ ] = p;
+            }
+        );
+        
 		cout << "Reading " << m_points->size() << " points." << endl << endl;
 		auto start = Profiler::now();
 		
-		long i = 0;
 		m_reader.read(
 			[ & ]( const Point& p )
-			{
-				( *m_points )[ i++ ] = p;
-				Vec3 pos = p.getPos();
-				for( int i = 0; i < 3; ++i )
-				{
-					origin[ i ] = std::min( origin[ i ], pos[ i ] );
-					maxCoords[ i ] = std::max( maxCoords[ i ], pos[ i ] );
-				}
-			}
+            {
+                dimCalc.insertPoint( p );
+            }
 		);
 		
 		m_inputTime = Profiler::elapsedTime( start );
@@ -101,21 +100,17 @@ namespace omicron::disk
 		
 		start = Profiler::now();
 		
-		Vec3 octreeSize = maxCoords - origin;
-		
-		// Normalizing model.
-		float scale = 1.f / std::max( std::max( octreeSize.x(), octreeSize.y() ), octreeSize.z() );
+		DimOriginScale dimOriginScale = dimCalc.dimensions( leafLvl );
 		
 		#pragma omp parallel for
 		for( ulong i = 0; i < m_points->size(); ++i )
 		{
-			Vec3& pos = ( *m_points )[ i ].getPos();
-			pos = ( pos - origin ) * scale;
+            dimOriginScale.scale( ( *m_points )[ i ] );
 		}
 		
-		m_comp.init( Vec3( 0.f, 0.f, 0.f ), octreeSize * scale, leafLvl );
+		m_comp = dimOriginScale.dimensions();
 		
-		cout << "Normalizing time (ms): " << Profiler::elapsedTime( start ) << endl << endl << "Scale: " << scale << endl << "Octree dim: " <<  m_comp << endl;
+		cout << "Normalizing time (ms): " << Profiler::elapsedTime( start ) << endl << endl << "Scale: " << dimOriginScale.scale() << endl << "Octree dim: " <<  m_comp << endl;
 	}
 	
 	template< typename M >
