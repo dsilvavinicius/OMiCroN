@@ -60,7 +60,7 @@ enum ReconstructionAlgorithm
 #define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
 
-#define RAM_QUOTA 1024ul * 1024ul * 1024ul * 7ul
+#define RAM_QUOTA 6ul * 1024ul * 1024ul * 1024ul
 
 // Activates rendering in parallel with hierarchy creation.
 #define HIERARCHY_CREATION_RENDERING
