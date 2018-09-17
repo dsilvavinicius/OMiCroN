@@ -1,0 +1,104 @@
+Dataset: StMathewWithFaces_sorted7
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.2
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 0.0003, 0.0002 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+2
+Level 4 : 
+2.5
+2.5
+Level 5 : 
+2.2
+2.2
+Level 6 : 
+2.6
+2.3
+Level 7 : 
+2
+2
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 27ms
+Render queue time: 0ms
+CPU overhead: 27ms
+Rendered points: 847168
+Front insertion delay: 0ms
+Front size: 823
+Front segments: 1
+Front segment size: 823
+
+=== AVERAGE STATS === 
+Traversal time: 29.8691ms
+Render queue time: 0.0116731ms
+CPU overhead: 29.8808ms
+Rendered points: 604395
+Front insertion delay: 63.2762ms
+Front size: 540.993
+Front segments: 1
+Front segment size: 549.089
+0% completed at Fri Jul 13 08:31:44 2018
+
+10% completed at Fri Jul 13 08:31:54 2018
+
+20% completed at Fri Jul 13 08:32:03 2018
+
+30% completed at Fri Jul 13 08:32:13 2018
+
+40% completed at Fri Jul 13 08:32:21 2018
+
+50% completed at Fri Jul 13 08:32:30 2018
+
+60% completed at Fri Jul 13 08:32:38 2018
+
+70% completed at Fri Jul 13 08:32:46 2018
+
+80% completed at Fri Jul 13 08:32:54 2018
+
+90% completed at Fri Jul 13 08:33:02 2018
+
+100% completed at Fri Jul 13 08:33:12 2018
+
+=== GPU STATS === 
+GPU Overhead: 24
+Average GPU Overhead: 31.2529
+No sort? true
+Sorting flag: Partial sort
+Sorting chunks: 10
+Hierarchy construction method: 0
+Time for reader input: 0ms
+Time for reader init: 0ms
+Time for reader reading: 87952ms
+Time to create hierarchy: 87969ms
+Dynamic memory allocated: 8421161600 bytes
+Number of nodes in hierarchy: 54788
+Number of splats in hierarchy: 233714559
+Number of substituted placeholders: 23711
+
