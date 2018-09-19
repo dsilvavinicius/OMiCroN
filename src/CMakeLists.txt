@@ -70,7 +70,7 @@ add_library( Tbb::Tbb UNKNOWN IMPORTED )
 set_target_properties( Tbb::Tbb
 	PROPERTIES
 		INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include/tbb
-		IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/tbb/libtbbmalloc.so
+		IMPORTED_LOCATION ${CMAKE_CURRENT_SOURCE_DIR}/lib/tbb/libtbbmalloc.so.2
 )
 
 # Creates the renderer library.
