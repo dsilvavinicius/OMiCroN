@@ -1,3 +1,6 @@
 {
-    "cmake.buildDirectory": "${workspaceRoot}/../bin"
+    "cmake.buildDirectory": "${workspaceRoot}/../bin",
+    "C_Cpp.intelliSenseEngineFallback": "Disabled",
+    "C_Cpp.errorSquiggles": "Disabled",
+    "C_Cpp.configurationWarnings": "Disabled"
 }
