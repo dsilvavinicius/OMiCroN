@@ -2,6 +2,7 @@
 #define O1_OCTREE_NODE_H
 
 #include <memory>
+#include <stxxl/vector>
 #include "tucano/tucano.hpp"
 #include "omicron/basic/array.h"
 #include "omicron/renderer/splat_renderer/surfel_cloud.h"
@@ -18,18 +19,14 @@ namespace omicron::hierarchy
     using namespace Tucano;
 //     using namespace util;
     
-	/** Octree node that provide all operations in O(1) time. Expects that sibling groups are allocated continuously in
-	 * memory. Each node is responsable only for children resources.
-	 * @param Contents is the element type of the array member.
-	 * @param ContentsAlloc is the allocator used for Contents type. The default allocator provides multithreaded
-	 * environment support. */
-	template< typename Contents, typename ContentsAlloc = TbbAllocator< Contents > >
+	template< typename Morton >
 	class O1OctreeNode
 	{
 	public:
-		using ContentsArray = Array< Contents, ContentsAlloc >;
-		using NodeAlloc = typename ContentsAlloc:: template rebind< O1OctreeNode >::other;
+		using NodeAlloc = TbbAllocator< O1OctreeNode >;
 		using NodeArray = Array< O1OctreeNode, NodeAlloc >;
+		using ExtPointVector = stxxl::VECTOR_GENERATOR< Point >;
+		using ExtIndexVector = stxxl::VECTOR_GENERATOR< ulong >;
 		
 		/** Initializes and empty unusable node. */
 		O1OctreeNode()
@@ -301,8 +298,14 @@ namespace omicron::hierarchy
 		static O1OctreeNode deserialize( byte* serialization );
 		
 	private:
+		Morton m_morton;
+
 		SurfelCloud* m_cloud;
 		
+		static shared_ptr< ExtPointVector > m_points;
+
+		static shared_ptr< ExtIndexVector > m_indices;
+
 		ContentsArray m_contents;
 		
 		// CACHE INVARIANT. Parent pointer. Is always current after octree bottom-up creation, since octree cache release
