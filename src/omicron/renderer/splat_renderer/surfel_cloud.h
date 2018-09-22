@@ -9,6 +9,7 @@
 #include "omicron/util/stack_trace.h"
 #include "omicron/hierarchy/hierarchy_creation_log.h"
 #include "omicron/memory/global_malloc.h"
+#include "omicron/hierarchy/external_vector_types.h"
 
 // #define DEBUG
 // #define CTOR_DEBUG
@@ -36,7 +37,7 @@ public:
 	
 	/** Ctor which maps a VBO GPU memory for the cloud and issue a async loading operation. The loading operation status
 	 * can be evaluated with loadStatus(). */
-	SurfelCloud( const omicron::basic::Array< Surfel >& surfels );
+	SurfelCloud( const ExtSurfelVector& surfels, const ExtIndexVector& indices, const ulong offset, const ulong size );
 	
 	SurfelCloud( const SurfelCloud& other ) = delete;
 	SurfelCloud( SurfelCloud&& other ) = delete;
@@ -60,7 +61,7 @@ public:
 	uint numPoints() const { return m_numPts; }
 	
 	friend ostream& operator<<( ostream& out, const SurfelCloud& cloud );
-	
+
 private:
 	void unmap();
 	
@@ -84,10 +85,10 @@ inline void SurfelCloud::operator delete( void* p )
 	TbbAllocator< SurfelCloud >().deallocate( static_cast< SurfelCloud* >( p ) );
 }
 
-inline SurfelCloud::SurfelCloud(  const omicron::basic::Array< Surfel >& surfels )
-: m_numPts( surfels.size() )
+inline SurfelCloud::SurfelCloud( const ExtSurfelVector& surfels, const ExtIndexVector& indices, const ulong offset, const ulong size )
+: m_numPts( size )
 {
-	assert( surfels.size() > 0 && "SurfelCloud size is expected to be greater than 0." );
+	assert( size > 0 && "SurfelCloud size is expected to be greater than 0." );
 	
 	GpuAllocStatistics::notifyAlloc( m_numPts * GpuAllocStatistics::pointSize() );
 	
@@ -125,7 +126,13 @@ inline SurfelCloud::SurfelCloud(  const omicron::basic::Array< Surfel >& surfels
 		async( launch::async,
 			[ & ]
 			{
-				memcpy( m_bufferMap, surfels.data(), sizeof( Surfel ) * m_numPts );
+				auto bufferIter = m_bufferMap;
+
+				for( int i = 0; i < m_numPts; ++i )
+				{
+					ulong index = indices[ offset + i ];
+					bufferIter++ = surfels[ index ];
+				}
 			}
 		)
 	);

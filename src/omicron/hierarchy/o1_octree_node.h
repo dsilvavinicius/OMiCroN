@@ -8,6 +8,7 @@
 #include "omicron/hierarchy/hierarchy_creation_log.h"
 #include "omicron/util/stack_trace.h"
 #include "omicron/memory/global_malloc.h"
+#include "omicron/hierarchy/external_vector_types.h"
 
 // #define CTOR_DEBUG
 // #define LOADING_DEBUG
@@ -26,23 +27,21 @@ namespace omicron::hierarchy
 		using NodeAlloc = TbbAllocator< O1OctreeNode >;
 		using NodeVector = std::vector< O1OctreeNode, NodeAlloc >;
 		using IndexVector = std::vector< ulong, TbbAllocator< ulong > >;
-		using ExtPointVector = stxxl::VECTOR_GENERATOR< Point >;
-		using ExtIndexVector = stxxl::VECTOR_GENERATOR< ulong >;
 		
 		/** Initializes and empty unusable node. */
 		O1OctreeNode();
 		
 		/** Ctor to build a leaf O1OctreeNode totally init except for the gpu cloud. */
-		O1OctreeNode( ContentsArray&& contents, O1OctreeNode* parent );
+		O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent );
 		
 		/** Ctor to build an inner O1OctreeNode totally init except for the gpu cloud. */
-		O1OctreeNode( ContentsArray&& contents, O1OctreeNode* parent, NodeVector&& children );
+		O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent, NodeVector&& children );
 		
 		/** Ctor to build an O1OctreeNode when child and parent info are not known yet. */
-		O1OctreeNode( const ContentsArray& contents, const bool isLeaf );
+		// O1OctreeNode( const ContentsArray& contents, const bool isLeaf );
 		
 		/** Ctor to build an O1OctreeNode when child and parent info are not known yet. */
-		O1OctreeNode( ContentsArray&& contents, const bool isLeaf );
+		// O1OctreeNode( ContentsArray&& contents, const bool isLeaf );
 		
 		O1OctreeNode( const O1OctreeNode& other ) = delete;
 		
@@ -57,16 +56,18 @@ namespace omicron::hierarchy
 		O1OctreeNode& operator=( O1OctreeNode&& other );
 		
 		/** Ctor to init from stream. Parent data */
-		O1OctreeNode( ifstream& input );
+		// O1OctreeNode( ifstream& input );
 
 		void* operator new( size_t size );
 		void* operator new[]( size_t size );
 		void operator delete( void* p );
 		void operator delete[]( void* p );
 		
-		const ContentsArray& getContents() const { return m_contents; }
+		const Morton& getMorton() const { return m_morton; }
+
+		/* const ContentsArray& getContents() const { return m_contents; }
 		
-		ContentsArray& getContents() { return m_contents; }
+		ContentsArray& getContents() { return m_contents; } */
 		
 		/** Gets a pointer for the parent of this node. */
 		O1OctreeNode* parent() const { return m_parent; }
@@ -83,23 +84,23 @@ namespace omicron::hierarchy
 		
 		bool isLeaf() const { return m_isLeaf; }
 		
-		void setContents( ContentsArray&& contents );
+		// void setContents( ContentsArray&& contents );
 		
 		/** Sets parent pointer. */
 		void setParent( O1OctreeNode* parent ) { m_parent = parent; }
 		
 		/** Sets the array of children. */
-		void setChildren( const NodeVector& children );
+		/* void setChildren( const NodeVector& children );
 		
-		void setChildren( NodeVector&& children );
+		void setChildren( NodeVector&& children ); */
 		
 		/** Release the child nodes. The node is not turned into leaf. Useful to release memory momentarily. */
-		void releaseChildren() { m_children.clear(); }
+		// void releaseChildren() { m_children.clear(); }
 		
 		/** Transforms the node into a leaf, releasing all child nodes. */
-		void turnLeaf();
+		// void turnLeaf();
 		
-		bool empty() const { return m_contents.size() == 0; }
+		bool empty() const { return m_indexSize == 0; }
 		
 		const SurfelCloud& cloud() const { return *m_cloud; }
 		
@@ -120,22 +121,22 @@ namespace omicron::hierarchy
 		string toString() const;
 		
 		// Binary persistence. Structure: | leaf flag | point data | children data |
-		void persist( ostream& out ) const;
+		// void persist( ostream& out ) const;
 		
 		friend ostream& operator<<( ostream& out, const O1OctreeNode& node );
 		
-		size_t serialize( byte** serialization ) const;
+		// size_t serialize( byte** serialization ) const;
 		
-		static void pushPoint( const Point& p ) { m_points.push_back( p ); }
+		static void pushPoint( const Point& p ) { m_surfels.push_back( p ); }
 
-		static O1OctreeNode deserialize( byte* serialization );
+		// static O1OctreeNode deserialize( byte* serialization );
 
 	private:
 		Morton m_morton;
 
 		SurfelCloud* m_cloud;
 		
-		static ExtPointVector m_points;
+		static ExtPointVector m_surfels;
 
 		static ExtIndexVector m_indices;
 		
@@ -169,6 +170,7 @@ namespace omicron::hierarchy
 	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent )
 	: m_morton( morton ),
 	m_indexOffset( indexOffset ),
+	m_indexSize( indices.size() ),
 	m_children(),
 	m_parent( parent ),
 	m_cloud( nullptr ),
@@ -181,76 +183,66 @@ namespace omicron::hierarchy
 	}
 		
 	template< typename Morton >
-	inline O1OctreeNode< Morton >::O1OctreeNode( ContentsArray&& contents, O1OctreeNode* parent, NodeVector&& children )
-	: m_contents( std::move( contents ) ),
+	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent, NodeVector&& children )
+	: O1Octree( morton, indexOffset, indices, parent ),
 	m_children( std::move( children ) ),
-	m_parent( parent ),
-	m_cloud( nullptr ),
 	m_isLeaf( false )
 	{}
 		
-	template< typename Morton >
+	/* template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
 	: m_contents( contents ),
 	m_isLeaf( isLeaf ),
 	m_parent( nullptr ),
 	m_children(),
 	m_cloud( nullptr )
-	{}
+	{} */
 		
-	template< typename Morton >
+	/* template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( ContentsArray&& contents, const bool isLeaf )
 	: m_contents( std::move( contents ) ),
 	m_isLeaf( isLeaf ),
 	m_parent( nullptr ),
 	m_children(),
 	m_cloud( nullptr )
-	{}
+	{} */
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( O1OctreeNode&& other )
-	: m_contents( std::move( other.m_contents ) ),
+	: m_indexOffset( other.m_indexOffset ),
+	m_indexSize( other.m_indexSize ),
 	m_children( std::move( other.m_children ) ),
 	m_cloud( other.m_cloud ),
 	m_parent( other.m_parent ),
 	m_isLeaf( other.m_isLeaf )
 	{
+		other.m_morton = Morton();
+		other.m_indexOffset = 0;
+		other.m_indexSize = 0;
 		other.m_parent = nullptr;
 		other.m_cloud = nullptr;
-		
-		#ifdef CTOR_DEBUG
-		{
-			stringstream ss; ss << "Move ctor" << endl << *this << endl << "Moved: " << endl << other << endl
-				<< "Stack: " << StackTrace::toString() << endl << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
 	}
 		
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode& operator=( O1OctreeNode&& other )
 	{
-		m_contents = std::move( other.m_contents );
+		m_indexOffset = other.m_indexOffset;
+		m_indexSize = other.m_indexSize;
 		m_children = std::move( other.m_children );
 		m_cloud = other.m_cloud;
 		m_parent = other.m_parent;
 		m_isLeaf = other.m_isLeaf;
 		
+		other.m_morton = Morton();
+		other.m_indexOffset = 0;
+		other.m_indexSize = 0;
 		other.m_parent = nullptr;
 		other.m_cloud = nullptr;
-		
-		#ifdef CTOR_DEBUG
-		{
-			stringstream ss; ss << "Move op" << endl << *this << endl << "Moved: " << endl << other << endl
-				<< "Stack: " << StackTrace::toString() << endl << endl;;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-		}
-		#endif
 		
 		return *this;
 	}
 	
-	template< typename Morton >
+	/* template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( ifstream& input )
 	: m_cloud( nullptr ),
 	m_parent( nullptr )
@@ -263,7 +255,7 @@ namespace omicron::hierarchy
 		{
 			child.setParent( this );
 		}
-	}
+	} */
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::~O1OctreeNode()
@@ -300,7 +292,7 @@ namespace omicron::hierarchy
 		NodeAlloc().deallocate( static_cast< typename NodeAlloc::pointer >( p ), 2 );
 	}
 	
-	template< typename Morton >
+	/* template< typename Morton >
 	inline void O1OctreeNode< Morton >::setContents( ContentsArray&& contents )
 	{
 		m_contents.clear();
@@ -326,14 +318,14 @@ namespace omicron::hierarchy
 	{
 		m_isLeaf = true;
 		releaseChildren();
-	}
+	} */
 
 	template< typename Morton >
 	inline void O1OctreeNode< Morton >::loadInGpu()
 	{
-		if( m_cloud == nullptr && GpuAllocStatistics::hasMemoryFor( m_contents ) )
+		if( m_cloud == nullptr && GpuAllocStatistics::hasMemoryFor( m_indexSize ) )
 		{
-			m_cloud = new SurfelCloud( m_contents );
+			m_cloud = new SurfelCloud( m_surfels, m_indices, m_indexOffset, m_indexSize );
 			
 			#ifdef LOADING_DEBUG
 			{
@@ -387,8 +379,7 @@ namespace omicron::hierarchy
 		stringstream ss;
 		ss
 			<< "Addr: " << this << endl
-			<< "Points: " << m_contents.size() << endl
-			<< "First point: " << m_contents[ 0 ] << endl
+			<< "Points: " << m_indexSize.size() << endl
 			<< "Parent: " << m_parent << endl
 			<< "Children: " << m_children.size() << endl
 			<< "Is leaf? " << m_isLeaf << endl
@@ -400,18 +391,18 @@ namespace omicron::hierarchy
 	}
 	
 	// Binary persistence. Structure: | leaf flag | point data | children data |
-	template< typename Morton >
+	/* template< typename Morton >
 	inline void O1OctreeNode< Morton >::persist( ostream& out ) const
 	{
 		out.write( reinterpret_cast< const char* >( &m_isLeaf ), sizeof( bool ) );
 		m_contents.persist( out );
 		m_children.persist( out );
-	}
+	} */
 
 	template< typename Morton >
 	pair< uint, uint > O1OctreeNode< Morton >::subtreeStatistics() const
 	{
-		pair< uint, uint > subtreeStats( 1u, m_contents.size() );
+		pair< uint, uint > subtreeStats( 1u, m_indexSize );
 		childrenStatistics( *this, subtreeStats );
 		
 		return subtreeStats;
@@ -424,12 +415,12 @@ namespace omicron::hierarchy
 		
 		for( const O1OctreeNode& child : node.m_children )
 		{
-			stats.second += child.m_contents.size();
+			stats.second += child.m_indexSize;
 			childrenStatistics( child, stats );
 		}
 	}
 	
-	template< typename Morton >
+	/* template< typename Morton >
 	inline size_t O1OctreeNode< Morton >::serialize( byte** serialization ) const
 	{
 		byte* content;
@@ -447,9 +438,9 @@ namespace omicron::hierarchy
 		Serializer::dispose( content );
 		
 		return nodeSize;
-	}
+	} */
 
-	template< typename Morton >
+	/* template< typename Morton >
 	inline O1OctreeNode< Morton > O1OctreeNode< Morton >
 	::deserialize( byte* serialization )
 	{
@@ -462,7 +453,7 @@ namespace omicron::hierarchy
 		
 		auto node = O1OctreeNode< Contents, ContentsAlloc >( contents, flag );
 		return node;
-	}
+	} */
 
 	template< typename Morton >
 	ostream& operator<<( ostream& out, const O1OctreeNode< Morton >& node )

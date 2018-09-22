@@ -33,9 +33,9 @@ namespace omicron::hierarchy
 			return sizeof( Surfel );
 		}
 		
-		static bool hasMemoryFor( const Array< Surfel >& points )
+		static bool hasMemoryFor( const uint nPoints )
 		{
-			ulong neededGpuMem = pointSize() * points.size();
+			ulong neededGpuMem = pointSize() * nPoints;
 			return totalAllocated() + neededGpuMem < m_totalGpuMem;
 		}
 		
