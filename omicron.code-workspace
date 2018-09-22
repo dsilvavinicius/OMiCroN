@@ -5,6 +5,9 @@
 		}
 	],
 	"settings": {
-		"cmake.buildDirectory": "${workspaceRoot}/../bin"
+		"cmake.buildDirectory": "${workspaceRoot}/../bin",
+		"files.associations": {
+			"vector": "cpp"
+		}
 	}
 }
