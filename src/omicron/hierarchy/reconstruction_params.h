@@ -92,16 +92,9 @@ enum ReconstructionAlgorithm
 // #define SEGMENTS_PER_FRONT 10
 #define SEGMENTS_PER_FRONT 1
 
-// Enables node colapse when leaves do not have siblings.
-#define NODE_COLAPSE
-
 // Number of placeholders expected to be substituted in the hierarchy creation.
 #if MODEL == DAVID
-	#ifdef NODE_COLAPSE
-		#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19895u // David + leaf collapse
-	#else
-		#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u // David + no leaf collapse
-	#endif
+	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u // David + no leaf collapse
 #elif MODEL == ATLAS
 	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
 #elif MODEL == ST_MATHEW || MODEL == BUNNY || MODEL == DUOMO

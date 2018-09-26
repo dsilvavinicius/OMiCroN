@@ -147,13 +147,6 @@ namespace omicron::hierarchy
 				<< "Projection threshold: " << cumulusStats.m_projThresh << endl << endl
 				<< "Hierarchy depth: " << cumulusStats.m_hierarchyDepth << endl << endl
 				<< "Parent point ratio: " << PARENT_POINTS_RATIO_VALUE << endl << endl
-				<< "Leaf collapse: " <<
-				#ifdef NODE_COLAPSE
-					"true"
-				#else
-					"false"
-				#endif
-				<< endl << endl
 				<< "Leaf tangent sizes: " << endl << "{ " << LEAF_SURFEL_TANGENT_SIZE_X
 				<< ", " << LEAF_SURFEL_TANGENT_SIZE_Y << " }" << endl << endl
 				<< "=== Tangent multipliers === " << endl << "Level 1 : " << endl << ReconstructionParams::calcMultipliers( 1 ) << endl

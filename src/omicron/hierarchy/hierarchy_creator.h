@@ -10,7 +10,6 @@
 #include "omicron/hierarchy/o1_octree_node.h"
 #include "omicron/hierarchy/octree_dimensions.h"
 #include "omicron/hierarchy/front.h"
-// #include "SQLiteManager.h"
 #include "omicron/hierarchy/hierarchy_creation_log.h"
 #include "omicron/memory/global_malloc.h"
 #include "omicron/hierarchy/reconstruction_params.h"
@@ -34,16 +33,14 @@ namespace omicron::hierarchy
 	class HierarchyCreator
 	{
 	public:
-		using PointArray = Array< Surfel >;
-		using PointVector = vector< Surfel, TbbAllocator< Surfel > >;
 		using Node = O1OctreeNode< Surfel >;
 		using NodeArray = Array< Node >;
+		using IndexVector = typename Node::IndexVector;
 		
 		using OctreeDim = OctreeDimensions< Morton >;
 		using Front = hierarchy::Front< Morton >;
 		using Reader = PointReader;
 		using ReaderPtr = unique_ptr< PointReader >;
-		//using Sql = SQLiteManager< Point, Morton, Node >;
 		
 		/** List of nodes that can be processed parallel by one thread. */
 		using NodeList = list< Node, ManagedAllocator< Node > >;
@@ -61,7 +58,7 @@ namespace omicron::hierarchy
 							#ifdef HIERARCHY_CREATION_RENDERING
 								Front& front,
 							#endif
-							ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
+							ulong expectedLoadPerThread, int nThreads = 8 );
 		
 		/** Ctor.
 		 * @param sortedPlyFilename is a sorted .ply point filename.
@@ -73,7 +70,7 @@ namespace omicron::hierarchy
 							#ifdef HIERARCHY_CREATION_RENDERING
 								Front& front,
 							#endif
-							ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads = 8 );
+							ulong expectedLoadPerThread, int nThreads = 8 );
 		
 		/** Creates the hierarchy asychronously.
 		 * @return a future that will contain the hierarchy's root node and the duration of the creation in ms when done.
@@ -116,14 +113,6 @@ namespace omicron::hierarchy
 			void setParent( Node& node, const int threadIdx, typename Front::FrontListIter& frontIter ) /*const*/;
 		#endif
 		
-	#ifdef NODE_COLAPSE
-		/** Collapses (turn into leaf) a node if it has only one child. */
-		void collapse( Node& node ) const;
-		
-		/** If needed, collapses (turn into leaf) the boundary nodes of a worklist. */
-		void collapseBoundaries( NodeList& list ) const;
-	#endif
-		
 		/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 		 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
 		void removeBoundaryDuplicate( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
@@ -150,7 +139,7 @@ namespace omicron::hierarchy
 							  const bool setParentFlag ) /*const*/;
 		
 		/** Creates a point sample with 1/8 of the points in the prefix-sum map. */
-		PointArray samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
+		IndexVector samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
 		
 		/** Calculates the multipliers for splat tangent vectors when constructing a parent node.
 		 * @param octreeDim is the interpolation parameter.
@@ -159,18 +148,6 @@ namespace omicron::hierarchy
 		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
-		
-		void turnReleaseOn( mutex& releaseMutex, bool& isReleasing );
-		
-		/** Sets all data to ensure that the algorithm's release is turned off. */
-		void turnReleaseOff( mutex& releaseMutex, bool& isReleasing, condition_variable& releaseFlag,
-							 mutex& diskThreadMutex, bool& isDiskThreadStopped );
-		
-		/** Releases and persists a given sibling group.
-		 * @param siblings is the sibling group to be released and persisted if it is the case.
-		 * @param threadIdx is the index of the executing thread.
-		 * @param dim is the dimensions of the octree for the sibling lvl. */
-		//void releaseSiblings( NodeArray& siblings, const int threadIdx, const OctreeDim& dim );
 		
 		string nodeListToString( const NodeList& list, const OctreeDim& lvlDim );
 		
@@ -193,8 +170,6 @@ namespace omicron::hierarchy
 		
 		mutex m_listMutex;
 		
-		ulong m_memoryLimit;
-		
 		ulong m_expectedLoadPerThread;
 		
 		#ifdef HIERARCHY_CREATION_RENDERING
@@ -210,14 +185,12 @@ namespace omicron::hierarchy
 						#ifdef HIERARCHY_CREATION_RENDERING
 							Front& front,
 						#endif
-						ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads )
+						ulong expectedLoadPerThread, int nThreads )
 	: m_reader( std::move( reader ) ),
 	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
 	m_leafLvlDim( dim ),
 	m_nThreads( nThreads ),
-	m_expectedLoadPerThread( expectedLoadPerThread ),
-	//m_dbs( nThreads ),
-	m_memoryLimit( memoryLimit )
+	m_expectedLoadPerThread( expectedLoadPerThread )
 	
 	#ifdef HIERARCHY_CREATION_RENDERING
 		, m_front( front )
@@ -233,14 +206,12 @@ namespace omicron::hierarchy
 						#ifdef HIERARCHY_CREATION_RENDERING
 							Front& front,
 						#endif
-						ulong expectedLoadPerThread, const ulong memoryLimit, int nThreads )
+						ulong expectedLoadPerThread, int nThreads )
 	: m_reader( new PlyPointReader( sortedPlyFilename ) ), 
 	m_lvlWorkLists( dim.m_nodeLvl + 1 ),
 	m_leafLvlDim( dim ),
 	m_nThreads( nThreads ),
-	m_expectedLoadPerThread( expectedLoadPerThread ),
-	//m_dbs( nThreads ),
-	m_memoryLimit( memoryLimit )
+	m_expectedLoadPerThread( expectedLoadPerThread )
 	
 	#ifdef HIERARCHY_CREATION_RENDERING
 		, m_front( front )
@@ -280,22 +251,14 @@ namespace omicron::hierarchy
 		// SHARED. The disk access thread sets this true when it finishes reading all points in the sorted file.
 		bool leafLvlLoaded = false;
 		
-		// SHARED. Release flags.
-		mutex releaseMutex;
-		bool isReleasing = false;
-		condition_variable releaseFlag;
-		
-		// SHARED. Indicates the disk thread is stopped.
-		mutex diskThreadMutex;
-		bool isDiskThreadStopped = false;
-		
 		// Thread that loads data from sorted file or database.
 		thread diskAccessThread(
 			[ & ]()
 			{
 				OctreeDim leafLvlDimCpy = m_leafLvlDim; // Just to make sure it will be in thread local mem.
 				NodeList nodeList;
-				PointVector points;
+				ulong nPoints = 0ul;
+				IndexVector indices;
 				
 				Morton currentParent;
 				m_reader->read(
@@ -312,52 +275,36 @@ namespace omicron::hierarchy
 						
 						if( parent != currentParent )
 						{
-							if( points.size() > 0 )
+							if( indices.size() > 0 )
 							{
 								#ifdef LEAF_CREATION_DEBUG
 								{
 									stringstream ss; ss << "Creating node "
-										<< leafLvlDimCpy.calcMorton( points[ 0 ] ).getPathToRoot() << endl << endl;
+										<< Node::calcMorton( indices[ 0 ], leafLvlDimCpy ).getPathToRoot() << endl << endl;
 									HierarchyCreationLog::logDebugMsg( ss.str() );
 								}
 								#endif
 								
 								
-								nodeList.push_back( Node( std::move( points ), true ) );
+								nodeList.push_back( Node( Node::calcMorton( indices[ 0 ], leafLvlDimCpy ), nPoints, indices, true ) );
 								
-								points = PointVector();
+								indices = IndexVector();
 								
 								if( nodeList.size() == m_expectedLoadPerThread )
 								{
 									pushWork( std::move( nodeList ) );
 									nodeList = NodeList();
-									
-									bool isReleasingCpy;
-									{
-										lock_guard< mutex > lock( releaseMutex );
-										isReleasingCpy = isReleasing;
-									}
-									
-									if( isReleasingCpy )
-									{
-										{
-											lock_guard< mutex > lock( diskThreadMutex );
-											isDiskThreadStopped = true;
-										}
-							
-										unique_lock< mutex > lock( releaseMutex );
-										releaseFlag.wait( lock, [ & ] { return !isReleasing; } );
-									}
 								}
 							}
 							currentParent = parent;
 						}
-						
-						points.push_back( Surfel( p ) );
+
+						Node::pushSurfel( Surfel( p ) );
+						indices.push_back( nPoints++ );
 					}
 				);
 				
-				nodeList.push_back( Node( std::move( points ), true ) );
+				nodeList.push_back( Node( Node::calcMorton( indices[ 0 ], leafLvlDimCpy ), nPoints, indices, true ) );
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
@@ -378,15 +325,6 @@ namespace omicron::hierarchy
 			m_octreeDim = m_leafLvlDim;
 			int lvl = m_leafLvlDim.m_nodeLvl;
 			bool nextPassFlag = false; // Indicates that the current algorithm pass should end and a new one should be issued.
-			
-			if( isReleasing
-				#ifdef HIERARCHY_CREATION_RENDERING
-					&& !m_front.isReleasing()
-				#endif
-			)
-			{
-				turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
-			}
 			
 			// BEGIN HIERARCHY CONSTRUCTION LOOP.
 			while( lvl )
@@ -419,12 +357,7 @@ namespace omicron::hierarchy
 					}
 					else
 					{
-						bool isDiskThreadStoppedCpy;
-						{
-							lock_guard< mutex > lock( diskThreadMutex );
-							isDiskThreadStoppedCpy = isDiskThreadStopped;
-						}
-						if( lvl != m_leafLvlDim.m_nodeLvl || isLastPass || isDiskThreadStoppedCpy )
+						if( lvl != m_leafLvlDim.m_nodeLvl || isLastPass )
 						{
 							dispatchedThreads = workListSize;
 							increaseLvlFlag = true;
@@ -517,11 +450,7 @@ namespace omicron::hierarchy
 									}
 									#endif
 									
-									#ifdef NODE_COLAPSE
-										bool newNodeIsLeafFlag = ( lvl == m_leafLvlDim.level() ) ? true : false;
-									#else
-										bool newNodeIsLeafFlag = false;
-									#endif
+									bool newNodeIsLeafFlag = false;
 									
 									output.push_back(
 										createNodeFromSingleChild( std::move( siblings[ 0 ] ), newNodeIsLeafFlag,
@@ -624,20 +553,6 @@ namespace omicron::hierarchy
 					#endif
 					// END LOAD BALANCE.
 					
-					// BEGIN NODE RELEASE MANAGEMENT.
-					if( isReleasing )
-					{
-						if( AllocStatistics::totalAllocated() < m_memoryLimit )
-						{
-							turnReleaseOff( releaseMutex, isReleasing, releaseFlag, diskThreadMutex, isDiskThreadStopped );
-						}
-					}
-					else if( AllocStatistics::totalAllocated() > m_memoryLimit )
-					{
-						turnReleaseOn( releaseMutex, isReleasing );
-					}
-					// END NODE RELEASE MANAGEMENT.
-					
 					workListSize = updatedWorkListSize( lvl );
 					
 					size_t leafLvlWorkCount = ( lvl == m_leafLvlDim.m_nodeLvl ) ? workListSize :
@@ -663,13 +578,6 @@ namespace omicron::hierarchy
 					{
 						// The last NodeList is not collapsed and the parent of its children is not set yet.
 						NodeList& lastList = m_lvlWorkLists[ lvl - 1 ].back();
-						
-						#ifdef NODE_COLAPSE
-							if( lvl == m_leafLvlDim.level() )
-							{
-								collapseBoundaries( lastList );
-							}
-						#endif
 						
 						for( Node& child : lastList.back().child() )
 						{
@@ -826,31 +734,6 @@ namespace omicron::hierarchy
 		}
 	}
 #endif
-	
-#ifdef NODE_COLAPSE
-	template< typename Morton >
-	inline void HierarchyCreator< Morton >::collapse( Node& node ) const
-	{
-		NodeArray& children = node.child();
-		
-		if( children.size() == 1 && children[ 0 ].isLeaf() )
-		{
-			node.turnLeaf();
-		}
-	}
-	
-	/** If needed, collapse (turn into leaf) the boundary nodes of a worklist. */
-	template< typename Morton >
-	inline void HierarchyCreator< Morton >::collapseBoundaries( NodeList& list )
-	const
-	{
-		if( !list.empty() )
-		{
-			collapse( list.front() );
-			collapse( list.back() );
-		}
-	}
-#endif
 
 	/** If needed, removes the boundary duplicate node in previousProcessed, moving its children to nextProcessed.
 	 * Boundary duplicates can occur if nodes from the same sibling group are processed in different threads. */
@@ -888,7 +771,7 @@ namespace omicron::hierarchy
 					Node& child = mergedChild[ i ];
 					
 					prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
-					nPoints += child.getContents().size();
+					nPoints += child.size();
 					
 					if( previousIdx == -1 )
 					{
@@ -912,7 +795,7 @@ namespace omicron::hierarchy
 					Node& child = mergedChild[ idx ];
 					
 					prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
-					nPoints += child.getContents().size();
+					nPoints += child.size();
 					
 					if( previousIdx == -1 )
 					{
@@ -969,17 +852,6 @@ namespace omicron::hierarchy
 					}
 				}
 			}
-			
-			#ifdef NODE_COLAPSE
-// 				collapseBoundaries( previousProcessed );
-// 			
-// 				// If needed, collapse the first node of nextProcessed
-// 				NodeArray& newNextFirstNodeChild = nextFirstNode.child();
-// 				if( newNextFirstNodeChild.size() == 1 && newNextFirstNodeChild[ 0 ].isLeaf() )
-// 				{
-// 					nextFirstNode.turnLeaf();
-// 				}
-			#endif
 		}
 	}
 		
@@ -1149,7 +1021,7 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline typename HierarchyCreator< Morton >::PointArray HierarchyCreator< Morton >
+	inline typename HierarchyCreator< Morton >::IndexVector HierarchyCreator< Morton >
 	::samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const
 	{
 		int numSamplePoints = std::max( 1.f, nPoints * PARENT_POINTS_RATIO_VALUE );
