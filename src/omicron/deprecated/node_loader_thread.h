@@ -39,7 +39,7 @@ namespace omicron::hierarchy
 		
 		ulong memoryUsage();
 		
-		bool hasMemoryFor( const PointArray& points );
+		bool hasMemoryFor( const uint nPoints );
 		
 		bool isReleasing();
 		
@@ -101,10 +101,9 @@ namespace omicron::hierarchy
 		return GpuAllocStatistics::totalAllocated();
 	}
 	
-	inline bool NodeLoaderThread::hasMemoryFor( const PointArray& points )
+	inline bool NodeLoaderThread::hasMemoryFor( const uint nPoints )
 	{
-		ulong neededGpuMem = GpuAllocStatistics::pointSize() * points.size();
-		return memoryUsage() + neededGpuMem < m_totalGpuMem;
+		return GpuAllocStatistics::hasMemoryFor( nPoints );
 	}
 	
 	inline bool NodeLoaderThread::isReleasing()
@@ -160,7 +159,7 @@ namespace omicron::hierarchy
 	
 	inline void NodeLoaderThread::load( Node& node )
 	{
-		if( hasMemoryFor( node.getContents() ) )
+		if( hasMemoryFor( node.size() ) )
 		{
 			node.loadInGpu();
 		}

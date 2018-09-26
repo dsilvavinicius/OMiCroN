@@ -85,7 +85,7 @@ add_library( Point_Based_Renderer_Lib
 	
 	${UI_HDRS}
 	
-	omicron/hierarchy/node_loader_thread.h
+#	omicron/hierarchy/node_loader_thread.h
 	
 	omicron/basic/stream.cpp
 	omicron/basic/morton_code.cpp

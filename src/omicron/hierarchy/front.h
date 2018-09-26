@@ -7,7 +7,6 @@
 #include "omicron/hierarchy/octree_stats.h"
 // #include "renderers/StreamingRenderer.h"
 #include "omicron/renderer/splat_renderer/splat_renderer.hpp"
-#include "omicron/hierarchy/node_loader.h"
 #include "omicron/util/profiler.h"
 #include "omicron/util/stack_trace.h"
 #include "tucano/effects/phongshader.hpp"
@@ -65,7 +64,6 @@ namespace omicron::hierarchy
 		using NodeArray = Array< Node >;
 		using OctreeDim = OctreeDimensions< Morton >;
 		using Renderer = SplatRenderer;
-		using NodeLoader = hierarchy::NodeLoader< Point >;
 		
 		/** The node type that is used in front. */
 		typedef struct FrontNode
@@ -104,8 +102,7 @@ namespace omicron::hierarchy
 		/** Ctor.
 		 * @param dbFilename is the path to a database file which will be used to store nodes in an out-of-core approach.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
-		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nHierarchyCreationThreads,
-			   NodeLoader& loader, const ulong memoryLimit );
+		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nHierarchyCreationThreads, const ulong memoryLimit );
 		
 		/** Inserts a node into thread's buffer end so it can be push to the front later on. After this, the tracking
 		 * method will ensure that the placeholder related with this node, if any, will be substituted by it.
@@ -144,9 +141,6 @@ namespace omicron::hierarchy
 		 * the classic front initialization and ignores the bottom-up insertion capability provided in this class. Obviously,
 		 * the hierarchy should be constructed beforehand and this should be the only insertion needed into the front. */
 		void insertRoot( Node& root );
-		
-		/** Checks if the front is in release mode. */
-		bool isReleasing();
 		
 		/** Notifies that all leaf level nodes are already loaded. */
 		void notifyLeafLvlLoaded();
@@ -315,8 +309,6 @@ namespace omicron::hierarchy
 		/** All placeholders pending insertion. The list is sorted in hierarchy width order.  */
 		FrontList m_placeholders;
 		
-		NodeLoader& m_nodeLoader;
-		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
 		
@@ -342,8 +334,7 @@ namespace omicron::hierarchy
 	};
 	
 	template< typename Morton >
-	inline Front< Morton >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
-								   const int nHierarchyCreationThreads, NodeLoader& loader, const ulong memoryLimit )
+	inline Front< Morton >::Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nHierarchyCreationThreads, const ulong memoryLimit )
 	: m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nHierarchyCreationThreads ),
@@ -351,7 +342,6 @@ namespace omicron::hierarchy
 	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
 	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_leafLvlLoadedFlag( false ),
-	m_nodeLoader( loader ),
 	m_lastInsertionTime( Profiler::now() ),
 	m_substitutedPlaceholders( 0u )
 	{
@@ -368,12 +358,6 @@ namespace omicron::hierarchy
 	void Front< Morton >::notifyLeafLvlLoaded()
 	{
 		m_leafLvlLoadedFlag = true;
-	}
-	
-	template< typename Morton >
-	inline bool Front< Morton >::isReleasing()
-	{
-		return m_nodeLoader.isReleasing();
 	}
 	
 	template< typename Morton >
@@ -549,8 +533,7 @@ namespace omicron::hierarchy
 					
 				trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
 			}
-			
-			m_nodeLoader.onIterationEnd();
+
 			renderer.render_frame();
 		}
 		

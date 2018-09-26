@@ -131,7 +131,8 @@ inline SurfelCloud::SurfelCloud( const ExtSurfelVector& surfels, const ExtIndexV
 				for( int i = 0; i < m_numPts; ++i )
 				{
 					ulong index = indices[ offset + i ];
-					bufferIter++ = surfels[ index ];
+					*bufferIter = surfels[ index ];
+					++bufferIter;
 				}
 			}
 		)

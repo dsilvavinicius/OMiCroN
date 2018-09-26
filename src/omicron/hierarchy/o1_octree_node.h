@@ -65,6 +65,8 @@ namespace omicron::hierarchy
 		
 		const Morton& getMorton() const { return m_morton; }
 
+		const uint size() const { return m_indexSize; } 
+
 		/* const ContentsArray& getContents() const { return m_contents; }
 		
 		ContentsArray& getContents() { return m_contents; } */
@@ -123,7 +125,8 @@ namespace omicron::hierarchy
 		// Binary persistence. Structure: | leaf flag | point data | children data |
 		// void persist( ostream& out ) const;
 		
-		friend ostream& operator<<( ostream& out, const O1OctreeNode& node );
+		template< typename M >
+		friend ostream& operator<<( ostream& out, const O1OctreeNode< M >& node );
 		
 		// size_t serialize( byte** serialization ) const;
 		
@@ -136,12 +139,12 @@ namespace omicron::hierarchy
 
 		SurfelCloud* m_cloud;
 		
-		static ExtPointVector m_surfels;
+		static ExtSurfelVector m_surfels;
 
 		static ExtIndexVector m_indices;
 		
 		ulong m_indexOffset;
-		ulong m_indexSize;
+		uint m_indexSize;
 
 		// CACHE INVARIANT. Parent pointer. Is always current after octree bottom-up creation, since octree cache release
 		// is bottom-up.
@@ -159,7 +162,7 @@ namespace omicron::hierarchy
 	inline O1OctreeNode< Morton >::O1OctreeNode()
 	: m_morton(),
 	m_indexOffset( 0 ),
-	m_indexSize( 0 )
+	m_indexSize( 0 ),
 	m_isLeaf( false ),
 	m_parent( nullptr ),
 	m_children(),
@@ -184,10 +187,11 @@ namespace omicron::hierarchy
 		
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent, NodeVector&& children )
-	: O1Octree( morton, indexOffset, indices, parent ),
-	m_children( std::move( children ) ),
-	m_isLeaf( false )
-	{}
+	: O1OctreeNode( morton, indexOffset, indices, parent )
+	{
+		m_children.setChildren( std::move( children ) );
+		m_isLeaf = false;
+	}
 		
 	/* template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( const ContentsArray& contents, const bool isLeaf )
@@ -224,7 +228,7 @@ namespace omicron::hierarchy
 	}
 		
 	template< typename Morton >
-	inline O1OctreeNode< Morton >::O1OctreeNode& operator=( O1OctreeNode&& other )
+	inline O1OctreeNode< Morton >& O1OctreeNode< Morton >::operator=( O1OctreeNode&& other )
 	{
 		m_indexOffset = other.m_indexOffset;
 		m_indexSize = other.m_indexSize;
@@ -277,7 +281,7 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline void* O1OctreeNode< Morton >::operator new[]( size_t size )
 	{
-		return NodeAlloc().allocate( size / sizeof( O1OctreeNode< Contents > ) );
+		return NodeAlloc().allocate( size / sizeof( O1OctreeNode< Morton > ) );
 	}
 	
 	template< typename Morton >
@@ -379,7 +383,7 @@ namespace omicron::hierarchy
 		stringstream ss;
 		ss
 			<< "Addr: " << this << endl
-			<< "Points: " << m_indexSize.size() << endl
+			<< "Points: " << m_indexSize << endl
 			<< "Parent: " << m_parent << endl
 			<< "Children: " << m_children.size() << endl
 			<< "Is leaf? " << m_isLeaf << endl
@@ -408,8 +412,8 @@ namespace omicron::hierarchy
 		return subtreeStats;
 	}
 	
-	template< typename Contents, typename ContentsAlloc >
-	void O1OctreeNode< Contents, ContentsAlloc >::childrenStatistics( const O1OctreeNode& node, pair< uint, uint >& stats ) const
+	template< typename Morton >
+	void O1OctreeNode< Morton >::childrenStatistics( const O1OctreeNode& node, pair< uint, uint >& stats ) const
 	{
 		stats.first += node.m_children.size();
 		
