@@ -131,12 +131,10 @@ namespace omicron::hierarchy
 							  OctreeDim& nextLvlDim );
 		
 		/** Creates a node from its solo child node. */
-		Node createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx,
-										const bool setParentFlag ) /*const*/;
+		Node createNodeFromSingleChild( Node&& child, const int threadIdx, const bool setParentFlag ) /*const*/;
 		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
-		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx,
-							  const bool setParentFlag ) /*const*/;
+		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/;
 		
 		/** Creates a point sample with 1/8 of the points in the prefix-sum map. */
 		IndexVector samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
@@ -438,44 +436,22 @@ namespace omicron::hierarchy
 									isBoundarySiblingGroup = true;
 								}
 								
-								if( nSiblings == 1 && siblings[ 0 ].isLeaf() && !isBoundarySiblingGroup )
+								#ifdef INNER_CREATION_DEBUG
 								{
-									#ifdef INNER_CREATION_DEBUG
-									{
-										stringstream ss; ss << "[ t" << omp_get_thread_num()
-											<< " ] creating collapsed inner " << ( ( isBoundarySiblingGroup ) ? "boundary:"
-											: "not boundary:" )
-											<< nextLvlDim.calcMorton( siblings[ 0 ] ).getPathToRoot() << endl << endl;
-										HierarchyCreationLog::logDebugMsg( ss.str() );
-									}
-									#endif
-									
-									bool newNodeIsLeafFlag = false;
-									
-									output.push_back(
-										createNodeFromSingleChild( std::move( siblings[ 0 ] ), newNodeIsLeafFlag,
-																   threadIdx, !isBoundarySiblingGroup )
-									);
+									stringstream ss; ss << "[ t" << omp_get_thread_num()
+										<< " ] creating LoD inner " << ( ( isBoundarySiblingGroup ) ? "boundary:"
+										: "not boundary:" )
+										<< nextLvlDim.calcMorton( siblings[ 0 ] ).getPathToRoot() << endl << endl;
+									HierarchyCreationLog::logDebugMsg( ss.str() );
 								}
-								else
-								{
-									#ifdef INNER_CREATION_DEBUG
-									{
-										stringstream ss; ss << "[ t" << omp_get_thread_num()
-											<< " ] creating LoD inner " << ( ( isBoundarySiblingGroup ) ? "boundary:"
-											: "not boundary:" )
-											<< nextLvlDim.calcMorton( siblings[ 0 ] ).getPathToRoot() << endl << endl;
-										HierarchyCreationLog::logDebugMsg( ss.str() );
-									}
-									#endif
-									
-									// LOD
-									Node inner = createInnerNode( std::move( siblings ), nSiblings,
-																  threadIdx, !isBoundarySiblingGroup );
-									
-									output.push_back( std::move( inner ) );
-									isBoundarySiblingGroup = false;
-								}
+								#endif
+								
+								// LOD
+								Node inner = createInnerNode( std::move( siblings ), nSiblings,
+																threadIdx, !isBoundarySiblingGroup );
+								
+								output.push_back( std::move( inner ) );
+								isBoundarySiblingGroup = false;
 							}
 						}
 					}
@@ -926,7 +902,7 @@ namespace omicron::hierarchy
 	
 	template< typename Morton >
 	inline typename HierarchyCreator< Morton >::Node HierarchyCreator< Morton >
-	::createNodeFromSingleChild( Node&& child, bool isLeaf, const int threadIdx, const bool setParentFlag ) /*const*/
+	::createNodeFromSingleChild( Node&& child, const int threadIdx, const bool setParentFlag ) /*const*/
 	{
 		// Setup a placeholder in front if the node is at the leaf level.
 		Morton childMorton = m_octreeDim.calcMorton( child );
@@ -954,18 +930,15 @@ namespace omicron::hierarchy
 			selectedPoints[ i ] = s;
 		}
 		
-		Node node( std::move( selectedPoints ), isLeaf );
-		if( !isLeaf )
+		Node node( std::move( selectedPoints ), false );
+		NodeArray children( 1 );
+		children[ 0 ] = std::move( child );
+		node.setChildren( std::move( children ) );
+		
+		Node& finalChild = node.child()[ 0 ];
+		if( setParentFlag && !finalChild.isLeaf() )
 		{
-			NodeArray children( 1 );
-			children[ 0 ] = std::move( child );
-			node.setChildren( std::move( children ) );
-			
-			Node& finalChild = node.child()[ 0 ];
-			if( setParentFlag && !finalChild.isLeaf() )
-			{
-				setParent( finalChild, threadIdx );
-			}
+			setParent( finalChild, threadIdx );
 		}
 		
 		return node;
