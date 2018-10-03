@@ -8,7 +8,6 @@
 #include "omicron/hierarchy/hierarchy_creation_log.h"
 #include "omicron/util/stack_trace.h"
 #include "omicron/memory/global_malloc.h"
-#include "omicron/hierarchy/external_vector_types.h"
 #include "omicron/hierarchy/octree_dimensions.h"
 
 // #define CTOR_DEBUG
@@ -31,8 +30,11 @@ namespace omicron::hierarchy
 		
 		/** Initializes an empty unusable node. */
 		O1OctreeNode();
-		
-		/** Ctor to build an O1OctreeNode when child and parent info are not known yet. Gpu cloud is also not init.*/
+
+		/** Ctor to build an O1OctreeNode when child, parent and indices are not known yet. Gpu cloud is also not init. */
+		O1OctreeNode( const Morton morton );
+
+		/** Ctor to build an O1OctreeNode when child and parent are not known yet. Gpu cloud is also not init.*/
 		O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, const bool isLeaf );
 
 		/** Ctor to build a leaf O1OctreeNode totally init except for the gpu cloud. */
@@ -127,10 +129,6 @@ namespace omicron::hierarchy
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< M >& node );
 		
 		// size_t serialize( byte** serialization ) const;
-		
-		static void pushSurfel( const Surfel& s ) { m_surfels.push_back( s ); }
-
-		static Morton calcMorton( const ulong index, const OctreeDimensions< Morton >& octreeDim ) { octreeDim.calcMorton( m_surfels[ index ] ); }
 
 		// static O1OctreeNode deserialize( byte* serialization );
 
@@ -138,10 +136,6 @@ namespace omicron::hierarchy
 		Morton m_morton;
 
 		SurfelCloud* m_cloud;
-		
-		static ExtSurfelVector m_surfels;
-
-		static ExtIndexVector m_indices;
 		
 		ulong m_indexOffset;
 		uint m_indexSize;
@@ -170,10 +164,16 @@ namespace omicron::hierarchy
 	{}
 
 	template< typename Morton >
-	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, const bool isLeaf )
+	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton )
 	: O1OctreeNode()
 	{
 		m_morton = morton;
+	}
+
+	template< typename Morton >
+	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, const bool isLeaf )
+	: O1OctreeNode( morton )
+	{
 		m_indexOffset = indexOffset;
 		m_indexSize = indices.size();
 		m_isLeaf = isLeaf;

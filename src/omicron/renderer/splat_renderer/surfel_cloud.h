@@ -9,7 +9,7 @@
 #include "omicron/util/stack_trace.h"
 #include "omicron/hierarchy/hierarchy_creation_log.h"
 #include "omicron/memory/global_malloc.h"
-#include "omicron/hierarchy/external_vector_types.h"
+#include "omicron/hierarchy/external_octree_data.h"
 
 // #define DEBUG
 // #define CTOR_DEBUG
@@ -37,7 +37,7 @@ public:
 	
 	/** Ctor which maps a VBO GPU memory for the cloud and issue a async loading operation. The loading operation status
 	 * can be evaluated with loadStatus(). */
-	SurfelCloud( const ExtSurfelVector& surfels, const ExtIndexVector& indices, const ulong offset, const ulong size );
+	SurfelCloud( const ulong offset, const ulong size );
 	
 	SurfelCloud( const SurfelCloud& other ) = delete;
 	SurfelCloud( SurfelCloud&& other ) = delete;
@@ -85,7 +85,7 @@ inline void SurfelCloud::operator delete( void* p )
 	TbbAllocator< SurfelCloud >().deallocate( static_cast< SurfelCloud* >( p ) );
 }
 
-inline SurfelCloud::SurfelCloud( const ExtSurfelVector& surfels, const ExtIndexVector& indices, const ulong offset, const ulong size )
+inline SurfelCloud::SurfelCloud( const ulong offset, const ulong size )
 : m_numPts( size )
 {
 	assert( size > 0 && "SurfelCloud size is expected to be greater than 0." );
@@ -128,12 +128,7 @@ inline SurfelCloud::SurfelCloud( const ExtSurfelVector& surfels, const ExtIndexV
 			{
 				auto bufferIter = m_bufferMap;
 
-				for( int i = 0; i < m_numPts; ++i )
-				{
-					ulong index = indices[ offset + i ];
-					*bufferIter = surfels[ index ];
-					++bufferIter;
-				}
+				ExtOctreeData::copyFromExternal( bufferIter, offset, m_numPts );
 			}
 		)
 	);
