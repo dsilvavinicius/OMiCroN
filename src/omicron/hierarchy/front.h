@@ -60,7 +60,7 @@ namespace omicron::hierarchy
 	class Front
 	{
 	public:
-		using Node = O1OctreeNode< Surfel >;
+		using Node = O1OctreeNode< Morton >;
 		using NodeArray = Array< Node >;
 		using OctreeDim = OctreeDimensions< Morton >;
 		using Renderer = SplatRenderer;

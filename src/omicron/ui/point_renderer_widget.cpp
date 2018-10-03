@@ -6,15 +6,14 @@
 
 // #define ADAPTIVE_PROJ
 
-PointRendererWidget::PointRendererWidget( NodeLoader& loader, QWidget *parent )
-: Tucano::QtFreecameraWidget( parent, loader.widget() ),
+PointRendererWidget::PointRendererWidget( QWidget *parent )
+: Tucano::QtFreecameraWidget( parent ),
 m_projThresh( PROJ_THRESHOLD ),
 m_desiredRenderTime( 0.f ),
 draw_trackball( true ),
 m_drawAuxViewports( false ),
 m_octree( nullptr ),
 m_renderer( nullptr ),
-m_loader( loader ),
 m_statistics( m_projThresh )
 {
 	setlocale( LC_NUMERIC, "C" );
@@ -511,11 +510,11 @@ void PointRendererWidget::openMesh( const string& filename )
 		}
 		
 		
-		m_octree = new Octree( octreeJson, m_loader, runtime );
+		m_octree = new Octree( octreeJson, runtime );
 	}
 	else if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".ply" ) )
 	{
-		m_octree = new Octree( filename, 7, m_loader, runtime );
+		m_octree = new Octree( filename, 7, runtime );
 	}
 	else
 	{
@@ -611,7 +610,7 @@ void PointRendererWidget::saveScreenshotCamera()
 
 void PointRendererWidget::saveOctree()
 {
-	if( m_octree->isCreationFinished() )
+	/* if( m_octree->isCreationFinished() )
 	{
 		if( m_octSaveFuture.valid() )
 		{
@@ -661,5 +660,5 @@ void PointRendererWidget::saveOctree()
 			std::thread t( std::move( task ) );
 			t.detach();
 		}
-	}
+	} */
 }

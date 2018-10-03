@@ -33,7 +33,7 @@ namespace omicron::hierarchy
 	class HierarchyCreator
 	{
 	public:
-		using Node = O1OctreeNode< Surfel >;
+		using Node = O1OctreeNode< Morton >;
 		using NodeArray = Array< Node >;
 		using IndexVector = typename Node::IndexVector;
 		
@@ -81,11 +81,6 @@ namespace omicron::hierarchy
 		const Reader& reader() const { return *m_reader; }
 		
 	private:
-		/** Map type used to perform a prefix-sum in nodes of a sibling group. */
-		using SiblingPointsPrefixMap = map< int, Node&, less< int >, ManagedAllocator< pair< const int, Node& > > >;
-		/** Entry type of SiblingPointsPrefixMap. */
-		using SiblingPointsPrefixMapEntry = typename SiblingPointsPrefixMap::value_type;
-		
 		/** Creates the hierarchy.
 		 * @return hierarchy's root node. The pointer ownership is caller's. */
 		Node* create();
@@ -130,19 +125,8 @@ namespace omicron::hierarchy
 		void mergeOrPushWork( NodeList& previousProcessed, const int previousIdx, NodeList& nextProcessed,
 							  OctreeDim& nextLvlDim );
 		
-		/** Creates a node from its solo child node. */
-		Node createNodeFromSingleChild( Node&& child, const int threadIdx, const bool setParentFlag ) /*const*/;
-		
 		/** Creates an inner Node, given a children array and the number of meaningfull entries in the array. */
 		Node createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/;
-		
-		/** Creates a point sample with 1/8 of the points in the prefix-sum map. */
-		IndexVector samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const;
-		
-		/** Calculates the multipliers for splat tangent vectors when constructing a parent node.
-		 * @param octreeDim is the interpolation parameter.
-		 * @returns a Vector2f, each coordinate being the multiplier for that dimension. */
-		Vector2f calcTangentMultipliers( const OctreeDim& octreeDim ) const;
 		
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
@@ -284,7 +268,7 @@ namespace omicron::hierarchy
 								#endif
 								
 								
-								nodeList.push_back( Node( Node::calcMorton( indices[ 0 ], leafLvlDimCpy ), nPoints, indices, true ) );
+								nodeList.push_back( Node( ExtOctreeData::calcMorton( indices[ 0 ], leafLvlDimCpy ), indices ) );
 								
 								indices = IndexVector();
 								
@@ -297,12 +281,12 @@ namespace omicron::hierarchy
 							currentParent = parent;
 						}
 
-						Node::pushSurfel( Surfel( p ) );
+						ExtOctreeData::pushSurfel( Surfel( p ) );
 						indices.push_back( nPoints++ );
 					}
 				);
 				
-				nodeList.push_back( Node( Node::calcMorton( indices[ 0 ], leafLvlDimCpy ), nPoints, indices, true ) );
+				nodeList.push_back( Node( ExtOctreeData::calcMorton( indices[ 0 ], leafLvlDimCpy ), indices ) );
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
@@ -736,18 +720,12 @@ namespace omicron::hierarchy
 			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
 			{
 				// Nodes from same sibling groups were in different threads
-				
-				int nPoints = 0;
-				SiblingPointsPrefixMap prefixMap;
 				NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
 				
 				for( int i = 0; i < prevLastNodeChild.size(); ++i )
 				{
 					mergedChild[ i ] = std::move( prevLastNodeChild[ i ] );
 					Node& child = mergedChild[ i ];
-					
-					prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
-					nPoints += child.size();
 					
 					if( previousIdx == -1 )
 					{
@@ -770,9 +748,6 @@ namespace omicron::hierarchy
 					
 					Node& child = mergedChild[ idx ];
 					
-					prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
-					nPoints += child.size();
-					
 					if( previousIdx == -1 )
 					{
 						setParent( child, 0
@@ -786,11 +761,8 @@ namespace omicron::hierarchy
 						setParent( child, previousIdx );
 					}
 				}
-				
-				PointArray selectedPoints = samplePoints( prefixMap, nPoints );
-				nextFirstNode.setContents( std::move( selectedPoints ) );
+
 				nextFirstNode.setChildren( std::move( mergedChild ) );
-				
 				previousProcessed.pop_back();
 			}
 			else
@@ -874,151 +846,37 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline void HierarchyCreator< Morton >::turnReleaseOn( mutex& releaseMutex, bool& isReleasing )
-	{
-		{
-			lock_guard< mutex > lock( releaseMutex );
-			isReleasing = true;
-		}
-	}
-		
-	template< typename Morton >
-	inline void HierarchyCreator< Morton >
-	::turnReleaseOff( mutex& releaseMutex, bool& isReleasing, condition_variable& releaseFlag, mutex& diskThreadMutex,
-						bool& isDiskThreadStopped )
-	{
-		{
-			lock_guard< mutex > lock( releaseMutex );
-			isReleasing = false;
-		}
-		
-		releaseFlag.notify_one();
-		
-		{
-			lock_guard< mutex > lock( diskThreadMutex );
-			isDiskThreadStopped = false;
-		}
-	}
-	
-	template< typename Morton >
 	inline typename HierarchyCreator< Morton >::Node HierarchyCreator< Morton >
-	::createNodeFromSingleChild( Node&& child, const int threadIdx, const bool setParentFlag ) /*const*/
+	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag )
 	{
-		// Setup a placeholder in front if the node is at the leaf level.
-		Morton childMorton = m_octreeDim.calcMorton( child );
-		if( childMorton.getLevel() == m_leafLvlDim.m_nodeLvl )
+		NodeArray children( nChildren );
+		
+		// Verify if placeholders are necessary.
+		bool frontPlaceholdersOn = ( inChildren[ 0 ].getMorton().getLevel() == m_leafLvlDim.m_nodeLvl );
+		
+		for( int i = 0; i < children.size(); ++i )
 		{
-			#ifdef HIERARCHY_CREATION_RENDERING
-				m_front.insertPlaceholder( childMorton, threadIdx );
-			#endif
-		}
-		
-		const PointArray& childPoints = child.getContents();
-		
-		int numSamplePoints = std::max( 1.f, childPoints.size() * PARENT_POINTS_RATIO_VALUE );
-		PointArray selectedPoints( numSamplePoints );
-		
-		Vector2f tangentMultipliers = calcTangentMultipliers( m_octreeDim );
-		
-		for( int i = 0; i < numSamplePoints; ++i )
-		{
-			int choosenIdx = rand() % childPoints.size();
-			Surfel s = childPoints[ choosenIdx ];
+			children[ i ] = std::move( inChildren[ i ] );
 			
-			s.u *= tangentMultipliers.x();
-			s.v *= tangentMultipliers.y();
-			selectedPoints[ i ] = s;
-		}
-		
-		Node node( std::move( selectedPoints ), false );
-		NodeArray children( 1 );
-		children[ 0 ] = std::move( child );
-		node.setChildren( std::move( children ) );
-		
-		Node& finalChild = node.child()[ 0 ];
-		if( setParentFlag && !finalChild.isLeaf() )
-		{
-			setParent( finalChild, threadIdx );
-		}
-		
-		return node;
-	}
-	
-	template< typename Morton >
-	inline typename HierarchyCreator< Morton >::Node HierarchyCreator< Morton >
-	::createInnerNode( NodeArray&& inChildren, uint nChildren, const int threadIdx, const bool setParentFlag ) /*const*/
-	{
-		if( nChildren == 1 )
-		{
-			return createNodeFromSingleChild( std::move( inChildren[ 0 ] ), false, threadIdx, setParentFlag );
-		}
-		else
-		{
-			NodeArray children( nChildren );
-			
-			// Verify if placeholders are necessary.
-			bool frontPlaceholdersOn = ( m_octreeDim.calcMorton( inChildren[ 0 ] ).getLevel() == m_leafLvlDim.m_nodeLvl );
-			
-			int nPoints = 0;
-			SiblingPointsPrefixMap prefixMap;
-			for( int i = 0; i < children.size(); ++i )
+			if( frontPlaceholdersOn )
 			{
-				children[ i ] = std::move( inChildren[ i ] );
-				
-				if( frontPlaceholdersOn )
-				{
-					#ifdef HIERARCHY_CREATION_RENDERING
-						m_front.insertPlaceholder( m_octreeDim.calcMorton( children[ i ] ), threadIdx );
-					#endif
-				}
-				
-				Node& child = children[ i ];
-				
-				prefixMap.insert( prefixMap.end(), SiblingPointsPrefixMapEntry( nPoints, child ) );
-				nPoints += child.getContents().size();
-				
-				// Set parental relationship of children.
-				if( setParentFlag && !child.isLeaf() )
-				{
-					setParent( child, threadIdx );
-				}
+				#ifdef HIERARCHY_CREATION_RENDERING
+					m_front.insertPlaceholder( children[ i ].getMorton(), threadIdx );
+				#endif
 			}
 			
-			PointArray selectedPoints = samplePoints( prefixMap, nPoints );
+			Node& child = children[ i ];
 			
-			Node node( std::move( selectedPoints ), false );
-			node.setChildren( std::move( children ) );
-			
-			return node;
-		}
-	}
-	
-	template< typename Morton >
-	inline typename HierarchyCreator< Morton >::IndexVector HierarchyCreator< Morton >
-	::samplePoints( const SiblingPointsPrefixMap& prefixMap, const int nPoints ) const
-	{
-		int numSamplePoints = std::max( 1.f, nPoints * PARENT_POINTS_RATIO_VALUE );
-		PointArray selectedPoints( numSamplePoints );
-		
-		Vector2f tangentMultipliers = calcTangentMultipliers( m_octreeDim );
-		
-		for( int i = 0; i < numSamplePoints; ++i )
-		{
-			int choosenIdx = rand() % nPoints;
-			SiblingPointsPrefixMapEntry choosenEntry = *( --prefixMap.upper_bound( choosenIdx ) );
-			
-			Surfel s = choosenEntry.second.getContents()[ choosenIdx - choosenEntry.first ];
-			s.multiplyTangents( tangentMultipliers );
-			selectedPoints[ i ] = s;
+			// Set parental relationship of children.
+			if( setParentFlag && !child.isLeaf() )
+			{
+				setParent( child, threadIdx );
+			}
 		}
 		
-		return selectedPoints;
-	}
-	
-	template< typename Morton >
-	inline Vector2f HierarchyCreator< Morton >::calcTangentMultipliers( const OctreeDim& octreeDim ) const
-	{
-		return ReconstructionParams::calcMultipliers( octreeDim.level() );
+		Node node( *children[ 0 ].getMorton().traverseUp(), std::move( children ) );
+		
+		return node;
 	}
 	
 	template< typename Morton >

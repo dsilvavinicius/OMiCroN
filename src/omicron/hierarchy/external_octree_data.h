@@ -19,11 +19,11 @@ namespace omicron::hierarchy
         static void pushSurfel( const Surfel& s ) { m_surfels.push_back( s ); }
         
         template< typename Morton >
-		static Morton calcMorton( const ulong index, const OctreeDimensions< Morton >& octreeDim ) { octreeDim.calcMorton( m_surfels[ index ] ); }
+		static Morton calcMorton( const ulong index, const OctreeDimensions< Morton >& octreeDim ) { return octreeDim.calcMorton( m_surfels[ index ] ); }
         
         static ulong reserveIndices( const uint nIndices );
         static void copy2External( const IndexVector& indices, const ulong pos );
-        static void copyFromExternal( SurfelIter& iter, const ulong pos, const uint size );
+        static void copyFromExternal( SurfelIter& iter, const ulong pos, const int hierarchyLvl, const uint size );
     
     private:
         using ExtSurfelVector = stxxl::VECTOR_GENERATOR< Surfel >::result;
@@ -50,11 +50,15 @@ namespace omicron::hierarchy
         }
     }
 
-    inline void ExtOctreeData::copyFromExternal( SurfelIter& iter, const ulong pos, const uint size )
+    inline void ExtOctreeData::copyFromExternal( SurfelIter& iter, const ulong pos, const int hierarchyLvl, const uint size )
     {
+        Vector2f multipliers = ReconstructionParams::calcMultipliers( hierarchyLvl );
+
         for( ulong i = pos; i < pos + size; ++i )
         {
-            *iter++ = m_surfels[ m_indices[ i ] ];
+            Surfel s = m_surfels[ m_indices[ i ] ];
+            s.multiplyTangents( multipliers );
+            *iter++ = s;
         }
     }
 }

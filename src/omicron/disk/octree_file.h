@@ -25,7 +25,7 @@ namespace omicron::disk
 	
 	inline void OctreeFile::write( const string& filename, const OctreeFile::Node& root )
 	{
-		cout << "Saving binary octree to " << filename << endl << endl;
+		/* cout << "Saving binary octree to " << filename << endl << endl;
 		
 		ofstream file( filename, ofstream::out | ofstream::binary );
 		
@@ -35,12 +35,12 @@ namespace omicron::disk
 			throw logic_error( ss.str() );
 		}
 		
-		root.persist( file );
+		root.persist( file ); */
 	}
 
 	inline OctreeFile::NodePtr OctreeFile::read( const string& filename )
 	{
-		cout << "Loading binary octree from " << filename << endl << endl;
+		/* cout << "Loading binary octree from " << filename << endl << endl;
 		
 		ifstream file( filename, ofstream::in | ofstream::binary );
 		
@@ -52,7 +52,7 @@ namespace omicron::disk
 		
 		auto root = new Node( file );
 		
-		return NodePtr( root );
+		return NodePtr( root ); */
 	}
 }
 

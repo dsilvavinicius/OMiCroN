@@ -27,11 +27,8 @@ protected:
 	void closeEvent( QCloseEvent * event ) override;
 	
 private:
-	using NodeLoader = omicron::hierarchy::NodeLoader< typename PointRendererWidget::Point >;
-	
 	Ui::MainWindow *ui;
 	PointRendererWidget* m_pointRenderWidget;
-	NodeLoader* m_loader;
 };
 
 #endif // MAINWINDOW

@@ -37,7 +37,7 @@ public:
 	
 	/** Ctor which maps a VBO GPU memory for the cloud and issue a async loading operation. The loading operation status
 	 * can be evaluated with loadStatus(). */
-	SurfelCloud( const ulong offset, const ulong size );
+	SurfelCloud( const ulong offset, const ulong size, const int hierarchyLvl );
 	
 	SurfelCloud( const SurfelCloud& other ) = delete;
 	SurfelCloud( SurfelCloud&& other ) = delete;
@@ -85,7 +85,7 @@ inline void SurfelCloud::operator delete( void* p )
 	TbbAllocator< SurfelCloud >().deallocate( static_cast< SurfelCloud* >( p ) );
 }
 
-inline SurfelCloud::SurfelCloud( const ulong offset, const ulong size )
+inline SurfelCloud::SurfelCloud( const ulong offset, const ulong size, const int hierarchyLvl )
 : m_numPts( size )
 {
 	assert( size > 0 && "SurfelCloud size is expected to be greater than 0." );
@@ -128,7 +128,7 @@ inline SurfelCloud::SurfelCloud( const ulong offset, const ulong size )
 			{
 				auto bufferIter = m_bufferMap;
 
-				ExtOctreeData::copyFromExternal( bufferIter, offset, m_numPts );
+				ExtOctreeData::copyFromExternal( bufferIter, offset, hierarchyLvl, m_numPts );
 			}
 		)
 	);

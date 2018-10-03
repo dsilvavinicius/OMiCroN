@@ -11,10 +11,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	
 	auto hiddenWidget = new GLHiddenWidget( ui->centralWidget );
 	hiddenWidget->setVisible( false );
-	auto loaderThread = new NodeLoaderThread( hiddenWidget, 900ul * 1024ul * 1024ul );
-	m_loader = new NodeLoader( loaderThread, 1 );
 	
-	m_pointRenderWidget = new PointRendererWidget( *m_loader, ui->centralWidget );
+	m_pointRenderWidget = new PointRendererWidget( ui->centralWidget );
 	m_pointRenderWidget->setObjectName(QStringLiteral("pointRendererWidget"));
 	QSizePolicy sizePolicy( QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding );
 	sizePolicy.setHorizontalStretch( 0 );
@@ -28,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent) :
 MainWindow::~MainWindow()
 {
     delete ui;
-	delete m_loader;
 }
 
 void MainWindow::initialize()

@@ -41,10 +41,9 @@ public:
 		using Octree = FastParallelOctree< MortonCode >;
 	#endif
 	
-	using NodeLoader = typename Octree::NodeLoader;
 	using Renderer = SplatRenderer;
 
-	explicit PointRendererWidget( NodeLoader& loader, QWidget *parent );
+	explicit PointRendererWidget( QWidget *parent );
 	~PointRendererWidget();
 	
 	void initialize( const unsigned int& frameRate, const int& renderingTimeTolerance );
@@ -138,7 +137,6 @@ private:
 	
 // 	PointModel mesh;
 	Renderer* m_renderer;
-	NodeLoader& m_loader;
 	Octree* m_octree;
 	
 	QTimer *m_timer;

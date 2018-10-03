@@ -25,7 +25,7 @@ namespace omicron::hierarchy
 	{
 	public:
 		using NodeAlloc = TbbAllocator< O1OctreeNode >;
-		using NodeVector = std::vector< O1OctreeNode, NodeAlloc >;
+		using NodeVector = Array< O1OctreeNode >;
 		using IndexVector = std::vector< ulong, TbbAllocator< ulong > >;
 		
 		/** Initializes an empty unusable node. */
@@ -34,14 +34,16 @@ namespace omicron::hierarchy
 		/** Ctor to build an O1OctreeNode when child, parent and indices are not known yet. Gpu cloud is also not init. */
 		O1OctreeNode( const Morton morton );
 
-		/** Ctor to build an O1OctreeNode when child and parent are not known yet. Gpu cloud is also not init.*/
-		O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, const bool isLeaf );
+		/** Ctor to build a leaf O1OctreeNode when parent are not known yet. Gpu cloud is also not init.*/
+		O1OctreeNode( const Morton morton, const IndexVector& indices );
+
+		/** Ctor to build an inner O1OctreeNode totally init except for the gpu cloud. */
+		O1OctreeNode( const Morton morton, NodeVector&& children );
 
 		/** Ctor to build a leaf O1OctreeNode totally init except for the gpu cloud. */
-		O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent );
+		// O1OctreeNode( const Morton morton, O1OctreeNode* parent );
 		
-		/** Ctor to build an inner O1OctreeNode totally init except for the gpu cloud. */
-		O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent, NodeVector&& children );
+		
 		
 		O1OctreeNode( const O1OctreeNode& other ) = delete;
 		
@@ -86,15 +88,15 @@ namespace omicron::hierarchy
 		
 		bool isLeaf() const { return m_isLeaf; }
 		
-		// void setContents( ContentsArray&& contents );
+		void setIndices();
 		
 		/** Sets parent pointer. */
 		void setParent( O1OctreeNode* parent ) { m_parent = parent; }
 		
 		/** Sets the array of children. */
-		/* void setChildren( const NodeVector& children );
+		void setChildren( const NodeVector& children );
 		
-		void setChildren( NodeVector&& children ); */
+		void setChildren( NodeVector&& children );
 		
 		/** Release the child nodes. The node is not turned into leaf. Useful to release memory momentarily. */
 		// void releaseChildren() { m_children.clear(); }
@@ -133,6 +135,8 @@ namespace omicron::hierarchy
 		// static O1OctreeNode deserialize( byte* serialization );
 
 	private:
+		void setIndices( const IndexVector& indices );
+
 		Morton m_morton;
 
 		SurfelCloud* m_cloud;
@@ -171,29 +175,26 @@ namespace omicron::hierarchy
 	}
 
 	template< typename Morton >
-	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, const bool isLeaf )
+	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const IndexVector& indices )
 	: O1OctreeNode( morton )
 	{
-		m_indexOffset = indexOffset;
 		m_indexSize = indices.size();
-		m_isLeaf = isLeaf;
+		m_isLeaf = true;
 
-		for( ulong i = 0; i < indices.size(); ++i )
-		{
-			m_indices[ indexOffset + i ] = indices[ i ];
-		}
+		setIndices( indices );
 	}
 
-	template< typename Morton >
-	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent )
-	: O1OctreeNode( morton, indexOffset, indices, true )
+	/* template< typename Morton >
+	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, O1OctreeNode* parent )
+	: O1OctreeNode( morton )
 	{
+		m_isLeaf = true;
 		m_parent = parent;
-	}
+	} */
 		
 	template< typename Morton >
-	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, const ulong indexOffset, const IndexVector& indices, O1OctreeNode* parent, NodeVector&& children )
-	: O1OctreeNode( morton, indexOffset, indices, parent )
+	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, NodeVector&& children )
+	: O1OctreeNode( morton )
 	{
 		m_children.setChildren( std::move( children ) );
 		m_isLeaf = false;
@@ -284,11 +285,30 @@ namespace omicron::hierarchy
 		NodeAlloc().deallocate( static_cast< typename NodeAlloc::pointer >( p ), 2 );
 	}
 	
-	/* template< typename Morton >
-	inline void O1OctreeNode< Morton >::setContents( ContentsArray&& contents )
+	template< typename Morton >
+	inline void O1OctreeNode< Morton >::setIndices()
 	{
-		m_contents.clear();
-		m_contents = std::move( contents );
+		IndexVector sample;
+
+		for( const O1OctreeNode& node : m_children )
+		{
+			int nSamples = std::max( 1.f, node.size() * PARENT_POINTS_RATIO_VALUE );
+			for( int i = 0; i < nSamples; ++i )
+			{
+				int chosenIdx = rand() % nSamples + node.m_indexOffset;
+				
+				sample.push_back( chosenIdx );
+			}
+		}
+
+		setIndices( sample );
+	}
+
+	template< typename Morton >
+	inline void O1OctreeNode< Morton >::setIndices( const IndexVector& indices )
+	{
+		m_indexOffset = ExtOctreeData::reserveIndices( indices.size() );
+		ExtOctreeData::copy2External( indices, m_indexOffset );
 	}
 
 	template< typename Morton >
@@ -305,7 +325,7 @@ namespace omicron::hierarchy
 		m_children = std::move( children );
 	}
 
-	template< typename Morton >
+	/*template< typename Morton >
 	inline void O1OctreeNode< Morton >::turnLeaf()
 	{
 		m_isLeaf = true;
@@ -317,7 +337,7 @@ namespace omicron::hierarchy
 	{
 		if( m_cloud == nullptr && GpuAllocStatistics::hasMemoryFor( m_indexSize ) )
 		{
-			m_cloud = new SurfelCloud( m_surfels, m_indices, m_indexOffset, m_indexSize );
+			m_cloud = new SurfelCloud( m_indexOffset, m_indexSize, m_morton.getLvl() );
 			
 			#ifdef LOADING_DEBUG
 			{

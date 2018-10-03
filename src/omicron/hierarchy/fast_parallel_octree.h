@@ -25,7 +25,6 @@ namespace omicron::hierarchy
 		using NodeArray = typename HierarchyCreator::NodeArray;
 		using Dim = typename HierarchyCreator::OctreeDim;
 		using Front = hierarchy::Front< MortonCode >;
-		using NodeLoader = typename Front::NodeLoader;
 		using Renderer = SplatRenderer;
 		
 		/**
@@ -34,12 +33,10 @@ namespace omicron::hierarchy
 		 * @param maxLvl is the level from which the octree will be constructed bottom-up. Smaller values incur in
 		 * less created nodes, but also less possibilities for LOD ( level of detail ). In practice, the more points the
 		 * model has, the deeper the hierachy needs to be for good visualization. */
-		FastParallelOctree( const string& plyFilename, const int maxLvl, NodeLoader& nodeLoader,
-							const RuntimeSetup& runtime = RuntimeSetup() );
+		FastParallelOctree( const string& plyFilename, const int maxLvl, const RuntimeSetup& runtime = RuntimeSetup() );
 		
 		/** Ctor. Creates the octree from a octree file. */
-		FastParallelOctree( const Json::Value& octreeJson, NodeLoader& nodeLoader,
-							const RuntimeSetup& runtime = RuntimeSetup() );
+		FastParallelOctree( const Json::Value& octreeJson, const RuntimeSetup& runtime = RuntimeSetup() );
 		
 		~FastParallelOctree();
 		
@@ -77,10 +74,10 @@ namespace omicron::hierarchy
 		
 	private:
 		/** Builds from a point set in memory. */
-		void buildFromPoints( typename HierarchyCreator::ReaderPtr reader, const Dim& dim, NodeLoader& nodeLoader, const RuntimeSetup& runtime );
+		void buildFromPoints( typename HierarchyCreator::ReaderPtr reader, const Dim& dim, const RuntimeSetup& runtime );
 		
 		/** Builds from a octree file json. */
-		void buildFromSortedFile( const Json::Value& octreeJson, NodeLoader& nodeLoader, const RuntimeSetup& runtime );
+		void buildFromSortedFile( const Json::Value& octreeJson, const RuntimeSetup& runtime );
 		
 		string toString( const Node& node, const Dim& nodeLvlDim ) const;
 		
@@ -114,7 +111,7 @@ namespace omicron::hierarchy
 	
 	template< typename Morton >
 	FastParallelOctree< Morton >
-	::FastParallelOctree( const string& plyFilename, const int maxLvl, NodeLoader& loader, const RuntimeSetup& runtime )
+	::FastParallelOctree( const string& plyFilename, const int maxLvl, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
 	m_root( nullptr ),
@@ -138,12 +135,12 @@ namespace omicron::hierarchy
 		m_readerInTime = reader->inputTime();
 		m_readerInitTime = reader->initTime();
 		
-		buildFromPoints( typename HierarchyCreator::ReaderPtr( reader ), reader->dimensions(), loader, runtime );
+		buildFromPoints( typename HierarchyCreator::ReaderPtr( reader ), reader->dimensions(), runtime );
 	}
 	
 	template< typename Morton >
 	FastParallelOctree< Morton >
-	::FastParallelOctree( const Json::Value& octreeJson, NodeLoader& loader, const RuntimeSetup& runtime )
+	::FastParallelOctree( const Json::Value& octreeJson, const RuntimeSetup& runtime )
 	: m_hierarchyCreator( nullptr ),
 	m_front( nullptr ),
 	m_root( nullptr ),
@@ -151,7 +148,7 @@ namespace omicron::hierarchy
 	m_readerInitTime( 0u ),
 	m_readerReadTime( 0u )
 	{
-		buildFromSortedFile( octreeJson, loader, runtime );
+		buildFromSortedFile( octreeJson, runtime );
 	}
 	
 	template< typename Morton >
@@ -171,7 +168,7 @@ namespace omicron::hierarchy
 	
 	template< typename Morton >
 	void FastParallelOctree< Morton >
-	::buildFromPoints( typename HierarchyCreator::ReaderPtr reader, const Dim& dim, NodeLoader& loader, const RuntimeSetup& runtime )
+	::buildFromPoints( typename HierarchyCreator::ReaderPtr reader, const Dim& dim, const RuntimeSetup& runtime )
 	{
 		omp_set_num_threads( 8 );
 		
@@ -182,20 +179,20 @@ namespace omicron::hierarchy
 			cout << "Dim from sorted set: " << m_dim << endl;
 		}
 		
-		m_front = new Front( "", m_dim, runtime.m_nThreads, loader, runtime.m_memoryQuota );
+		m_front = new Front( "", m_dim, runtime.m_nThreads, runtime.m_memoryQuota );
 		
 		m_hierarchyCreator = new HierarchyCreator( 	std::move( reader ), m_dim,
 													#ifdef HIERARCHY_CREATION_RENDERING
 														*m_front,
 													#endif
-													runtime.m_loadPerThread, runtime.m_memoryQuota, runtime.m_nThreads );
+													runtime.m_loadPerThread, runtime.m_nThreads );
 		
 		m_creationFuture = m_hierarchyCreator->createAsync();
 	}
 	
 	template< typename Morton >
 	void FastParallelOctree< Morton >
-	::buildFromSortedFile( const Json::Value& octreeJson, NodeLoader& loader, const RuntimeSetup& runtime )
+	::buildFromSortedFile( const Json::Value& octreeJson, const RuntimeSetup& runtime )
 	{
 		cout << "Octree json: " << endl << octreeJson << endl;
 			
@@ -215,14 +212,13 @@ namespace omicron::hierarchy
 			cout << "Dim from Json: " << m_dim << endl;
 		}
 		
-		m_front = new Front( octreeJson[ "database" ].asString(), m_dim, runtime.m_nThreads, loader,
-							 runtime.m_memoryQuota );
+		m_front = new Front( octreeJson[ "database" ].asString(), m_dim, runtime.m_nThreads, runtime.m_memoryQuota );
 		
 		m_hierarchyCreator = new HierarchyCreator( octreeJson[ "points" ].asString(), m_dim,
 													#ifdef HIERARCHY_CREATION_RENDERING
 														*m_front,
 													#endif
-												   runtime.m_loadPerThread, runtime.m_memoryQuota, runtime.m_nThreads );
+												   runtime.m_loadPerThread, runtime.m_nThreads );
 		
 		m_creationFuture = m_hierarchyCreator->createAsync();
 	}
