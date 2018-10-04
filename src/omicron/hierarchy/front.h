@@ -63,10 +63,10 @@ namespace omicron::hierarchy
 		using Node = O1OctreeNode< Morton >;
 		using NodeArray = Array< Node >;
 		using OctreeDim = OctreeDimensions< Morton >;
-		using Renderer = SplatRenderer;
+		using Renderer = SplatRenderer< Morton >;
 		
 		/** The node type that is used in front. */
-		typedef struct FrontNode
+		/* typedef struct FrontNode
 		{
 			FrontNode( Node& node, const Morton& morton )
 			: m_octreeNode( &node ),
@@ -93,9 +93,9 @@ namespace omicron::hierarchy
 			
 			Node* m_octreeNode;
 			Morton m_morton;
-		} FrontNode;
+		} FrontNode; */
 		
-		using FrontList = list< FrontNode, ManagedAllocator< FrontNode > >;
+		using FrontList = list< Node*, ManagedAllocator< Node* > >;
 		using FrontListIter = typename FrontList::iterator;
 		using InsertionVector = vector< FrontList, ManagedAllocator< FrontList > >;
 		
@@ -109,7 +109,7 @@ namespace omicron::hierarchy
 		 * @param node is a reference to the node to be inserted.
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread. */
-		void insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx );
+		void insertIntoBufferEnd( Node& node, int threadIdx );
 		
 		/** Acquire the iterator to the beginning of a thread buffer.
 		 * @param node is a reference to the node to be inserted.
@@ -126,12 +126,12 @@ namespace omicron::hierarchy
 		 * @param morton is node's morton code id.
 		 * @param threadIdx is the hierarchy creation thread index of the caller thread.
 		 * @returns an iterator pointing to the element inserted into front. */
-		void insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton, int threadIdx );
+		void insertIntoBuffer( FrontListIter& iter, Node& node, int threadIdx );
 		
 		/** Synchronized. Inserts a placeholder for a node that will be defined later in the shallower levels. This node
 		 * will be replaced on front tracking if a substitute is already defined.
 		 * @param morton is the placeholder node id. */
-		void insertPlaceholder( const Morton& morton, int threadIdx );
+		void insertPlaceholder( int threadIdx );
 		
 		/** Synchronized. Notifies that all threads have finished an insertion iteration.
 		 * @param dispatchedThreads is the number of dispatched thread in the creation iteration. */
@@ -158,7 +158,7 @@ namespace omicron::hierarchy
 						const Float projThresh );
 		
 		/** Substitute a placeholder with the first node of the given substitution level. */
-		bool substitutePlaceholder( FrontNode& node, int substitutionLvl );
+		bool substitutePlaceholder( Node* node, int substitutionLvl );
 		
 		bool checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
 						 FrontListIter& frontIt, int substituionLvl, Renderer& renderer,
@@ -171,7 +171,7 @@ namespace omicron::hierarchy
 		
 		void branch( FrontListIter& iter, Node& node, const OctreeDim& nodeLvlDim, Renderer& renderer );
 		
-		void setupNodeRendering( FrontListIter& iter, const FrontNode& frontNode, Renderer& renderer );
+		void setupNodeRendering( FrontListIter& iter, Node* frontNode, Renderer& renderer );
 		
 		void setupNodeRenderingNoFront( const Morton& moton, Node& node, Renderer& renderer );
 		
@@ -361,7 +361,7 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::insertIntoBufferEnd( Node& node, const Morton& morton, int threadIdx )
+	inline void Front< Morton >::insertIntoBufferEnd( Node& node, int threadIdx )
 	{
 		#ifdef INSERTION_DEBUG
 		{
@@ -371,9 +371,7 @@ namespace omicron::hierarchy
 		#endif
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		FrontNode frontNode( node, morton );
-		
-		list.push_back( frontNode );
+		list.push_back( &node );
 	}
 	
 	template< typename Morton >
@@ -383,8 +381,7 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::insertIntoBuffer( FrontListIter& iter, Node& node, const Morton& morton,
-													int threadIdx )
+	inline void Front< Morton >::insertIntoBuffer( FrontListIter& iter, Node& node, int threadIdx )
 	{
 		#ifdef INSERTION_DEBUG
 		{
@@ -394,18 +391,14 @@ namespace omicron::hierarchy
 		#endif
 		
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
-		FrontNode frontNode( node, morton );
-		
-		list.insert( iter, frontNode );
+		list.insert( iter, &node );
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::insertPlaceholder( const Morton& morton, int threadIdx )
+	inline void Front< Morton >::insertPlaceholder( int threadIdx )
 	{
-		assert( morton.getLevel() == m_leafLvlDim.m_nodeLvl && "Placeholders should be in hierarchy's deepest level." );
-		
 		FrontList& list = m_currentIterPlaceholders[ threadIdx ];
-		list.push_back( FrontNode( m_placeholder, morton ) );
+		list.push_back( &m_placeholder );
 	}
 	
 	template< typename Morton >
@@ -418,7 +411,7 @@ namespace omicron::hierarchy
 			{
 				if( !list.empty() )
 				{
-					lvl = list.front().m_morton.getLevel();
+					lvl = list.front()->getMorton().getLevel();
 					break;
 				}
 			}
@@ -587,9 +580,9 @@ namespace omicron::hierarchy
 	inline void Front< Morton >
 	::trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer, const Float projThresh )
 	{
-		FrontNode& frontNode = *frontIt;
+		Node* frontNode = *frontIt;
 		
-		if( frontNode.m_octreeNode == &m_placeholder )
+		if( frontNode == &m_placeholder )
 		{
 			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
 			{
@@ -598,8 +591,8 @@ namespace omicron::hierarchy
 			}
 		}
 		
-		Node& node = *frontNode.m_octreeNode;
-		Morton& morton = frontNode.m_morton;
+		Node& node = *frontNode;
+		const Morton& morton = frontNode->getMorton();
 		OctreeDim nodeLvlDim( m_leafLvlDim, morton.getLevel() );
 		
 		Node* parentNode = node.parent();
@@ -650,9 +643,9 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline bool Front< Morton >::substitutePlaceholder( FrontNode& node, int substitutionLvl )
+	inline bool Front< Morton >::substitutePlaceholder( Node* node, int substitutionLvl )
 	{
-		assert( node.m_octreeNode == &m_placeholder && "Substitution paramenter should be a placeholder node" );
+		assert( node == &m_placeholder && "Substitution paramenter should be a placeholder node" );
 		
 		if( substitutionLvl != -1 )
 		{
@@ -662,9 +655,9 @@ namespace omicron::hierarchy
 			
 			if( !substitutionLvlList.empty() )
 			{
-				FrontNode& substituteCandidate = substitutionLvlList.front();
+				Node* substituteCandidate = substitutionLvlList.front();
 				
-				if( node.m_morton.isDescendantOf( substituteCandidate.m_morton ) )
+				if( node->getMorton().isDescendantOf( substituteCandidate->getMorton() ) )
 				{
 					#ifdef SUBSTITUTION_DEBUG
 						stringstream ss; ss << "Substituting placeholder " << node.m_morton.getPathToRoot( true )
@@ -676,9 +669,9 @@ namespace omicron::hierarchy
 					node = substituteCandidate;
 					
 					#ifdef ASYNC_LOAD
-						node.m_octreeNode->loadInGpu();
+						node->loadInGpu();
 					#else
-						node.m_octreeNode->loadGPU();
+						node->loadGPU();
 					#endif
 						
 					substitutionLvlList.erase( substitutionLvlList.begin() );
@@ -760,12 +753,12 @@ namespace omicron::hierarchy
 			FrontListIter siblingIter = frontIt;
 			while( siblingIter != m_front.end() )
 			{
-				if( siblingIter->m_octreeNode == &m_placeholder )
+				if( *siblingIter == &m_placeholder )
 				{
 					substitutePlaceholder( *siblingIter, substitutionLvl );
 				}
 				
-				if( siblingIter++->m_octreeNode->parent() != parentNode )
+				if( ( *siblingIter++ )->parent() != parentNode )
 				{
 					break;
 				}
@@ -824,9 +817,9 @@ namespace omicron::hierarchy
 	inline void Front< Morton >::prune( FrontListIter& frontIt, Node* parentNode, const bool parentIsCullable,
 										Renderer& renderer )
 	{
-		Morton parentMorton = *frontIt->m_morton.traverseUp();
+		Morton parentMorton = *( ( *frontIt )->getMorton().traverseUp() );
 		
-		while( frontIt != m_front.end() && frontIt->m_octreeNode->parent() == parentNode )
+		while( frontIt != m_front.end() && ( *frontIt )->parent() == parentNode )
 		{
 			#ifdef RENDERING_DEBUG
 			{
@@ -835,7 +828,7 @@ namespace omicron::hierarchy
 			}
 			#endif
 			
-			renderer.eraseFromList( *frontIt->m_octreeNode );
+			renderer.eraseFromList( **frontIt );
 			frontIt = m_front.erase( frontIt );
 		}
 		
@@ -862,15 +855,13 @@ namespace omicron::hierarchy
 			}
 // 		}
 		
-		FrontNode frontNode( *parentNode, parentMorton );
-		
 		if( parentIsCullable )
 		{
-			m_front.insert( frontIt, frontNode );
+			m_front.insert( frontIt, parentNode );
 		}
 		else
 		{
-			setupNodeRendering( frontIt, frontNode, renderer );
+			setupNodeRendering( frontIt, parentNode, renderer );
 		}
 	}
 	
@@ -940,28 +931,27 @@ namespace omicron::hierarchy
 		{
 			Node& child = children[ i ];
 			AlignedBox3f box = childLvlDim.getNodeBoundaries( child );
-			FrontNode frontNode( child, childLvlDim.calcMorton( child ) );
 			
 			assert( frontNode.m_morton.getBits() != 1 && "Inserting root node into front (branch)." );
 			
 			if( !renderer.isCullable( box ) )
 			{
-				setupNodeRendering( frontIt, frontNode, renderer );
+				setupNodeRendering( frontIt, &child, renderer );
 			}
 			else
 			{
-				m_front.insert( frontIt, frontNode );
+				m_front.insert( frontIt, &child );
 			}
 		}
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::setupNodeRendering( FrontListIter& frontIt, const FrontNode& frontNode,
+	inline void Front< Morton >::setupNodeRendering( FrontListIter& frontIt, Node* frontNode,
 													 Renderer& renderer )
 	{
 		m_front.insert( frontIt, frontNode );
 		
-		setupNodeRenderingNoFront( frontNode.m_morton, *frontNode.m_octreeNode, renderer );
+		setupNodeRenderingNoFront( frontNode->getMorton(), *frontNode, renderer );
 	}
 	
 	template< typename Morton >

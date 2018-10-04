@@ -76,11 +76,12 @@ public:
         float radius_scale, float ewa_radius, float epsilon);
 };
 
+template< typename Morton >
 class SplatRenderer
 {
 
 public:
-	using Node = O1OctreeNode< Surfel >;
+	using Node = O1OctreeNode< Morton >;
 	
     SplatRenderer( Tucano::Camera* camera, const Vector3f& modelCentroid = Vector3f::Zero() );
     virtual ~SplatRenderer();
@@ -210,7 +211,7 @@ private:
 	atomic_int m_diskFileSuffix;
 };
 
-inline void SplatRenderer::eraseFromList( const Node& node )
+template< typename Morton > inline void SplatRenderer< Morton >::eraseFromList( const Node& node )
 {
 	#ifdef RENDERING_DEBUG
 	{
@@ -252,7 +253,7 @@ inline void SplatRenderer::eraseFromList( const Node& node )
 	}
 }
 
-inline void SplatRenderer::resetIterator()
+template< typename Morton > inline void SplatRenderer< Morton >::resetIterator()
 {
 	#ifdef RENDERING_DEBUG
 	{
@@ -263,7 +264,7 @@ inline void SplatRenderer::resetIterator()
 	m_toRenderIter = m_toRender.begin();
 }
 
-inline void SplatRenderer::render( Node& node )
+template< typename Morton > inline void SplatRenderer< Morton >::render( Node& node )
 {
 	m_renderedSplats += node.cloud().numPoints();
 	
@@ -299,7 +300,7 @@ inline void SplatRenderer::render( Node& node )
 }
 
 #ifdef TUCANO_RENDERER
-	inline void SplatRenderer::render_cloud_tucano( Node& node ) const
+	template< typename Morton > inline void SplatRenderer< Morton >::render_cloud_tucano( Node& node ) const
 	{
 		model::Array< Surfel >& surfels = node.getContents()
 		
@@ -324,12 +325,13 @@ inline void SplatRenderer::render( Node& node )
 	}
 #endif
 
-inline bool SplatRenderer::isCullable( const AlignedBox3f& box ) const
+
+template< typename Morton > inline bool SplatRenderer< Morton >::isCullable( const AlignedBox3f& box ) const
 {
 	return m_frustum.isCullable( box );
 }
 
-inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float projThresh ) const
+template< typename Morton > inline bool SplatRenderer< Morton >::isRenderable( const AlignedBox3f& box, const float projThresh ) const
 {
 	const Vector3f& rawMin = box.min();
 	const Vector3f& rawMax = box.max();
@@ -369,7 +371,7 @@ inline bool SplatRenderer::isRenderable( const AlignedBox3f& box, const float pr
 	return maxDiagLength < projThresh;
 }
 
-inline void SplatRenderer::begin_frame()
+template< typename Morton > inline void SplatRenderer< Morton >::begin_frame()
 {
 	m_frustum.update( *m_camera );
 	
@@ -386,7 +388,7 @@ inline void SplatRenderer::begin_frame()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-inline void SplatRenderer::render_pass( bool depth_only )
+template< typename Morton > inline void SplatRenderer< Morton >::render_pass( bool depth_only )
 { 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_PROGRAM_POINT_SIZE);
@@ -447,7 +449,7 @@ inline void SplatRenderer::render_pass( bool depth_only )
     glDisable(GL_DEPTH_TEST);
 }
 
-inline void SplatRenderer::render_frame()
+template< typename Morton > inline void SplatRenderer< Morton >::render_frame()
 {
 	#ifndef TUCANO_RENDERER
 		if( !m_toRender.empty() )
@@ -554,7 +556,8 @@ inline void SplatRenderer::render_frame()
 	#endif
 }
 
-inline ulong SplatRenderer::end_frame()
+template< typename Morton >
+inline ulong SplatRenderer< Morton >::end_frame()
 {
 	#if !defined TUCANO_RENDERER && !defined PROGRAM_ATTRIBUTE_DEBUG
 		m_fbo.unbind();
@@ -573,7 +576,8 @@ inline ulong SplatRenderer::end_frame()
 	return renderedSplats;
 }
 
-inline Vector2f SplatRenderer
+template< typename Morton >
+inline Vector2f SplatRenderer< Morton >
 ::projToNormDeviceCoords( const Vector4f& point, const Matrix4f& viewProj ) const
 {
 	Vector4f proj = viewProj * point;
@@ -588,17 +592,17 @@ inline Vector2f SplatRenderer
 	return Vector2f( proj.x() / proj.w(), proj.y() / proj.w() );
 }
 
-inline void SplatRenderer::toggleFboSave()
+template< typename Morton > inline void SplatRenderer< Morton >::toggleFboSave()
 {
 	m_saveFboFlag = !m_saveFboFlag;
 }
 
-inline void SplatRenderer::toggleModelMatrixUse()
+template< typename Morton > inline void SplatRenderer< Morton >::toggleModelMatrixUse()
 {
 	m_useModelMatrix = !m_useModelMatrix;
 }
 
-inline void SplatRenderer::saveFbo( int attach )
+template< typename Morton > inline void SplatRenderer< Morton >::saveFbo( int attach )
 {
 	mutex mtx;
 	condition_variable condVar;
@@ -664,7 +668,8 @@ inline void SplatRenderer::saveFbo( int attach )
 	delete[] pixels;
 }
 
-inline const Tucano::Camera& SplatRenderer::camera() const
+template< typename Morton >
+inline const Tucano::Camera& SplatRenderer< Morton >::camera() const
 {
 	return *m_camera;
 }

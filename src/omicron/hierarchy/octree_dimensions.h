@@ -59,11 +59,11 @@ namespace omicron::hierarchy
 			return calcMorton( surfel.c );
 		}
 		
-		template< typename Node >
+		/* template< typename Node >
 		M calcMorton( const Node& node ) const
 		{
 			return calcMorton( node.getContents()[ 0 ] );
-		}
+		} */
 		
 		/** Returns the boundaries of the node identified by the given MortonCode */
 		AlignedBox3f getMortonBoundaries( const M& code ) const
@@ -97,7 +97,7 @@ namespace omicron::hierarchy
 		template< typename Node >
 		AlignedBox3f getNodeBoundaries( const Node& node )
 		{
-			return getMortonBoundaries( calcMorton( node ) );
+			return getMortonBoundaries( node.getMorton() );
 		}
 		
 		bool operator()( const Point& p0, const Point& p1 ) const

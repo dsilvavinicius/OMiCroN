@@ -41,7 +41,7 @@ public:
 		using Octree = FastParallelOctree< MortonCode >;
 	#endif
 	
-	using Renderer = SplatRenderer;
+	using Renderer = SplatRenderer< MortonCode >;
 
 	explicit PointRendererWidget( QWidget *parent );
 	~PointRendererWidget();

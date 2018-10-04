@@ -373,14 +373,14 @@ namespace omicron::hierarchy
 						while( !input.empty() )
 						{
 							Node& node = input.front();
-							Morton parentCode = *m_octreeDim.calcMorton( node ).traverseUp();
+							Morton parentCode = *node.getMorton().traverseUp();
 							
 							NodeArray siblings( 8 );
 							siblings[ 0 ] = std::move( node );
 							input.pop_front();
 							int nSiblings = 1;
 							
-							while( !input.empty() && *m_octreeDim.calcMorton( input.front() ).traverseUp() == parentCode )
+							while( !input.empty() && *input.front().getMorton().traverseUp() == parentCode )
 							{
 								siblings[ nSiblings ] = std::move( input.front() );
 								++nSiblings;
@@ -576,8 +576,7 @@ namespace omicron::hierarchy
 		
 			if( root->isLeaf() )
 			{
-				Morton rootCode; rootCode.build( 0x1 );
-				m_front.insertIntoBufferEnd( *root, rootCode, 0 );
+				m_front.insertIntoBufferEnd( *root, 0 );
 				m_front.notifyInsertionEnd( 1 );
 			}
 		#endif
@@ -651,7 +650,7 @@ namespace omicron::hierarchy
 				#ifdef HIERARCHY_CREATION_RENDERING
 					if( child.isLeaf() )
 					{
-						m_front.insertIntoBufferEnd( child, childDim.calcMorton( child ), threadIdx );
+						m_front.insertIntoBufferEnd( child, threadIdx );
 					}
 				#endif
 			}
@@ -688,7 +687,7 @@ namespace omicron::hierarchy
 				
 				if( child.isLeaf() )
 				{
-					m_front.insertIntoBuffer( frontIter, child, childDim.calcMorton( child ), threadIdx );
+					m_front.insertIntoBuffer( frontIter, child, threadIdx );
 				}
 			}
 		}
@@ -717,7 +716,7 @@ namespace omicron::hierarchy
 				#endif
 			}
 			
-			if( nextLvlDim.calcMorton( prevLastNode ) == nextLvlDim.calcMorton( nextFirstNode ) )
+			if( prevLastNode.getMorton() == nextFirstNode.getMorton() )
 			{
 				// Nodes from same sibling groups were in different threads
 				NodeArray mergedChild( prevLastNodeChild.size() + nextFirstNodeChild.size() );
@@ -861,7 +860,7 @@ namespace omicron::hierarchy
 			if( frontPlaceholdersOn )
 			{
 				#ifdef HIERARCHY_CREATION_RENDERING
-					m_front.insertPlaceholder( children[ i ].getMorton(), threadIdx );
+					m_front.insertPlaceholder( threadIdx );
 				#endif
 			}
 			

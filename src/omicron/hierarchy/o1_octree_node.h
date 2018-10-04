@@ -196,7 +196,7 @@ namespace omicron::hierarchy
 	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton, NodeVector&& children )
 	: O1OctreeNode( morton )
 	{
-		m_children.setChildren( std::move( children ) );
+		setChildren( std::move( children ) );
 		m_isLeaf = false;
 	}
 
@@ -337,7 +337,7 @@ namespace omicron::hierarchy
 	{
 		if( m_cloud == nullptr && GpuAllocStatistics::hasMemoryFor( m_indexSize ) )
 		{
-			m_cloud = new SurfelCloud( m_indexOffset, m_indexSize, m_morton.getLvl() );
+			m_cloud = new SurfelCloud( m_indexOffset, m_indexSize, m_morton.getLevel() );
 			
 			#ifdef LOADING_DEBUG
 			{

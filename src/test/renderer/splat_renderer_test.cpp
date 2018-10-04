@@ -8,7 +8,7 @@
 #include "omicron/renderer/ogl_utils.h"
 #include "omicron/disk/ply_point_writter.h"
 #include "tucano/effects/phongshader.hpp"
-#include "omicron/hierarchy/node_loader.h"
+//#include "omicron/hierarchy/node_loader.h"
 #include "omicron/ui/gl_hidden_widget.h"
 
 #define USE_SPLAT

@@ -25,7 +25,7 @@ namespace omicron::hierarchy
 		using NodeArray = typename HierarchyCreator::NodeArray;
 		using Dim = typename HierarchyCreator::OctreeDim;
 		using Front = hierarchy::Front< MortonCode >;
-		using Renderer = SplatRenderer;
+		using Renderer = SplatRenderer< MortonCode >;
 		
 		/**
 		 * Ctor. Creates the octree from a .ply file, generating a sorted file in the process which can be used with

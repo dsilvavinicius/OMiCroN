@@ -80,8 +80,8 @@ UniformBufferParameter::set_buffer_data(Vector3f const& color, float shininess,
     glBufferSubData(GL_UNIFORM_BUFFER, 24, sizeof(float), &epsilon);
     unbind();
 }
-
-SplatRenderer::SplatRenderer( Tucano::Camera* camera, const Vector3f& modelCentroid )
+template< typename Morton >
+inline SplatRenderer< Morton >::SplatRenderer( Tucano::Camera* camera, const Vector3f& modelCentroid )
     : m_camera(camera), m_frustum( *camera ),
 	  m_soft_zbuffer(true), m_smooth(false),
       m_ewa_filter(true), m_multisample(false),
@@ -104,7 +104,8 @@ SplatRenderer::SplatRenderer( Tucano::Camera* camera, const Vector3f& modelCentr
     setup_screen_size_quad();
 }
 
-SplatRenderer::~SplatRenderer()
+template< typename Morton >
+SplatRenderer< Morton >::~SplatRenderer()
 {
     glDeleteBuffers(1, &m_rect_vertices_vbo);
     glDeleteBuffers(1, &m_rect_texture_uv_vbo);
@@ -113,8 +114,8 @@ SplatRenderer::~SplatRenderer()
     glDeleteTextures(1, &m_filter_kernel);
 }
 
-void
-SplatRenderer::setup_program_objects()
+template< typename Morton >
+void SplatRenderer< Morton >::setup_program_objects()
 {
     m_visibility.set_visibility_pass();
     m_visibility.set_pointsize_method(m_pointsize_method);
@@ -130,8 +131,7 @@ SplatRenderer::setup_program_objects()
     m_finalization.set_smooth(m_smooth);
 }
 
-inline void
-SplatRenderer::setup_filter_kernel()
+template< typename Morton > inline void SplatRenderer< Morton >::setup_filter_kernel()
 {
     const float sigma2 = 0.316228f; // Sqrt(0.1).
 
@@ -151,8 +151,7 @@ SplatRenderer::setup_filter_kernel()
     glTexImage1D(GL_TEXTURE_1D, 0, GL_R32F, 256, 0, GL_RED, GL_FLOAT, yi);
 }
 
-inline void
-SplatRenderer::setup_screen_size_quad()
+template< typename Morton > inline void SplatRenderer< Morton >::setup_screen_size_quad()
 {
     float rect_vertices[12] = {
         1.0f, 1.0f, 0.0f,
@@ -196,14 +195,12 @@ SplatRenderer::setup_screen_size_quad()
     glBindVertexArray(0);
 }
 
-bool
-SplatRenderer::smooth() const
+template< typename Morton > inline bool SplatRenderer< Morton >::smooth() const
 {
     return m_smooth;
 }
 
-void
-SplatRenderer::set_smooth(bool enable)
+template< typename Morton > inline void SplatRenderer< Morton >::set_smooth(bool enable)
 {
     if (m_smooth != enable)
     {
@@ -225,14 +222,12 @@ SplatRenderer::set_smooth(bool enable)
     }
 }
 
-bool
-SplatRenderer::backface_culling() const
+template< typename Morton > inline bool SplatRenderer< Morton >::backface_culling() const
 {
     return m_backface_culling;
 }
 
-void
-SplatRenderer::set_backface_culling(bool enable)
+template< typename Morton > inline void SplatRenderer< Morton >::set_backface_culling(bool enable)
 {
     if (m_backface_culling != enable)
     {
@@ -242,14 +237,12 @@ SplatRenderer::set_backface_culling(bool enable)
     }
 }
 
-bool
-SplatRenderer::soft_zbuffer() const
+template< typename Morton > inline bool SplatRenderer< Morton >::soft_zbuffer() const
 {
     return m_soft_zbuffer;
 }
 
-void
-SplatRenderer::set_soft_zbuffer(bool enable)
+template< typename Morton > inline void SplatRenderer< Morton >::set_soft_zbuffer(bool enable)
 {
     if (m_soft_zbuffer != enable)
     {
@@ -263,26 +256,22 @@ SplatRenderer::set_soft_zbuffer(bool enable)
     }
 }
 
-float
-SplatRenderer::soft_zbuffer_epsilon() const
+template< typename Morton > inline float SplatRenderer< Morton >::soft_zbuffer_epsilon() const
 {
     return m_epsilon;
 }
 
-void
-SplatRenderer::set_soft_zbuffer_epsilon(float epsilon)
+template< typename Morton > inline void SplatRenderer< Morton >::set_soft_zbuffer_epsilon(float epsilon)
 {
     m_epsilon = epsilon;
 }
 
-unsigned int
-SplatRenderer::pointsize_method() const
+template< typename Morton > inline unsigned int SplatRenderer< Morton >::pointsize_method() const
 {
     return m_pointsize_method;
 }
 
-void
-SplatRenderer::set_pointsize_method(unsigned int pointsize_method)
+template< typename Morton > inline void SplatRenderer< Morton >::set_pointsize_method(unsigned int pointsize_method)
 {
     if (m_pointsize_method != pointsize_method)
     {
@@ -292,14 +281,12 @@ SplatRenderer::set_pointsize_method(unsigned int pointsize_method)
     }
 }
 
-bool
-SplatRenderer::ewa_filter() const
+template< typename Morton > inline bool SplatRenderer< Morton >::ewa_filter() const
 {
     return m_ewa_filter;
 }
 
-void
-SplatRenderer::set_ewa_filter(bool enable)
+template< typename Morton > inline void SplatRenderer< Morton >::set_ewa_filter(bool enable)
 {
     if (m_soft_zbuffer && m_ewa_filter != enable)
     {
@@ -308,14 +295,12 @@ SplatRenderer::set_ewa_filter(bool enable)
     }
 }
 
-bool
-SplatRenderer::multisample() const
+template< typename Morton > inline bool SplatRenderer< Morton >::multisample() const
 {
     return m_multisample;
 }
 
-void
-SplatRenderer::set_multisample(bool enable)
+template< typename Morton > inline void SplatRenderer< Morton >::set_multisample(bool enable)
 {
     if (m_multisample != enable)
     {
@@ -325,63 +310,54 @@ SplatRenderer::set_multisample(bool enable)
     }
 }
 
-float const*
-SplatRenderer::material_color() const
+template< typename Morton >
+float const* SplatRenderer< Morton >::material_color() const
 {
     return m_color.data();
 }
 
-void
-SplatRenderer::set_material_color(float const* color_ptr)
+template< typename Morton > inline void SplatRenderer< Morton >::set_material_color(float const* color_ptr)
 {
     Map<const Vector3f> color(color_ptr);
     m_color = color;
 }
 
-float
-SplatRenderer::material_shininess() const
+template< typename Morton > inline float SplatRenderer< Morton >::material_shininess() const
 {
     return m_shininess;
 }
 
-void
-SplatRenderer::set_material_shininess(float shininess)
+template< typename Morton > inline void SplatRenderer< Morton >::set_material_shininess(float shininess)
 {
     m_shininess = shininess;
 }
 
-float
-SplatRenderer::radius_scale() const
+template< typename Morton > inline float SplatRenderer< Morton >::radius_scale() const
 {
     return m_radius_scale;
 }
 
-void
-SplatRenderer::set_radius_scale(float radius_scale)
+template< typename Morton > inline void SplatRenderer< Morton >::set_radius_scale(float radius_scale)
 {
     m_radius_scale = radius_scale;
 }
 
-float
-SplatRenderer::ewa_radius() const
+template< typename Morton > inline float SplatRenderer< Morton >::ewa_radius() const
 {
     return m_ewa_radius;
 }
 
-void
-SplatRenderer::set_ewa_radius(float ewa_radius)
+template< typename Morton > inline void SplatRenderer< Morton >::set_ewa_radius(float ewa_radius)
 {
     m_ewa_radius = ewa_radius;
 }
 
-void
-SplatRenderer::reshape(int width, int height)
+template< typename Morton > inline void SplatRenderer< Morton >::reshape(int width, int height)
 {
     m_fbo.reshape(width, height);
 }
 
-void
-SplatRenderer::setup_uniforms( glProgram& program, const Matrix4f& modelView )
+template< typename Morton > inline void SplatRenderer< Morton >::setup_uniforms( glProgram& program, const Matrix4f& modelView )
 {
     m_uniform_camera.set_buffer_data( modelView, m_camera->getProjectionMatrix() );
     
