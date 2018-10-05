@@ -16,7 +16,7 @@
 
 namespace omicron::test
 {
-    using namespace std;
+    /* using namespace std;
     using namespace Tucano;
     using namespace util;
     using namespace renderer;
@@ -24,16 +24,14 @@ namespace omicron::test
     using SurfelArray = Array< Surfel >;
     using Node = O1OctreeNode< Surfel >;
     using Siblings = Array< Node >;
-    using NodeLoader = hierarchy::NodeLoader< Surfel >;
     
     class SplatRendererTestWidget
     : public QtFreecameraWidget
     {
     public:
         #ifdef USE_SPLAT
-            SplatRendererTestWidget( NodeLoader& loader, QWidget *parent = 0 )
+            SplatRendererTestWidget( QWidget *parent = 0 )
             : QtFreecameraWidget( parent, loader.widget() ),
-            m_loader( loader ),
             m_siblings( N_SEGMENTS ),
             m_surfels( N_SEGMENTS ),
             m_renderer( nullptr )
@@ -300,5 +298,5 @@ namespace omicron::test
             #endif
         }
         ASSERT_EQ( 0, AllocStatistics::totalAllocated() );
-    }
+    } */
 }

@@ -850,19 +850,9 @@ namespace omicron::hierarchy
 	{
 		NodeArray children( nChildren );
 		
-		// Verify if placeholders are necessary.
-		bool frontPlaceholdersOn = ( inChildren[ 0 ].getMorton().getLevel() == m_leafLvlDim.m_nodeLvl );
-		
 		for( int i = 0; i < children.size(); ++i )
 		{
 			children[ i ] = std::move( inChildren[ i ] );
-			
-			if( frontPlaceholdersOn )
-			{
-				#ifdef HIERARCHY_CREATION_RENDERING
-					m_front.insertPlaceholder( threadIdx );
-				#endif
-			}
 			
 			Node& child = children[ i ];
 			

@@ -25,11 +25,8 @@ namespace omicron::test::hierarchy
             auto start = Profiler::now( "Octree construction", m_log );
             
             GLHiddenWidget hiddenWidget;
-            NodeLoaderThread loaderThread( &hiddenWidget, 900ul * 1024ul * 1024ul );
-            NodeLoader< Point > loader( &loaderThread, 1 );
             
-            Octree octree( param.m_plyFilename, param.m_hierarchyLvl, loader,
-                            RuntimeSetup( param.m_nThreads, param.m_workItemSize, param.m_memoryQuota ) );
+            Octree octree( param.m_plyFilename, param.m_hierarchyLvl, RuntimeSetup( param.m_nThreads, param.m_workItemSize, param.m_memoryQuota ) );
             
             Profiler::elapsedTime( start, "Octree construction", m_log );
         }

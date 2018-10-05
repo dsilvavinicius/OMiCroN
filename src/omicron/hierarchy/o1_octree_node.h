@@ -31,7 +31,7 @@ namespace omicron::hierarchy
 		/** Initializes an empty unusable node. */
 		O1OctreeNode();
 
-		/** Ctor to build an O1OctreeNode when child, parent and indices are not known yet. Gpu cloud is also not init. */
+		/** Ctor to build an O1OctreeNode when child, parent and indices are not known yet. Gpu cloud is also not init. The constructed node can also be considered a placeholder for another node. */
 		O1OctreeNode( const Morton morton );
 
 		/** Ctor to build a leaf O1OctreeNode when parent are not known yet. Gpu cloud is also not init.*/

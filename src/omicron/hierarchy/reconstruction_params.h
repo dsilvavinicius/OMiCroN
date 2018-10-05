@@ -94,11 +94,11 @@ enum ReconstructionAlgorithm
 
 // Number of placeholders expected to be substituted in the hierarchy creation.
 #if MODEL == DAVID
-	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 19777u // David + no leaf collapse
+	#define EXPECTED_INSERTED_LEAVES 19777u // David + no leaf collapse
 #elif MODEL == ATLAS
-	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 21187u // Atlas + no leaf collapse
+	#define EXPECTED_INSERTED_LEAVES 21187u // Atlas + no leaf collapse
 #elif MODEL == ST_MATHEW || MODEL == BUNNY || MODEL == DUOMO
-	#define EXPECTED_SUBSTITUTED_PLACEHOLDERS 23711u // StMathew + no leaf collapse
+	#define EXPECTED_INSERTED_LEAVES 23711u // StMathew + no leaf collapse
 #endif
 
 #ifdef LAB

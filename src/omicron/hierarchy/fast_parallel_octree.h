@@ -67,8 +67,8 @@ namespace omicron::hierarchy
 		 * hierarchy and second values equals to the the number of contents in all nodes. Returns 0 otherwise. */
 		pair< uint, uint > nodeStatistics() const;
 		
-		uint substitutedPlaceholders() const;
-		
+		uint insertedLeaves() { return m_front->insertedLeaves(); }
+
 		template< typename M >
 		friend ostream& operator<<( ostream& out, const FastParallelOctree< M >& octree );
 		
@@ -266,12 +266,6 @@ namespace omicron::hierarchy
 	pair< uint, uint > FastParallelOctree< Morton >::nodeStatistics() const
 	{
 		return m_root->subtreeStatistics();
-	}
-	
-	template< typename Morton >
-	uint FastParallelOctree< Morton >::substitutedPlaceholders() const
-	{
-		return m_front->substitutedPlaceholders();
 	}
 	
 	template< typename Morton >

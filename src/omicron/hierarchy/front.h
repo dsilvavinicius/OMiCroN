@@ -150,18 +150,13 @@ namespace omicron::hierarchy
 		 * @param projThresh is the projection threashold */
 		OctreeStats trackFront( Renderer& renderer, const Float projThresh );
 		
-		/** @returns the number of placeholders substituted in front evaluation until now. */
-		uint substitutedPlaceholders() const;
-		
+		uint insertedLeaves() { return m_insertedLeaves; }
+
 	private:
-		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
-						const Float projThresh );
-		
-		/** Substitute a placeholder with the first node of the given substitution level. */
-		bool substitutePlaceholder( Node* node, int substitutionLvl );
+		void trackNode( FrontListIter& frontIt, Node*& lastParent, Renderer& renderer, const Float projThresh );
 		
 		bool checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
-						 FrontListIter& frontIt, int substituionLvl, Renderer& renderer,
+						 FrontListIter& frontIt, Renderer& renderer,
 					const Float projThresh, bool& out_isCullable );
 		
 		void prune( FrontListIter& frontIt, Node* parentNode, const bool parentIsCullable, Renderer& renderer );
@@ -287,27 +282,15 @@ namespace omicron::hierarchy
 		/** Iterator used to resume front processing from previous frame. */
 		FrontListIter m_frontIter;
 		
-		/** Node used as a placeholder in the front. It is used whenever it is known that a node should occupy a given
-		 * position, but the node itself is not defined yet because the hierarchy creation algorithm have not reached
-		 * the needed level. */
-		Node m_placeholder;
-		
 		/** Mutexes to synchronize m_perLvlInsertions operations. */
-		vector< mutex > m_perLvlMtx;
+		mutex m_mutex;
 		
 		/** Nodes pending insertion in the current insertion iteration. m_currentIterInsertions[ t ] have the insertions
 		 * of thread t. This lists are moved to m_perLvlInsertions whenever notifyInsertionEnd() is called. */
 		InsertionVector m_currentIterInsertions;
 		
 		/** All pending insertion nodes. m_perLvlInsertions[ l ] have the nodes for level l, sorted in hierarchy width order. */
-		InsertionVector m_perLvlInsertions;
-		
-		/** All placeholders pending insertion in the current insertion iteration. m_currentIterPlaceholders[ t ] have the
-		 * insertions of thread t. The lists are moved to m_placeholders whenever notifyInsertionEnd() is called. */
-		InsertionVector m_currentIterPlaceholders;
-		
-		/** All placeholders pending insertion. The list is sorted in hierarchy width order.  */
-		FrontList m_placeholders;
+		FrontList m_insertions;
 		
 		/** Dimensions of the octree nodes at deepest level. */
 		OctreeDim m_leafLvlDim;
@@ -321,8 +304,9 @@ namespace omicron::hierarchy
 		// Statistics related data.
 		chrono::system_clock::time_point m_lastInsertionTime;
 		OctreeStats m_octreeStats;
-		uint m_substitutedPlaceholders; // Number of placeholders substituted.
 		
+		uint m_insertedLeaves;
+
 		#ifdef NODE_ID_TEXT
 			TextEffect m_textEffect;
 			vector< pair< string, Vector4f >, TbbAllocator< pair< string, Vector4f > > > m_nodeIds;
@@ -338,12 +322,9 @@ namespace omicron::hierarchy
 	: m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nHierarchyCreationThreads ),
-	m_currentIterPlaceholders( nHierarchyCreationThreads ),
-	m_perLvlInsertions( leafLvlDim.m_nodeLvl + 1 ),
-	m_perLvlMtx( leafLvlDim.m_nodeLvl + 1 ),
 	m_leafLvlLoadedFlag( false ),
 	m_lastInsertionTime( Profiler::now() ),
-	m_substitutedPlaceholders( 0u )
+	m_insertedLeaves( 0u )
 	{
 		m_frontIter = m_front.end();
 		
@@ -395,47 +376,16 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline void Front< Morton >::insertPlaceholder( int threadIdx )
-	{
-		FrontList& list = m_currentIterPlaceholders[ threadIdx ];
-		list.push_back( &m_placeholder );
-	}
-	
-	template< typename Morton >
 	inline void Front< Morton >::notifyInsertionEnd( uint dispatchedThreads )
 	{
 		if( dispatchedThreads > 0 )
 		{
-			int lvl = -1;
+			lock_guard< mutex > lock( m_mutex );
+			
 			for( FrontList& list : m_currentIterInsertions )
 			{
-				if( !list.empty() )
-				{
-					lvl = list.front()->getMorton().getLevel();
-					break;
-				}
-			}
-			
-			if( lvl != -1 )
-			{
-				lock_guard< mutex > lock( m_perLvlMtx[ lvl ] );
-			
-				for( FrontList& list : m_currentIterInsertions )
-				{
-					FrontList& lvlInsertions = m_perLvlInsertions[ lvl ];
-					// Move nodes to the per-level sorted buffer.
-					lvlInsertions.splice( lvlInsertions.end(), list );
-				}
-			}
-			
-			{
-				lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
-				
-				// Move placeholders to the sorted buffer.
-				for( FrontList& list : m_currentIterPlaceholders )
-				{
-					m_placeholders.splice( m_placeholders.end(), list );
-				}
+				// Move nodes to the per-level sorted buffer.
+				m_insertions.splice( m_insertions.end(), list );
 			}
 		}
 	}
@@ -462,36 +412,21 @@ namespace omicron::hierarchy
 		int nNodesPerFrame = 0;
 		
 		{
-			lock_guard< mutex > lock( m_perLvlMtx[ m_leafLvlDim.m_nodeLvl ] );
+			lock_guard< mutex > lock( m_mutex );
 			
-			if( !m_placeholders.empty() )
+			if( !m_insertions.empty() )
 			{
+				m_insertedLeaves += m_insertions.size();
 				frontInsertionDelay = Profiler::elapsedTime( m_lastInsertionTime );
 				m_lastInsertionTime = Profiler::now();
 			}
 				
 			// Insert all leaf level placeholders.
-			m_front.splice( m_front.end(), m_placeholders );
+			m_front.splice( m_front.end(), m_insertions );
 		}
 		
 		if( !m_front.empty() )
 		{
-			// The level from which the placeholders will be substituted is the one with max size, in order to maximize
-			// placeholder substitution.
-			size_t maxSize = 1;
-			int substitutionLvl = -1;
-			for( int i = 0; i < m_perLvlInsertions.size(); ++i )
-			{
-				lock_guard< mutex > lock( m_perLvlMtx[ i ] );
-				size_t lvlSize = m_perLvlInsertions[ i ].size();
-				maxSize = std::max( maxSize, lvlSize );
-				
-				if( maxSize == lvlSize )
-				{
-					substitutionLvl = i;
-				}
-			}
-
 			Node* lastParent = nullptr; // Parent of last node. Used to optimize prunning check.
 				
 			#if defined FRONT_TRACKING_DEBUG || defined RENDERING_DEBUG
@@ -524,7 +459,7 @@ namespace omicron::hierarchy
 					assertFrontIterator( m_frontIter, front );
 				#endif
 					
-				trackNode( m_frontIter, lastParent, substitutionLvl, renderer, projThresh );
+				trackNode( m_frontIter, lastParent, renderer, projThresh );
 			}
 
 			renderer.render_frame();
@@ -578,18 +513,9 @@ namespace omicron::hierarchy
 	
 	template< typename Morton >
 	inline void Front< Morton >
-	::trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer, const Float projThresh )
+	::trackNode( FrontListIter& frontIt, Node*& lastParent, Renderer& renderer, const Float projThresh )
 	{
 		Node* frontNode = *frontIt;
-		
-		if( frontNode == &m_placeholder )
-		{
-			if( !substitutePlaceholder( frontNode, substitutionLvl ) )
-			{
-				frontIt++;
-				return;
-			}
-		}
 		
 		Node& node = *frontNode;
 		const Morton& morton = frontNode->getMorton();
@@ -604,7 +530,7 @@ namespace omicron::hierarchy
 			OctreeDim parentLvlDim( nodeLvlDim, nodeLvlDim.m_nodeLvl - 1 );
 			Morton parentMorton = *morton.traverseUp();
 			bool parentIsCullable;
-			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, substitutionLvl, renderer,
+			if( checkPrune( parentMorton, parentNode, parentLvlDim, frontIt, renderer,
 							projThresh, parentIsCullable ) )
 			{
 				prune( frontIt, parentNode, parentIsCullable, renderer );
@@ -643,55 +569,9 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline bool Front< Morton >::substitutePlaceholder( Node* node, int substitutionLvl )
-	{
-		assert( node == &m_placeholder && "Substitution paramenter should be a placeholder node" );
-		
-		if( substitutionLvl != -1 )
-		{
-			lock_guard< mutex > lock( m_perLvlMtx[ substitutionLvl ] );
-			
-			FrontList& substitutionLvlList = m_perLvlInsertions[ substitutionLvl ];
-			
-			if( !substitutionLvlList.empty() )
-			{
-				Node* substituteCandidate = substitutionLvlList.front();
-				
-				if( node->getMorton().isDescendantOf( substituteCandidate->getMorton() ) )
-				{
-					#ifdef SUBSTITUTION_DEBUG
-						stringstream ss; ss << "Substituting placeholder " << node.m_morton.getPathToRoot( true )
-							<< " by " << substituteCandidate.m_morton.getPathToRoot( true ) << endl << endl;
-						HierarchyCreationLog::logDebugMsg( ss.str() );
-					#endif
-					
-					++m_substitutedPlaceholders;
-					node = substituteCandidate;
-					
-					#ifdef ASYNC_LOAD
-						node->loadInGpu();
-					#else
-						node->loadGPU();
-					#endif
-						
-					substitutionLvlList.erase( substitutionLvlList.begin() );
-					
-					return true;
-				}
-				else 
-				{
-					return false;
-				}
-			}
-		}
-		
-		return false;
-	}
-	
-	template< typename Morton >
 	inline bool Front< Morton >
 	::checkPrune( const Morton& parentMorton, Node* parentNode, const OctreeDim& parentLvlDim,
-				  FrontListIter& frontIt, int substitutionLvl, Renderer& renderer, const Float projThresh,
+				  FrontListIter& frontIt, Renderer& renderer, const Float projThresh,
 			   bool& out_isCullable )
 	{
 		#ifdef PRUNING_DEBUG
@@ -752,12 +632,7 @@ namespace omicron::hierarchy
 			int nSiblings = 0;
 			FrontListIter siblingIter = frontIt;
 			while( siblingIter != m_front.end() )
-			{
-				if( *siblingIter == &m_placeholder )
-				{
-					substitutePlaceholder( *siblingIter, substitutionLvl );
-				}
-				
+			{	
 				if( ( *siblingIter++ )->parent() != parentNode )
 				{
 					break;
@@ -1022,12 +897,6 @@ namespace omicron::hierarchy
 		}
 		
 		node.unloadInGpu();
-	}
-	
-	template< typename Morton >
-	inline uint Front< Morton >::substitutedPlaceholders() const
-	{
-		return m_substitutedPlaceholders;
 	}
 }
 

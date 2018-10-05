@@ -183,8 +183,8 @@ void PointRendererWidget::paintGL (void)
 	
 	{
 		float currentCompletion = m_statistics.currentCompletion();
-		if( m_octree->substitutedPlaceholders() >= EXPECTED_SUBSTITUTED_PLACEHOLDERS * ( currentCompletion + 0.1f )
-			|| ( m_octree->substitutedPlaceholders() == EXPECTED_SUBSTITUTED_PLACEHOLDERS && m_statistics.currentCompletion() < 1.f ) )
+		if( m_octree->insertedLeaves() >= EXPECTED_INSERTED_LEAVES * ( currentCompletion + 0.1f )
+			|| ( m_octree->insertedLeaves() == EXPECTED_INSERTED_LEAVES && m_statistics.currentCompletion() < 1.f ) )
 		{
 			m_statistics.addCompletionPercent( m_statistics.currentCompletion() + 0.1f );
 		}
@@ -369,7 +369,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 		<< "Dynamic memory allocated: " << AllocStatistics::totalAllocated() << " bytes" << endl
 		<< "Number of nodes in hierarchy: " << nodeStats.first << endl 
 		<< "Number of splats in hierarchy: " << nodeStats.second << endl
-		<< "Number of substituted placeholders: " << m_octree->substitutedPlaceholders() << endl << endl;
+		<< "Number of substituted placeholders: " << m_octree->insertedLeaves() << endl << endl;
 	statsFile << statsString.str();
 	
 	statsFile.close();
