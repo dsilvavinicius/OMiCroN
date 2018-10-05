@@ -6,7 +6,7 @@
 
 namespace omicron::test
 {
-    using namespace std;
+    /* using namespace std;
     using namespace basic;
     
     template< typename T >
@@ -118,7 +118,7 @@ namespace omicron::test
         {
             ASSERT_TRUE( expectedPoints[ i ]->equal( *otherPoints[ i ], 1.e-15 ) );
         }
-    }
+    } */
     
 // 		TYPED_TEST( O1OctreeNodeTest, Serialization )
 // 		{

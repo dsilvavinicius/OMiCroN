@@ -95,6 +95,7 @@ add_library( Point_Based_Renderer_Lib
 # 	omicron/Scan.cpp
 # 	omicron/basic/Camera.cpp
 	omicron/hierarchy/hierarchy_creation_log.cpp
+	omicron/hierarchy/external_octree_data.cpp
 	
 	omicron/renderer/splat_renderer/buffer.cpp
 	omicron/renderer/splat_renderer/framebuffer.cpp

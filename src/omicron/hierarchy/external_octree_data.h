@@ -7,8 +7,6 @@
 
 namespace omicron::hierarchy
 {
-    using namespace omicron::renderer;
-
     /** All external datastructures of the octree nodes and methods to operate them. */
     class ExtOctreeData
     {
