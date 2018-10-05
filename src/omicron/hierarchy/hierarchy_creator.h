@@ -641,6 +641,7 @@ namespace omicron::hierarchy
 			}
 			#endif
 			
+			node.setIndices();
 			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 			
 			for( Node& child : node.child() )
@@ -673,12 +674,13 @@ namespace omicron::hierarchy
 			}
 			#endif
 			
+			node.setIndices();
 			OctreeDim childDim( m_octreeDim, m_octreeDim.m_nodeLvl + 1 );
 			
 			for( Node& child : node.child() )
 			{
 				child.setParent( &node );
-				
+
 				#ifdef DEBUG
 // 				{
 // 					cout << "Child: " << childDim.calcMorton( child ).getPathToRoot( true ) << child << endl << endl;
