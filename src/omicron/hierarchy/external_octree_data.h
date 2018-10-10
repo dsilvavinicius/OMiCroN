@@ -24,8 +24,13 @@ namespace omicron::hierarchy
         static void copyFromExternal( SurfelIter& iter, const ulong pos, const int hierarchyLvl, const uint size );
     
     private:
-        using ExtSurfelVector = stxxl::VECTOR_GENERATOR< Surfel >::result;
-        using ExtIndexVector = stxxl::VECTOR_GENERATOR< ulong >::result;
+        static constexpr ulong EXT_SURFEL_MEM_BUDGET = 5ul * 1024ul * 1024ul * 1024ul;
+        static constexpr ulong EXT_INDEX_MEM_BUDGET = 5ul * 1024ul * 1024ul * 1024ul;
+        static constexpr ulong EXT_PAGE_SIZE = 4ul;
+        static constexpr ulong EXT_BLOCK_SIZE = 2ul * 1024ul * 1024ul;
+
+        using ExtSurfelVector = stxxl::VECTOR_GENERATOR< Surfel, EXT_PAGE_SIZE, EXT_SURFEL_MEM_BUDGET / ( EXT_BLOCK_SIZE * EXT_PAGE_SIZE ), EXT_BLOCK_SIZE >::result;
+        using ExtIndexVector = stxxl::VECTOR_GENERATOR< ulong, EXT_PAGE_SIZE, EXT_INDEX_MEM_BUDGET / ( EXT_BLOCK_SIZE * EXT_PAGE_SIZE ), EXT_BLOCK_SIZE >::result;
         
         static ExtSurfelVector m_surfels;
 		static ExtIndexVector m_indices;

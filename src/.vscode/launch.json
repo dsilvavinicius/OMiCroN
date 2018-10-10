@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/Point_Based_Renderer",
+            "program": "${workspaceFolder}/../bin/Point_Based_Renderer",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

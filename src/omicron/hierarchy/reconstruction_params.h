@@ -46,7 +46,7 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL DAVID
+#define MODEL BUNNY
 
 // Define to indicates that the system will be run in the laboratory.
 // #define LAB

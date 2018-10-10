@@ -807,8 +807,6 @@ namespace omicron::hierarchy
 			Node& child = children[ i ];
 			AlignedBox3f box = childLvlDim.getNodeBoundaries( child );
 			
-			assert( frontNode.m_morton.getBits() != 1 && "Inserting root node into front (branch)." );
-			
 			if( !renderer.isCullable( box ) )
 			{
 				setupNodeRendering( frontIt, &child, renderer );

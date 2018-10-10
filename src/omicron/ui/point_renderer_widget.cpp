@@ -106,7 +106,7 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#if NO_SORT == true
 			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted7.oct" );
 		#else
-			openMesh( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny.ply" );
+			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply" );
 		#endif
 	#endif
 	
