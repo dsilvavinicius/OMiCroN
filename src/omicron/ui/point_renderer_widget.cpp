@@ -103,10 +103,14 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 			#endif
 		#endif
 	#elif MODEL == BUNNY
-		#if NO_SORT == true
-			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted7.oct" );
+		#ifdef LAB
+			openMesh( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny_flipped_normals.ply" );
 		#else
-			openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply" );
+			#if NO_SORT == true
+				openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted7.oct" );
+			#else
+				openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply" );
+			#endif
 		#endif
 	#endif
 	
