@@ -156,4 +156,15 @@ namespace omicron::test
         PointSorter sorter( "/media/vinicius/data/Datasets/Duomo/Duomo.ply", sortLevel );
         sorter.sortToFile( "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.ply" );
     }
+
+    TEST_F( PointSorterTest, Bunny )
+    {
+        using M = ShallowMortonCode;
+        using PointSorter = disk::PointSorter< M >;
+        
+        int sortLevel = 7;
+        
+        PointSorter sorter( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply", sortLevel );
+        sorter.sortToFile( "/media/vinicius/data/Datasets/Bunny/bunny_sorted.ply" );
+    }
 }

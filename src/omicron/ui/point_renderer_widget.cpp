@@ -104,12 +104,12 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 		#endif
 	#elif MODEL == BUNNY
 		#ifdef LAB
-			openMesh( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny_flipped_normals.ply" );
+			openMesh( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny_sorted.ply" );
 		#else
 			#if NO_SORT == true
 				openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted7.oct" );
 			#else
-				openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply" );
+				openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted.ply" );
 			#endif
 		#endif
 	#endif

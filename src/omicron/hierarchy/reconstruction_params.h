@@ -49,7 +49,7 @@ enum ReconstructionAlgorithm
 #define MODEL BUNNY
 
 // Define to indicates that the system will be run in the laboratory.
-#define LAB
+//#define LAB
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 8
