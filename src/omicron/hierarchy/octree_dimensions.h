@@ -123,7 +123,7 @@ namespace omicron::hierarchy
         
         Point max_value() const
         {
-            return Point( Vec3( 0.f, 0.f, 0.f ), m_origin + m_size );
+            return Point( Vec3( 0.f, 0.f, 0.f ), m_origin + m_size - m_nodeSize * 0.5f );
         }
 		
 		friend ostream& operator<<( ostream& out, const OctreeDimensions& dim )
