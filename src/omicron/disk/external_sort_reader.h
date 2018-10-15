@@ -33,6 +33,9 @@ namespace omicron::disk
         const OctreeDim& dimensions() const { return *m_comp; }
     
     private:
+        static constexpr ulong RUNS_CREATOR_MEMORY = 10ul * 1024ul * 1024ul * 1024ul;
+        static constexpr ulong RUNS_MERGER_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
+
         using RunsCreator = runs_creator< use_push< Point >, OctreeDim >;
         
         unique_ptr< RunsCreator > m_runsCreator;
@@ -61,7 +64,7 @@ namespace omicron::disk
         
         auto start = Profiler::now( "STXXL::runs_creator." );
         
-        m_runsCreator = unique_ptr< RunsCreator >( new RunsCreator( *m_comp, 10ul * 1024ul * 1024ul * 1024ul ) );
+        m_runsCreator = unique_ptr< RunsCreator >( new RunsCreator( *m_comp, RUNS_CREATOR_MEMORY ) );
         
         PlyPointReader reader( inputFilename );
         reader.read(
@@ -82,7 +85,7 @@ namespace omicron::disk
         
         auto start = Profiler::now( "STXXL::runs_merger init." );
         
-        RunsMerger runsMerger( m_runsCreator->result(), *m_comp, 1ul * 1024ul * 1024ul * 1024ul );
+        RunsMerger runsMerger( m_runsCreator->result(), *m_comp, RUNS_MERGER_MEMORY );
         
         m_initTime = Profiler::elapsedTime( start, "STXXL::runs_merger init." );
         
