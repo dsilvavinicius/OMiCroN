@@ -362,7 +362,7 @@ namespace omicron::hierarchy
 					IterArray iterOutput( dispatchedThreads );
 					
 					// BEGIN PARALLEL WORKLIST PROCESSING.
-					#pragma omp parallel for
+					//#pragma omp parallel for
 					for( int i = 0; i < dispatchedThreads; ++i )
 					{
 						int threadIdx = omp_get_thread_num();
