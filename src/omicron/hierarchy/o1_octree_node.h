@@ -202,7 +202,8 @@ namespace omicron::hierarchy
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( O1OctreeNode&& other )
-	: m_indexOffset( other.m_indexOffset ),
+	: m_morton( other.m_morton ),
+	m_indexOffset( other.m_indexOffset ),
 	m_indexSize( other.m_indexSize ),
 	m_children( std::move( other.m_children ) ),
 	m_cloud( other.m_cloud ),
@@ -219,6 +220,7 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline O1OctreeNode< Morton >& O1OctreeNode< Morton >::operator=( O1OctreeNode&& other )
 	{
+		m_morton = other.m_morton;
 		m_indexOffset = other.m_indexOffset;
 		m_indexSize = other.m_indexSize;
 		m_children = std::move( other.m_children );
@@ -307,13 +309,18 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline void O1OctreeNode< Morton >::setIndices( const IndexVector& indices )
 	{
-		m_indexOffset = ExtOctreeData::reserveIndices( indices.size() );
+		assert( indices.size() > 0 );
+
+		m_indexSize = indices.size();
+		m_indexOffset = ExtOctreeData::reserveIndices( m_indexSize );
 		ExtOctreeData::copy2External( indices, m_indexOffset );
 	}
 
 	template< typename Morton >
 	inline void O1OctreeNode< Morton >::setChildren( const NodeVector& children )
 	{
+		assert( children.size() > 0 );
+
 		m_children.clear();
 		m_children = children;
 	}
@@ -321,6 +328,8 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline void O1OctreeNode< Morton >::setChildren( NodeVector&& children )
 	{
+		assert( children.size() > 0 );
+
 		m_children.clear();
 		m_children = std::move( children );
 	}

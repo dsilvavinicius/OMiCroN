@@ -267,8 +267,9 @@ namespace omicron::hierarchy
 								}
 								#endif
 								
-								
-								nodeList.push_back( Node( ExtOctreeData::calcMorton( indices[ 0 ], leafLvlDimCpy ), indices ) );
+								Morton morton = ExtOctreeData::calcMorton( indices[ 0 ], leafLvlDimCpy );
+								Node node( morton, indices );
+								nodeList.push_back( std::move( node ) );
 								
 								indices = IndexVector();
 								
@@ -286,7 +287,9 @@ namespace omicron::hierarchy
 					}
 				);
 				
-				nodeList.push_back( Node( ExtOctreeData::calcMorton( indices[ 0 ], leafLvlDimCpy ), indices ) );
+				Morton morton = ExtOctreeData::calcMorton( indices[ 0 ], leafLvlDimCpy );
+				Node node( morton, indices );
+				nodeList.push_back( std::move( node ) );
 				pushWork( std::move( nodeList ) );
 				
 				leafLvlLoaded = true;
