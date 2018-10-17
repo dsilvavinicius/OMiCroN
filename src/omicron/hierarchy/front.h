@@ -128,11 +128,6 @@ namespace omicron::hierarchy
 		 * @returns an iterator pointing to the element inserted into front. */
 		void insertIntoBuffer( FrontListIter& iter, Node& node, int threadIdx );
 		
-		/** Synchronized. Inserts a placeholder for a node that will be defined later in the shallower levels. This node
-		 * will be replaced on front tracking if a substitute is already defined.
-		 * @param morton is the placeholder node id. */
-		void insertPlaceholder( int threadIdx );
-		
 		/** Synchronized. Notifies that all threads have finished an insertion iteration.
 		 * @param dispatchedThreads is the number of dispatched thread in the creation iteration. */
 		void notifyInsertionEnd( uint dispatchedThreads );
@@ -351,6 +346,9 @@ namespace omicron::hierarchy
 		}
 		#endif
 		
+		assert( node.getMorton().getLevel() == MAX_HIERARCHY_LVL );
+		assert( node.getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( &node );
 	}
@@ -371,6 +369,9 @@ namespace omicron::hierarchy
 		}
 		#endif
 		
+		assert( node.getMorton().getLevel() == MAX_HIERARCHY_LVL );
+		assert( node.getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.insert( iter, &node );
 	}
@@ -447,6 +448,8 @@ namespace omicron::hierarchy
 			
 			for( int i = 0; m_frontIter != m_front.end() && i < nNodesPerFrame; ++i )
 			{
+				assert( ( *m_frontIter )->getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+
 				#ifdef FRONT_TRACKING_DEBUG
 				{
 					stringstream ss; ss << "Tracking " << m_frontIter->m_morton.getPathToRoot() << endl

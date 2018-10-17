@@ -69,6 +69,8 @@ namespace omicron::hierarchy
 
 		const uint size() const { return m_indexSize; } 
 
+		const ulong offset() const { return m_indexOffset; }
+
 		/* const ContentsArray& getContents() const { return m_contents; }
 		
 		ContentsArray& getContents() { return m_contents; } */

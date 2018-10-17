@@ -60,6 +60,9 @@ enum ReconstructionAlgorithm
 #define WORK_LIST_SIZE 8
 // #define WORK_LIST_SIZE 32
 
+// The maximum level of the constructed hierarchy.
+#define MAX_HIERARCHY_LVL 7
+
 #define RAM_QUOTA 6ul * 1024ul * 1024ul * 1024ul
 
 // Activates rendering in parallel with hierarchy creation.

@@ -518,7 +518,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	}
 	else if( !filename.substr( filename.find_last_of( '.' ) ).compare( ".ply" ) )
 	{
-		m_octree = new Octree( filename, 7, runtime );
+		m_octree = new Octree( filename, MAX_HIERARCHY_LVL, runtime );
 	}
 	else
 	{
