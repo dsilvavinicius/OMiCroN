@@ -124,10 +124,9 @@ inline SurfelCloud::SurfelCloud( const ulong offset, const ulong size, const int
 	
 	m_loadFuture = new future< void >(
 		async( launch::async,
-			[ & ]
+			[ = ]
 			{
 				auto bufferIter = m_bufferMap;
-
 				ExtOctreeData::copyFromExternal( bufferIter, offset, hierarchyLvl, m_numPts );
 			}
 		)

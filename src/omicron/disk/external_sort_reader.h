@@ -33,8 +33,13 @@ namespace omicron::disk
         const OctreeDim& dimensions() const { return *m_comp; }
     
     private:
-        static constexpr ulong RUNS_CREATOR_MEMORY = 10ul * 1024ul * 1024ul * 1024ul;
-        static constexpr ulong RUNS_MERGER_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
+        #ifdef LAB
+            static constexpr ulong RUNS_CREATOR_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
+            static constexpr ulong RUNS_MERGER_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
+        #else
+            static constexpr ulong RUNS_CREATOR_MEMORY = 10ul * 1024ul * 1024ul * 1024ul;
+            static constexpr ulong RUNS_MERGER_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
+        #endif
 
         using RunsCreator = runs_creator< use_push< Point >, OctreeDim >;
         
