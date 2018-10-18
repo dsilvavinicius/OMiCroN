@@ -19,7 +19,7 @@
 // #define SUBSTITUTION_DEBUG
 // #define ORDERING_DEBUG
 // #define RENDERING_DEBUG
-// #define FRONT_TRACKING_DEBUG
+#define FRONT_TRACKING_DEBUG
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
 
@@ -167,109 +167,11 @@ namespace omicron::hierarchy
 		
 		void unloadInGpu( Node& node );
 		
-		#ifdef ORDERING_DEBUG
-			void assertFrontIterator( const FrontListIter& iter, const FrontList& front )
-			{
-				if( iter != front.begin() )
-				{
-					Morton& currMorton = iter->m_morton;
-					Morton& prevMorton = prev( iter )->m_morton;
-					
-					uint currLvl = currMorton.getLevel();
-					uint prevLvl = prevMorton.getLevel();
-					
-					bool isPlaceholder = ( iter->m_octreeNode == &m_placeholder );
-					stringstream ss;
-					if( currLvl < prevLvl )
-					{
-						Morton prevAncestorMorton = prevMorton.getAncestorInLvl( currLvl );
-						if( currMorton <= prevAncestorMorton )
-						{
-							ss  << "Front order compromised. Prev: " << prevAncestorMorton.getPathToRoot( true )
-								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
-								<< isPlaceholder << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-					else if( currLvl > prevLvl )
-					{
-						Morton currAncestorMorton = currMorton.getAncestorInLvl( prevLvl );
-						if( currAncestorMorton <= prevMorton  )
-						{
-							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-								<< "Curr: " << currAncestorMorton.getPathToRoot( true ) << " is placeholder? "
-								<< isPlaceholder << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-					else
-					{
-						if( currMorton <= prevMorton )
-						{
-							ss  << "Front order compromised. Prev: " << prevMorton.getPathToRoot( true )
-								<< "Curr: " << currMorton.getPathToRoot( true ) << " is placeholder? "
-								<< isPlaceholder << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-				}
-// 				assertNode( *iter->m_octreeNode, iter->m_morton );
-			}
-		
-			void assertNode( const Node& node, const Morton& morton )
-			{
-				uint nodeLvl = morton.getLevel();
-				OctreeDim nodeDim( m_leafLvlDim, nodeLvl );
-				
-				stringstream ss;
-				ss << "Asserting: " << morton.toString() << " Addr: " << &node << endl << endl;
-				
-				if( &node == &m_placeholder )
-				{
-					uint level = morton.getLevel();
-					if( level != m_leafLvlDim.m_nodeLvl )
-					{
-						ss << "Placeholder is not from leaf level." << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
-				}
-				else
-				{
-					if( node.getContents().empty() )
-					{
-						ss << "Empty node" << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
-					Morton calcMorton = nodeDim.calcMorton( node );
-					if( calcMorton != morton )
-					{
-						ss << "Morton inconsistency. Calc: " << calcMorton.toString() << endl << endl;
-						HierarchyCreationLog::logAndFail( ss.str() );
-					}
-					
-					OctreeDim parentDim( nodeDim, nodeDim.m_nodeLvl - 1 );
-					Node* parentNode = node.parent();
-					
-					if( parentNode != nullptr )
-					{
-						if( parentNode->getContents().empty() )
-						{
-							ss << "Empty parent" << endl << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-						
-						Morton parentMorton = *morton.traverseUp();
-						Morton calcParentMorton = parentDim.calcMorton( *parentNode );
-						if( parentMorton != calcParentMorton )
-						{
-							ss << "traversal parent: " << parentMorton.toString() << " Calc parent: "
-							<< calcParentMorton.toString() << endl;
-							HierarchyCreationLog::logAndFail( ss.str() );
-						}
-					}
-				}
-			}
-		#endif
+		bool checkNode( const Node& node ) const;
+
+		bool checkInsertion( const Node& toInsert ) const;
+
+		bool checkIterInsertions() const;
 		
 		/** The internal front datastructure. Contains all FrontNodes. */
 		FrontList m_front;
@@ -331,6 +233,38 @@ namespace omicron::hierarchy
 	}
 
 	template< typename Morton >
+	bool Front< Morton >::checkInsertion( const Node& toInsert ) const
+	{
+		assert( toInsert.getMorton().getLevel() == MAX_HIERARCHY_LVL );
+		checkNode( toInsert );
+
+		return true;
+	}
+
+	template< typename Morton >
+	bool Front< Morton >::checkNode( const Node& node ) const
+	{
+		assert( Morton() < node.getMorton() );
+		assert( node.getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+
+		return true;
+	}
+
+	template< typename Morton >
+	bool Front< Morton >::checkIterInsertions() const
+	{
+		for( const FrontList& list : m_currentIterInsertions )
+		{
+			for( const Node* node : list )
+			{
+				checkInsertion( *node );
+			}
+		}
+
+		return true;
+	}
+
+	template< typename Morton >
 	void Front< Morton >::notifyLeafLvlLoaded()
 	{
 		m_leafLvlLoadedFlag = true;
@@ -346,8 +280,7 @@ namespace omicron::hierarchy
 		}
 		#endif
 		
-		assert( node.getMorton().getLevel() == MAX_HIERARCHY_LVL );
-		assert( node.getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+		assert( checkInsertion( node ) );
 
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.push_back( &node );
@@ -369,8 +302,7 @@ namespace omicron::hierarchy
 		}
 		#endif
 		
-		assert( node.getMorton().getLevel() == MAX_HIERARCHY_LVL );
-		assert( node.getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+		assert( checkInsertion( node ) );
 
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
 		list.insert( iter, &node );
@@ -383,6 +315,8 @@ namespace omicron::hierarchy
 		{
 			lock_guard< mutex > lock( m_mutex );
 			
+			assert( checkIterInsertions() );
+
 			for( FrontList& list : m_currentIterInsertions )
 			{
 				// Move nodes to the per-level sorted buffer.
@@ -448,13 +382,14 @@ namespace omicron::hierarchy
 			
 			for( int i = 0; m_frontIter != m_front.end() && i < nNodesPerFrame; ++i )
 			{
-				assert( ( *m_frontIter )->getMorton() <= Morton::getLvlLast( MAX_HIERARCHY_LVL ) );
+				assert( checkNode( **m_frontIter ) );
 
 				#ifdef FRONT_TRACKING_DEBUG
 				{
-					stringstream ss; ss << "Tracking " << m_frontIter->m_morton.getPathToRoot() << endl
-						<< *m_frontIter->m_octreeNode << endl << endl;
+					stringstream ss; ss << "Tracking " << ( *m_frontIter )->getMorton().getPathToRoot() << endl
+						<< *m_frontIter << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
+					HierarchyCreationLog::flush();
 				}
 				#endif
 				

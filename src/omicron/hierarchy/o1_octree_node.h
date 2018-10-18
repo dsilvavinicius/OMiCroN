@@ -49,6 +49,8 @@ namespace omicron::hierarchy
 		
 		~O1OctreeNode();
 		
+		void clean();
+
 		O1OctreeNode& operator=( const O1OctreeNode& other ) = delete;
 		
 		/** Move ctor. */
@@ -141,7 +143,7 @@ namespace omicron::hierarchy
 
 		Morton m_morton;
 
-		SurfelCloud* m_cloud;
+		unique_ptr< SurfelCloud > m_cloud;
 		
 		ulong m_indexOffset;
 		uint m_indexSize;
@@ -160,14 +162,9 @@ namespace omicron::hierarchy
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode()
-	: m_morton(),
-	m_indexOffset( 0 ),
-	m_indexSize( 0 ),
-	m_isLeaf( false ),
-	m_parent( nullptr ),
-	m_children(),
-	m_cloud( nullptr )
-	{}
+	{
+		clean();
+	}
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( const Morton morton )
@@ -204,19 +201,8 @@ namespace omicron::hierarchy
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode( O1OctreeNode&& other )
-	: m_morton( other.m_morton ),
-	m_indexOffset( other.m_indexOffset ),
-	m_indexSize( other.m_indexSize ),
-	m_children( std::move( other.m_children ) ),
-	m_cloud( other.m_cloud ),
-	m_parent( other.m_parent ),
-	m_isLeaf( other.m_isLeaf )
 	{
-		other.m_morton = Morton();
-		other.m_indexOffset = 0;
-		other.m_indexSize = 0;
-		other.m_parent = nullptr;
-		other.m_cloud = nullptr;
+		*this = std::move( other );
 	}
 		
 	template< typename Morton >
@@ -226,15 +212,11 @@ namespace omicron::hierarchy
 		m_indexOffset = other.m_indexOffset;
 		m_indexSize = other.m_indexSize;
 		m_children = std::move( other.m_children );
-		m_cloud = other.m_cloud;
+		m_cloud = std::move( other.m_cloud );
 		m_parent = other.m_parent;
 		m_isLeaf = other.m_isLeaf;
 		
-		other.m_morton = Morton();
-		other.m_indexOffset = 0;
-		other.m_indexSize = 0;
-		other.m_parent = nullptr;
-		other.m_cloud = nullptr;
+		other.clean();
 		
 		return *this;
 	}
@@ -257,14 +239,21 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::~O1OctreeNode()
 	{
-		m_parent = nullptr;
-		if( m_cloud )
-		{
-			delete m_cloud;
-			m_cloud = nullptr;
-		}
+		clean();
 	}
 	
+	template< typename Morton >
+	inline void O1OctreeNode< Morton >::clean()
+	{
+		m_morton = Morton();
+		m_indexOffset = 0;
+		m_indexSize = 0;
+		m_isLeaf = false;
+		m_parent = nullptr;
+		m_cloud = nullptr;
+		m_children.clear();
+	}
+
 	template< typename Morton >
 	inline void* O1OctreeNode< Morton >::operator new( size_t size )
 	{
@@ -348,7 +337,7 @@ namespace omicron::hierarchy
 	{
 		if( m_cloud == nullptr && GpuAllocStatistics::hasMemoryFor( m_indexSize ) )
 		{
-			m_cloud = new SurfelCloud( m_indexOffset, m_indexSize, m_morton.getLevel() );
+			m_cloud = unique_ptr< SurfelCloud >( new SurfelCloud( m_indexOffset, m_indexSize, m_morton.getLevel() ) );
 			
 			#ifdef LOADING_DEBUG
 			{
@@ -362,18 +351,14 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline void O1OctreeNode< Morton >::unloadInGpu()
 	{
-		if( m_cloud != nullptr )
+	#ifdef LOADING_DEBUG
 		{
-			#ifdef LOADING_DEBUG
-			{
-				stringstream ss; ss << "Unloading cloud: " << m_cloud << endl << endl;
-				HierarchyCreationLog::logDebugMsg( ss.str() );
-			}
-			#endif
-			
-			delete m_cloud;
-			m_cloud = nullptr;
+			stringstream ss; ss << "Unloading cloud: " << m_cloud << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
+		#endif
+
+		m_cloud = nullptr;
 	}
 	
 	template< typename Morton >
