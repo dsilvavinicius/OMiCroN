@@ -16,9 +16,8 @@
 
 // Definitions to turn on debug logging for each Front operation.
 // #define INSERTION_DEBUG
-// #define SUBSTITUTION_DEBUG
 // #define ORDERING_DEBUG
-// #define RENDERING_DEBUG
+#define RENDERING_DEBUG
 #define FRONT_TRACKING_DEBUG
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
@@ -173,6 +172,8 @@ namespace omicron::hierarchy
 
 		bool checkIterInsertions() const;
 		
+		string toString() const;
+
 		/** The internal front datastructure. Contains all FrontNodes. */
 		FrontList m_front;
 		
@@ -275,11 +276,14 @@ namespace omicron::hierarchy
 	{
 		#ifdef INSERTION_DEBUG
 		{
-			stringstream ss; ss << "Inserting " << morton.getPathToRoot( true ) << endl << endl;
+			stringstream ss; ss << "Inserting " << node.getMorton().toString() << endl << &node << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
 		}
 		#endif
 		
+		//assert( node.getMorton().getBits() != 0x20fafe );
+
 		assert( checkInsertion( node ) );
 
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
@@ -297,11 +301,14 @@ namespace omicron::hierarchy
 	{
 		#ifdef INSERTION_DEBUG
 		{
-			stringstream ss; ss << "Inserting " << morton.getPathToRoot( true ) << endl << endl;
+			stringstream ss; ss << "Inserting " << node.getMorton().toString() << endl << &node << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
 		}
 		#endif
 		
+		//assert( node.getMorton().getBits() != 0x20fafe );
+
 		assert( checkInsertion( node ) );
 
 		FrontList& list = m_currentIterInsertions[ threadIdx ];
@@ -366,9 +373,9 @@ namespace omicron::hierarchy
 				
 			#if defined FRONT_TRACKING_DEBUG || defined RENDERING_DEBUG
 			{
-				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << "Size: " << m_front.size()
-					<< endl << endl;
+				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << toString() << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
 			}
 			#endif
 			
@@ -386,8 +393,7 @@ namespace omicron::hierarchy
 
 				#ifdef FRONT_TRACKING_DEBUG
 				{
-					stringstream ss; ss << "Tracking " << ( *m_frontIter )->getMorton().getPathToRoot() << endl
-						<< *m_frontIter << endl << endl;
+					stringstream ss; ss << "Tracking " << ( *m_frontIter )->getMorton().toString() << endl << *m_frontIter << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 					HierarchyCreationLog::flush();
 				}
@@ -401,6 +407,12 @@ namespace omicron::hierarchy
 			}
 
 			renderer.render_frame();
+
+			#ifdef FRONT_TRACKING_DEBUG
+			{
+				HierarchyCreationLog::logDebugMsg( "===== FRONT TRACKING END =====\n\n" );
+			}
+			#endif
 		}
 		
 		#ifdef NODE_ID_TEXT
@@ -437,12 +449,6 @@ namespace omicron::hierarchy
 		unsigned int numRenderedPoints = renderer.end_frame();
 		
 		int renderQueueTime = Profiler::elapsedTime( start );
-		
-		#ifdef FRONT_TRACKING_DEBUG
-		{
-			HierarchyCreationLog::logDebugMsg( "===== FRONT TRACKING END =====\n\n" );
-		}
-		#endif
 		
 		m_octreeStats.addFrame( FrameStats( traversalTime, renderQueueTime, numRenderedPoints, frontInsertionDelay, m_front.size(), nNodesPerFrame ) );
 		
@@ -495,8 +501,9 @@ namespace omicron::hierarchy
 		{
 			#ifdef RENDERING_DEBUG
 			{
-				stringstream ss; ss << "Trying to remove from rendering (culled): " << morton.getPathToRoot() << endl << endl;
+				stringstream ss; ss << "Culling: " << morton.toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
 			}
 			#endif
 			
@@ -636,8 +643,9 @@ namespace omicron::hierarchy
 		{
 			#ifdef RENDERING_DEBUG
 			{
-				stringstream ss; ss << "Trying to remove from rendering (prunning): " << frontIt->m_morton.getPathToRoot() << endl << endl;
+				stringstream ss; ss << "Pruning: " << ( *frontIt )->getMorton().toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
 			}
 			#endif
 			
@@ -728,8 +736,9 @@ namespace omicron::hierarchy
 	{
 		#ifdef RENDERING_DEBUG
 		{
-			stringstream ss; ss << "Trying to remove from rendering (branch): " << frontIt->m_morton.getPathToRoot() << endl << endl;
+			stringstream ss; ss << "Branch: " << ( *frontIt )->getMorton().toString() << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
 		}
 		#endif
 		
@@ -833,6 +842,19 @@ namespace omicron::hierarchy
 		}
 		
 		node.unloadInGpu();
+	}
+
+	template< typename Morton >
+	inline string Front< Morton >::toString() const
+	{
+		stringstream ss; ss << "Front size: " << m_front.size() << endl;
+
+		for( const Node* node : m_front )
+		{
+			ss << node->getMorton().toString() << endl;
+		}
+
+		return ss.str();
 	}
 }
 

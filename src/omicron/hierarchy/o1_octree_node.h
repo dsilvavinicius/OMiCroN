@@ -12,6 +12,7 @@
 
 // #define CTOR_DEBUG
 // #define LOADING_DEBUG
+// #define CLEAN_DEBUG
 
 namespace omicron::hierarchy
 {
@@ -245,6 +246,17 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline void O1OctreeNode< Morton >::clean()
 	{
+		#ifdef CLEAN_DEBUG
+		{
+			if( m_morton.getBits() != 0 )
+			{
+				stringstream ss; ss << "clean " << m_morton.toString() << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
+			}
+		}
+		#endif
+
 		m_morton = Morton();
 		m_indexOffset = 0;
 		m_indexSize = 0;
@@ -474,5 +486,6 @@ namespace omicron::hierarchy
 
 #undef CTOR_DEBUG
 #undef LOADING_DEBUG
+#undef CLEAN_DEBUG
 
 #endif

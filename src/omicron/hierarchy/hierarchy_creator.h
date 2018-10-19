@@ -22,6 +22,7 @@
 // #define NODE_PROCESSING_DEBUG
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
+#define PARALLEL_OUT_DEBUG
 
 using namespace util;
 
@@ -131,10 +132,12 @@ namespace omicron::hierarchy
 		/** Checks if all work is finished in all lvls. */
 		bool checkAllWorkFinished();
 		
-		string nodeListToString( const NodeList& list, const OctreeDim& lvlDim );
+		string nodeListToString( const NodeList& list ) const;
 		
-		string workListToString( const WorkList& list, const OctreeDim& lvlDim );
+		string workListToString( const WorkList& list ) const;
 		
+		string iterArrayToString( const IterArray& array ) const;
+
 		/** Thread[ i ] uses database connection m_dbs[ i ]. */
 		//Array< Sql > m_dbs;
 		
@@ -444,6 +447,13 @@ namespace omicron::hierarchy
 					}
 					// END PARALLEL WORKLIST PROCESSING.
 					
+					#ifdef PARALLEL_OUT_DEBUG
+					{
+						HierarchyCreationLog::logDebugMsg( iterArrayToString( iterOutput ) );
+						HierarchyCreationLog::flush();
+					}
+					#endif
+
 					WorkList& nextLvlWorkList = m_lvlWorkLists[ lvl - 1 ];
 					
 					if( !iterOutput.empty() && !iterOutput[ 0 ].empty() )
@@ -874,26 +884,39 @@ namespace omicron::hierarchy
 	}
 	
 	template< typename Morton >
-	inline string HierarchyCreator< Morton >::nodeListToString( const NodeList& list, const OctreeDim& lvlDim )
+	inline string HierarchyCreator< Morton >::nodeListToString( const NodeList& list ) const
 	{
 		stringstream ss;
 		ss << "list size: " << list.size() <<endl;
 		for( const Node& node : list )
 		{
-			ss << lvlDim.calcMorton( node ).getPathToRoot( true );
+			ss << node.getMorton().toString() << endl;
 		}
 		
 		return ss.str();
 	}
 	
 	template< typename Morton >
-	inline string HierarchyCreator< Morton >::workListToString( const WorkList& list, const OctreeDim& lvlDim )
+	inline string HierarchyCreator< Morton >::workListToString( const WorkList& list ) const
 	{
-		stringstream ss; ss << "Size: " << list.size() << endl;
+		stringstream ss; ss << "work list size: " << list.size() << endl;
 		
 		for( const NodeList& nodeList : list )
 		{
-			ss << nodeListToString( nodeList, lvlDim ) << endl;
+			ss << nodeListToString( nodeList ) << endl;
+		}
+		
+		return ss.str();
+	}
+
+	template< typename Morton >
+	inline string HierarchyCreator< Morton >::iterArrayToString( const IterArray& array ) const
+	{
+		stringstream ss; ss << "iter array size: " << array.size() << endl;
+		
+		for( const NodeList& list : array )
+		{
+			ss << nodeListToString( list ) << endl;
 		}
 		
 		return ss.str();
@@ -905,5 +928,6 @@ namespace omicron::hierarchy
 #undef NODE_PROCESSING_DEBUG
 #undef NODE_LIST_MERGE_DEBUG
 #undef PARENT_DEBUG
+#undef PARALLEL_OUT_DEBUG
 
 #endif
