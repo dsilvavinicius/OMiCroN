@@ -15,7 +15,7 @@
 #include "omicron/memory/global_malloc.h"
 
 // Definitions to turn on debug logging for each Front operation.
-// #define INSERTION_DEBUG
+#define INSERTION_DEBUG
 // #define ORDERING_DEBUG
 #define RENDERING_DEBUG
 #define FRONT_TRACKING_DEBUG
@@ -521,9 +521,9 @@ namespace omicron::hierarchy
 	{
 		#ifdef PRUNING_DEBUG
 		{
-			stringstream ss; ss << parentMorton.getPathToRoot() << " checking prune." << endl << parentNode << endl
-				<< endl;
+			stringstream ss; ss << parentMorton.toString() << " checking prune." << endl << parentNode << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
 		}
 		#endif
 		
@@ -537,38 +537,41 @@ namespace omicron::hierarchy
 			
 			#ifdef PRUNING_DEBUG
 			{
-				stringstream ss; ss << parentMorton.getPathToRoot() << ": CULLABLE." << endl << endl;
+				stringstream ss; ss << parentMorton.toString() << ": CULLABLE." << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
 			}
 			#endif
 		}
 		else
 		{
 			#ifdef PRUNING_DEBUG
-// 			{
-// 				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT CULLABLE." << endl << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
+ 			{
+ 				stringstream ss; ss << parentMorton.toString() << ": NOT CULLABLE." << endl << endl;
+ 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
+ 			}
 			#endif
 			
 			if( renderer.isRenderable( parentBox, projThresh ) )
 			{
 				#ifdef PRUNING_DEBUG
-// 				{
-// 					stringstream ss; ss << parentMorton.getPathToRoot() << ": RENDERABLE." << endl
-// 						<< endl;
-// 					HierarchyCreationLog::logDebugMsg( ss.str() );
-// 				}
+ 				{
+ 					stringstream ss; ss << parentMorton.toString() << ": RENDERABLE." << endl << endl;
+ 					HierarchyCreationLog::logDebugMsg( ss.str() );
+					HierarchyCreationLog::flush();
+ 				}
 				#endif
 				
 				pruneFlag = true;
 			}
 			#ifdef PRUNING_DEBUG
-// 			else
-// 			{
-// 				stringstream ss; ss << parentMorton.getPathToRoot() << ": NOT RENDERABLE." << endl << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
+ 			else
+ 			{
+ 				stringstream ss; ss << parentMorton.toString() << ": NOT RENDERABLE." << endl << endl;
+ 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
+ 			}
 			#endif
 		}
 		
@@ -593,9 +596,9 @@ namespace omicron::hierarchy
 			{
 				#ifdef PRUNING_DEBUG
 				{
-					stringstream ss; ss << parentMorton.getPathToRoot() << ": last sibling group."
-						<< endl << endl;
+					stringstream ss; ss << parentMorton.toString() << ": last sibling group." << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
+					HierarchyCreationLog::flush();
 				}
 				#endif
 				
@@ -612,22 +615,22 @@ namespace omicron::hierarchy
 			#endif
 			
 			#ifdef PRUNING_DEBUG
-// 			{
-// 				stringstream ss; ss << parentMorton.getPathToRoot() << ": not loaded."
-// 					<< endl << endl;
-// 				HierarchyCreationLog::logDebugMsg( ss.str() );
-// 			}
+ 			{
+ 				stringstream ss; ss << parentMorton.toString() << ": not loaded." << endl << endl;
+ 				HierarchyCreationLog::logDebugMsg( ss.str() );
+				HierarchyCreationLog::flush();
+ 			}
 			#endif
 				
 			pruneFlag = false;
 		}
 		
 		#ifdef PRUNING_DEBUG
-// 		{
-// 			stringstream ss; ss << parentMorton.getPathToRoot() << ": prunning successful? " << pruneFlag
-// 				<< endl << endl;
-// 			HierarchyCreationLog::logDebugMsg( ss.str() );
-// 		}
+ 		{
+ 			stringstream ss; ss << parentMorton.toString() << ": prunning successful? " << pruneFlag << endl << endl;
+ 			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
+ 		}
 		#endif
 		
 		return pruneFlag;
@@ -639,9 +642,11 @@ namespace omicron::hierarchy
 	{
 		Morton parentMorton = *( ( *frontIt )->getMorton().traverseUp() );
 		
+		assert( ( *frontIt )->parent() == parentNode );
+
 		while( frontIt != m_front.end() && ( *frontIt )->parent() == parentNode )
 		{
-			#ifdef RENDERING_DEBUG
+			#ifdef PRUNING_DEBUG
 			{
 				stringstream ss; ss << "Pruning: " << ( *frontIt )->getMorton().toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
