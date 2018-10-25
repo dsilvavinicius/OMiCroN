@@ -17,7 +17,7 @@
 // Definitions to turn on debug logging for each Front operation.
 #define INSERTION_DEBUG
 // #define ORDERING_DEBUG
-#define RENDERING_DEBUG
+// #define RENDERING_DEBUG
 #define FRONT_TRACKING_DEBUG
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG

@@ -10,14 +10,14 @@
 #include "omicron/memory/global_malloc.h"
 #include "omicron/hierarchy/octree_dimensions.h"
 
-// #define CTOR_DEBUG
+#define CTOR_DEBUG
 // #define LOADING_DEBUG
 // #define CLEAN_DEBUG
 
 namespace omicron::hierarchy
 {
     using namespace Tucano;
-//     using namespace util;
+    using namespace util;
     
 	/** Out-of-core octree node, which accesses its point data by indices. Each node has a range in a shared out-of-core vector for indices. The points are stores in another shared out-of-core vector.
 	 */
@@ -209,6 +209,14 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline O1OctreeNode< Morton >& O1OctreeNode< Morton >::operator=( O1OctreeNode&& other )
 	{
+		#ifdef CTOR_DEBUG
+		{
+			stringstream ss; ss << "move assign or ctor" << m_morton.toString() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
+		}
+		#endif
+
 		m_morton = other.m_morton;
 		m_indexOffset = other.m_indexOffset;
 		m_indexSize = other.m_indexSize;
@@ -240,6 +248,14 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::~O1OctreeNode()
 	{
+		#ifdef CTOR_DEBUG
+		{
+			stringstream ss; ss << "dtor" << m_morton.toString() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
+		}
+		#endif
+
 		clean();
 	}
 	
