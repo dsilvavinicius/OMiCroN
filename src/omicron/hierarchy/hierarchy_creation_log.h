@@ -16,6 +16,7 @@ namespace omicron::hierarchy
 		{
 			lock_guard< recursive_mutex > lock( m_logMutex );
 			m_log << msg;
+			m_log.flush();
 		}
 	
 		/** Logs a debug message and fail by throwing an exception. */

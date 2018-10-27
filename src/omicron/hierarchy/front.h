@@ -15,10 +15,10 @@
 #include "omicron/memory/global_malloc.h"
 
 // Definitions to turn on debug logging for each Front operation.
-#define INSERTION_DEBUG
+// #define INSERTION_DEBUG
 // #define ORDERING_DEBUG
 // #define RENDERING_DEBUG
-#define FRONT_TRACKING_DEBUG
+// #define FRONT_TRACKING_DEBUG
 // #define PRUNING_DEBUG
 // #define BRANCHING_DEBUG
 
@@ -278,7 +278,6 @@ namespace omicron::hierarchy
 		{
 			stringstream ss; ss << "Inserting " << node.getMorton().toString() << endl << &node << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
 		}
 		#endif
 		
@@ -303,7 +302,6 @@ namespace omicron::hierarchy
 		{
 			stringstream ss; ss << "Inserting " << node.getMorton().toString() << endl << &node << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
 		}
 		#endif
 		
@@ -375,7 +373,6 @@ namespace omicron::hierarchy
 			{
 				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << toString() << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
 			}
 			#endif
 			
@@ -395,7 +392,6 @@ namespace omicron::hierarchy
 				{
 					stringstream ss; ss << "Tracking " << ( *m_frontIter )->getMorton().toString() << endl << *m_frontIter << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
-					HierarchyCreationLog::flush();
 				}
 				#endif
 				
@@ -503,7 +499,6 @@ namespace omicron::hierarchy
 			{
 				stringstream ss; ss << "Culling: " << morton.toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
 			}
 			#endif
 			
@@ -523,7 +518,6 @@ namespace omicron::hierarchy
 		{
 			stringstream ss; ss << parentMorton.toString() << " checking prune." << endl << parentNode << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
 		}
 		#endif
 		
@@ -539,7 +533,6 @@ namespace omicron::hierarchy
 			{
 				stringstream ss; ss << parentMorton.toString() << ": CULLABLE." << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
 			}
 			#endif
 		}
@@ -549,7 +542,6 @@ namespace omicron::hierarchy
  			{
  				stringstream ss; ss << parentMorton.toString() << ": NOT CULLABLE." << endl << endl;
  				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
  			}
 			#endif
 			
@@ -559,7 +551,6 @@ namespace omicron::hierarchy
  				{
  					stringstream ss; ss << parentMorton.toString() << ": RENDERABLE." << endl << endl;
  					HierarchyCreationLog::logDebugMsg( ss.str() );
-					HierarchyCreationLog::flush();
  				}
 				#endif
 				
@@ -570,7 +561,6 @@ namespace omicron::hierarchy
  			{
  				stringstream ss; ss << parentMorton.toString() << ": NOT RENDERABLE." << endl << endl;
  				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
  			}
 			#endif
 		}
@@ -598,7 +588,6 @@ namespace omicron::hierarchy
 				{
 					stringstream ss; ss << parentMorton.toString() << ": last sibling group." << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
-					HierarchyCreationLog::flush();
 				}
 				#endif
 				
@@ -618,7 +607,6 @@ namespace omicron::hierarchy
  			{
  				stringstream ss; ss << parentMorton.toString() << ": not loaded." << endl << endl;
  				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
  			}
 			#endif
 				
@@ -629,7 +617,6 @@ namespace omicron::hierarchy
  		{
  			stringstream ss; ss << parentMorton.toString() << ": prunning successful? " << pruneFlag << endl << endl;
  			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
  		}
 		#endif
 		
@@ -650,7 +637,6 @@ namespace omicron::hierarchy
 			{
 				stringstream ss; ss << "Pruning: " << ( *frontIt )->getMorton().toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
 			}
 			#endif
 			
@@ -743,7 +729,6 @@ namespace omicron::hierarchy
 		{
 			stringstream ss; ss << "Branch: " << ( *frontIt )->getMorton().toString() << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
 		}
 		#endif
 		

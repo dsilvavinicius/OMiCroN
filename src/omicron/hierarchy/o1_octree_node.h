@@ -10,7 +10,9 @@
 #include "omicron/memory/global_malloc.h"
 #include "omicron/hierarchy/octree_dimensions.h"
 
-#define CTOR_DEBUG
+// #define CTOR_DEBUG
+#define DTOR_DEBUG
+// #define MOVE_DEBUG
 // #define LOADING_DEBUG
 // #define CLEAN_DEBUG
 
@@ -209,13 +211,12 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline O1OctreeNode< Morton >& O1OctreeNode< Morton >::operator=( O1OctreeNode&& other )
 	{
-		#ifdef CTOR_DEBUG
+		#ifdef MOVE_DEBUG
 		{
 			stringstream ss; ss << "move" << endl
 				<< other.m_morton.toString() << " -> " << m_morton.toString() << endl
 				<< "addr " << &other << " -> " << this  << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
 		}
 		#endif
 
@@ -250,11 +251,13 @@ namespace omicron::hierarchy
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::~O1OctreeNode()
 	{
-		#ifdef CTOR_DEBUG
+		#ifdef DTOR_DEBUG
 		{
-			stringstream ss; ss << "dtor " << m_morton.getPathToRoot() << endl << "addr " << this << endl << endl;
-			HierarchyCreationLog::logDebugMsg( ss.str() );
-			HierarchyCreationLog::flush();
+			if( m_morton != Morton() )
+			{
+				stringstream ss; ss << "dtor " << m_morton.getPathToRoot() << endl << "addr " << this << endl << endl;
+				HierarchyCreationLog::logDebugMsg( ss.str() );
+			}
 
 			assert( m_morton == Morton() );
 		}
@@ -272,7 +275,6 @@ namespace omicron::hierarchy
 			{
 				stringstream ss; ss << "clean " << m_morton.toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
-				HierarchyCreationLog::flush();
 			}
 		}
 		#endif
@@ -505,6 +507,8 @@ namespace omicron::hierarchy
 }
 
 #undef CTOR_DEBUG
+#undef DTOR_DEBUG
+#undef MOVE_DEBUG
 #undef LOADING_DEBUG
 #undef CLEAN_DEBUG
 
