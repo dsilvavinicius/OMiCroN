@@ -18,8 +18,8 @@
 #include "omicron/disk/sort_point_reader.h"
 
 // #define LEAF_CREATION_DEBUG
-// #define INNER_CREATION_DEBUG
-// #define NODE_PROCESSING_DEBUG
+#define INNER_CREATION_DEBUG
+#define NODE_PROCESSING_DEBUG
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
 #define PARALLEL_OUT_DEBUG
@@ -399,10 +399,11 @@ namespace omicron::hierarchy
 								for( int i = 0; i < nSiblings; ++i )
 								{
 									ss << "[ t" << omp_get_thread_num() << " ] processing: "
-										<< m_octreeDim.calcMorton( siblings[ i ] ).getPathToRoot() << endl << endl;
+										<< siblings[ i ].getMorton().getPathToRoot() << endl << endl;
 								}
 								
 								HierarchyCreationLog::logDebugMsg( ss.str() );
+								HierarchyCreationLog::flush();
 							}
 							#endif
 							
@@ -425,16 +426,6 @@ namespace omicron::hierarchy
 								{
 									isBoundarySiblingGroup = true;
 								}
-								
-								#ifdef INNER_CREATION_DEBUG
-								{
-									stringstream ss; ss << "[ t" << omp_get_thread_num()
-										<< " ] creating LoD inner " << ( ( isBoundarySiblingGroup ) ? "boundary:"
-										: "not boundary:" )
-										<< nextLvlDim.calcMorton( siblings[ 0 ] ).getPathToRoot() << endl << endl;
-									HierarchyCreationLog::logDebugMsg( ss.str() );
-								}
-								#endif
 								
 								// LOD
 								Node inner = createInnerNode( std::move( siblings ), nSiblings,
@@ -880,6 +871,16 @@ namespace omicron::hierarchy
 		
 		Node node( *children[ 0 ].getMorton().traverseUp(), std::move( children ) );
 		
+		#ifdef INNER_CREATION_DEBUG
+		{
+			stringstream ss; ss << "[ t" << omp_get_thread_num()
+				<< " ] inner " << ( ( !setParentFlag ) ? "boundary:" : "not boundary:" )
+				<< node.getMorton().getPathToRoot() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+			HierarchyCreationLog::flush();
+		}
+		#endif
+
 		return node;
 	}
 	

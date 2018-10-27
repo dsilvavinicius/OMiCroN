@@ -211,7 +211,9 @@ namespace omicron::hierarchy
 	{
 		#ifdef CTOR_DEBUG
 		{
-			stringstream ss; ss << "move assign or ctor" << m_morton.toString() << endl << endl;
+			stringstream ss; ss << "move" << endl
+				<< other.m_morton.toString() << " -> " << m_morton.toString() << endl
+				<< "addr " << &other << " -> " << this  << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			HierarchyCreationLog::flush();
 		}
@@ -250,9 +252,11 @@ namespace omicron::hierarchy
 	{
 		#ifdef CTOR_DEBUG
 		{
-			stringstream ss; ss << "dtor" << m_morton.toString() << endl << endl;
+			stringstream ss; ss << "dtor " << m_morton.getPathToRoot() << endl << "addr " << this << endl << endl;
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 			HierarchyCreationLog::flush();
+
+			assert( m_morton == Morton() );
 		}
 		#endif
 

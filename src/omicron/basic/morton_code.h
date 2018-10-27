@@ -377,26 +377,33 @@ namespace omicron::basic
 		stringstream ss;
 		MortonCode< T > code = *this;
 		
-		if (simple)
+		if( code.getBits() == 0x0 )
 		{
-			while( code.getBits() != 1 )
-			{
-				ss << "0x" << hex << code.getBits() << dec << "->";
-				code = *code.traverseUp();
-			}
-			ss << "0x" << hex << code.getBits() << dec;
+			return "0x0";
 		}
 		else
 		{
-			while( code.getBits() != 1 )
+			if (simple)
 			{
-				ss << code << dec << " -> ";
-				code = *code.traverseUp();
+				while( code.getBits() != 1 )
+				{
+					ss << "0x" << hex << code.getBits() << dec << "->";
+					code = *code.traverseUp();
+				}
+				ss << "0x" << hex << code.getBits() << dec;
 			}
-			ss << code << dec;
+			else
+			{
+				while( code.getBits() != 1 )
+				{
+					ss << code << dec << " -> ";
+					code = *code.traverseUp();
+				}
+				ss << code << dec;
+			}
+			
+			return ss.str();
 		}
-		
-		return ss.str();
 	}
 	
 	template <typename T>
