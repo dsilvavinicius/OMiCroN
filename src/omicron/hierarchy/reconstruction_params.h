@@ -228,6 +228,14 @@ namespace omicron::hierarchy
 						case 4: return Vector2f( 2.0f, 2.0f );
 						case 3: return Vector2f( 2.0f, 1.0f );
 					#endif
+				#elif MODEL == BUNNY
+					case 7: return Vector2f( 2.f, 2.f );
+					case 6: return Vector2f( 2.f, 2.f );
+					case 5: return Vector2f( 2.f, 2.f );
+					case 4: return Vector2f( 2.f, 2.f );
+					case 3: return Vector2f( 2.f, 2.f );
+					case 2: return Vector2f( 2.f, 2.f );
+					case 1: return Vector2f( 2.f, 2.f );
 				#endif
 			}
 		

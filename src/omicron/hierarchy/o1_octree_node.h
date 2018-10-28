@@ -11,10 +11,11 @@
 #include "omicron/hierarchy/octree_dimensions.h"
 
 // #define CTOR_DEBUG
-#define DTOR_DEBUG
+// #define DTOR_DEBUG
 // #define MOVE_DEBUG
 // #define LOADING_DEBUG
 // #define CLEAN_DEBUG
+// #define SAMPLE_DEBUG
 
 namespace omicron::hierarchy
 {
@@ -259,7 +260,7 @@ namespace omicron::hierarchy
 				HierarchyCreationLog::logDebugMsg( ss.str() );
 			}
 
-			assert( m_morton == Morton() );
+			//assert( m_morton == Morton() );
 		}
 		#endif
 
@@ -317,9 +318,20 @@ namespace omicron::hierarchy
 	{
 		IndexVector sample;
 
+		#ifdef SAMPLE_DEBUG
+			stringstream ss; ss << "Sample for " << m_morton.toString() << endl;
+		#endif
+
 		for( const O1OctreeNode& node : m_children )
 		{
 			int nSamples = std::max( 1.f, node.size() * PARENT_POINTS_RATIO_VALUE );
+
+			#ifdef SAMPLE_DEBUG
+			{
+				ss << node.getMorton().getPathToRoot() << " points: " << node.size() << " sample: " << nSamples << endl;
+			}
+			#endif
+
 			for( int i = 0; i < nSamples; ++i )
 			{
 				int chosenIdx = rand() % nSamples + node.m_indexOffset;
@@ -327,6 +339,13 @@ namespace omicron::hierarchy
 				sample.push_back( chosenIdx );
 			}
 		}
+
+		#ifdef SAMPLE_DEBUG
+		{
+			ss << "total: " << sample.size() << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
 
 		setIndices( sample );
 	}

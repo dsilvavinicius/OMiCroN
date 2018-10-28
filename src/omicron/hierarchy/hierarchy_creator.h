@@ -18,11 +18,11 @@
 #include "omicron/disk/sort_point_reader.h"
 
 // #define LEAF_CREATION_DEBUG
-#define INNER_CREATION_DEBUG
-#define NODE_PROCESSING_DEBUG
+// #define INNER_CREATION_DEBUG
+// #define NODE_PROCESSING_DEBUG
 // #define NODE_LIST_MERGE_DEBUG
 // #define PARENT_DEBUG
-#define PARALLEL_OUT_DEBUG
+// #define PARALLEL_OUT_DEBUG
 
 using namespace util;
 

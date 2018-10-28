@@ -41,6 +41,7 @@ namespace omicron::hierarchy
 {
     using namespace std;
     using namespace util;
+	using namespace renderer;
     
 	/** Visualization front of an hierarchy under construction. Front ensures that its nodes are always sorted
 	 * in hierarchy's width and that nodes can be inserted in a multithreaded environment. The nodes must be inserted in
@@ -371,7 +372,7 @@ namespace omicron::hierarchy
 				
 			#if defined FRONT_TRACKING_DEBUG || defined RENDERING_DEBUG
 			{
-				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << toString() << endl;
+				stringstream ss; ss << "===== FRONT TRACKING BEGINS =====" << endl << /*toString() <<*/ endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
 			}
 			#endif
@@ -390,7 +391,7 @@ namespace omicron::hierarchy
 
 				#ifdef FRONT_TRACKING_DEBUG
 				{
-					stringstream ss; ss << "Tracking " << ( *m_frontIter )->getMorton().toString() << endl << *m_frontIter << endl << endl;
+					stringstream ss; ss << "Tracking " << ( *m_frontIter )->getMorton().getPathToRoot() << endl << *m_frontIter << endl << endl;
 					HierarchyCreationLog::logDebugMsg( ss.str() );
 				}
 				#endif
@@ -633,7 +634,7 @@ namespace omicron::hierarchy
 
 		while( frontIt != m_front.end() && ( *frontIt )->parent() == parentNode )
 		{
-			#ifdef PRUNING_DEBUG
+			#ifdef RENDERING_DEBUG
 			{
 				stringstream ss; ss << "Pruning: " << ( *frontIt )->getMorton().toString() << endl << endl;
 				HierarchyCreationLog::logDebugMsg( ss.str() );
@@ -771,7 +772,7 @@ namespace omicron::hierarchy
 		{
 			#ifdef NODE_ID_TEXT
 			{
-				const Vec3& textPos = node.getContents()[ 0 ].c;
+				const Vec3& textPos = ExtOctreeData::getSurfel( node.offset() ).c;
 				
 				m_nodeIds.push_back(
 					pair< string, Vector4f >( morton.toString(), Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )
