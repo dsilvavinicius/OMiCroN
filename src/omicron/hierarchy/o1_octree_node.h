@@ -16,6 +16,7 @@
 // #define LOADING_DEBUG
 // #define CLEAN_DEBUG
 // #define SAMPLE_DEBUG
+#define INDEX_DEBUG
 
 namespace omicron::hierarchy
 {
@@ -358,6 +359,15 @@ namespace omicron::hierarchy
 		m_indexSize = indices.size();
 		m_indexOffset = ExtOctreeData::reserveIndices( m_indexSize );
 		ExtOctreeData::copy2External( indices, m_indexOffset );
+
+		#ifdef INDEX_DEBUG
+		{
+			stringstream ss; ss << "Indices: " << m_morton.getPathToRoot() << endl
+				<< "Offset: " << m_indexOffset << " Size: " << m_indexSize << endl
+				<< "Pos[0]" << ExtOctreeData::getSurfel( m_indexOffset ).c << endl << endl;
+			HierarchyCreationLog::logDebugMsg( ss.str() );
+		}
+		#endif
 	}
 
 	template< typename Morton >
@@ -530,5 +540,6 @@ namespace omicron::hierarchy
 #undef MOVE_DEBUG
 #undef LOADING_DEBUG
 #undef CLEAN_DEBUG
+#undef INDEX_DEBUG
 
 #endif

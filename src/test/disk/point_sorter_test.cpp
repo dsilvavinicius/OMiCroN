@@ -166,9 +166,12 @@ namespace omicron::test
         
         #ifdef LAB
             PointSorter sorter( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny_flipped_normals.ply", sortLevel );
-            sorter.sortToFile( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny_sorted.ply" );
+            sorter.sortToFile( "/home/dsilva.vinicius/projects/datasets/Bunny/bunny_flipped_normals_sorted.ply" );
         #else
-            PointSorter sorter( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply", sortLevel );
+            //PointSorter sorter( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals.ply", sortLevel );
+            //sorter.sortToFile( "/media/vinicius/data/Datasets/Bunny/bunny_flipped_normals_sorted.ply" );
+
+            PointSorter sorter( "/media/vinicius/data/Datasets/Bunny/bunny.ply", sortLevel );
             sorter.sortToFile( "/media/vinicius/data/Datasets/Bunny/bunny_sorted.ply" );
         #endif
     }
