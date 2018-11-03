@@ -35,7 +35,7 @@
 #define CUT_RENDERING_METHOD RENDER_ENTIRE_CUT
 
 // Render an id text in each rendered node.
-#define NODE_ID_TEXT
+// #define NODE_ID_TEXT
 
 namespace omicron::hierarchy
 {
@@ -772,7 +772,7 @@ namespace omicron::hierarchy
 		{
 			#ifdef NODE_ID_TEXT
 			{
-				const Vec3& textPos = ExtOctreeData::getSurfel( node.offset() ).c;
+				const Vec3& textPos = ExtOctreeData::getSurfel( ExtOctreeData::getIndex( node.offset() ) ).c;
 				
 				m_nodeIds.push_back(
 					pair< string, Vector4f >( morton.toString(), Vector4f( textPos.x(), textPos.y(), textPos.z(), 1.f ) )

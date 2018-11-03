@@ -16,7 +16,7 @@
 // #define LOADING_DEBUG
 // #define CLEAN_DEBUG
 // #define SAMPLE_DEBUG
-#define INDEX_DEBUG
+// #define INDEX_DEBUG
 
 namespace omicron::hierarchy
 {
@@ -47,8 +47,6 @@ namespace omicron::hierarchy
 
 		/** Ctor to build a leaf O1OctreeNode totally init except for the gpu cloud. */
 		// O1OctreeNode( const Morton morton, O1OctreeNode* parent );
-		
-		
 		
 		O1OctreeNode( const O1OctreeNode& other ) = delete;
 		
@@ -135,7 +133,7 @@ namespace omicron::hierarchy
 		
 		// Binary persistence. Structure: | leaf flag | point data | children data |
 		// void persist( ostream& out ) const;
-		
+
 		template< typename M >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< M >& node );
 		
@@ -335,9 +333,9 @@ namespace omicron::hierarchy
 
 			for( int i = 0; i < nSamples; ++i )
 			{
-				int chosenIdx = rand() % nSamples + node.m_indexOffset;
+				int chosenOffset = rand() % nSamples;
 				
-				sample.push_back( chosenIdx );
+				sample.push_back( ExtOctreeData::getIndex( node.m_indexOffset + chosenOffset ) );
 			}
 		}
 
@@ -363,8 +361,18 @@ namespace omicron::hierarchy
 		#ifdef INDEX_DEBUG
 		{
 			stringstream ss; ss << "Indices: " << m_morton.getPathToRoot() << endl
-				<< "Offset: " << m_indexOffset << " Size: " << m_indexSize << endl
-				<< "Pos[0]" << ExtOctreeData::getSurfel( m_indexOffset ).c << endl << endl;
+				<< "Offset: " << m_indexOffset << " Size: " << m_indexSize << endl;
+
+			Array< Surfel > surfels( m_indexSize );
+			Surfel* iter = surfels.data();
+			ExtOctreeData::copyFromExternal( iter, m_indexOffset, m_morton.getLevel(), m_indexSize );
+
+			for( const Surfel& surfel : surfels )
+			{
+				ss << surfel << endl;
+			}
+			ss << endl;
+
 			HierarchyCreationLog::logDebugMsg( ss.str() );
 		}
 		#endif

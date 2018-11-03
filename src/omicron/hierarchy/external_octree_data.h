@@ -19,7 +19,7 @@ namespace omicron::hierarchy
         template< typename Morton >
 		static Morton calcMorton( const ulong index, const OctreeDimensions< Morton >& octreeDim ) { return octreeDim.calcMorton( m_surfels[ index ] ); }
         static const Surfel& getSurfel( const ulong index ) { return m_surfels[ index ]; }
-
+        static const ulong getIndex( const ulong offset ) { return m_indices[ offset ]; }
 
         static ulong reserveIndices( const uint nIndices );
         static void copy2External( const IndexVector& indices, const ulong pos );
@@ -56,6 +56,7 @@ namespace omicron::hierarchy
     {
         for( const ulong i : indices )
         {
+            assert( !( Vec3( 0.f, 0.f, 0.f ) == m_surfels[ i ].c && Vec3( 0.f, 0.f, 0.f ) == m_surfels[ i ].u && Vec3( 0.f, 0.f, 0.f ) == m_surfels[ i ].v ) );
             m_indices[ pos++ ] = i;
         }
     }
