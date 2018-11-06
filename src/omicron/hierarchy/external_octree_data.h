@@ -30,8 +30,8 @@ namespace omicron::hierarchy
             static constexpr ulong EXT_SURFEL_MEM_BUDGET = 1ul * 1024ul * 1024ul * 1024ul;
             static constexpr ulong EXT_INDEX_MEM_BUDGET = 1ul * 1024ul * 1024ul * 1024ul;
         #else
-            static constexpr ulong EXT_SURFEL_MEM_BUDGET = 5ul * 1024ul * 1024ul * 1024ul;
-            static constexpr ulong EXT_INDEX_MEM_BUDGET = 5ul * 1024ul * 1024ul * 1024ul;
+            static constexpr ulong EXT_SURFEL_MEM_BUDGET = 4ul * 1024ul * 1024ul * 1024ul;
+            static constexpr ulong EXT_INDEX_MEM_BUDGET = 4ul * 1024ul * 1024ul * 1024ul;
         #endif
         static constexpr ulong EXT_PAGE_SIZE = 4ul;
         static constexpr ulong EXT_BLOCK_SIZE = 2ul * 1024ul * 1024ul;

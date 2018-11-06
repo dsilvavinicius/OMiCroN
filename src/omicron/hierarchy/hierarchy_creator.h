@@ -181,7 +181,6 @@ namespace omicron::hierarchy
 		, m_front( front )
 	#endif
 	{
-		srand( 1 );
 		omp_set_num_threads( m_nThreads );
 	}
 	
@@ -202,7 +201,6 @@ namespace omicron::hierarchy
 		, m_front( front )
 	#endif
 	{
-		srand( 1 );
 		omp_set_num_threads( m_nThreads );
 	}
 	

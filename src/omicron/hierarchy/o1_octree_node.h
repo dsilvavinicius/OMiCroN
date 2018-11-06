@@ -1,6 +1,7 @@
 #ifndef O1_OCTREE_NODE_H
 #define O1_OCTREE_NODE_H
 
+#include <random>
 #include <memory>
 #include <stxxl/vector>
 #include "tucano/tucano.hpp"
@@ -142,6 +143,8 @@ namespace omicron::hierarchy
 		// static O1OctreeNode deserialize( byte* serialization );
 
 	private:
+		static default_random_engine m_rng;
+
 		void setIndices( const IndexVector& indices );
 
 		Morton m_morton;
@@ -162,6 +165,9 @@ namespace omicron::hierarchy
 		// CACHE INVARIANT. Indicates if the node is leaf.
 		bool m_isLeaf;
 	};
+
+	template< typename Morton >
+    default_random_engine O1OctreeNode< Morton >::m_rng = default_random_engine();
 
 	template< typename Morton >
 	inline O1OctreeNode< Morton >::O1OctreeNode()
@@ -333,7 +339,8 @@ namespace omicron::hierarchy
 
 			for( int i = 0; i < nSamples; ++i )
 			{
-				int chosenOffset = rand() % nSamples;
+				uniform_int_distribution< int > distribution( 0, node.size() );
+				int chosenOffset = distribution( m_rng );
 				
 				sample.push_back( ExtOctreeData::getIndex( node.m_indexOffset + chosenOffset ) );
 			}

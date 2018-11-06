@@ -37,7 +37,7 @@ namespace omicron::disk
             static constexpr ulong RUNS_CREATOR_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
             static constexpr ulong RUNS_MERGER_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
         #else
-            static constexpr ulong RUNS_CREATOR_MEMORY = 10ul * 1024ul * 1024ul * 1024ul;
+            static constexpr ulong RUNS_CREATOR_MEMORY = 5ul * 1024ul * 1024ul * 1024ul;
             static constexpr ulong RUNS_MERGER_MEMORY = 1ul * 1024ul * 1024ul * 1024ul;
         #endif
 

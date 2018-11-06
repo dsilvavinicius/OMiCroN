@@ -35,7 +35,7 @@
 #define CUT_RENDERING_METHOD RENDER_ENTIRE_CUT
 
 // Render an id text in each rendered node.
-// #define NODE_ID_TEXT
+//#define NODE_ID_TEXT
 
 namespace omicron::hierarchy
 {
