@@ -176,7 +176,12 @@ add_custom_command( TARGET Copy PRE_BUILD
 add_custom_command( TARGET Copy PRE_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/data/example/staypuff.ply
 	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/data/example/staypuff.ply )
-	
+
+# STXXL config file.
+add_custom_command( TARGET Copy PRE_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/.stxxl
+	$<TARGET_FILE_DIR:Point_Based_Renderer_Lib>/.stxxl )
+
 add_dependencies( Point_Based_Renderer Copy )
 
 # Tests directory.
