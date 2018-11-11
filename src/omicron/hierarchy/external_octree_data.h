@@ -14,12 +14,12 @@ namespace omicron::hierarchy
         using SurfelIter = Surfel*;
         using IndexVector = std::vector< ulong, TbbAllocator< ulong > >;
 
-        static void pushSurfel( const Surfel& s ) { m_surfels.push_back( s ); }
+        static void pushSurfel( const Surfel& s ) { lock_guard< mutex > lock( m_indexMutex ); m_surfels.push_back( s ); }
         
         template< typename Morton >
-		static Morton calcMorton( const ulong index, const OctreeDimensions< Morton >& octreeDim ) { return octreeDim.calcMorton( m_surfels[ index ] ); }
-        static const Surfel& getSurfel( const ulong index ) { return m_surfels[ index ]; }
-        static const ulong getIndex( const ulong offset ) { return m_indices[ offset ]; }
+		static Morton calcMorton( const ulong index, const OctreeDimensions< Morton >& octreeDim ) { lock_guard< mutex > lock( m_indexMutex ); return octreeDim.calcMorton( m_surfels[ index ] ); }
+        static const Surfel& getSurfel( const ulong index ) { lock_guard< mutex > lock( m_indexMutex ); return m_surfels[ index ]; }
+        static const ulong getIndex( const ulong offset ) { lock_guard< mutex > lock( m_indexMutex ); return m_indices[ offset ]; }
 
         static ulong reserveIndices( const uint nIndices );
         static void copy2External( const IndexVector& indices, const ulong pos );
@@ -54,6 +54,7 @@ namespace omicron::hierarchy
     
     inline void ExtOctreeData::copy2External( const IndexVector& indices, ulong pos )
     {
+        lock_guard< mutex > lock( m_indexMutex );
         for( const ulong i : indices )
         {
             assert( !( Vec3( 0.f, 0.f, 0.f ) == m_surfels[ i ].c && Vec3( 0.f, 0.f, 0.f ) == m_surfels[ i ].u && Vec3( 0.f, 0.f, 0.f ) == m_surfels[ i ].v ) );
@@ -63,6 +64,8 @@ namespace omicron::hierarchy
 
     inline void ExtOctreeData::copyFromExternal( SurfelIter& iter, const ulong pos, const int hierarchyLvl, const uint size )
     {
+        lock_guard< mutex > indexLock( m_indexMutex );
+
         Vector2f multipliers = ReconstructionParams::calcMultipliers( hierarchyLvl );
 
         for( ulong i = pos; i < pos + size; ++i )

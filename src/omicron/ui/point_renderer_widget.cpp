@@ -112,6 +112,8 @@ void PointRendererWidget::initialize( const unsigned int& frameRate, const int& 
 				openMesh( "/media/vinicius/data/Datasets/Bunny/bunny_sorted.ply" );
 			#endif
 		#endif
+	#elif MODEL == DRAGON
+		openMesh( "/media/viniciusdasilva/Expansion Drive/Datasets/dragon/dragon.ply" );
 	#endif
 	
 	m_timer = new QTimer( this );

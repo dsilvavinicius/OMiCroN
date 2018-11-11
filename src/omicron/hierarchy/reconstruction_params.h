@@ -15,6 +15,7 @@ using namespace std;
 #define ATLAS 2
 #define DUOMO 3
 #define BUNNY 4
+#define DRAGON 5
 
 // Sort type
 #define HEAP_SORT_D 0
@@ -46,10 +47,10 @@ enum ReconstructionAlgorithm
 // ===== Independent parameters =====
 
 // Current dataset.
-#define MODEL ST_MATHEW
+#define MODEL DUOMO
 
 // Define to indicates that the system will be run in the laboratory.
-// #define LAB
+//#define LAB
 
 // Number of threads used in the HierarchyCreator.
 #define HIERARCHY_CREATION_THREADS 8
@@ -69,8 +70,8 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-// #define NO_SORT true
-#define NO_SORT false
+#define NO_SORT true
+// #define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING EXTERNAL_SORT_D
@@ -141,6 +142,9 @@ enum ReconstructionAlgorithm
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.00008f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.00002f
 #elif MODEL ==  BUNNY
+	#define LEAF_SURFEL_TANGENT_SIZE_X 0.015f
+	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.015f
+#elif
 	#define LEAF_SURFEL_TANGENT_SIZE_X 0.015f
 	#define LEAF_SURFEL_TANGENT_SIZE_Y 0.015f
 #endif
