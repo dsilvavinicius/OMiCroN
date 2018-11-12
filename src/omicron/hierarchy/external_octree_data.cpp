@@ -5,4 +5,5 @@ namespace omicron::hierarchy
     ExtOctreeData::ExtSurfelVector ExtOctreeData::m_surfels;
 	ExtOctreeData::ExtIndexVector ExtOctreeData::m_indices;
     mutex ExtOctreeData::m_indexMutex;
+    mutex ExtOctreeData::m_surfelMutex;
 }
