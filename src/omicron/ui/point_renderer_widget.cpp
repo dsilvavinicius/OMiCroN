@@ -353,7 +353,7 @@ void PointRendererWidget::closeEvent( QCloseEvent * event )
 	
 	cout << "Generating statistics..." << endl << endl;
 	
-	ostringstream statsFilename; statsFilename << "../../statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
+	ostringstream statsFilename; statsFilename << "../statistics/" << m_statistics.m_datasetName << "-" << the_date << ".txt";
 	ofstream statsFile( statsFilename.str() );
 	
 	pair< uint, uint > nodeStats = m_octree->nodeStatistics();

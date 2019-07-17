@@ -42,6 +42,7 @@ namespace omicron::disk
     template< typename Morton >
     ExternalSortReader< Morton >::ExternalSortReader( const string& inputFilename, uint maxLevel )
     {
+        auto dimCalcStart = Profiler::now( "External sorter dimension calculation" );
         // Calculates the octree dimensions.
         OctreeDimCalc dimCalc( []( const Point& p ){} );
         
@@ -54,7 +55,8 @@ namespace omicron::disk
                 }
             );
         }
-        
+        Profiler::elapsedTime(dimCalcStart, "External sorter dimension calculation");
+
         DimOriginScale dimOriginScale = dimCalc.dimensions( maxLevel );
         
         m_comp = unique_ptr< OctreeDim >( new OctreeDim( dimOriginScale.dimensions() ) );

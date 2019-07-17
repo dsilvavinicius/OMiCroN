@@ -66,8 +66,8 @@ enum ReconstructionAlgorithm
 #define HIERARCHY_CREATION_RENDERING
 
 // Indicates that the input will not be sorted.
-// #define NO_SORT true
-#define NO_SORT false
+#define NO_SORT true
+//#define NO_SORT false
 
 // Selects the sorting algorithm for the case of unsorted input. 
 #define SORTING EXTERNAL_SORT_D
@@ -76,8 +76,8 @@ enum ReconstructionAlgorithm
 #define SORTING_SEGMENTS 10
 
 // Activates de loading of binary octree files instead of hierarchy creation.
-// #define OCTREE_CONSTRUCTION TOP_DOWN_OCTREE
-#define OCTREE_CONSTRUCTION OMICRON
+#define OCTREE_CONSTRUCTION BINARY_OCTREE_FILE
+//#define OCTREE_CONSTRUCTION OMICRON
 
 // #define PARENT_POINTS_RATIO_ONE_FOURTH
 #define PARENT_POINTS_RATIO_ONE_FIFTH

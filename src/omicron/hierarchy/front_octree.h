@@ -2,10 +2,10 @@
 #define FRONT_OCTREE_H
 
 #include <jsoncpp/json/json.h>
-#include "Front.h"
-#include "OctreeDimensions.h"
-#include "OctreeFile.h"
-#include "RuntimeSetup.h"
+#include "front.h"
+#include "octree_dimensions.h"
+#include "../disk/octree_file.h"
+#include "runtime_setup.h"
 
 namespace omicron::hierarchy
 {
@@ -15,7 +15,7 @@ namespace omicron::hierarchy
 	{
 	public:
 		using Dim = OctreeDimensions< Morton >;
-		using Front = model::Front< Morton >;
+		using Front = hierarchy::Front< Morton >;
 		using Node = typename Front::Node;
 		using NodeLoader = typename Front::NodeLoader;
 		using Renderer = SplatRenderer;
@@ -48,10 +48,16 @@ namespace omicron::hierarchy
 		
 		uint substitutedPlaceholders() const{ return 0u; }
 		
+		uint readerInTime() { return m_inTime; }
+		uint readerInitTime() { return 0u; }
+		uint readerReadTime() { return 0u; }
+
 	private:
 		unique_ptr< Front > m_front;
 		OctreeFile::NodePtr m_root;
 		Dim m_dim;
+
+		uint m_inTime;
 	};
 	
 	template< typename Morton >
@@ -75,7 +81,7 @@ namespace omicron::hierarchy
 		
 		m_root = OctreeFile::read( octreeJson[ "nodes" ].asString() );
 		
-		Profiler::elapsedTime( now, "Binary octree file reading" );
+		m_inTime = Profiler::elapsedTime( now, "Binary octree file reading" );
 		
 		m_front = unique_ptr< Front >( new Front( octreeJson[ "database" ].asString(), m_dim, 1, nodeLoader, 8ul * 1024ul * 1024ul * 1024ul ) );
 		m_front->insertRoot( *m_root );
