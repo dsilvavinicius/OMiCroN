@@ -47,7 +47,7 @@ namespace omicron::test::disk
             root.setChildren( std::move( rootChildren ) );
         }
         
-        OctreeFile::write( "test_octree.boc", root );
+        OctreeFile::writeDepth( "test_octree.boc", root );
         
         NodePtr rootPtr = OctreeFile::read( "test_octree.boc" );
         

@@ -95,6 +95,22 @@ namespace omicron::basic
 	ostream& operator<<( ostream& out, const QPoint& point );
 	
 	ostream& operator<<( ostream& out, const QRect& rect );
+
+	class Binary
+	{
+	public:
+		template<typename T>
+		static void read(istream& in, T& data)
+		{
+			in.read( reinterpret_cast< char* >( &data ), sizeof( T ) );
+		}
+
+		template<typename T>
+		static void write(ostream& out, const T& data)
+		{
+			out.write( reinterpret_cast< const char* >( &data ), sizeof( T ) );
+		}
+	};
 }
 
 #endif

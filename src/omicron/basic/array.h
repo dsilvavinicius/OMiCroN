@@ -156,7 +156,7 @@ namespace omicron::basic
 		 @param input is expected to be binary and writen with persist() */
 		Array( ifstream& input )
 		{
-			input.read( reinterpret_cast< char* >( &m_size ), sizeof( uint ) );
+			Binary::read(input, m_size);
 			m_array = A().allocate( m_size );
 			initArray( input );
 		}
@@ -263,7 +263,7 @@ namespace omicron::basic
 		// Binary persistence. Structure: | array size | contents |
 		void persist( ostream& out ) const
 		{
-			out.write( reinterpret_cast< const char* >( &m_size ), sizeof( uint ) );
+			Binary::write(out, m_size);
 			for( const T& content : *this )
 			{
 				content.persist( out );

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <Eigen/Dense>
 #include "omicron/basic/point.h"
+#include "omicron/basic/stream.h"
 #include "omicron/hierarchy/reconstruction_params.h"
 
 using namespace std;
@@ -80,21 +81,21 @@ inline Surfel::Surfel( ifstream& input )
 {
 	float x, y, z;
 	
-	input.read( reinterpret_cast< char* >( &x ), sizeof( float ) );
-	input.read( reinterpret_cast< char* >( &y ), sizeof( float ) );
-	input.read( reinterpret_cast< char* >( &z ), sizeof( float ) );
+	Binary::read(input, x);
+	Binary::read(input, y);
+	Binary::read(input, z);
 	
 	c = Eigen::Vector3f( x, y, z );
 	
-	input.read( reinterpret_cast< char* >( &x ), sizeof( float ) );
-	input.read( reinterpret_cast< char* >( &y ), sizeof( float ) );
-	input.read( reinterpret_cast< char* >( &z ), sizeof( float ) );
+	Binary::read(input, x);
+	Binary::read(input, y);
+	Binary::read(input, z);
 	
 	u = Eigen::Vector3f( x, y, z );
 	
-	input.read( reinterpret_cast< char* >( &x ), sizeof( float ) );
-	input.read( reinterpret_cast< char* >( &y ), sizeof( float ) );
-	input.read( reinterpret_cast< char* >( &z ), sizeof( float ) );
+	Binary::read(input, x);
+	Binary::read(input, y);
+	Binary::read(input, z);
 	
 	v = Eigen::Vector3f( x, y, z );
 }
@@ -120,17 +121,17 @@ inline string Surfel::toString() const
 
 inline void Surfel::persist( ostream& out ) const
 {
-	out.write( reinterpret_cast< const char* >( &c.x() ), sizeof( float ) );
-	out.write( reinterpret_cast< const char* >( &c.y() ), sizeof( float ) );
-	out.write( reinterpret_cast< const char* >( &c.z() ), sizeof( float ) );
-	
-	out.write( reinterpret_cast< const char* >( &u.x() ), sizeof( float ) );
-	out.write( reinterpret_cast< const char* >( &u.y() ), sizeof( float ) );
-	out.write( reinterpret_cast< const char* >( &u.z() ), sizeof( float ) );
-	
-	out.write( reinterpret_cast< const char* >( &v.x() ), sizeof( float ) );
-	out.write( reinterpret_cast< const char* >( &v.y() ), sizeof( float ) );
-	out.write( reinterpret_cast< const char* >( &v.z() ), sizeof( float ) );
+	Binary::write(out, c.x());
+	Binary::write(out, c.y());
+	Binary::write(out, c.z());
+
+	Binary::write(out, u.x());
+	Binary::write(out, u.y());
+	Binary::write(out, u.z());
+
+	Binary::write(out, v.x());
+	Binary::write(out, v.y());
+	Binary::write(out, v.z());
 }
 
 inline ostream& operator<<( ostream& out, const Surfel& surfel )

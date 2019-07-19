@@ -652,7 +652,7 @@ void PointRendererWidget::saveOctree()
 						string filename = "/media/vinicius/data/Datasets/Bunny/bunny.boc";
 					#endif
 					
-					OctreeFile::write( filename, m_octree->root() );
+					OctreeFile::writeDepth( filename, m_octree->root() );
 					
 					return Profiler::elapsedTime( now, "Save octree operation" );
 				}

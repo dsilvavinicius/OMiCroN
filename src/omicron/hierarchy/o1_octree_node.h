@@ -125,13 +125,21 @@ namespace omicron::hierarchy
 			return *this;
 		}
 		
-		/** Ctor to init from stream. Parent data */
-		O1OctreeNode( ifstream& input )
+		struct NoRecursionMark{};
+
+		/** Ctor to init from stream. Only the contents are set properly. Children array is set empty, parent and cloud data are set to null. */
+		O1OctreeNode(ifstream& input, NoRecursionMark)
 		: m_cloud( nullptr ),
 		m_parent( nullptr )
 		{
-			input.read( reinterpret_cast< char* >( &m_isLeaf ), sizeof( bool ) );
+			Binary::read(input, m_isLeaf);
 			m_contents = ContentsArray( input );
+		}
+
+		/** Ctor to init from stream. Contents and children are set properly. Parent and cloud data are set to null. */
+		O1OctreeNode( ifstream& input )
+		: O1OctreeNode( input, NoRecursionMark() )
+		{
 			m_children = NodeArray( input );
 			
 			for( O1OctreeNode& child : m_children )
@@ -285,14 +293,20 @@ namespace omicron::hierarchy
 			return ss.str();
 		}
 		
-		// Binary persistence. Structure: | leaf flag | point data | children data |
+		/** Binary persistence. Structure: | leaf flag | point data | children data | . To persist contents only, user persistContents() instead. */
 		void persist( ostream& out ) const
 		{
-			out.write( reinterpret_cast< const char* >( &m_isLeaf ), sizeof( bool ) );
-			m_contents.persist( out );
+			persistContents(out);
 			m_children.persist( out );
 		}
 		
+		/** Binary persistence. Structure: | leaf flag | point data |. To recursivelly persist children, use persist() instead. */
+		void persistContents( ostream& out ) const
+		{
+			Binary::write(out, m_isLeaf);
+			m_contents.persist( out );
+		}
+
 		template< typename C >
 		friend ostream& operator<<( ostream& out, const O1OctreeNode< C >& node );
 		
