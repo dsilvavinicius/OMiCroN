@@ -6,17 +6,44 @@ namespace omicron::test::disk
 {
     using namespace basic;
     
+    using Node = OctreeFile::Node;
+    using NodePtr = OctreeFile::NodePtr;
+
     class OctreeFileTest : public ::testing::Test
     {
     protected:
         void SetUp() {}
     };
 
+    void checkHierarchy(const NodePtr& rootPtr, const Surfel& rootSurfel, const Surfel& childSurfel0, const Surfel& childSurfel1, const Surfel& grandChildSurfel0, const Surfel& grandChildSurfel1)
+    {
+        ASSERT_EQ( rootPtr->parent(), nullptr );
+        ASSERT_EQ( rootPtr->getContents().size(), 1 );
+        ASSERT_EQ( rootPtr->getContents()[ 0 ], rootSurfel );
+        ASSERT_EQ( rootPtr->isLeaf(), false );
+        ASSERT_EQ( rootPtr->child().size(), 1 );
+        
+        Node& child = rootPtr->child()[ 0 ];
+        
+        ASSERT_EQ( child.parent(), rootPtr.get() );
+        ASSERT_EQ( child.getContents().size(), 2 );
+        ASSERT_EQ( child.getContents()[ 0 ], childSurfel0 );
+        ASSERT_EQ( child.getContents()[ 1 ], childSurfel1 );
+        ASSERT_EQ( child.isLeaf(), false );
+        ASSERT_EQ( child.child().size(), 1 );
+        
+        Node& grandChild = child.child()[ 0 ];
+        
+        ASSERT_EQ( grandChild.parent(), &child );
+        ASSERT_EQ( grandChild.getContents().size(), 2 );
+        ASSERT_EQ( grandChild.getContents()[ 0 ], grandChildSurfel0 );
+        ASSERT_EQ( grandChild.getContents()[ 1 ], grandChildSurfel1 );
+        ASSERT_EQ( grandChild.isLeaf(), true );
+        ASSERT_EQ( grandChild.child().size(), 0 );
+    }
+
     TEST_F( OctreeFileTest, WriteAndRead )
     {
-        using Node = OctreeFile::Node;
-        using NodePtr = OctreeFile::NodePtr;
-        
         Surfel rootSurfel( Vec3( 0.0f, 0.1f, 0.2f ), Vec3( 0.3f, 0.4f, 0.5f ), Vec3( 0.6f, 0.7f, 0.8f ) );
         
         Surfel childSurfel0( Vec3( 1.0f, 1.1f, 1.2f ), Vec3( 1.3f, 1.4f, 1.5f ), Vec3( 1.6f, 1.7f, 1.8f ) );
@@ -47,32 +74,18 @@ namespace omicron::test::disk
             root.setChildren( std::move( rootChildren ) );
         }
         
-        OctreeFile::writeDepth( "test_octree.boc", root );
+        // First case: depth-first order.
+        {
+            OctreeFile::writeDepth( "test_octree_depth.boc", root );
+            NodePtr rootPtr = OctreeFile::read( "test_octree_depth.boc" );
+            checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
+        }
         
-        NodePtr rootPtr = OctreeFile::read( "test_octree.boc" );
-        
-        ASSERT_EQ( rootPtr->parent(), nullptr );
-        ASSERT_EQ( rootPtr->getContents().size(), 1 );
-        ASSERT_EQ( rootPtr->getContents()[ 0 ], rootSurfel );
-        ASSERT_EQ( rootPtr->isLeaf(), false );
-        ASSERT_EQ( rootPtr->child().size(), 1 );
-        
-        Node& child = rootPtr->child()[ 0 ];
-        
-        ASSERT_EQ( child.parent(), rootPtr.get() );
-        ASSERT_EQ( child.getContents().size(), 2 );
-        ASSERT_EQ( child.getContents()[ 0 ], childSurfel0 );
-        ASSERT_EQ( child.getContents()[ 1 ], childSurfel1 );
-        ASSERT_EQ( child.isLeaf(), false );
-        ASSERT_EQ( child.child().size(), 1 );
-        
-        Node& grandChild = child.child()[ 0 ];
-        
-        ASSERT_EQ( grandChild.parent(), &child );
-        ASSERT_EQ( grandChild.getContents().size(), 2 );
-        ASSERT_EQ( grandChild.getContents()[ 0 ], grandChildSurfel0 );
-        ASSERT_EQ( grandChild.getContents()[ 1 ], grandChildSurfel1 );
-        ASSERT_EQ( grandChild.isLeaf(), true );
-        ASSERT_EQ( grandChild.child().size(), 0 );
+        // Second case: breadth-first order.
+        {
+            OctreeFile::writeBreadth( "test_octree_breadth.boc", root );
+            NodePtr rootPtr = OctreeFile::read( "test_octree_breadth.boc" );
+            checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
+        }
     }
 }

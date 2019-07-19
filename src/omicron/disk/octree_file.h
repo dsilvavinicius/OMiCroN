@@ -71,8 +71,11 @@ namespace omicron::disk
 
 			node->persistContents(file);
 
-			uint nChildren = node->child().size();
-			Binary::write(file, nChildren);
+			if(!node->isLeaf())
+			{
+				uint nChildren = node->child().size();
+				Binary::write(file, nChildren);
+			}
 
 			for(const Node& node : node->child())
 			{
@@ -98,22 +101,48 @@ namespace omicron::disk
 
 		if(isDepth)
 		{
+			cout << "Depth-first order format detected." << endl << endl;
+
 			return NodePtr( new Node( file ) );
 		}
 		else
 		{
-			// std::queue<Node&> q;
-			// NodePtr root( new Node( file, Node::NoRecursionMark() ) );
-			// q.push(*root);
+			cout << "Breadth-first order format detected." << endl << endl;
 
-			// while(!q.empty())
-			// {
-			// 	Node& node = q.front();
-			// 	q.pop();
+			NodePtr root(new Node(file, Node::NoRecursionMark()));
+			std::queue<pair<Node*, uint>> q;
+			
+			if(!root->isLeaf())
+			{
+				pair<Node*, uint> queueRoot;
+				queueRoot.first = root.get();
+				Binary::read(file, queueRoot.second);
+				q.push(queueRoot);
+			}
 
-			// }
-
-			// return root;
+			while(!q.empty())
+			{
+				Node* node = q.front().first;
+				typename Node::NodeArray children(q.front().second);
+				q.pop();
+				
+				for(typename Node::NodeArray::iterator it = children.begin(); it != children.end(); ++it)
+				{
+					*it = Node(file, Node::NoRecursionMark());
+					it->setParent(node);
+					
+					if(!it->isLeaf())
+					{
+						pair<Node*, uint> queueNode;
+						queueNode.first = it;
+						Binary::read(file, queueNode.second);
+						q.push(queueNode);
+					}
+				}
+				node->setChildren(std::move(children));
+			}
+			
+			return root;
 		}
 	}
 }
