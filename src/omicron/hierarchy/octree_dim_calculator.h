@@ -18,7 +18,7 @@ namespace omicron::hierarchy
         /** Ctor.
          *  @param onPointReceived is an event called whenever a point is inserted by this.
          */
-        OctreeDimCalculator( const function< void( const Point& ) >& onPointInserted );
+        OctreeDimCalculator( const function< void( const Point& ) >& onPointInserted = [](const Point&){} );
     
         /** Inserts a point, expanding the octree boundary if needed. */
         void insertPoint( const Point& p );

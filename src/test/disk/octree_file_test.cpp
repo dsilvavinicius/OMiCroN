@@ -1,10 +1,13 @@
+#include "omicron/basic/morton_code.h"
 #include "omicron/disk/octree_file.h"
+#include "omicron/hierarchy/octree_dim_calculator.h"
 
 #include <gtest/gtest.h>
 
 namespace omicron::test::disk
 {
     using namespace basic;
+    using namespace hierarchy;
     
     using Node = OctreeFile::Node;
     using NodePtr = OctreeFile::NodePtr;
@@ -81,11 +84,36 @@ namespace omicron::test::disk
             checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
         }
         
+        cout << "Depth-first order test passed." << endl << endl;
+
         // Second case: breadth-first order.
         {
             OctreeFile::writeBreadth( "test_octree_breadth.boc", root );
             NodePtr rootPtr = OctreeFile::read( "test_octree_breadth.boc" );
             checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
         }
+
+        cout << "Breadth-first order test passed." << endl << endl;
+
+        // Third case: async breadth-first oder.
+        {
+            OctreeFile::writeBreadth( "test_octree_breadth.boc", root );
+            
+            OctreeDimCalculator<ShallowMortonCode> octreeDimCalc;
+            octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), rootSurfel.c));
+            octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), childSurfel0.c));
+            octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), childSurfel1.c));
+            octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), grandChildSurfel0.c));
+            octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), grandChildSurfel1.c));
+            DimOriginScale<ShallowMortonCode> dimOriginScale = octreeDimCalc.dimensions(3);
+            
+            pair<NodePtr, future<void>> rootAndFuture = OctreeFile::asyncRead( "test_octree_breadth.boc", dimOriginScale.dimensions() );
+            NodePtr rootPtr = std::move(rootAndFuture.first);
+            rootAndFuture.second.get();
+
+            checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
+        }
+
+        cout << "Async breadth-first order test passed." << endl << endl;
     }
 }
