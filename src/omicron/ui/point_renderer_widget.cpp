@@ -400,7 +400,7 @@ void PointRendererWidget::updateFromKeyInput()
 		camera->moveBack();
 	if( m_keys[ Qt::Key_W ] )
 		camera->moveForward();
-	if( m_keys[ Qt::Key_C ] )
+	if( m_keys[ Qt::Key_Q ] )
 		camera->moveDown();
 	if( m_keys[ Qt::Key_E ] )
 		camera->moveUp();
@@ -495,7 +495,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	{
         // Debug
 		{
-			cout << "Octree Json " << filename << endl;
+			cout << "Octree Json:" << endl << filename << endl;
 		}
         
 		ifstream file( filename );
@@ -522,7 +522,7 @@ void PointRendererWidget::openMesh( const string& filename )
 		throw runtime_error( "Supported file formats are .oct for already processed octrees or .ply for raw point clouds." );
 	}
 	
-	cout << "Octree built." << endl;
+	cout << "Parallel octree construction started." << endl << endl;
 	
 	{
 		int startIdx = filename.find_last_of( '/' ) + 1;
@@ -541,7 +541,7 @@ void PointRendererWidget::openMesh( const string& filename )
 	// threshold adaptations.
 	Vector3f centroid = m_octree->dim().m_size * 0.5f;
 	
-	cout << "Model centroid: " << centroid << endl << "Model origin: " << m_octree->dim().m_origin << endl << endl;
+	cout << "Model centroid: " << endl << centroid << endl << endl << "Model origin: " << endl << m_octree->dim().m_origin << endl << endl;
 	
 	m_renderer = new Renderer( camera, centroid );
 	

@@ -29,8 +29,7 @@ namespace omicron::hierarchy
 		
 		OctreeStats trackFront( Renderer& renderer, const Float projThresh );
 	
-		/** Just here to fit FastParallelOctree interface. */
-		void waitCreation(){}
+		void waitCreation(){ m_octFile->waitAsyncRead(); }
 		
 		bool isCreationFinished() { return true; }
 		
@@ -48,16 +47,15 @@ namespace omicron::hierarchy
 		
 		uint substitutedPlaceholders() const{ return 0u; }
 		
-		uint readerInTime() { return m_inTime; }
+		uint readerInTime() { return 0u; }
 		uint readerInitTime() { return 0u; }
-		uint readerReadTime() { return 0u; }
+		uint readerReadTime() { return m_octFile->waitAsyncRead(); }
 
 	private:
 		unique_ptr< Front > m_front;
 		typename OctreeFile<Morton>::NodePtr m_root;
+		unique_ptr< OctreeFile<Morton> > m_octFile;
 		Dim m_dim;
-
-		uint m_inTime;
 	};
 	
 	template< typename Morton >
@@ -77,14 +75,14 @@ namespace omicron::hierarchy
 			cout << "Dim from Json: " << m_dim << endl;
 		}
 		
-		auto now = Profiler::now( "Binary octree file reading" );
-		
-		OctreeFile<Morton> octFile;
-		m_root = octFile.read( octreeJson[ "nodes" ].asString() );
-		
-		m_inTime = Profiler::elapsedTime( now, "Binary octree file reading" );
-		
 		m_front = unique_ptr< Front >( new Front( octreeJson[ "database" ].asString(), m_dim, 1, nodeLoader, 8ul * 1024ul * 1024ul * 1024ul ) );
+
+		m_octFile = unique_ptr<OctreeFile<Morton>>(new OctreeFile<Morton>());
+		m_root = m_octFile->asyncRead(
+			octreeJson[ "nodes" ].asString(), m_dim,
+			[&](uint levelDone){ m_front->setMaxDepth(levelDone); }
+		);
+		
 		m_front->insertRoot( *m_root );
 	}
 	

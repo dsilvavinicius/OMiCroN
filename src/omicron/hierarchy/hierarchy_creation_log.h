@@ -12,26 +12,26 @@ namespace omicron::hierarchy
 	{
 	public:
 		/** Logs a debug message. */
-		static void logDebugMsg( const string& msg )
+		static void logDebugMsg( const string& msg, ostream& out = m_log )
 		{
 			lock_guard< recursive_mutex > lock( m_logMutex );
-			m_log << msg;
+			out << msg;
 		}
 	
 		/** Logs a debug message and fail by throwing an exception. */
-		static void logAndFail( const string& msg )
+		static void logAndFail( const string& msg, ostream& out = m_log )
 		{
 			{
 				lock_guard< recursive_mutex > lock( m_logMutex );
-				logDebugMsg( msg );
+				logDebugMsg( msg, out );
 				flush();
 			}
 			throw logic_error( msg );
 		}
 	
-		static void flush()
+		static void flush(ostream& out = m_log)
 		{
-			m_log.flush();
+			out.flush();
 		}
 	
 	private:

@@ -4,6 +4,8 @@
 #include <queue>
 #include "omicron/hierarchy/o1_octree_node.h"
 #include "omicron/hierarchy/octree_dimensions.h"
+#include "omicron/hierarchy/hierarchy_creation_log.h"
+#include "omicron/util/profiler.h"
 
 namespace omicron::disk
 {
@@ -39,8 +41,9 @@ namespace omicron::disk
 		typename OctreeFile::NodePtr asyncRead(
 			const string& filename, const OctreeDimensions<Morton>& dimensions, const function< void(uint) >& onLevelDone = [](uint){});
 
-		/** Waits for the asynchronous read to be done. */
-		void waitAsyncRead() { if(m_future) { m_future->get(); } }
+		/** Waits for the asynchronous read to be done.
+		 * @returns the total time needed to read the file. */
+		uint waitAsyncRead() { if(m_future) { m_future->wait(); return m_time.load(); } return 0u; }
 
 	private:
 		// Reads the header of the file
@@ -60,6 +63,7 @@ namespace omicron::disk
 		ifstream m_file;
 		OctreeDimensions<Morton> m_octreeDim;
 		function< void(uint levelDone) > m_onLevelDone;
+		atomic_uint m_time;
 	};
 	
 	template<typename Morton>
@@ -168,6 +172,8 @@ namespace omicron::disk
 			m_future = make_shared<future<void>>(
 				std::async(std::launch::async,
 					[&]{
+						auto now = util::Profiler::now( "Binary octree file reading" );
+
 						OctreeDimensions<Morton> currentLvlDim(m_octreeDim, 0);
 						Morton previousMorton = currentLvlDim.calcMorton(*m_root);
 
@@ -177,12 +183,23 @@ namespace omicron::disk
 								if(morton <= previousMorton)
 								{
 									// New level detected
+									stringstream ss; ss << "Loaded level " << currentLvlDim.level() << endl << endl;
+									HierarchyCreationLog::logDebugMsg(ss.str(), cout);
+									
 									m_onLevelDone(currentLvlDim.level());
 									currentLvlDim = OctreeDimensions<Morton>(currentLvlDim, currentLvlDim.level() + 1);
 								}
 								previousMorton = morton;
 							}
 						);
+
+						stringstream ss; ss << "Loaded level " << currentLvlDim.level() << endl << endl;
+						HierarchyCreationLog::logDebugMsg(ss.str(), cout);
+						m_onLevelDone(currentLvlDim.level());
+						
+						m_time = util::Profiler::elapsedTime( now, "Binary octree file reading" );
+
+						HierarchyCreationLog::logDebugMsg("All levels loaded.\n\n", cout);
 					}
 				)
 			);

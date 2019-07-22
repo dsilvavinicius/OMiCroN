@@ -105,7 +105,7 @@ namespace omicron::hierarchy
 		 * @param dbFilename is the path to a database file which will be used to store nodes in an out-of-core approach.
 		 * @param leafLvlDim is the information of octree size at the deepest (leaf) level. */
 		Front( const string& dbFilename, const OctreeDim& leafLvlDim, const int nHierarchyCreationThreads,
-			   NodeLoader& loader, const ulong memoryLimit );
+			   NodeLoader& loader, const ulong memoryLimit, const uint maxDepth = Morton::maxLvl() );
 		
 		/** Inserts a node into thread's buffer end so it can be push to the front later on. After this, the tracking
 		 * method will ensure that the placeholder related with this node, if any, will be substituted by it.
@@ -159,6 +159,10 @@ namespace omicron::hierarchy
 		/** @returns the number of placeholders substituted in front evaluation until now. */
 		uint substitutedPlaceholders() const;
 		
+		void setMaxDepth(const uint maxDepth) { m_maxDepth = maxDepth; }
+
+		uint getMaxDepth(){ return m_maxDepth.load(); }
+
 	private:
 		void trackNode( FrontListIter& frontIt, Node*& lastParent, int substitutionLvl, Renderer& renderer,
 						const Float projThresh );
@@ -326,6 +330,9 @@ namespace omicron::hierarchy
 		/** Indicates that all leaf level nodes are already loaded. */
 		atomic_bool m_leafLvlLoadedFlag;
 		
+		// The maximum depth that the front can be branched.
+		atomic_uint m_maxDepth;
+
 		// Statistics related data.
 		chrono::system_clock::time_point m_lastInsertionTime;
 		OctreeStats m_octreeStats;
@@ -343,7 +350,7 @@ namespace omicron::hierarchy
 	
 	template< typename Morton >
 	inline Front< Morton >::Front( const string& dbFilename, const OctreeDim& leafLvlDim,
-								   const int nHierarchyCreationThreads, NodeLoader& loader, const ulong memoryLimit )
+								   const int nHierarchyCreationThreads, NodeLoader& loader, const ulong memoryLimit, const uint maxDepth )
 	: m_leafLvlDim( leafLvlDim ),
 	m_memoryLimit( memoryLimit ),
 	m_currentIterInsertions( nHierarchyCreationThreads ),
@@ -353,7 +360,8 @@ namespace omicron::hierarchy
 	m_leafLvlLoadedFlag( false ),
 	m_nodeLoader( loader ),
 	m_lastInsertionTime( Profiler::now() ),
-	m_substitutedPlaceholders( 0u )
+	m_substitutedPlaceholders( 0u ),
+	m_maxDepth(maxDepth)
 	{
 		m_frontIter = m_front.end();
 		
@@ -906,7 +914,7 @@ namespace omicron::hierarchy
 		AlignedBox3f box = nodeLvlDim.getMortonBoundaries( morton );
 		out_isCullable = renderer.isCullable( box );
 		
-		if( !node.isLeaf() && !node.child().empty() )
+		if( nodeLvlDim.level() < m_maxDepth && !node.isLeaf() && !node.child().empty() )
 		{
 			NodeArray& children = node.child();
 			
