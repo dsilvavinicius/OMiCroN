@@ -29,7 +29,11 @@ class PointRendererWidget
 	Q_OBJECT
 
 public:
-	using MortonCode = MediumMortonCode;
+	#ifdef SHALLOW_OCTREE
+		using MortonCode = ShallowMortonCode;
+	#else
+		using MortonCode = MediumMortonCode;
+	#endif
 	
 	using Point = omicron::basic::Point;
 	

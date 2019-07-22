@@ -9,8 +9,9 @@ namespace omicron::test::disk
     using namespace basic;
     using namespace hierarchy;
     
-    using Node = OctreeFile::Node;
-    using NodePtr = OctreeFile::NodePtr;
+    using Morton = ShallowMortonCode;
+    using Node = OctreeFile<Morton>::Node;
+    using NodePtr = OctreeFile<Morton>::NodePtr;
 
     class OctreeFileTest : public ::testing::Test
     {
@@ -79,8 +80,9 @@ namespace omicron::test::disk
         
         // First case: depth-first order.
         {
-            OctreeFile::writeDepth( "test_octree_depth.boc", root );
-            NodePtr rootPtr = OctreeFile::read( "test_octree_depth.boc" );
+            OctreeFile<Morton> octFile;
+            octFile.writeDepth( "test_octree_depth.boc", root );
+            NodePtr rootPtr = octFile.read( "test_octree_depth.boc" );
             checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
         }
         
@@ -88,8 +90,9 @@ namespace omicron::test::disk
 
         // Second case: breadth-first order.
         {
-            OctreeFile::writeBreadth( "test_octree_breadth.boc", root );
-            NodePtr rootPtr = OctreeFile::read( "test_octree_breadth.boc" );
+            OctreeFile<Morton> octFile;
+            octFile.writeBreadth( "test_octree_breadth.boc", root );
+            NodePtr rootPtr = octFile.read( "test_octree_breadth.boc" );
             checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
         }
 
@@ -97,21 +100,21 @@ namespace omicron::test::disk
 
         // Third case: async breadth-first oder.
         {
-            OctreeFile::writeBreadth( "test_octree_breadth.boc", root );
+            OctreeFile<Morton> octFile;
+            octFile.writeBreadth( "test_octree_breadth.boc", root );
             
-            OctreeDimCalculator<ShallowMortonCode> octreeDimCalc;
+            OctreeDimCalculator<Morton> octreeDimCalc;
             octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), rootSurfel.c));
             octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), childSurfel0.c));
             octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), childSurfel1.c));
             octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), grandChildSurfel0.c));
             octreeDimCalc.insertPoint(Point(Vec3(1.f, 0.f, 0.f), grandChildSurfel1.c));
-            DimOriginScale<ShallowMortonCode> dimOriginScale = octreeDimCalc.dimensions(3);
+            DimOriginScale<Morton> dimOriginScale = octreeDimCalc.dimensions(3);
             
-            pair<NodePtr, future<void>> rootAndFuture = OctreeFile::asyncRead( "test_octree_breadth.boc", dimOriginScale.dimensions() );
-            NodePtr rootPtr = std::move(rootAndFuture.first);
-            rootAndFuture.second.get();
+            NodePtr root = octFile.asyncRead( "test_octree_breadth.boc", dimOriginScale.dimensions() );
+            octFile.waitAsyncRead();
 
-            checkHierarchy(rootPtr, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
+            checkHierarchy(root, rootSurfel, childSurfel0, childSurfel1, grandChildSurfel0, grandChildSurfel1);
         }
 
         cout << "Async breadth-first order test passed." << endl << endl;

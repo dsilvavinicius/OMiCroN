@@ -62,7 +62,8 @@
 			"typeinfo": "cpp",
 			"unordered_set": "cpp",
 			"memory": "cpp",
-			"optional": "cpp"
+			"optional": "cpp",
+			"*.ipp": "cpp"
 		}
 	}
 }

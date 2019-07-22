@@ -75,6 +75,9 @@ enum ReconstructionAlgorithm
 // Number of segments for partial sorting.
 #define SORTING_SEGMENTS 10
 
+// Indicates that the hierarchy is shallow. Morton codes are uints, instead of longs.
+#define SHALLOW_OCTREE
+
 // Activates de loading of binary octree files instead of hierarchy creation.
 #define OCTREE_CONSTRUCTION BINARY_OCTREE_FILE
 //#define OCTREE_CONSTRUCTION OMICRON

@@ -54,7 +54,7 @@ namespace omicron::hierarchy
 
 	private:
 		unique_ptr< Front > m_front;
-		OctreeFile::NodePtr m_root;
+		typename OctreeFile<Morton>::NodePtr m_root;
 		Dim m_dim;
 
 		uint m_inTime;
@@ -79,7 +79,8 @@ namespace omicron::hierarchy
 		
 		auto now = Profiler::now( "Binary octree file reading" );
 		
-		m_root = OctreeFile::read( octreeJson[ "nodes" ].asString() );
+		OctreeFile<Morton> octFile;
+		m_root = octFile.read( octreeJson[ "nodes" ].asString() );
 		
 		m_inTime = Profiler::elapsedTime( now, "Binary octree file reading" );
 		

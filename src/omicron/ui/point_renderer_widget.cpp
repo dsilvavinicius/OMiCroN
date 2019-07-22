@@ -653,7 +653,8 @@ void PointRendererWidget::saveOctree()
 					#endif
 					
 					//OctreeFile::writeDepth( filename, m_octree->root() );
-					OctreeFile::writeBreadth( filename, m_octree->root() );
+					OctreeFile<MortonCode> octFile;
+					octFile.writeBreadth( filename, m_octree->root() );
 					
 					return Profiler::elapsedTime( now, "Save octree operation" );
 				}

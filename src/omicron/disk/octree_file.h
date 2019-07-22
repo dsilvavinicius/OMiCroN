@@ -8,50 +8,62 @@
 namespace omicron::disk
 {
 	/** Tools for writing and reading binary octree files, which contain raw node data. */
+	template<typename Morton>
 	class OctreeFile
 	{
 	public:
 		using Node = O1OctreeNode< Surfel >;
-		using NodePtr = unique_ptr< Node >;
+		using NodePtr = shared_ptr< Node >;
+		using FuturePtr = shared_ptr< future<void> >;
 		
 		/** Writes a binary octree file in depth-first order.
 		 * @param filename path to the file to be written with the octree.
 		 * @param root the root node of the octree. */
-		static void writeDepth( const string& filename, const Node& root );
+		void writeDepth( const string& filename, const Node& root );
 		
 		/** Writes a binary octree file in breadth-first order.
 		 * @param filename path to the file to be written with the octree.
 		 * @param root the root node of the octree. */
-		static void writeBreadth( const string& filename, const Node& root );
+		void writeBreadth( const string& filename, const Node& root );
 
 		/** Reads an octree file written previously by writeDepth() or writeBreadth().
 		 * @param filename path to the octree binary file.
 		 * @returns a pointer to the read octree. */
-		static NodePtr read( const string& filename );
+		NodePtr read( const string& filename );
 
 		/** Asynchronously reads an octree file written previously by writeBreadth().
 		 * @param filename is the path to the octree binary file.
 		 * @param dimension contains the octree dimensions used to calculate morton codes from node data.
 		 * @param onLevelDone describes what to do when a hierarchy level is finished.
 		 * @returns a pointer to the read octree. */
-		template<typename Morton>
-		static pair<typename OctreeFile::NodePtr, future<void>> asyncRead(
+		typename OctreeFile::NodePtr asyncRead(
 			const string& filename, const OctreeDimensions<Morton>& dimensions, const function< void(uint) >& onLevelDone = [](uint){});
+
+		/** Waits for the asynchronous read to be done. */
+		void waitAsyncRead() { if(m_future) { m_future->get(); } }
 
 	private:
 		// Reads the header of the file
 		// @returns the open file and a boolean equals to true if the file is in depth-first order, false otherwise (breadth-first order).
-		static pair<ifstream, bool> readHeader(const string& filename);
+		pair<ifstream, bool> readHeader(const string& filename);
 
 		// Reads the remaining of a breadth-first ordered file, after the root is read. Enables support for async read, since the root can be returned to the calling thread and the remaing of the file can be read by another thread.
 		// @param root is the root of hierarchy, already read.
 		// @param file is the octree file, ordered in breadth-first order.
 		// @param onSiblingGroupRead 
-		static void readBreadthFirst(NodePtr& root, ifstream& file,
-			const function< void(const typename Node::NodeArray&) >& onSiblingGroupRead = [](const typename Node::NodeArray&){});
+		void readBreadthFirst(
+			NodePtr& root, ifstream& file, const function< void(const typename Node::NodeArray&) >& onSiblingGroupRead = [](const typename Node::NodeArray&){});
+
+		// Asynchronous read variables.
+		FuturePtr m_future;
+		NodePtr m_root;
+		ifstream m_file;
+		OctreeDimensions<Morton> m_octreeDim;
+		function< void(uint levelDone) > m_onLevelDone;
 	};
 	
-	inline void OctreeFile::writeDepth( const string& filename, const OctreeFile::Node& root )
+	template<typename Morton>
+	inline void OctreeFile<Morton>::writeDepth( const string& filename, const OctreeFile::Node& root )
 	{
 		cout << "Saving binary octree in depth-first order to " << filename << endl << endl;
 		
@@ -68,7 +80,8 @@ namespace omicron::disk
 		root.persist( file );
 	}
 
-	inline void OctreeFile::writeBreadth( const string& filename, const OctreeFile::Node& root )
+	template<typename Morton>
+	inline void OctreeFile<Morton>::writeBreadth( const string& filename, const OctreeFile::Node& root )
 	{
 		cout << "Saving binary octree in breadth-first order to " << filename << endl << endl;
 		
@@ -106,7 +119,8 @@ namespace omicron::disk
 		}
 	}
 
-	inline OctreeFile::NodePtr OctreeFile::read( const string& filename )
+	template<typename Morton>
+	inline typename OctreeFile<Morton>::NodePtr OctreeFile<Morton>::read( const string& filename )
 	{
 		pair<ifstream, bool> fileAndHeader = readHeader(filename);
 		ifstream file(std::move(fileAndHeader.first));
@@ -116,13 +130,13 @@ namespace omicron::disk
 		{
 			cout << "Depth-first order format detected." << endl << endl;
 
-			return NodePtr( new Node( file ) );
+			return make_shared<Node>( file );
 		}
 		else
 		{
 			cout << "Breadth-first order format detected." << endl << endl;
 
-			NodePtr root(new Node(file, Node::NoRecursionMark()));
+			NodePtr root = make_shared<Node>(file, Node::NoRecursionMark());
 			
 			readBreadthFirst(root, file);
 			
@@ -131,12 +145,15 @@ namespace omicron::disk
 	}
 
 	template<typename Morton>
-	inline pair<typename OctreeFile::NodePtr, future<void>> OctreeFile::asyncRead(
+	inline typename OctreeFile<Morton>::NodePtr OctreeFile<Morton>::asyncRead(
 			const string& filename, const OctreeDimensions<Morton>& dimensions, const function< void(uint levelDone) >& onLevelDone)
 	{
 		pair<ifstream, bool> fileAndHeader = OctreeFile::readHeader(filename);
-		ifstream file = std::move(fileAndHeader.first);
 		bool isDepth = fileAndHeader.second;
+		
+		m_file = std::move(fileAndHeader.first);
+		m_octreeDim = dimensions;
+		m_onLevelDone = onLevelDone;
 
 		if(isDepth)
 		{
@@ -146,33 +163,36 @@ namespace omicron::disk
 		{
 			cout << "Breadth-first order format detected." << endl << endl;
 
-			OctreeFile::NodePtr root(new OctreeFile::Node(file, OctreeFile::Node::NoRecursionMark()));
+			m_root = make_shared<Node>(m_file, OctreeFile::Node::NoRecursionMark());
 
-			OctreeDimensions<Morton> currentLvlDim(dimensions, 0);
-			Morton previousMorton = currentLvlDim.calcMorton(*root);
+			m_future = make_shared<future<void>>(
+				std::async(std::launch::async,
+					[&]{
+						OctreeDimensions<Morton> currentLvlDim(m_octreeDim, 0);
+						Morton previousMorton = currentLvlDim.calcMorton(*m_root);
 
-			future<void> readFuture = std::async(std::launch::async,
-				[&]{
-					readBreadthFirst(root, file,
-						[&](const typename OctreeFile::Node::NodeArray& siblings){
-							Morton morton = currentLvlDim.calcMorton(siblings[0]);
-							if(morton <= previousMorton)
-							{
-								// New level detected
-								onLevelDone(currentLvlDim.level());
-								currentLvlDim = OctreeDimensions<Morton>(currentLvlDim, currentLvlDim.level() + 1);
+						readBreadthFirst(m_root, m_file,
+							[&](const typename OctreeFile::Node::NodeArray& siblings){
+								Morton morton = currentLvlDim.calcMorton(siblings[0]);
+								if(morton <= previousMorton)
+								{
+									// New level detected
+									m_onLevelDone(currentLvlDim.level());
+									currentLvlDim = OctreeDimensions<Morton>(currentLvlDim, currentLvlDim.level() + 1);
+								}
+								previousMorton = morton;
 							}
-							previousMorton = morton;
-						}
-					);
-				}
+						);
+					}
+				)
 			);
 
-			return pair<OctreeFile::NodePtr, future<void>>(std::move(root), std::move(readFuture));
+			return m_root;
 		}
 	}
 
-	inline pair<ifstream,bool> OctreeFile::readHeader(const string& filename)
+	template<typename Morton>
+	inline pair<ifstream,bool> OctreeFile<Morton>::readHeader(const string& filename)
 	{
 		cout << "Loading binary octree from " << filename << endl << endl;
 		
@@ -190,7 +210,8 @@ namespace omicron::disk
 		return pair<ifstream, bool>(std::move(file), isDepth);
 	}
 
-	inline void OctreeFile::readBreadthFirst(NodePtr& root, ifstream& file, const function< void(const typename Node::NodeArray&) >& onSiblingGroupRead)
+	template<typename Morton>
+	inline void OctreeFile<Morton>::readBreadthFirst(NodePtr& root, ifstream& file, const function< void(const typename Node::NodeArray&) >& onSiblingGroupRead)
 	{
 		std::queue<pair<Node*, uint>> q;
 			
