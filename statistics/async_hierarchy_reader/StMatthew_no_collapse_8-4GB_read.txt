@@ -1,0 +1,86 @@
+vinicius@vinicius-System-Product-Name:~/Projects/PointBasedGraphics/OMiCroN/bin$ ./Point_Based_Renderer
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+Octree Json:
+/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct
+{
+	"database" : "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/StMathew/StMathew.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply",
+	"size" : 
+	{
+		"x" : 0.35423251986503601,
+		"y" : 1,
+		"z" : 0.32236325740814209
+	}
+}
+Dim from Json: origin: 0
+0
+0
+octree size: 0.354233
+       1
+0.322363
+node lvl size:0.00276744
+ 0.0078125
+0.00251846
+node lvl:7
+
+Loading binary octree from /media/vinicius/data/Datasets/StMathew/StMathew.boc
+
+Breadth-first order format detected.
+
+Binary octree file reading started at: Parallel octree construction started.Tue Jul 23 18:23:11 2019
+
+
+
+Model centroid: 
+0.177116
+     0.5
+0.161182
+
+Model origin: 
+0
+0
+0
+
+Loaded level 0
+
+Renderer built.
+Loaded level 1
+
+Loaded level 2
+
+Loaded level 3
+
+Loaded level 4
+
+Loaded level 5
+
+Loaded level 6
+
+Binary octree file reading finished at: Tue Jul 23 18:23:58 2019
+
+Duration: 47878 ms.
+
+All levels loaded.
+
+Generating statistics...
+
+Statistics saved into ../statistics/StMathewWithFaces_sorted7-23_07_2019-18_24.txt

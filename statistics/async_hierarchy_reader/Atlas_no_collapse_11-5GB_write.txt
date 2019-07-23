@@ -1,0 +1,129 @@
+vinicius@vinicius-System-Product-Name:~/Projects/PointBasedGraphics/OMiCroN/bin$ ./Point_Based_Renderer
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+Octree Json:
+/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.oct
+{
+	"database" : "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/Atlas/Atlas.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.ply",
+	"size" : 
+	{
+		"x" : 0.52650493383407593,
+		"y" : 1,
+		"z" : 0.37578520178794861
+	}
+}
+Octree json: 
+{
+	"database" : "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/Atlas/Atlas.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.ply",
+	"size" : 
+	{
+		"x" : 0.52650493383407593,
+		"y" : 1,
+		"z" : 0.37578520178794861
+	}
+}
+Dim from Json: origin: 0
+0
+0
+octree size: 0.526505
+       1
+0.375785
+node lvl size:0.00411332
+ 0.0078125
+0.00293582
+node lvl:7
+
+PlyPointReader init started at: Tue Jul 23 17:39:23 2019
+
+Setup read of /media/vinicius/data/Datasets/Atlas/AtlasWithFaces_sorted7.ply
+
+Vertices in file: 255035497
+
+=== Elements in header ===
+
+vertex: 255035497 instances
+Prop name: x
+Prop name: y
+Prop name: z
+Prop name: nx
+Prop name: ny
+Prop name: nz
+
+PlyPointReader init finished at: Tue Jul 23 17:39:23 2019
+
+Duration: 0 ms.
+
+Parallel octree construction started.
+
+Model centroid: 
+Hierarchy creation started at: 0.263252
+     0.5
+0.187893
+
+Model origin: 
+0
+0
+0
+
+Tue Jul 23 17:39:23 2019
+
+MEMORY BEFORE CREATING: 304304
+
+PlyPointReader read started at: Tue Jul 23 17:39:23 2019
+
+Renderer built.
+PlyPointReader read finished at: Tue Jul 23 17:42:32 2019
+
+Duration: 188685 ms.
+
+===== Leaf lvl loaded =====
+
+Hierarchy creation finished at: Tue Jul 23 17:42:33 2019
+
+Duration: 190164 ms.
+
+Waiting for async octree creation finish. It can take several minutes or hours depending on model size...
+
+Hierarchy creation finished. Duration: 190164
+
+Save octree operation started at: Tue Jul 23 17:42:41 2019
+
+Saving binary octree in breadth-first order to /media/vinicius/data/Datasets/Atlas/Atlas.boc
+
+Save octree operation finished at: Tue Jul 23 17:48:06 2019
+
+Duration: 325099 ms.
+
+Waiting for pending save octree operation.
+
+Generating statistics...
+
+Statistics saved into ../statistics/AtlasWithFaces_sorted7-23_07_2019-17_54.txt

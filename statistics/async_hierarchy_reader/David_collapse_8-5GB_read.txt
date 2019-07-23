@@ -1,0 +1,86 @@
+vinicius@vinicius-System-Product-Name:~/Projects/PointBasedGraphics/OMiCroN/bin$ ./Point_Based_Renderer
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+Octree Json:
+/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.oct
+{
+	"database" : "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/David/David.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/David/DavidWithFaces_sorted7.ply",
+	"size" : 
+	{
+		"x" : 0.39949041604995728,
+		"y" : 0.23220483958721161,
+		"z" : 1
+	}
+}
+Dim from Json: origin: 0
+0
+0
+octree size:  0.39949
+0.232205
+       1
+node lvl size:0.00312102
+ 0.0018141
+ 0.0078125
+node lvl:7
+
+Loading binary octree from /media/vinicius/data/Datasets/David/David.boc
+
+Breadth-first order format detected.
+
+Binary octree file reading started at: Parallel octree construction started.Tue Jul 23 17:32:07 2019
+
+
+
+Model centroid: 
+0.199745
+0.116102
+     0.5
+
+Model origin: 
+0
+0
+0
+
+Loaded level 0
+
+Renderer built.
+Loaded level 1
+
+Loaded level 2
+
+Loaded level 3
+
+Loaded level 4
+
+Loaded level 5
+
+Loaded level 6
+
+Binary octree file reading finished at: Tue Jul 23 17:32:56 2019
+
+Duration: 48385 ms.
+
+All levels loaded.
+
+Generating statistics...
+
+Statistics saved into ../statistics/DavidWithFaces_sorted7-23_07_2019-17_33.txt

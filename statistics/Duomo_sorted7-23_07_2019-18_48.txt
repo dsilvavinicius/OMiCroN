@@ -1,0 +1,84 @@
+Dataset: Duomo_sorted7
+
+Hierarchy creation threads: 8
+
+Work list size: 8
+
+GPU memory allowed: 1073741824
+
+Projection threshold: 0.05
+
+Hierarchy depth: 7
+
+Parent point ratio: 0.2
+
+Leaf collapse: false
+
+Leaf tangent sizes: 
+{ 8e-05, 2e-05 }
+
+=== Tangent multipliers === 
+Level 1 : 
+1
+1
+Level 2 : 
+1
+1
+Level 3 : 
+2
+1
+Level 4 : 
+2
+2
+Level 5 : 
+2.8
+1.8
+Level 6 : 
+  3
+2.1
+Level 7 : 
+4.4
+4.4
+Level 8 : 
+1
+1
+
+Reconstruction algorithm: WHA07
+
+=== CURRENT FRAME STATS ===
+Traversal time: 42ms
+Render queue time: 0ms
+CPU overhead: 42ms
+Rendered points: 614399
+Front insertion delay: 0ms
+Front size: 717
+Front segments: 1
+Front segment size: 717
+
+=== AVERAGE STATS === 
+Traversal time: 23.9262ms
+Render queue time: 0ms
+CPU overhead: 23.9262ms
+Rendered points: 594928
+Front insertion delay: 0ms
+Front size: 695.357
+Front segments: 1
+Front segment size: 694.517
+0% completed at Tue Jul 23 18:48:04 2019
+
+=== GPU STATS === 
+GPU Overhead: 21
+Average GPU Overhead: 11.4379
+No sort? true
+Sorting flag: External sort
+Sorting chunks: 10
+Hierarchy construction method: 1
+Time for reader input: 0ms
+Time for reader init: 0ms
+Time for reader reading: 24765ms
+Time to create hierarchy: 0ms
+Dynamic memory allocated: 4489370204 bytes
+Number of nodes in hierarchy: 32774
+Number of splats in hierarchy: 124572733
+Number of substituted placeholders: 0
+

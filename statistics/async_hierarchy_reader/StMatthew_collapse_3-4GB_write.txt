@@ -1,0 +1,129 @@
+vinicius@vinicius-System-Product-Name:~/Projects/PointBasedGraphics/OMiCroN/bin$ ./Point_Based_Renderer
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+Octree Json:
+/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.oct
+{
+	"database" : "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/StMathew/StMathew.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply",
+	"size" : 
+	{
+		"x" : 0.35423251986503601,
+		"y" : 1,
+		"z" : 0.32236325740814209
+	}
+}
+Octree json: 
+{
+	"database" : "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/StMathew/StMathew.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply",
+	"size" : 
+	{
+		"x" : 0.35423251986503601,
+		"y" : 1,
+		"z" : 0.32236325740814209
+	}
+}
+Dim from Json: origin: 0
+0
+0
+octree size: 0.354233
+       1
+0.322363
+node lvl size:0.00276744
+ 0.0078125
+0.00251846
+node lvl:7
+
+PlyPointReader init started at: Tue Jul 23 18:31:16 2019
+
+Setup read of /media/vinicius/data/Datasets/StMathew/StMathewWithFaces_sorted7.ply
+
+Vertices in file: 186984410
+
+=== Elements in header ===
+
+vertex: 186984410 instances
+Prop name: x
+Prop name: y
+Prop name: z
+Prop name: nx
+Prop name: ny
+Prop name: nz
+
+PlyPointReader init finished at: Tue Jul 23 18:31:16 2019
+
+Duration: 0 ms.
+
+Parallel octree construction started.
+
+Model centroid: 
+Hierarchy creation started at: 0.177116
+     0.5
+0.161182
+
+Model origin: 
+Tue Jul 23 18:31:16 2019
+
+MEMORY BEFORE CREATING: 0
+0302512
+
+
+0
+
+PlyPointReader read started at: Tue Jul 23 18:31:16 2019
+
+Renderer built.
+PlyPointReader read finished at: Tue Jul 23 18:32:32 2019
+
+Duration: 75923 ms.
+
+===== Leaf lvl loaded =====
+
+Hierarchy creation finished at: Tue Jul 23 18:32:32 2019
+
+Duration: 75948 ms.
+
+Waiting for async octree creation finish. It can take several minutes or hours depending on model size...
+
+Hierarchy creation finished. Duration: 75948
+
+Save octree operation started at: Tue Jul 23 18:32:38 2019
+
+Saving binary octree in breadth-first order to /media/vinicius/data/Datasets/StMathew/StMathew.boc
+
+Save octree operation finished at: Tue Jul 23 18:33:45 2019
+
+Duration: 66256 ms.
+
+Waiting for pending save octree operation.
+
+Generating statistics...
+
+Statistics saved into ../statistics/StMathewWithFaces_sorted7-23_07_2019-18_34.txt
