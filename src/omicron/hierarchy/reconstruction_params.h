@@ -79,8 +79,8 @@ enum ReconstructionAlgorithm
 #define SHALLOW_OCTREE
 
 // Activates de loading of binary octree files instead of hierarchy creation.
-#define OCTREE_CONSTRUCTION BINARY_OCTREE_FILE
-//#define OCTREE_CONSTRUCTION OMICRON
+//#define OCTREE_CONSTRUCTION BINARY_OCTREE_FILE
+#define OCTREE_CONSTRUCTION OMICRON
 
 // #define PARENT_POINTS_RATIO_ONE_FOURTH
 #define PARENT_POINTS_RATIO_ONE_FIFTH

@@ -1,0 +1,119 @@
+vinicius@vinicius-System-Product-Name:~/Projects/PointBasedGraphics/OMiCroN/bin$ ./Point_Based_Renderer
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+created arrow
+creating arrow from axes
+created arrow
+done arrow from axes
+Octree Json:
+/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.oct
+{
+	"database" : "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/Duomo/Duomo.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.ply",
+	"size" : 
+	{
+		"x" : 1,
+		"y" : 0.73849219083786011,
+		"z" : 0.45388567447662354
+	}
+}
+Octree json: 
+{
+	"database" : "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.db",
+	"depth" : 7,
+	"nodes" : "/media/vinicius/data/Datasets/Duomo/Duomo.boc",
+	"origin" : 
+	{
+		"x" : 0,
+		"y" : 0,
+		"z" : 0
+	},
+	"points" : "/media/vinicius/data/Datasets/Duomo/Duomo_sorted7.ply",
+	"size" : 
+	{
+		"x" : 1,
+		"y" : 0.73849219083786011,
+		"z" : 0.45388567447662354
+	}
+}
+Dim from Json: origin: 0
+0
+0
+octree size:        1
+0.738492
+0.453886
+node lvl size: 0.0078125
+0.00576947
+0.00354598
+node lvl:7
+
+PlyPointReader init started at: Mon Jul 29 17:52:25 2019
+
+Setup read of /media/vinicius/data/Datasets/Duomo/Duomo_sorted7.ply
+
+Vertices in file: 99665840
+
+=== Elements in header ===
+
+vertex: 99665840 instances
+Prop name: x
+Prop name: y
+Prop name: z
+Prop name: nx
+Prop name: ny
+Prop name: nz
+
+PlyPointReader init finished at: Mon Jul 29 17:52:25 2019
+
+Duration: 0 ms.
+
+Parallel octree construction started.
+
+Model centroid: 
+Hierarchy creation started at:      0.5
+0.369246
+0.226943
+
+Model origin: 
+Mon Jul 29 17:52:25 2019
+
+MEMORY BEFORE CREATING: 3021600
+
+
+0
+0
+
+PlyPointReader read started at: Mon Jul 29 17:52:25 2019
+
+Renderer built.
+PlyPointReader read finished at: Mon Jul 29 17:53:14 2019
+
+Duration: 49277 ms.
+
+===== Leaf lvl loaded =====
+
+Hierarchy creation finished at: Mon Jul 29 17:53:14 2019
+
+Duration: 49303 ms.
+
+Waiting for async octree creation finish. It can take several minutes or hours depending on model size...
+
+Hierarchy creation finished. Duration: 49303
+
+Generating statistics...
+
+Statistics saved into ../statistics/Duomo_sorted7-29_07_2019-17_53.txt
